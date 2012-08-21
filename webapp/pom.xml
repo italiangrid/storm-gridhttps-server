@@ -1,0 +1,69 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	
+	<parent>
+        <groupId>it.grid.storm</groupId>
+        <artifactId>fs-WebDAV</artifactId>
+        <version>0.0.1</version>
+    </parent>
+    <artifactId>webdav-fs-webapp</artifactId>
+    <packaging>war</packaging>
+    <version>0.0.1-SNAPSHOT</version>
+	<name>${project.artifactId}</name>
+
+	<properties>
+		<miltonVersion>2.0.8</miltonVersion>
+		<junitVersion>4.8.1</junitVersion>
+		<slf4jVersion>1.6.6</slf4jVersion>
+		<springVersion>3.1.2.RELEASE</springVersion>
+	</properties>
+
+	<repositories>
+		<repository>
+			<id>ettrema</id>
+			<url>http://www.ettrema.com/maven2</url>
+		</repository>
+	</repositories>
+
+	<dependencies>
+		<dependency>
+			<groupId>junit</groupId>
+			<artifactId>junit</artifactId>
+			<version>${junitVersion}</version>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.slf4j</groupId>
+			<artifactId>slf4j-log4j12</artifactId>
+			<version>${slf4jVersion}</version>
+		</dependency>
+		<dependency>
+			<groupId>io.milton</groupId>
+			<artifactId>milton-server</artifactId>
+			<version>${miltonVersion}</version>
+			<exclusions>
+				<exclusion>
+					<groupId>io.milton</groupId>
+					<artifactId>milton-mail-api</artifactId>
+				</exclusion>
+				<exclusion>
+					<groupId>io.milton</groupId>
+					<artifactId>milton-mail-server</artifactId>
+				</exclusion>
+			</exclusions>
+		</dependency>
+
+		<dependency>
+			<groupId>org.springframework</groupId>
+			<artifactId>spring-context</artifactId>
+			<version>${springVersion}</version>
+		</dependency>
+
+	</dependencies>
+
+	<build>
+		<finalName>${project.artifactId}</finalName>
+	</build>
+
+</project>
