@@ -86,12 +86,12 @@ public class JServer {
 	
 	public void start() throws Exception {
 		server.start();
-		log.info("SERVER JETTY STARTED ON " + this.getRunning_port());
+		log.info("SERVER STARTED ON " + this.getRunning_port());
 	}
 
 	public void stop() throws Exception {
 		server.stop();
-		log.info("SERVER JETTY STOPPED");
+		log.info("SERVER STOPPED");
 	}
 
 	public void join() throws Exception {
