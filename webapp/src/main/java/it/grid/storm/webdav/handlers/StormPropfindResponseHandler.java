@@ -13,7 +13,6 @@ public class StormPropfindResponseHandler implements StormHandler {
 
 	private Method m = Method.PROPFIND;
 
-	@Override
 	public Method getMethod() {
 		return m;
 	}

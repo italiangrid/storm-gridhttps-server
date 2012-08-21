@@ -1,4 +1,4 @@
-package org.example;
+package it.grid.storm;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -43,6 +43,7 @@ public class WebAppBuilder {
 
 		this.unzipTemplate(this.attributes.get("template"),
 				this.attributes.get("outputd"));
+		//System.out.println("OUTPUTD: " + this.attributes.get("outputd"));
 		this.setRootDir(this.attributes.get("outputd")
 				+ "/WEB-INF/classes/applicationContext.xml",
 				this.attributes.get("rootd"));
@@ -59,7 +60,7 @@ public class WebAppBuilder {
 
 	private void setRootDir(String xmlfilesrc, String rootdir) throws Exception {
 		try {
-
+			//System.out.println("xmlfilesrc: " + xmlfilesrc);
 			SAXBuilder builder = new SAXBuilder();
 			File xmlFile = new File(xmlfilesrc);
 			Document doc = (Document) builder.build(xmlFile);

@@ -13,7 +13,6 @@ public class StormPutResponseHandler implements StormHandler {
 
 	private Method m = Method.PUT;
 
-	@Override
 	public Method getMethod() {
 		return m;
 	}

@@ -1,4 +1,4 @@
-package org.example;
+package it.grid.storm;
 
 import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.Handler;
@@ -26,10 +26,14 @@ public class JServer {
 	private ContextHandlerCollection contextHandlerCollection;
 
 	public JServer() {
-		this(JServer.default_port);
+		this(JServer.default_port,"","","");
+	}
+	
+	public JServer(int port) {
+		this(port, "","","");
 	}
 
-	public JServer(int port) {
+	public JServer(int port, String keystoreFilepath, String keystorePassword, String trustPassword) {
 		server = new Server();
 		this.setRunning_port(port);
 		server.setStopAtShutdown(true);
@@ -44,15 +48,17 @@ public class JServer {
 		connector = new SelectChannelConnector();
 		connector.setPort(this.getRunning_port());
 		connector.setMaxIdleTime(30000);
-		//server.setConnectors(new Connector[] { connector });
-
-		SslSelectChannelConnector ssl_connector = new SslSelectChannelConnector();
-        ssl_connector.setPort(8443);
-        ssl_connector.setKeystore("classes/keystore");
-        ssl_connector.setKeyPassword("password");
-		ssl_connector.setTrustPassword("password");
-        
-		server.setConnectors(new Connector[] { connector, ssl_connector });
+		
+		if(keystoreFilepath.compareTo("")!=0) {
+			SslSelectChannelConnector ssl_connector = new SslSelectChannelConnector();
+	        ssl_connector.setPort(8443);
+	        ssl_connector.setKeystore(keystoreFilepath);
+	        ssl_connector.setKeyPassword(keystorePassword);
+			ssl_connector.setTrustPassword(trustPassword);
+			server.setConnectors(new Connector[] { connector, ssl_connector });
+		} else {
+			server.setConnectors(new Connector[] { connector });
+		}
 
 		// Init collection of webapps' handlers
 		hc = new HandlerCollection();

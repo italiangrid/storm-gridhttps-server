@@ -1,4 +1,4 @@
-package org.example;
+package it.grid.storm;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -26,13 +26,13 @@ public class Main {
 
 		parseCommandLine(args);
 
-		server = new JServer(8085);
+		server = new JServer(8085,"server/target/classes/keystore","password","password");
 		builder = new WebAppBuilder();
 
 		Map<String, String> attributes = new HashMap<String, String>();
 		attributes.put("rootd", "/tmp");
 		attributes.put("name", "WebDAV-fs-server");
-		attributes.put("outputd", webappsDirectory + "/WebDAV-fs-server");
+		attributes.put("outputd", webappsDirectory + "/" + attributes.get("name"));
 		attributes.put("template", warTemplateFile);
 
 		try {

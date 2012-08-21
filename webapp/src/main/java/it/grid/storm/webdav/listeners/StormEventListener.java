@@ -13,11 +13,13 @@ import io.milton.event.Event;
 import io.milton.event.EventListener;
 import io.milton.http.Request.Method;
 
+@SuppressWarnings("rawtypes")
 public abstract class StormEventListener implements EventListener {
 
 	private static final Logger log = LoggerFactory
 			.getLogger(StormEventListener.class);
 
+	
 	private List<Class> handlersList;
 	private Map<Method, StormHandler> handlersMap = new HashMap<Method, StormHandler>();
 
