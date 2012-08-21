@@ -8,6 +8,7 @@ import io.milton.event.ResponseEvent;
 
 import it.grid.storm.webdav.handlers.StormHandler;
 
+@SuppressWarnings({ "rawtypes" })
 public class StormResponseListener<T> extends StormEventListener {
 
 	private static final Logger log = LoggerFactory

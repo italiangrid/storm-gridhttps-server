@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-2.0.xsd">
+
+	<bean id="milton.fs.resource.factory" class="io.milton.http.fs.FileSystemResourceFactory">
+		<property name="securityManager" ref="milton.fs.security.manager" />
+		<property name="lockManager" ref="milton.fs.lock.manager" />
+		<property name="root" value="$rootPath" />
+	</bean>
+
+	<bean id="milton.fs.security.manager" class="io.milton.http.fs.NullSecurityManager">
+		<property name="realm" value="aRealm" />
+	</bean>
+
+	<bean id="webdav-fs-webapp.listeners.request" class="it.grid.storm.webdav.listeners.StormRequestListener"
+		init-method="init">
+		<property name="handlersList">
+			<list>
+				<value type="java.lang.Class">it.grid.storm.webdav.handlers.StormPropfindRequestHandler
+				</value>
+				<value type="java.lang.Class">it.grid.storm.webdav.handlers.StormPutRequestHandler
+				</value>
+			</list>
+		</property>
+	</bean>
+
+	<bean id="webdav-fs-webapp.listeners.response" class="it.grid.storm.webdav.listeners.StormResponseListener"
+		init-method="init">
+		<property name="handlersList">
+			<list>
+				<value type="java.lang.Class">it.grid.storm.webdav.handlers.StormPropfindResponseHandler
+				</value>
+				<value type="java.lang.Class">it.grid.storm.webdav.handlers.StormPutResponseHandler
+				</value>
+			</list>
+		</property>
+	</bean>
+
+	<bean id="webdav-fs-webapp.event.manager" class="it.grid.storm.webdav.StormEventManager"
+		init-method="init">
+		<property name="listenersList">
+			<list>
+				<ref bean="webdav-fs-webapp.listeners.request" />
+				<ref bean="webdav-fs-webapp.listeners.response" />
+			</list>
+		</property>
+	</bean>
+
+	<bean id="milton.fs.lock.manager" class="io.milton.http.fs.FsMemoryLockManager" />
+
+	<bean id="milton.resource.type.helper" class="io.milton.http.webdav.WebDavResourceTypeHelper" />
+
+	<bean id="milton.http.manager" class="io.milton.config.HttpManagerBuilder">
+
+		<property name="mainResourceFactory" ref="milton.fs.resource.factory" />
+
+		<property name="eventManager" ref="webdav-fs-webapp.event.manager" />
+
+		<!-- resourceTypeHelper is explicit in order to avoid the defualt huge 
+			configuration (that include also caldav and carddav -->
+		<property name="resourceTypeHelper" ref="milton.resource.type.helper" />
+
+		<!-- start desabling some useless (I think) features -->
+		<property name="caldavEnabled" value="false" />
+		<property name="carddavEnabled" value="false" />
+		<property name="aclEnabled" value="false" />
+		<property name="enableWellKnown" value="false" />
+		<property name="enabledJson" value="false" />
+
+	</bean>
+
+</beans>

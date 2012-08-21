@@ -13,28 +13,27 @@ import io.milton.event.Event;
 import io.milton.event.EventListener;
 import io.milton.http.Request.Method;
 
-@SuppressWarnings("rawtypes")
 public abstract class StormEventListener implements EventListener {
 
 	private static final Logger log = LoggerFactory
 			.getLogger(StormEventListener.class);
 
 	
-	private List<Class> handlersList;
+	private List<Class<StormHandler>> handlersList;
 	private Map<Method, StormHandler> handlersMap = new HashMap<Method, StormHandler>();
 
-	public List<Class> getHandlersList() {
+	public List<Class<StormHandler>> getHandlersList() {
 		return handlersList;
 	}
 
-	public void setHandlersList(List<Class> handlersList) {
+	public void setHandlersList(List<Class<StormHandler>> handlersList) {
 		this.handlersList = handlersList;
 	}
 
 	public void init() {
 		if (!handlersList.isEmpty()) {
 			Object handler = null;
-			for (Class c : handlersList) {
+			for (Class<StormHandler> c : handlersList) {
 				try {
 					handler = Class.forName(c.getCanonicalName()).newInstance();
 				} catch (InstantiationException e) {
@@ -72,6 +71,7 @@ public abstract class StormEventListener implements EventListener {
 
 	public abstract void onEvent(Event e);
 
+	@SuppressWarnings("rawtypes")
 	public abstract Class getEventType();
 
 }

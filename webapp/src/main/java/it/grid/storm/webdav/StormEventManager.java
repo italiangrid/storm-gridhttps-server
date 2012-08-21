@@ -31,6 +31,7 @@ public class StormEventManager implements EventManager {
 		this.listenersList = listenersList;
 	}
 
+	@SuppressWarnings("unchecked")
 	public void init() {
 		log.info("Registring event listeners from the list");
 		if (!listenersList.isEmpty()) {

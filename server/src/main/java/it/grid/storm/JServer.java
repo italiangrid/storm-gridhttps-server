@@ -24,20 +24,23 @@ public class JServer {
 	private Connector connector;
 	private HandlerCollection hc;
 	private ContextHandlerCollection contextHandlerCollection;
-
+	
 	public JServer() {
-		this(JServer.default_port,"","","");
+		this(JServer.default_port);
 	}
 	
 	public JServer(int port) {
-		this(port, "","","");
+		initAsHttpServer(port);
 	}
 
 	public JServer(int port, String keystoreFilepath, String keystorePassword, String trustPassword) {
+		initAsHttpsServer(port, keystoreFilepath, keystorePassword, trustPassword);
+	}
+
+	private void initAsHttpServer(int port) {
 		server = new Server();
 		this.setRunning_port(port);
 		server.setStopAtShutdown(true);
-		// server.setGracefulShutdown(2000);
 
 		// Increase thread pool
 		threadPool = new QueuedThreadPool();
@@ -48,26 +51,39 @@ public class JServer {
 		connector = new SelectChannelConnector();
 		connector.setPort(this.getRunning_port());
 		connector.setMaxIdleTime(30000);
-		
-		if(keystoreFilepath.compareTo("")!=0) {
-			SslSelectChannelConnector ssl_connector = new SslSelectChannelConnector();
-	        ssl_connector.setPort(8443);
-	        ssl_connector.setKeystore(keystoreFilepath);
-	        ssl_connector.setKeyPassword(keystorePassword);
-			ssl_connector.setTrustPassword(trustPassword);
-			server.setConnectors(new Connector[] { connector, ssl_connector });
-		} else {
-			server.setConnectors(new Connector[] { connector });
-		}
+		server.setConnectors(new Connector[] { connector });
 
 		// Init collection of webapps' handlers
 		hc = new HandlerCollection();
 		contextHandlerCollection = new ContextHandlerCollection();
 		hc.setHandlers(new Handler[] { contextHandlerCollection });
 		server.setHandler(hc);
-
 	}
+	
+	private void initAsHttpsServer(int port, String keystoreFilepath, String keystorePassword, String trustPassword) {
+		server = new Server();
+		this.setRunning_port(port);
+		server.setStopAtShutdown(true);
 
+		// Increase thread pool
+		threadPool = new QueuedThreadPool();
+		threadPool.setMaxThreads(100);
+		server.setThreadPool(threadPool);
+
+		SslSelectChannelConnector ssl_connector = new SslSelectChannelConnector();
+        ssl_connector.setPort(port);
+        ssl_connector.setKeystore(keystoreFilepath);
+        ssl_connector.setKeyPassword(keystorePassword);
+		ssl_connector.setTrustPassword(trustPassword);
+		server.setConnectors(new Connector[] { ssl_connector });
+		
+		// Init collection of webapps' handlers
+		hc = new HandlerCollection();
+		contextHandlerCollection = new ContextHandlerCollection();
+		hc.setHandlers(new Handler[] { contextHandlerCollection });
+		server.setHandler(hc);
+	}
+	
 	public void start() throws Exception {
 		server.start();
 		log.info("SERVER JETTY STARTED ON " + this.getRunning_port());
