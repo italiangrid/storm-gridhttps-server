@@ -31,10 +31,14 @@ public class JServer {
 	
 	public JServer(int port) {
 		initAsHttpServer(port);
+		log.info("SERVER: No keystore file defined or detected");
+		log.info("SERVER: I'm working on HTTP");
 	}
 
 	public JServer(int port, String keystoreFilepath, String keystorePassword, String trustPassword) {
 		initAsHttpsServer(port, keystoreFilepath, keystorePassword, trustPassword);
+		log.info("SERVER: keystore file detected");
+		log.info("SERVER: I'm working on HTTPS");
 	}
 
 	private void initAsHttpServer(int port) {
@@ -86,12 +90,12 @@ public class JServer {
 	
 	public void start() throws Exception {
 		server.start();
-		log.info("SERVER STARTED ON " + this.getRunning_port());
+		log.info("SERVER: I'm working on port " + this.getRunning_port());
 	}
 
 	public void stop() throws Exception {
 		server.stop();
-		log.info("SERVER STOPPED");
+		log.info("SERVER: STOPPED");
 	}
 
 	public void join() throws Exception {
@@ -100,8 +104,8 @@ public class JServer {
 
 	public void deploy(String contextPath, String webappPath) throws Exception {
 
-		log.info("DEPLOY WEBAPP {" + contextPath + ", " + webappPath
-				+ "} ... STARTING");
+		log.info("SERVER: DEPLOY WEBAPP {" + contextPath + ", " + webappPath
+				+ "} ... STARTED");
 		WebAppContext context = new WebAppContext();
 		context.setDescriptor(webappPath + "/WEB-INF/web.xml");
 		context.setResourceBase(webappPath);
@@ -109,25 +113,25 @@ public class JServer {
 		context.setParentLoaderPriority(true);
 		contextHandlerCollection.addHandler(context);
 		context.start();
-		log.info("DEPLOY WEBAPP {" + contextPath + ", " + webappPath
+		log.info("SERVER: DEPLOY WEBAPP {" + contextPath + ", " + webappPath
 				+ "} ... DEPLOYED");
 
 	}
 
 	public void deployWar(String contextPath, String warPath) throws Exception {
 
-		log.info("DEPLOY WEBAPP WAR FILE {" + contextPath + ", " + warPath
-				+ "} ... STARTING");
+		log.info("SERVER: DEPLOY WEBAPP WAR FILE {" + contextPath + ", " + warPath
+				+ "} ... STARTED");
 
 		String outputDirectory = "/tmp/temp";
-		log.info("Decompressing " + warPath + " on directory "
+		log.info("SERVER: Decompressing " + warPath + " on directory "
 				+ outputDirectory);
 		(new Zip()).unzip(warPath, outputDirectory);
-		log.info("Decompressing OK");
+		log.info("SERVER: Decompressing OK");
 
 		this.deploy(contextPath, outputDirectory);
 
-		log.info("DEPLOY WEBAPP WAR FILE {" + contextPath + ", " + warPath
+		log.info("SERVER: DEPLOY WEBAPP WAR FILE {" + contextPath + ", " + warPath
 				+ "} ... DEPLOYED");
 
 	}

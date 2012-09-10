@@ -24,12 +24,8 @@ public class WebAppBuilder {
 
 	private Map<String, String> attributes = new HashMap<String, String>();
 
-	public WebAppBuilder() {
-
-	}
-
 	public void addWebApp(Map<String, String> attributes) throws Exception {
-
+		
 		this.attributes.clear();
 		this.attributes.putAll(attributes);
 		if (this.attributes.get("template") == null)
@@ -41,25 +37,31 @@ public class WebAppBuilder {
 		if (this.attributes.get("outputd") == null)
 			throw new Exception("output directory not defined!");
 
-		this.unzipTemplate(this.attributes.get("template"),
-				this.attributes.get("outputd"));
-		//System.out.println("OUTPUTD: " + this.attributes.get("outputd"));
-		this.setRootDir(this.attributes.get("outputd")
-				+ "/WEB-INF/classes/applicationContext.xml",
-				this.attributes.get("rootd"));
+		log.info("WEBAPP-BUILDER: adding webapp " + this.attributes.get("name") + "...... ");
+		
+		this.unzipTemplate(this.attributes.get("template"), this.attributes.get("outputd"));
+		
+		log.info("WEBAPP-BUILDER: webapp working directory is " + this.attributes.get("outputd"));
+		
+		String applicationContextFile = this.attributes.get("outputd") + "/WEB-INF/classes/applicationContext.xml";
+		this.setRootDir(applicationContextFile, this.attributes.get("rootd"));
+		
+		log.info("WEBAPP-BUILDER: webapp " + this.attributes.get("name") + " added!");
 
 	}
 
 	private void unzipTemplate(String zipfile, String outputDirectory)
 			throws IOException {
-		log.info("Decompressing " + zipfile + " on directory "
+		log.info("WEBAPP-BUILDER: Decompressing " + zipfile + " on directory "
 				+ outputDirectory);
 		(new Zip()).unzip(zipfile, outputDirectory);
-		log.info("Decompressing OK");
+		log.info("WEBAPP-BUILDER: Decompressing OK");
 	}
 
 	private void setRootDir(String xmlfilesrc, String rootdir) throws Exception {
 		try {
+			log.info("WEBAPP-BUILDER: updating root directory......");
+			
 			//System.out.println("xmlfilesrc: " + xmlfilesrc);
 			SAXBuilder builder = new SAXBuilder();
 			File xmlFile = new File(xmlfilesrc);
@@ -92,7 +94,7 @@ public class WebAppBuilder {
 			xmlOutput.setFormat(Format.getPrettyFormat());
 			xmlOutput.output(doc, new FileWriter(xmlfilesrc));
 
-			log.info("root directory on applicationContext.xml updated!");
+			log.info("WEBAPP-BUILDER: root directory updated!");
 		} catch (IOException io) {
 			io.printStackTrace();
 		} catch (JDOMException e) {
