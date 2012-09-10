@@ -18,7 +18,7 @@ public class StormPropfindResponseHandler implements StormHandler {
 	}
 
 	public void exec(Event e) {
-		log.debug("this is the exec function of "
+		log.info("this is the exec function of "
 				+ StormPropfindResponseHandler.class);
 	}
 
