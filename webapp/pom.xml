@@ -11,7 +11,7 @@
 	<name>${project.artifactId}</name>
 
 	<properties>
-		<miltonVersion>2.0.8</miltonVersion>
+		<miltonVersion>2.1.3</miltonVersion>
 		<junitVersion>4.8.1</junitVersion>
 		<slf4jVersion>1.6.6</slf4jVersion>
 		<springVersion>3.1.2.RELEASE</springVersion>
@@ -19,7 +19,7 @@
 
 	<repositories>
 		<repository>
-			<id>ettrema</id>
+			<id>ettrema-repo</id>
 			<url>http://www.ettrema.com/maven2</url>
 		</repository>
 	</repositories>
