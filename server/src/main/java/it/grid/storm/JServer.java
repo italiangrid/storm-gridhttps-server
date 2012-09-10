@@ -91,6 +91,8 @@ public class JServer {
 	public void start() throws Exception {
 		server.start();
 		log.info("SERVER: I'm working on port " + this.getRunning_port());
+		log.info("SERVER: STARTED");
+		log.info("SERVER: Hello World!!");
 	}
 
 	public void stop() throws Exception {
