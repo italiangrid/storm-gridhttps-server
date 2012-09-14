@@ -2,8 +2,6 @@ package it.grid.storm;
 
 import java.io.File;
 
-import org.eclipse.jetty.util.log.Log;
-
 public class Main {
 
 	private static JServer server;
@@ -28,7 +26,7 @@ public class Main {
 		}
 		
 		server = new JServer(serverPort);
-		if ((new File(keystoreFile)).exists() && isHttps) {			
+		if ((new File(keystoreFile)).exists() && isHttps) {
 			server.initAsHttpsServer(keystoreFile, "password", "password");
 		} else {
 			server.initAsHttpServer();
@@ -43,15 +41,15 @@ public class Main {
 		try {
 			server.start();
 			server.deploy(webDAVfsServer);
+			
 		} catch (Exception e) {
 			e.printStackTrace();
 			try {
+				server.undeployAll();
 				server.stop();
 			} catch (Exception e1) {
 				e1.printStackTrace();
 			}
-			// remove webapps dir
-			server.deleteWebApps();
 		}
 
 		//adds an handler to CTRL-C that stops and deletes the webapps directory
@@ -60,14 +58,11 @@ public class Main {
 								 * shutdown code
 								 */
 				try {
+					server.undeployAll();
 					server.stop();
 				} catch (Exception e1) {
 					e1.printStackTrace();
 				}
-				// remove webapps dir
-				Log.info("SERVER: Removing webapps temporary directory ["+server.getWebappsDirectory()+"] ");
-				server.deleteWebApps();
-				Log.info("SERVER: Removed!");
 			}
 		});
 
@@ -85,8 +80,7 @@ public class Main {
 		cli.addOption("ssl", "if keystore exists server works on https", false, false);
 		warTemplateFile = cli.getString("w");
 		serverPort = cli.getInteger("p");
-		isHttps = cli.hasOption("ssl");		
-		
+		isHttps = cli.hasOption("ssl");			
 	}
 
 	

@@ -3,6 +3,7 @@ package it.grid.storm;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
@@ -27,17 +28,32 @@ import org.slf4j.LoggerFactory;
 public class JServer {
 
 	private static final Logger log = LoggerFactory.getLogger(Main.class);
-
 	private static final int default_port = 8085;
-	
 	private String webappsDirectory = "./webapps";
 	private int running_port;
-	
 	private Server server;
-	private QueuedThreadPool threadPool;
-	private HandlerCollection hc;
 	private ContextHandlerCollection contextHandlerCollection;
+	private List<WebApp> webApps = new ArrayList<WebApp>();
 	
+	public int getRunning_port() {
+		return running_port;
+	}
+
+	public void setRunning_port(int running_port) {
+		this.running_port = running_port;
+	}
+	
+	public String getWebappsDirectory() {
+		return webappsDirectory;
+	}
+
+	public void setWebappsDirectory(String webappsDirectory) {
+		this.webappsDirectory = webappsDirectory;
+	}
+	
+	public ContextHandlerCollection getContextHandlerCollection() {
+		return contextHandlerCollection;
+	}
 	
 	public JServer() {
 		this(JServer.default_port);
@@ -49,12 +65,12 @@ public class JServer {
 		server.setStopAtShutdown(true);
 		
 		// Increase thread pool
-		threadPool = new QueuedThreadPool();
+		QueuedThreadPool threadPool = new QueuedThreadPool();
 		threadPool.setMaxThreads(100);
 		server.setThreadPool(threadPool);
 		
 		// Init collection of webapps' handlers
-		hc = new HandlerCollection();
+		HandlerCollection hc = new HandlerCollection();
 		contextHandlerCollection = new ContextHandlerCollection();
 		hc.setHandlers(new Handler[] { contextHandlerCollection });
 		server.setHandler(hc);	
@@ -102,35 +118,54 @@ public class JServer {
 			throw new Exception("SERVER: the webapp " + webAppToDeploy.toString() + " is not ready to deploy!");
 		
 		String webAppPath = this.getWebappsDirectory() + "/" + webAppToDeploy.getName();
+		String contextPath = "/" + webAppToDeploy.getName();
+		String applicationContextFile = webAppPath + "/WEB-INF/classes/applicationContext.xml";	
 		
 		log.info("SERVER-DEPLOY: decompressing webapp template file {" + webAppToDeploy.getWarFile() + "} into {"+ this.getWebappsDirectory() +"}");
 		(new Zip()).unzip(webAppToDeploy.getWarFile(), webAppPath);
 		log.info("SERVER-DEPLOY: decompressed! ");
-	
-		String applicationContextFile = webAppPath + "/WEB-INF/classes/applicationContext.xml";	
+		
 		log.info("SERVER-DEPLOY: root directory has to be modified ... ");
 		this.setRootDir(applicationContextFile, webAppToDeploy.getRootDirectory());
 		log.info("SERVER-DEPLOY: root directory fixed! ");
 				
 		WebAppContext context = new WebAppContext();
-		String contextPath = "/" + webAppToDeploy.getName();
 		context.setDescriptor(webAppPath + "/WEB-INF/web.xml");
 		context.setResourceBase(webAppPath);
 		context.setContextPath(contextPath);
 		context.setParentLoaderPriority(true);		
-		contextHandlerCollection.addHandler(context);
+		this.getContextHandlerCollection().addHandler(context);
 		context.start();
 		
 		log.info("SERVER-DEPLOY: WEBAPP {" + contextPath + ", " + webAppPath + "} ... DEPLOYED");
 
+		this.webApps.add(webAppToDeploy);
+		
 	}
 	
-	public int getRunning_port() {
-		return running_port;
+	public void undeployAll() throws Exception {
+		while (!this.webApps.isEmpty())
+			this.undeploy(this.webApps.get(0));
+		this.deleteDirectory(new File(this.getWebappsDirectory()));
 	}
-
-	public void setRunning_port(int running_port) {
-		this.running_port = running_port;
+	
+	public void undeploy(WebApp toUndeploy) throws Exception {
+		if ((this.webApps.indexOf(toUndeploy)) == -1) {
+			throw new Exception("undeploy webapp error: webapp not found!");
+		}
+		
+		String webAppPath = this.getWebappsDirectory() + "/" + toUndeploy.getName();
+		
+		String contextPath = "/" + toUndeploy.getName();
+		WebAppContext context = new WebAppContext();
+		context.setDescriptor(webAppPath + "/WEB-INF/web.xml");
+		context.setResourceBase(webAppPath);
+		context.setContextPath(contextPath);
+		context.setParentLoaderPriority(true);
+		this.getContextHandlerCollection().removeHandler(context);
+		
+		deleteDirectory(new File(webAppPath));
+		this.webApps.remove(toUndeploy);
 	}
 	
 	private void setRootDir(String xmlfilesrc, String rootdir) throws Exception {
@@ -177,18 +212,6 @@ public class JServer {
 		} catch (JDOMException e) {
 			e.printStackTrace();
 		}
-	}
-
-	public String getWebappsDirectory() {
-		return webappsDirectory;
-	}
-
-	public void setWebappsDirectory(String webappsDirectory) {
-		this.webappsDirectory = webappsDirectory;
-	}
-	
-	public boolean deleteWebApps() {
-		return deleteDirectory(new File(this.getWebappsDirectory()));
 	}
 	
 	private boolean deleteDirectory(File path) {

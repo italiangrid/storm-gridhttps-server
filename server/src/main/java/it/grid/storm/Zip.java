@@ -55,7 +55,7 @@ public class Zip {
 		while (entries.hasMoreElements()) {
 			ZipEntry entry = entries.nextElement();
 			File file = new File(outputDirectory, entry.getName());
-			log.info("\t"+entry.getName()+" ["+entry.getSize()/1024 + "KB]");
+			log.debug("\t"+entry.getName()+" ["+entry.getSize()/1024 + "KB]");
 			if (entry.isDirectory()) {
 				file.mkdirs();
 			} else {
