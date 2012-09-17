@@ -11,10 +11,11 @@
 	<name>${project.artifactId}</name>
 
 	<properties>
-		<miltonVersion>2.1.3</miltonVersion>
 		<junitVersion>4.8.1</junitVersion>
+		<miltonVersion>2.1.3</miltonVersion>
 		<slf4jVersion>1.6.6</slf4jVersion>
 		<springVersion>3.1.2.RELEASE</springVersion>
+		<httpComponentsVersion>4.2.1</httpComponentsVersion>
 	</properties>
 
 	<repositories>
@@ -40,22 +41,22 @@
 			<groupId>io.milton</groupId>
 			<artifactId>milton-server</artifactId>
 			<version>${miltonVersion}</version>
-			<exclusions>
-				<exclusion>
-					<groupId>io.milton</groupId>
-					<artifactId>milton-mail-api</artifactId>
-				</exclusion>
-				<exclusion>
-					<groupId>io.milton</groupId>
-					<artifactId>milton-mail-server</artifactId>
-				</exclusion>
-			</exclusions>
 		</dependency>
-
 		<dependency>
 			<groupId>org.springframework</groupId>
 			<artifactId>spring-context</artifactId>
 			<version>${springVersion}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.httpcomponents</groupId>
+			<artifactId>httpclient</artifactId>
+			<version>${httpComponentsVersion}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>emi.storm</groupId>
+			<artifactId>gridhttps_filter</artifactId>
+			<version>1.0.0</version>
 		</dependency>
 
 	</dependencies>

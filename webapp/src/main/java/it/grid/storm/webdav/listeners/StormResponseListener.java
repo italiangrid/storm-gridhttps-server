@@ -25,13 +25,12 @@ public class StormResponseListener<T> extends StormEventListener {
 	public void onEvent(Event e) {
 		log.debug("Triggered event " + e.getClass().getCanonicalName());
 
-		String methodName = ((ResponseEvent) e).getRequest().getMethod()
-				.toString();
+		String methodName = super.getRequestMethodName(e);
 		log.debug("methodName: " + methodName);
 
 		if (super.handlersMapContainsKey(methodName)) {
 			log.debug(methodName + " is contained in handlersMap");
-			StormHandler handler = super.handlersMapGet(methodName);
+			StormHandler handler = super.handlersMapGetValue(methodName);
 			log.debug("handler: " + handler.getClass().getCanonicalName());
 			handler.exec(e);
 		} else {

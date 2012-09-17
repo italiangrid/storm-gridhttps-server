@@ -17,32 +17,37 @@
 		init-method="init">
 		<property name="handlersList">
 			<list>
-				<value type="java.lang.Class">it.grid.storm.webdav.handlers.StormPropfindRequestHandler
+				<value type="java.lang.Class">it.grid.storm.webdav.handlers.requests.StormPropfindRequestHandler
 				</value>
-				<value type="java.lang.Class">it.grid.storm.webdav.handlers.StormPutRequestHandler
+				<value type="java.lang.Class">it.grid.storm.webdav.handlers.requests.StormPutRequestHandler
+				</value>
+				<value type="java.lang.Class">it.grid.storm.webdav.handlers.requests.StormOptionsRequestHandler
 				</value>
 			</list>
 		</property>
 	</bean>
 
-	<bean id="webdav-fs-webapp.listeners.response" class="it.grid.storm.webdav.listeners.StormResponseListener"
-		init-method="init">
-		<property name="handlersList">
-			<list>
-				<value type="java.lang.Class">it.grid.storm.webdav.handlers.StormPropfindResponseHandler
-				</value>
-				<value type="java.lang.Class">it.grid.storm.webdav.handlers.StormPutResponseHandler
-				</value>
-			</list>
-		</property>
-	</bean>
+<!-- 	<bean id="webdav-fs-webapp.listeners.response" class="it.grid.storm.webdav.listeners.StormResponseListener" -->
+<!-- 		init-method="init"> -->
+<!-- 		<property name="handlersList"> -->
+<!-- 			<list> -->
+<!-- 				<value type="java.lang.Class">it.grid.storm.webdav.handlers.StormPropfindResponseHandler -->
+<!-- 				</value> -->
+<!-- 				<value type="java.lang.Class">it.grid.storm.webdav.handlers.StormPutResponseHandler -->
+<!-- 				</value> -->
+<!-- 			</list> -->
+<!-- 		</property> -->
+<!-- 	</bean> -->
+
+	<bean id="webdav-fs-webapp.listeners.mkcol" class="it.grid.storm.webdav.listeners.resources.StormNewFolderListener" />
 
 	<bean id="webdav-fs-webapp.event.manager" class="it.grid.storm.webdav.StormEventManager"
 		init-method="init">
 		<property name="listenersList">
 			<list>
 				<ref bean="webdav-fs-webapp.listeners.request" />
-				<ref bean="webdav-fs-webapp.listeners.response" />
+<!-- 				<ref bean="webdav-fs-webapp.listeners.response" /> -->
+				<ref bean="webdav-fs-webapp.listeners.mkcol" />
 			</list>
 		</property>
 	</bean>
@@ -51,14 +56,18 @@
 
 	<bean id="milton.resource.type.helper" class="io.milton.http.webdav.WebDavResourceTypeHelper" />
 
+
+
 	<bean id="milton.http.manager" class="io.milton.config.HttpManagerBuilder">
 
 		<property name="mainResourceFactory" ref="milton.fs.resource.factory" />
 
 		<property name="eventManager" ref="webdav-fs-webapp.event.manager" />
 
+		<!-- the default namespace is "DAV:" -->
+
 		<!-- resourceTypeHelper is explicit in order to avoid the defualt huge 
-			configuration (that include also caldav and carddav -->
+			configuration (that include also caldav and carddav) -->
 		<property name="resourceTypeHelper" ref="milton.resource.type.helper" />
 
 		<!-- start desabling some useless (I think) features -->

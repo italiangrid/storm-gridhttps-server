@@ -11,6 +11,7 @@ import it.grid.storm.webdav.handlers.StormHandler;
 
 import io.milton.event.Event;
 import io.milton.event.EventListener;
+import io.milton.event.RequestEvent;
 import io.milton.http.Request.Method;
 
 public abstract class StormEventListener implements EventListener {
@@ -58,6 +59,7 @@ public abstract class StormEventListener implements EventListener {
 							+ StormHandler.class.getCanonicalName());
 				}
 			}
+			handlersList.clear();
 		}
 	}
 
@@ -65,10 +67,15 @@ public abstract class StormEventListener implements EventListener {
 		return handlersMap.containsKey(Enum.valueOf(Method.class, methodName));
 	}
 
-	public StormHandler handlersMapGet(String methodName) {
+	public StormHandler handlersMapGetValue(String methodName) {
 		return handlersMap.get(Enum.valueOf(Method.class, methodName));
 	}
 
+	public String getRequestMethodName(Event e){
+		return ((RequestEvent) e).getRequest().getMethod()
+				.toString();
+	}
+	
 	public abstract void onEvent(Event e);
 
 	@SuppressWarnings("rawtypes")
