@@ -1,4 +1,6 @@
-package it.grid.storm;
+package it.grid.storm.webdav;
+
+import it.grid.storm.utils.Zip;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -27,7 +29,7 @@ import org.slf4j.LoggerFactory;
 
 public class JServer {
 
-	private static final Logger log = LoggerFactory.getLogger(Main.class);
+	private static final Logger log = LoggerFactory.getLogger(JServer.class);
 	private static final int default_port = 8085;
 	private String webappsDirectory = "./webapps";
 	private int running_port;
@@ -37,10 +39,6 @@ public class JServer {
 	
 	public int getRunning_port() {
 		return running_port;
-	}
-
-	public void setRunning_port(int running_port) {
-		this.running_port = running_port;
 	}
 	
 	public String getWebappsDirectory() {
@@ -61,7 +59,7 @@ public class JServer {
 	
 	public JServer(int port) {
 		server = new Server();
-		this.setRunning_port(port);
+		this.running_port = port;
 		server.setStopAtShutdown(true);
 		
 		// Increase thread pool
@@ -69,19 +67,21 @@ public class JServer {
 		threadPool.setMaxThreads(100);
 		server.setThreadPool(threadPool);
 		
-		// Init collection of webapps' handlers
+		// Initialize collection of web-applications' handlers
 		HandlerCollection hc = new HandlerCollection();
 		contextHandlerCollection = new ContextHandlerCollection();
 		hc.setHandlers(new Handler[] { contextHandlerCollection });
 		server.setHandler(hc);	
 	}
 
+	
+    
 	public void initAsHttpServer() {
 		Connector connector = new SelectChannelConnector();
 		connector.setPort(this.getRunning_port());
 		connector.setMaxIdleTime(30000);
 		server.setConnectors(new Connector[] { connector });
-		log.info("SERVER: initialized for working on HTTP");
+		log.info("SERVER: I'm working on HTTP");
 	}
 	
 	public void initAsHttpsServer(String keystoreFilepath, String keystorePassword, String trustPassword) {
@@ -92,15 +92,21 @@ public class JServer {
 		ssl_connector.setTrustPassword(trustPassword);
 		ssl_connector.setAllowRenegotiate(false);
 		server.setConnectors(new Connector[] { ssl_connector });
-		log.info("SERVER: initialized for working on HTTPS");
+		log.info("SERVER: I'm working on HTTPS");
+	}
+	
+	public boolean isInitialized() {
+		boolean isInit = true;
+		isInit &= (server.getConnectors() != null);
+		//isInit &= (webApps != null);
+		return isInit;
 	}
 	
 	public void start() throws Exception {
-		if (server.getConnectors() == null)
+		if (!this.isInitialized()) 
 			throw new Exception("server not initialized!");
 		server.start();
-		log.info("SERVER: I'm working on port " + this.getRunning_port());
-		log.info("SERVER: STARTED");
+		log.info("SERVER: STARTED on port " + this.getRunning_port());
 	}
 
 	public void stop() throws Exception {
@@ -111,11 +117,10 @@ public class JServer {
 	public void join() throws Exception {
 		server.join();
 	}
-
+	
 	public void deploy(WebApp webAppToDeploy) throws IOException, Exception {
 
-		if (!webAppToDeploy.isReadyToDeploy())
-			throw new Exception("SERVER: the webapp " + webAppToDeploy.toString() + " is not ready to deploy!");
+		if (webAppToDeploy == null) throw new Exception("SERVER: webapp is null!");
 		
 		String webAppPath = this.getWebappsDirectory() + "/" + webAppToDeploy.getName();
 		String contextPath = "/" + webAppToDeploy.getName();
@@ -125,7 +130,6 @@ public class JServer {
 		(new Zip()).unzip(webAppToDeploy.getWarFile(), webAppPath);
 		log.info("SERVER-DEPLOY: decompressed! ");
 		
-		log.info("SERVER-DEPLOY: root directory has to be modified ... ");
 		this.setRootDir(applicationContextFile, webAppToDeploy.getRootDirectory());
 		log.info("SERVER-DEPLOY: root directory fixed! ");
 				
@@ -155,8 +159,8 @@ public class JServer {
 		}
 		
 		String webAppPath = this.getWebappsDirectory() + "/" + toUndeploy.getName();
-		
 		String contextPath = "/" + toUndeploy.getName();
+		
 		WebAppContext context = new WebAppContext();
 		context.setDescriptor(webAppPath + "/WEB-INF/web.xml");
 		context.setResourceBase(webAppPath);
@@ -166,28 +170,31 @@ public class JServer {
 		
 		deleteDirectory(new File(webAppPath));
 		this.webApps.remove(toUndeploy);
+		
+		log.info("SERVER-UNDEPLOY: WEBAPP {" + contextPath + ", " + webAppPath + "} ... DEPLOYED");
+		
 	}
 	
 	private void setRootDir(String xmlfilesrc, String rootdir) throws Exception {
 		try {			
-			System.out.println("xmlfilesrc: " + xmlfilesrc);
 			SAXBuilder builder = new SAXBuilder();
 			File xmlFile = new File(xmlfilesrc);
 			Document doc = (Document) builder.build(xmlFile);
 
+			/* find element with id = milton.fs.resource.factory */
 			Element rootNode = doc.getRootElement();
 			List<?> beans = rootNode.getChildren();
 			Element current = null;
 			Iterator<?> i = beans.iterator();
 			while (i.hasNext()) {
 				current = (Element) i.next();
-				if (current.getAttributeValue("id").equals(
-						"milton.fs.resource.factory"))
+				if (current.getAttributeValue("id").equals("milton.fs.resource.factory"))
 					break;
 			}
 			if (!current.getAttributeValue("id").equals("milton.fs.resource.factory"))
 				throw new Exception("node 'milton.fs.resource.factory' not found!");
 			
+			/* find element with attribute name = root and set it with rootdir */
 			List<?> properties = current.getChildren();
 			Element property = null;
 			i = properties.iterator();
@@ -198,12 +205,10 @@ public class JServer {
 			}
 			if (!property.getAttributeValue("name").equals("root"))
 				throw new Exception("attribute 'root' not found!");
-			
 			property.setAttribute("value", rootdir);
 
+			/* output new file */
 			XMLOutputter xmlOutput = new XMLOutputter();
-
-			// display nice nice
 			xmlOutput.setFormat(Format.getPrettyFormat());
 			xmlOutput.output(doc, new FileWriter(xmlfilesrc));
 

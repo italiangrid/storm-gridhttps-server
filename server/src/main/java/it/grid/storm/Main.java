@@ -1,5 +1,9 @@
 package it.grid.storm;
 
+import it.grid.storm.storagearea.StorageAreaManager;
+import it.grid.storm.utils.MyCommandLineParser;
+import it.grid.storm.webdav.JServer;
+
 import java.io.File;
 
 public class Main {
@@ -14,7 +18,11 @@ public class Main {
 	 * If you want to use your own key and certificate you have to generate your own.
 	 */
 	private static String keystoreFile = getExeDirectory() + "/classes/keystore";;
-	private static int serverPort = 8085;
+	private static int serverPort;
+	private final static int defaultPort = 8085;
+	
+	private final static String hostnameBEStorm = "etics-06-vm03.cnaf.infn.it";
+	private final static int portBEStorm = 9998;
 
 	public static void main(String[] args) {
 		
@@ -33,14 +41,22 @@ public class Main {
 		}
 		server.setWebappsDirectory(getExeDirectory()+"/webapps");
 		
+		try {
+			StorageAreaManager.initFromStormBackend(hostnameBEStorm, portBEStorm);
+		} catch (Exception e2) {
+			e2.printStackTrace();
+		}
+		
+		/*
 		WebApp webDAVfsServer = new WebApp();
 		webDAVfsServer.setName("WebDAV-fs-server");
 		webDAVfsServer.setWarFile(warTemplateFile);
 		webDAVfsServer.setRootDirectory("/tmp");
+		*/
 		
 		try {
 			server.start();
-			server.deploy(webDAVfsServer);
+			//server.deploy(webDAVfsServer);
 			
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -79,8 +95,8 @@ public class Main {
 		cli.addOption("p", "the server port [default = " + serverPort + "]", true, false);
 		cli.addOption("ssl", "if keystore exists server works on https", false, false);
 		warTemplateFile = cli.getString("w");
-		serverPort = cli.getInteger("p");
-		isHttps = cli.hasOption("ssl");			
+		isHttps = cli.hasOption("ssl");
+		serverPort = cli.hasOption("p") ? cli.getInteger("p") : Main.defaultPort;
 	}
 
 	
