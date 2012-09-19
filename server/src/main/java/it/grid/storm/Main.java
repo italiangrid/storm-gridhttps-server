@@ -1,13 +1,24 @@
 package it.grid.storm;
 
+import it.grid.storm.storagearea.StorageArea;
 import it.grid.storm.storagearea.StorageAreaManager;
 import it.grid.storm.utils.MyCommandLineParser;
 import it.grid.storm.webdav.JServer;
+import it.grid.storm.webdav.WebApp;
 
 import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class Main {
 
+	private static final Logger log = LoggerFactory
+			.getLogger(Main.class);
+	
 	private static JServer server;
 	private static String warTemplateFile = "";
 	private static boolean isHttps = false;
@@ -54,8 +65,26 @@ public class Main {
 		webDAVfsServer.setRootDirectory("/tmp");
 		*/
 		
+		/* Generate WebApp List from StorageArea List */
+		List<WebApp> webapps = new ArrayList<WebApp>();
+		List<StorageArea> storageareas = StorageAreaManager.getStorageAreas();
+		for (int i = 0; i<storageareas.size(); i++) {
+			try {
+				webapps.add(new WebApp(storageareas.get(i),warTemplateFile));
+			} catch (IOException e) {
+				e.printStackTrace();
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		}
+		log.info("WEBAPPS-SA-LIST: " + webapps.toString());
+		
 		try {
 			server.start();
+			
+			for (int i = 0; i<webapps.size(); i++) {
+				server.deploy(webapps.get(i));
+			}
 			//server.deploy(webDAVfsServer);
 			
 		} catch (Exception e) {

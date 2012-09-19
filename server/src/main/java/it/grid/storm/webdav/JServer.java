@@ -36,11 +36,11 @@ public class JServer {
 	private Server server;
 	private ContextHandlerCollection contextHandlerCollection;
 	private List<WebApp> webApps = new ArrayList<WebApp>();
-	
+
 	public int getRunning_port() {
 		return running_port;
 	}
-	
+
 	public String getWebappsDirectory() {
 		return webappsDirectory;
 	}
@@ -48,34 +48,32 @@ public class JServer {
 	public void setWebappsDirectory(String webappsDirectory) {
 		this.webappsDirectory = webappsDirectory;
 	}
-	
+
 	public ContextHandlerCollection getContextHandlerCollection() {
 		return contextHandlerCollection;
 	}
-	
+
 	public JServer() {
 		this(JServer.default_port);
 	}
-	
+
 	public JServer(int port) {
 		server = new Server();
 		this.running_port = port;
 		server.setStopAtShutdown(true);
-		
+
 		// Increase thread pool
 		QueuedThreadPool threadPool = new QueuedThreadPool();
 		threadPool.setMaxThreads(100);
 		server.setThreadPool(threadPool);
-		
+
 		// Initialize collection of web-applications' handlers
 		HandlerCollection hc = new HandlerCollection();
 		contextHandlerCollection = new ContextHandlerCollection();
 		hc.setHandlers(new Handler[] { contextHandlerCollection });
-		server.setHandler(hc);	
+		server.setHandler(hc);
 	}
 
-	
-    
 	public void initAsHttpServer() {
 		Connector connector = new SelectChannelConnector();
 		connector.setPort(this.getRunning_port());
@@ -83,27 +81,28 @@ public class JServer {
 		server.setConnectors(new Connector[] { connector });
 		log.info("SERVER: I'm working on HTTP");
 	}
-	
-	public void initAsHttpsServer(String keystoreFilepath, String keystorePassword, String trustPassword) {
+
+	public void initAsHttpsServer(String keystoreFilepath,
+			String keystorePassword, String trustPassword) {
 		SslSelectChannelConnector ssl_connector = new SslSelectChannelConnector();
-        ssl_connector.setPort(this.getRunning_port());
-        ssl_connector.setKeystore(keystoreFilepath);
-        ssl_connector.setKeyPassword(keystorePassword);
+		ssl_connector.setPort(this.getRunning_port());
+		ssl_connector.setKeystore(keystoreFilepath);
+		ssl_connector.setKeyPassword(keystorePassword);
 		ssl_connector.setTrustPassword(trustPassword);
 		ssl_connector.setAllowRenegotiate(false);
 		server.setConnectors(new Connector[] { ssl_connector });
 		log.info("SERVER: I'm working on HTTPS");
 	}
-	
+
 	public boolean isInitialized() {
 		boolean isInit = true;
 		isInit &= (server.getConnectors() != null);
-		//isInit &= (webApps != null);
+		// isInit &= (webApps != null);
 		return isInit;
 	}
-	
+
 	public void start() throws Exception {
-		if (!this.isInitialized()) 
+		if (!this.isInitialized())
 			throw new Exception("server not initialized!");
 		server.start();
 		log.info("SERVER: STARTED on port " + this.getRunning_port());
@@ -117,66 +116,78 @@ public class JServer {
 	public void join() throws Exception {
 		server.join();
 	}
-	
+
+	public boolean isDeployed(WebApp webapp) {
+		return (this.webApps.indexOf(webapp) != -1);
+	}
+
 	public void deploy(WebApp webAppToDeploy) throws IOException, Exception {
 
-		if (webAppToDeploy == null) throw new Exception("SERVER: webapp is null!");
-		
-		String webAppPath = this.getWebappsDirectory() + "/" + webAppToDeploy.getName();
-		String contextPath = "/" + webAppToDeploy.getName();
-		String applicationContextFile = webAppPath + "/WEB-INF/classes/applicationContext.xml";	
-		
-		log.info("SERVER-DEPLOY: decompressing webapp template file {" + webAppToDeploy.getWarFile() + "} into {"+ this.getWebappsDirectory() +"}");
-		(new Zip()).unzip(webAppToDeploy.getWarFile(), webAppPath);
-		log.info("SERVER-DEPLOY: decompressed! ");
-		
-		this.setRootDir(applicationContextFile, webAppToDeploy.getRootDirectory());
-		log.info("SERVER-DEPLOY: root directory fixed! ");
-				
-		WebAppContext context = new WebAppContext();
-		context.setDescriptor(webAppPath + "/WEB-INF/web.xml");
-		context.setResourceBase(webAppPath);
-		context.setContextPath(contextPath);
-		context.setParentLoaderPriority(true);		
-		this.getContextHandlerCollection().addHandler(context);
-		context.start();
-		
-		log.info("SERVER-DEPLOY: WEBAPP {" + contextPath + ", " + webAppPath + "} ... DEPLOYED");
+		if (webAppToDeploy == null)
+			throw new Exception("SERVER-DEPLOY: webapp is null!");
+		if (isDeployed(webAppToDeploy))
+			throw new Exception("SERVER-DEPLOY: webapp already deployed!");
 
-		this.webApps.add(webAppToDeploy);
-		
-	}
-	
-	public void undeployAll() throws Exception {
-		while (!this.webApps.isEmpty())
-			this.undeploy(this.webApps.get(0));
-		this.deleteDirectory(new File(this.getWebappsDirectory()));
-	}
-	
-	public void undeploy(WebApp toUndeploy) throws Exception {
-		if ((this.webApps.indexOf(toUndeploy)) == -1) {
-			throw new Exception("undeploy webapp error: webapp not found!");
-		}
-		
-		String webAppPath = this.getWebappsDirectory() + "/" + toUndeploy.getName();
-		String contextPath = "/" + toUndeploy.getName();
-		
+		String contextPath = webAppToDeploy.getContextPath();
+		String webappPath = getWebappsDirectory() + contextPath;
+		String contextFile = webappPath
+				+ "/WEB-INF/classes/applicationContext.xml";
+
+		log.info("SERVER-DEPLOY: WEBAPP {" + contextPath + "} ... STARTED");
+
+		log.info("SERVER-DEPLOY: decompressing template file {"
+				+ webAppToDeploy.getWarFile() + "} into {"
+				+ getWebappsDirectory() + "}");
+		(new Zip()).unzip(webAppToDeploy.getWarFile(), webappPath);
+		log.info("SERVER-DEPLOY: decompressed! ");
+
+		buildContextFile(contextFile, webAppToDeploy);
+		log.info("SERVER-DEPLOY: application context file fixed! ");
+
 		WebAppContext context = new WebAppContext();
-		context.setDescriptor(webAppPath + "/WEB-INF/web.xml");
-		context.setResourceBase(webAppPath);
+		context.setDescriptor(webappPath + "/WEB-INF/web.xml");
+		context.setResourceBase(webappPath);
 		context.setContextPath(contextPath);
 		context.setParentLoaderPriority(true);
-		this.getContextHandlerCollection().removeHandler(context);
-		
-		deleteDirectory(new File(webAppPath));
-		this.webApps.remove(toUndeploy);
-		
-		log.info("SERVER-UNDEPLOY: WEBAPP {" + contextPath + ", " + webAppPath + "} ... DEPLOYED");
-		
+		getContextHandlerCollection().addHandler(context);
+		context.start();
+
+		log.info("SERVER-DEPLOY: WEBAPP {" + contextPath + "} ... DEPLOYED");
+
+		this.webApps.add(webAppToDeploy);
+
 	}
-	
-	private void setRootDir(String xmlfilesrc, String rootdir) throws Exception {
-		try {			
+
+	public void undeployAll() throws Exception {
+		while (!webApps.isEmpty())
+			undeploy(webApps.get(0));
+		deleteDirectory(new File(getWebappsDirectory()));
+	}
+
+	public void undeploy(WebApp toUndeploy) throws Exception {
+		if (!isDeployed(toUndeploy))
+			throw new Exception("undeploy webapp error: webapp not found!");
+
+		String contextPath = toUndeploy.getContextPath();
+		String webappPath = getWebappsDirectory() + contextPath;
+
+		WebAppContext context = new WebAppContext();
+		context.setDescriptor(webappPath + "/WEB-INF/web.xml");
+		context.setResourceBase(webappPath);
+		context.setContextPath(contextPath);
+		context.setParentLoaderPriority(true);
+		getContextHandlerCollection().removeHandler(context);
+
+		deleteDirectory(new File(webappPath));
+		webApps.remove(toUndeploy);
+
+		log.info("SERVER-UNDEPLOY: WEBAPP {" + contextPath + "} ... UNDEPLOYED");
+
+	}
+
+	private void buildContextFile(String xmlfilesrc, WebApp webapp)
+			throws Exception {
+		try {
 			SAXBuilder builder = new SAXBuilder();
 			File xmlFile = new File(xmlfilesrc);
 			Document doc = (Document) builder.build(xmlFile);
@@ -188,24 +199,37 @@ public class JServer {
 			Iterator<?> i = beans.iterator();
 			while (i.hasNext()) {
 				current = (Element) i.next();
-				if (current.getAttributeValue("id").equals("milton.fs.resource.factory"))
+				if (current.getAttributeValue("id").equals(
+						"milton.fs.resource.factory"))
 					break;
 			}
-			if (!current.getAttributeValue("id").equals("milton.fs.resource.factory"))
-				throw new Exception("node 'milton.fs.resource.factory' not found!");
-			
+			if (!current.getAttributeValue("id").equals(
+					"milton.fs.resource.factory"))
+				throw new Exception(
+						"node 'milton.fs.resource.factory' not found!");
+
 			/* find element with attribute name = root and set it with rootdir */
 			List<?> properties = current.getChildren();
 			Element property = null;
 			i = properties.iterator();
+			boolean foundRoot = false;
+			boolean foundContextPath = false;
 			while (i.hasNext()) {
 				property = (Element) i.next();
-				if (property.getAttributeValue("name").equals("root"))
-					break;
+				if (property.getAttributeValue("name").equals("root")) {
+					property.setAttribute("value", webapp.getRootDirectory());
+					foundRoot = true;
+				} else if (property.getAttributeValue("name").equals(
+						"contextPath")) {
+					property.setAttribute("value", webapp.getContextPath()
+							.substring(1));
+					foundContextPath = true;
+				}
 			}
-			if (!property.getAttributeValue("name").equals("root"))
+			if (!foundRoot)
 				throw new Exception("attribute 'root' not found!");
-			property.setAttribute("value", rootdir);
+			if (!foundContextPath)
+				throw new Exception("attribute 'contextPath' not found!");
 
 			/* output new file */
 			XMLOutputter xmlOutput = new XMLOutputter();
@@ -218,7 +242,7 @@ public class JServer {
 			e.printStackTrace();
 		}
 	}
-	
+
 	private boolean deleteDirectory(File path) {
 		if (path.exists()) {
 			File[] files = path.listFiles();
@@ -232,5 +256,5 @@ public class JServer {
 		}
 		return (path.delete());
 	}
-	
+
 }

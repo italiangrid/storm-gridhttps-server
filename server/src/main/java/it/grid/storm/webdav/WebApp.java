@@ -8,27 +8,43 @@ import java.io.IOException;
 public class WebApp {
 
 	private String warFile = "";
-	private StorageArea sa;
+	private String rootDirectory = "";
+	private String contextPath = "";
 
-	public WebApp(StorageArea sa, String warFile) throws Exception, IOException {
+	public WebApp(String contextPath, String rootDirectory, String warFile) throws Exception, IOException {
 		if (!(new File(warFile)).isFile())
 			throw new IOException("template war file not found!");
-		if (sa == null)
-			throw new Exception("storage area is null!");
-		this.warFile = warFile;
-		this.sa = sa;
+		setWarFile(warFile);
+		setRootDirectory(rootDirectory);
+		setContextPath(contextPath);
 	}
 	
-	public String getName() {
-		return sa.getName();
+	public WebApp(StorageArea SA, String warFile) throws Exception, IOException {
+		this(SA.getStfnRoot(), SA.getFSRoot(), warFile);
+	}
+	
+	public String getContextPath() {
+		return contextPath;
+	}
+
+	private void setContextPath(String contextPath) {
+		this.contextPath = contextPath;
 	}
 
 	public String getRootDirectory() {
-		return this.sa.getFSRoot();
+		return rootDirectory;
+	}
+	
+	private void setRootDirectory(String rootDirectory) {
+		this.rootDirectory = rootDirectory;
 	}
 
 	public String getWarFile() {
 		return warFile;
 	}
 
+	private void setWarFile(String warFile) {
+		this.warFile = warFile;
+	}
+	
 }

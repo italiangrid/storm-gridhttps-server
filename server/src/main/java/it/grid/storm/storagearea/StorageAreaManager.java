@@ -44,6 +44,10 @@ public class StorageAreaManager {
 	 */
 	private static List<StorageArea> storageAreas = null;
 
+	public static List<StorageArea> getStorageAreas() {
+		return storageAreas;
+	}
+
 	/**
 	 * Avoid instantiation
 	 */
@@ -226,7 +230,7 @@ public class StorageAreaManager {
             if (ConfigDiscoveryServiceConstants.VFS_ROOT_KEY.equals(keyValue[0]))
             {
                 root = keyValue[1];
-                log.debug("Found File System Root: " + name);
+                log.debug("Found File System Root: " + root);
                 continue;
             }
             if (ConfigDiscoveryServiceConstants.VFS_STFN_ROOT_KEY.equals(keyValue[0]))
