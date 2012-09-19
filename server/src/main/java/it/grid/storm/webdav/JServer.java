@@ -30,15 +30,20 @@ import org.slf4j.LoggerFactory;
 public class JServer {
 
 	private static final Logger log = LoggerFactory.getLogger(JServer.class);
-	private static final int default_port = 8085;
+	private static final int defaultPort = 8085;
 	private String webappsDirectory = "./webapps";
-	private int running_port;
+	
+	private int runningPort;
 	private Server server;
 	private ContextHandlerCollection contextHandlerCollection;
 	private List<WebApp> webApps = new ArrayList<WebApp>();
 
-	public int getRunning_port() {
-		return running_port;
+	public int getRunningPort() {
+		return runningPort;
+	}
+	
+	private void setRunningPort(int runningPort) {
+		this.runningPort = runningPort;
 	}
 
 	public String getWebappsDirectory() {
@@ -54,12 +59,12 @@ public class JServer {
 	}
 
 	public JServer() {
-		this(JServer.default_port);
+		this(JServer.defaultPort);
 	}
 
 	public JServer(int port) {
 		server = new Server();
-		this.running_port = port;
+		setRunningPort(port);
 		server.setStopAtShutdown(true);
 
 		// Increase thread pool
@@ -73,10 +78,10 @@ public class JServer {
 		hc.setHandlers(new Handler[] { contextHandlerCollection });
 		server.setHandler(hc);
 	}
-
+	
 	public void initAsHttpServer() {
 		Connector connector = new SelectChannelConnector();
-		connector.setPort(this.getRunning_port());
+		connector.setPort(getRunningPort());
 		connector.setMaxIdleTime(30000);
 		server.setConnectors(new Connector[] { connector });
 		log.info("SERVER: I'm working on HTTP");
@@ -85,11 +90,13 @@ public class JServer {
 	public void initAsHttpsServer(String keystoreFilepath,
 			String keystorePassword, String trustPassword) {
 		SslSelectChannelConnector ssl_connector = new SslSelectChannelConnector();
-		ssl_connector.setPort(this.getRunning_port());
+		ssl_connector.setPort(getRunningPort());
 		ssl_connector.setKeystore(keystoreFilepath);
 		ssl_connector.setKeyPassword(keystorePassword);
 		ssl_connector.setTrustPassword(trustPassword);
-		ssl_connector.setAllowRenegotiate(false);
+		ssl_connector.setAllowRenegotiate(true);
+		ssl_connector.setNeedClientAuth(true);
+		//ssl_connector.setWantClientAuth(true);
 		server.setConnectors(new Connector[] { ssl_connector });
 		log.info("SERVER: I'm working on HTTPS");
 	}
@@ -102,10 +109,10 @@ public class JServer {
 	}
 
 	public void start() throws Exception {
-		if (!this.isInitialized())
+		if (!isInitialized())
 			throw new Exception("server not initialized!");
 		server.start();
-		log.info("SERVER: STARTED on port " + this.getRunning_port());
+		log.info("SERVER: STARTED on port " + this.getRunningPort());
 	}
 
 	public void stop() throws Exception {
@@ -118,7 +125,7 @@ public class JServer {
 	}
 
 	public boolean isDeployed(WebApp webapp) {
-		return (this.webApps.indexOf(webapp) != -1);
+		return (webApps.indexOf(webapp) != -1);
 	}
 
 	public void deploy(WebApp webAppToDeploy) throws IOException, Exception {
