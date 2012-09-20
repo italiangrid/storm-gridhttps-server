@@ -78,7 +78,7 @@ public class JServer {
 		hc.setHandlers(new Handler[] { contextHandlerCollection });
 		server.setHandler(hc);
 	}
-	
+		
 	public void initAsHttpServer() {
 		Connector connector = new SelectChannelConnector();
 		connector.setPort(getRunningPort());
@@ -94,9 +94,7 @@ public class JServer {
 		ssl_connector.setKeystore(keystoreFilepath);
 		ssl_connector.setKeyPassword(keystorePassword);
 		ssl_connector.setTrustPassword(trustPassword);
-		ssl_connector.setAllowRenegotiate(true);
-		ssl_connector.setNeedClientAuth(true);
-		//ssl_connector.setWantClientAuth(true);
+		ssl_connector.setAllowRenegotiate(false);
 		server.setConnectors(new Connector[] { ssl_connector });
 		log.info("SERVER: I'm working on HTTPS");
 	}
