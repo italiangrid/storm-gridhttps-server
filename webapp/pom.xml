@@ -14,6 +14,7 @@
 		<miltonVersion>2.2.0</miltonVersion>
 		<junitVersion>4.8.1</junitVersion>
 		<slf4jVersion>1.6.6</slf4jVersion>
+		<logbackVersion>1.0.6</logbackVersion>
 		<springVersion>3.1.2.RELEASE</springVersion>
 		<httpComponentsVersion>4.2.1</httpComponentsVersion>
 		<javaxServletVersion>2.5</javaxServletVersion>
@@ -48,10 +49,20 @@
 			<version>${junitVersion}</version>
 			<scope>test</scope>
 		</dependency>
+<!-- 		<dependency> -->
+<!-- 			<groupId>org.slf4j</groupId> -->
+<!-- 			<artifactId>slf4j-log4j12</artifactId> -->
+<!-- 			<version>${slf4jVersion}</version> -->
+<!-- 		</dependency> -->
 		<dependency>
-			<groupId>org.slf4j</groupId>
-			<artifactId>slf4j-log4j12</artifactId>
-			<version>${slf4jVersion}</version>
+			<groupId>ch.qos.logback</groupId>
+			<artifactId>logback-classic</artifactId>
+			<version>${logbackVersion}</version>
+		</dependency>
+		<dependency>
+			<groupId>ch.qos.logback</groupId>
+			<artifactId>logback-core</artifactId>
+			<version>${logbackVersion}</version>
 		</dependency>
 		<dependency>
 			<groupId>io.milton</groupId>
