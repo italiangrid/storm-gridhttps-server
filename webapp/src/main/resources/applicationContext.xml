@@ -55,24 +55,20 @@
 
 	<bean id="milton.fs.lock.manager" class="io.milton.http.fs.FsMemoryLockManager" />
 
-	<bean id="milton.resource.type.helper" class="io.milton.http.webdav.WebDavResourceTypeHelper" />
-
-
-
 	<bean id="milton.http.manager" class="io.milton.config.HttpManagerBuilder">
-
 		<property name="mainResourceFactory" ref="milton.fs.resource.factory" />
-
 		<property name="eventManager" ref="webdav-fs-webapp.event.manager" />
 
 		<!-- the default namespace is "DAV:" -->
-
-		<!-- resourceTypeHelper is explicit in order to avoid the defualt huge 
+		<!-- resourceTypeHelper is explicit in order to avoid the default huge 
 			configuration (that include also caldav and carddav) -->
-		<property name="resourceTypeHelper" ref="milton.resource.type.helper" />
-
+		<!-- 
+		<property name="resourceTypeHelper" ref="milton.resource.type.helper" /> 
+		-->
 		<!-- start desabling some useless (I think) features -->
-		<property name="enabledJson" value="false" />
+		<!-- 
+		<property name="enabledJson" value="false" /> 
+		-->
 
 	</bean>
 
