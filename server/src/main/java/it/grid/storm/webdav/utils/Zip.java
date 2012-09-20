@@ -1,4 +1,4 @@
-package it.grid.storm.utils;
+package it.grid.storm.webdav.utils;
 
 import java.io.File;
 import java.io.FileInputStream;

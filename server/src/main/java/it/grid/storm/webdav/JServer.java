@@ -1,6 +1,6 @@
 package it.grid.storm.webdav;
 
-import it.grid.storm.utils.Zip;
+import it.grid.storm.webdav.utils.Zip;
 
 import java.io.File;
 import java.io.FileWriter;

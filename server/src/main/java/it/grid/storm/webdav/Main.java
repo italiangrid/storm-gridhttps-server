@@ -1,10 +1,10 @@
-package it.grid.storm;
+package it.grid.storm.webdav;
 
-import it.grid.storm.storagearea.StorageArea;
-import it.grid.storm.storagearea.StorageAreaManager;
-import it.grid.storm.utils.MyCommandLineParser;
 import it.grid.storm.webdav.JServer;
 import it.grid.storm.webdav.WebApp;
+import it.grid.storm.webdav.storagearea.StorageArea;
+import it.grid.storm.webdav.storagearea.StorageAreaManager;
+import it.grid.storm.webdav.utils.MyCommandLineParser;
 
 import java.io.File;
 import java.io.IOException;

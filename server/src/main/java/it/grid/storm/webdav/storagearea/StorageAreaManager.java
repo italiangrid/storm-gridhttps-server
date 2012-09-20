@@ -10,9 +10,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package it.grid.storm.storagearea;
+package it.grid.storm.webdav.storagearea;
 
-import it.grid.storm.remotecall.ConfigDiscoveryServiceConstants;
+import it.grid.storm.webdav.remotecall.ConfigDiscoveryServiceConstants;
 
 import java.io.IOException;
 import java.io.InputStream;

@@ -100,7 +100,7 @@
 							<transformers>
 								<transformer
 									implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
-									<mainClass>it.grid.storm.Main</mainClass>
+									<mainClass>it.grid.storm.webdav.Main</mainClass>
 								</transformer>
 							</transformers>
 						</configuration>

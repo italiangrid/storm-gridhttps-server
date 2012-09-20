@@ -1,6 +1,6 @@
 package it.grid.storm.webdav;
 
-import it.grid.storm.storagearea.StorageArea;
+import it.grid.storm.webdav.storagearea.StorageArea;
 
 import java.io.File;
 import java.io.IOException;

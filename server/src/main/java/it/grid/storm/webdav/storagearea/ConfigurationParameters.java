@@ -1,4 +1,4 @@
-package it.grid.storm.storagearea;
+package it.grid.storm.webdav.storagearea;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
