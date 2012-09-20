@@ -95,6 +95,7 @@ public class JServer {
 		ssl_connector.setKeyPassword(keystorePassword);
 		ssl_connector.setTrustPassword(trustPassword);
 		ssl_connector.setAllowRenegotiate(false);
+		
 		server.setConnectors(new Connector[] { ssl_connector });
 		log.info("SERVER: I'm working on HTTPS");
 	}
