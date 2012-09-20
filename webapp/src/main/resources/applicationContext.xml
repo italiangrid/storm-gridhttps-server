@@ -7,6 +7,7 @@
 		<property name="securityManager" ref="milton.fs.security.manager" />
 		<property name="lockManager" ref="milton.fs.lock.manager" />
 		<property name="root" value="$rootPath" />
+		<property name="contextPath" value="WebDAV-fs-server" />
 	</bean>
 
 	<bean id="milton.fs.security.manager" class="io.milton.http.fs.NullSecurityManager">
@@ -54,29 +55,9 @@
 
 	<bean id="milton.fs.lock.manager" class="io.milton.http.fs.FsMemoryLockManager" />
 
-	<bean id="milton.resource.type.helper" class="io.milton.http.webdav.WebDavResourceTypeHelper" />
-
-
-
 	<bean id="milton.http.manager" class="io.milton.config.HttpManagerBuilder">
-
 		<property name="mainResourceFactory" ref="milton.fs.resource.factory" />
-
 		<property name="eventManager" ref="webdav-fs-webapp.event.manager" />
-
-		<!-- the default namespace is "DAV:" -->
-
-		<!-- resourceTypeHelper is explicit in order to avoid the defualt huge 
-			configuration (that include also caldav and carddav) -->
-		<property name="resourceTypeHelper" ref="milton.resource.type.helper" />
-
-		<!-- start desabling some useless (I think) features -->
-		<property name="caldavEnabled" value="false" />
-		<property name="carddavEnabled" value="false" />
-		<property name="aclEnabled" value="false" />
-		<property name="enableWellKnown" value="false" />
-		<property name="enabledJson" value="false" />
-
 	</bean>
 
 </beans>

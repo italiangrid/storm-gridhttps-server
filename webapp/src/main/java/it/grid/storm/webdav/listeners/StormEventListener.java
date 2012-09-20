@@ -71,11 +71,6 @@ public abstract class StormEventListener implements EventListener {
 		return handlersMap.get(Enum.valueOf(Method.class, methodName));
 	}
 
-	public String getRequestMethodName(Event e){
-		return ((RequestEvent) e).getRequest().getMethod()
-				.toString();
-	}
-	
 	public abstract void onEvent(Event e);
 
 	@SuppressWarnings("rawtypes")
