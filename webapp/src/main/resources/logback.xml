@@ -1,0 +1,21 @@
+<configuration>
+
+	<appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+		<encoder>
+			<pattern>%date{HH:mm:ss.SSS} |- %-5level [%thread] - %msg%n</pattern>
+		</encoder>
+	</appender>
+
+	<logger name="io.milton" level="INFO">
+		<appender-ref ref="STDOUT" />
+	</logger>
+	
+	<logger name="it.grid.storm" level="DEBUG">
+		<appender-ref ref="STDOUT" />
+	</logger>
+
+	<root level="INFO">
+		
+	</root>
+	
+</configuration>
