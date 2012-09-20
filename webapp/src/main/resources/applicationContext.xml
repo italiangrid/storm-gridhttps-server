@@ -7,6 +7,7 @@
 		<property name="securityManager" ref="milton.fs.security.manager" />
 		<property name="lockManager" ref="milton.fs.lock.manager" />
 		<property name="root" value="$rootPath" />
+		<property name="contextPath" value="$contextPath" />
 	</bean>
 
 	<bean id="milton.fs.security.manager" class="io.milton.http.fs.NullSecurityManager">
@@ -71,10 +72,6 @@
 		<property name="resourceTypeHelper" ref="milton.resource.type.helper" />
 
 		<!-- start desabling some useless (I think) features -->
-		<property name="caldavEnabled" value="false" />
-		<property name="carddavEnabled" value="false" />
-		<property name="aclEnabled" value="false" />
-		<property name="enableWellKnown" value="false" />
 		<property name="enabledJson" value="false" />
 
 	</bean>

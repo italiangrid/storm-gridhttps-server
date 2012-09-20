@@ -16,12 +16,27 @@
 
 	<dependencies>
 
+		<!-- 
 		<dependency>
 			<groupId>org.slf4j</groupId>
 			<artifactId>slf4j-log4j12</artifactId>
 			<version>${slf4jVersion}</version>
 		</dependency>
+		-->
 
+		<dependency>
+			<groupId>ch.qos.logback</groupId>
+			<artifactId>logback-classic</artifactId>
+			<version>1.0.6</version>
+		</dependency>
+		
+		<dependency>
+			<groupId>ch.qos.logback</groupId>
+			<artifactId>logback-core</artifactId>
+			<version>1.0.6</version>
+		</dependency>
+            
+		
 		<!-- Jetty artifacts. Note: They do have transitive dependencies. -->
 		<dependency>
 			<groupId>org.eclipse.jetty</groupId>
@@ -45,6 +60,25 @@
 			<artifactId>commons-cli</artifactId>
 			<version>1.2</version>
 		</dependency>
+
+		<dependency>
+			<groupId>org.apache.httpcomponents</groupId>
+			<artifactId>httpcore</artifactId>
+			<version>4.0-beta3</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.apache.httpcomponents</groupId>
+			<artifactId>httpclient</artifactId>
+			<version>4.0-beta1</version>
+		</dependency>
+<!-- 
+		<dependency>
+			<groupId>org.italiangrid</groupId>
+			<artifactId>https-utils</artifactId>
+			<version>0.0.1-SNAPSHOT</version>
+		</dependency>
+ -->
 
 	</dependencies>
 

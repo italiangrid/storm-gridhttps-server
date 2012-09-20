@@ -1,4 +1,4 @@
-package it.grid.storm;
+package it.grid.storm.utils;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -15,7 +15,7 @@ import org.slf4j.LoggerFactory;
 
 public class Zip {
 	
-	private static final Logger log = LoggerFactory.getLogger(Main.class);
+	private static final Logger log = LoggerFactory.getLogger(Zip.class);
 	
 	private static final int BUFFER = 2048;
 	
