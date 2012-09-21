@@ -11,7 +11,6 @@ import java.util.List;
 
 import javax.servlet.ServletException;
 
-import org.apache.commons.lang.ArrayUtils;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.utils.URLEncodedUtils;
 import org.apache.http.message.BasicNameValuePair;
@@ -26,20 +25,15 @@ public class StormHttpsUtils {
 	private static final String HTTP_SCHEMA = "http";
 	private static final String HTTPS_SCHEMA = "https";
 
-	// private static final String[] READ_METHODS = { "PROPFIND", "OPTIONS",
-	// "GET", "HEAD" };
-	// private static final String[] WRITE_METHODS = { "DELETE", "PUT", "MKCOL",
-	// "MOVE", "COPY" };
-	//
-	// private static final String[] ALLOWED_METHODS = (String[]) ArrayUtils
-	// .addAll(READ_METHODS, WRITE_METHODS);
-
 	private static final String[] ALLOWED_METHODS = { "PROPFIND", "OPTIONS",
 			"GET", "DELETE", "PUT", "MKCOL", "MOVE", "COPY" };
 
 	private static final HashMap<String, String[]> METHODS_MAP = new HashMap<String, String[]>() {
 		private static final long serialVersionUID = 1L;
 		{
+			// Usage:
+			// put(METHOD_NAME, new String[]{OPERATION_ON_SOURCE_PATH , OPERATION_ON_DESTINATION_PATH})
+			// OPERATION_ON_DESTINATION_PATH is not mandatory (only COPY and MOVE have it)
 			put("OPTIONS", new String[] { "ping" });
 			put("GET", new String[] { "get" });
 			put("PUT", new String[] { "put" });
@@ -59,32 +53,6 @@ public class StormHttpsUtils {
 	private static final String ENCODING_SCHEME = "UTF-8";
 	private static final String RESOURCE = "authorization";
 	private static final String VERSION = "1.0";
-	// private static final String READ_OPERATION = "read";
-	// private static final String WRITE_OPERATION = "write";
-
-	/*
-	 * 
-	 * Per i seguenti metodi sulla sinistra controllare che l'utente sia
-	 * autorizzato a fare i comandi sulla destra:
-	 * 
-	 * OPTIONS -> ping GET -> get (prepare to get , reserve space) PUT -> put
-	 * (prepare to put , put done) DELETE -> delete (rm , rmdir) PROPFIND -> lis
-	 * MKCOL -> mkdir COPY -> cp -> si puo' pensare di fare una get sulla source
-	 * e una put sulla destination MOVE -> cp , rm -> si puo' pensare di fare
-	 * una get sulla source, una put sulla destination e una delete sulla source
-	 * 
-	 * 
-	 * 
-	 * 
-	 * WRITE_FILE('W', "WRITE_FILE", "Write data"),    READ_FILE('R',
-	 * "READ_FILE", "Read data"),    RENAME('F', "RENAME",
-	 * "Rename a file or a directory"),    DELETE('D', "DELETE",
-	 * "Delete a file or a directory"),    // TRAVERSE_DIRECTORY('T',
-	 * "TRAVERSE_DIRECTORY", "Traverse a directory"),    LIST_DIRECTORY('L',
-	 * "LIST_DIRECTORY", "Listing a directory"),    MAKE_DIRECTORY('M',
-	 * "CREATE_DIRECTORY", "Create a directory"),    CREATE_FILE('N',
-	 * "CREATE_FILE", "Create a new file"),
-	 */
 
 	private static final String VOMS_EXTENSIONS = "voms";
 	private static final String PLAIN = "plain";
@@ -100,7 +68,7 @@ public class StormHttpsUtils {
 
 	public static final String SUBJECT_DN = "CN=Matteo Manzali,L=CNAF,OU=Personal Certificate,O=INFN,C=IT";
 	public static final String STORM_SA_ROOTDIR = "/storage/dteam";
-	public static final String SERVLET_CONTEXT_PATH = "dteam";
+	public static final String SERVLET_CONTEXT_PATH = "WebDAV-fs-server";
 	/* Public methods */
 
 	public static boolean methodAllowed(String method) {

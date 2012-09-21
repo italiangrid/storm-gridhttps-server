@@ -5,11 +5,7 @@ import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URI;
 import java.security.cert.X509Certificate;
-import java.util.Arrays;
 
-import javax.servlet.Filter;
-import javax.servlet.FilterChain;
-import javax.servlet.FilterConfig;
 import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
@@ -27,28 +23,23 @@ import org.italiangrid.utils.voms.VOMSSecurityContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class StormHttpsFilter implements Filter {
+public class StormHttpsAuthorization {
 
 	private static final Logger log = LoggerFactory
-			.getLogger(StormHttpsFilter.class);
+			.getLogger(StormHttpsAuthorization.class);
 
-	private String subjectDN = null;
-	private String[] fqans = {};
-	private String methodName = null;
-	private String resourcePath = null;
-	private String destinationPath = null;
+	public static boolean isUserAuthorized(ServletRequest request,
+			ServletResponse response) throws IOException, ServletException {
 
-	public void destroy() {
-		log.debug("StormHttpsUtilsFilter destroied.");
+		/* *********************************************** */
 
-	}
+		// Initializing parameters
 
-	public void init(FilterConfig filterConfig) throws ServletException {
-		// nope
-	}
-
-	public void doFilter(ServletRequest request, ServletResponse response,
-			FilterChain chain) throws IOException, ServletException {
+		String subjectDN = null;
+		String[] fqans = {};
+		String methodName = null;
+		String resourcePath = null;
+		String destinationPath = null;
 
 		/* *********************************************** */
 
@@ -83,7 +74,7 @@ public class StormHttpsFilter implements Filter {
 
 		/* *********************************************** */
 
-		// Setting security context (only with certificates)
+		// Setting subjectDN and fqans from certificate and VOMS attributes
 
 		// VOMSSecurityContext.clearCurrentContext();
 		// VOMSSecurityContext sc = new VOMSSecurityContext();
@@ -93,52 +84,52 @@ public class StormHttpsFilter implements Filter {
 		//
 		// try {
 		//
-		// certChain = (X509Certificate[])
-		// request.getAttribute("javax.servlet.request.X509Certificate");
+		// certChain = (X509Certificate[]) request
+		// .getAttribute("javax.servlet.request.X509Certificate");
 		//
 		// } catch (Exception e) {
-		// log.warn("Error fetching certificate from http request: {}",
-		// e.getMessage(), e);
+		// log.warn("Error fetching certificate from http request: "
+		// + e.getMessage());
 		// // We swallow the exception and continue processing.
 		// }
 		//
-		// if (certChain == null){
-		// log.info("Unauthenticated connection from {}",
-		// request.getRemoteAddr());
-		// return;
+		// if (certChain == null) {
+		// log.warn("Unauthenticated connection from "
+		// + request.getRemoteAddr());
+		// return false;
 		// }
 		//
 		// sc.setClientCertChain(certChain);
 		//
-		// this.subjectDN = sc.getClientDN().getRFCDNv2();
-		// this.fqans = sc.getFQANs();
+		// subjectDN = sc.getClientDN().getRFCDNv2();
+		// fqans = sc.getFQANs();
 
 		/* *********************************************** */
 
-		// Instead of certificates...
+		// Instead of getting info from the certificate...
 
-		this.subjectDN = StormHttpsUtils.SUBJECT_DN;
+		subjectDN = StormHttpsUtils.SUBJECT_DN;
 		// fqans are already null
 
 		/* *********************************************** */
 
 		// Setting methodName
 
-		this.methodName = HTTPRequest.getMethod();
-		log.debug("Requested method is : " + this.methodName);
-		if (!StormHttpsUtils.methodAllowed(this.methodName)) {
+		methodName = HTTPRequest.getMethod();
+		log.debug("Requested method is : " + methodName);
+		if (!StormHttpsUtils.methodAllowed(methodName)) {
 			log.warn("Received a request for a not allowed method : "
-					+ this.methodName);
+					+ methodName);
 			HTTPResponse.sendError(HttpServletResponse.SC_METHOD_NOT_ALLOWED,
-					"Method " + this.methodName + " not allowed!");
-			return;
+					"Method " + methodName + " not allowed!");
+			return false;
 		}
 
 		/* *********************************************** */
 
 		// Setting resourcePath
 
-		this.resourcePath = StormHttpsUtils.prepareResourcePath(HTTPRequest
+		resourcePath = StormHttpsUtils.prepareResourcePath(HTTPRequest
 				.getRequestURI());
 
 		/* *********************************************** */
@@ -147,40 +138,38 @@ public class StormHttpsFilter implements Filter {
 
 		String destinationURI = HTTPRequest.getHeader("Destination");
 		if (destinationURI != null)
-			this.destinationPath = StormHttpsUtils
+			destinationPath = StormHttpsUtils
 					.prepareResourcePath(destinationURI);
 
 		/* *********************************************** */
 
-		// log.info("methodName is : " + this.methodName);
-		// log.info("fqans are : " + Arrays.toString(this.fqans));
-		// log.info("subjectDN is : " + this.subjectDN);
-		// log.info("resourcePath is : " + this.resourcePath);
-		// if (this.destinationPath != null) log.info("destinationPath is : " +
-		// this.destinationPath);
+		// log.info("methodName is : " + methodName);
+		// log.info("fqans are : " + Arrays.toString(fqans));
+		// log.info("subjectDN is : " + subjectDN);
+		// log.info("resourcePath is : " + resourcePath);
+		// if (destinationPath != null) log.info("destinationPath is : " +
+		// destinationPath);
 
 		/* *********************************************** */
 
 		// Retriving sourceOperation and destinationOperation
 
-		String sourceOperation = StormHttpsUtils
-				.sourceOperation(this.methodName);
+		String sourceOperation = StormHttpsUtils.sourceOperation(methodName);
 		String destinationOperation = StormHttpsUtils
-				.destinationOperation(this.methodName);
+				.destinationOperation(methodName);
 
-		if ((destinationOperation != null) && (this.destinationPath == null)) {
+		if ((destinationOperation != null) && (destinationPath == null)) {
 			throw new ServletException(
 					"No Destination header found in the request for the method "
-							+ this.methodName);
+							+ methodName);
 		}
 
-		String summary = "The method " + this.methodName
+		String summary = "The method " + methodName
 				+ " requires authorization for these operations:\n";
-		summary = summary + " -> '" + sourceOperation + "' on "
-				+ this.resourcePath;
+		summary = summary + " -> '" + sourceOperation + "' on " + resourcePath;
 		if (destinationOperation != null)
 			summary = summary + "\n" + " -> '" + destinationOperation + "' on "
-					+ this.resourcePath;
+					+ resourcePath;
 		log.debug(summary);
 
 		/* *********************************************** */
@@ -188,63 +177,65 @@ public class StormHttpsFilter implements Filter {
 		// Checking if the user is authorized
 
 		boolean isAuthorized = false;
-		log.debug("Asking for " + sourceOperation + " on " + this.resourcePath);
+		log.debug("Asking for '" + sourceOperation + "' on " + resourcePath);
 		try {
-			isAuthorized = isUserAuthorizedFake(this.resourcePath,
-					sourceOperation);
+			isAuthorized = isUserAuthorizedFake(resourcePath, sourceOperation,
+					subjectDN, fqans);
 		} catch (ServletException e) {
 			log.error("Unable to verify user authorization. ServletException : "
 					+ e.getMessage());
 			HTTPResponse.sendError(
 					HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
 					"Error testing user authorization: " + e.getMessage());
-			return;
+			return false;
 		}
 
 		if (destinationOperation != null) {
-			log.debug("Asking for " + destinationOperation + " on "
-					+ this.destinationPath);
+			log.debug("Asking for '" + destinationOperation + "' on "
+					+ destinationPath);
 			try {
 				isAuthorized = isAuthorized
-						&& isUserAuthorizedFake(this.resourcePath,
-								sourceOperation);
+						&& isUserAuthorizedFake(resourcePath, sourceOperation,
+								subjectDN, fqans);
 			} catch (ServletException e) {
 				log.error("Unable to verify user authorization. ServletException : "
 						+ e.getMessage());
 				HTTPResponse.sendError(
 						HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
 						"Error testing user authorization: " + e.getMessage());
-				return;
+				return false;
 			}
 		}
 
 		if (isAuthorized) {
 			log.info("User is authorized to access the requested resource");
-			chain.doFilter(request, response);
-			return;
+			return true;
 		} else {
 			log.warn("User is not authorized to access the requested resource");
 			HTTPResponse.sendError(HttpServletResponse.SC_FORBIDDEN,
 					"You are not authorized to access the requested resource");
-			return;
+			return false;
 		}
 
 	}
 
-	private boolean isUserAuthorizedFake(String path, String operation)
-			throws ServletException, IllegalArgumentException {
+	private static boolean isUserAuthorizedFake(String path, String operation,
+			String subjectDN, String[] fqans) throws ServletException,
+			IllegalArgumentException {
 		return true;
 	}
 
-	private boolean isUserAuthorized(String path, String operation)
-			throws ServletException, IllegalArgumentException {
-		if (path == null || operation == null) {
+	private static boolean isUserAuthorized(String path, String operation,
+			String subjectDN, String[] fqans) throws ServletException,
+			IllegalArgumentException {
+		if (path == null || operation == null || subjectDN == null
+				|| fqans == null) {
 			log.error("Received null parameter(s) at isUserAuthorized: path="
-					+ path + " operation=" + operation);
+					+ path + " operation=" + operation + " subjectDN="
+					+ subjectDN + " fqans=" + fqans);
 			throw new IllegalArgumentException("Received null parameter(s)");
 		}
-		URI uri = StormHttpsUtils.prepareURI(path, operation, this.subjectDN,
-				this.fqans);
+		URI uri = StormHttpsUtils.prepareURI(path, operation, subjectDN, fqans);
 		log.debug("Authorization request uri = " + uri.toString());
 		HttpGet httpget = new HttpGet(uri);
 		HttpClient httpclient = new DefaultHttpClient();

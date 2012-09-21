@@ -66,9 +66,8 @@
 		<property name="resourceTypeHelper" ref="milton.resource.type.helper" /> 
 		-->
 		<!-- start desabling some useless (I think) features -->
-		<!-- 
+		
 		<property name="enabledJson" value="false" /> 
-		-->
 
 	</bean>
 
