@@ -1,4 +1,4 @@
-package it.grid.storm.webdav;
+package it.grid.storm.webdav.authorization;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URI;
@@ -34,18 +34,15 @@ public class StormHttpsUtils {
 			// Usage:
 			// put(METHOD_NAME, new String[]{OPERATION_ON_SOURCE_PATH , OPERATION_ON_DESTINATION_PATH})
 			// OPERATION_ON_DESTINATION_PATH is not mandatory (only COPY and MOVE have it)
-			put("OPTIONS", new String[] { "ping" });
-			put("GET", new String[] { "get" });
-			put("PUT", new String[] { "put" });
-			put("DELETE", new String[] { "delete" });
-			put("PROPFIND", new String[] { "list" });
-			put("MKCOL", new String[] { "mkdir" });
-			put("COPY", new String[] { "get", "put" });
-			put("MOVE", new String[] { "delete", "put" });
-			// N.B.: for the MOVE method, if the user can delete a resource, he
-			// also can read it !!
+			put("OPTIONS", new String[] {});
+			put("GET", new String[] { "srmPrepareToGet" });
+			put("PUT", new String[] { "srmPrepareToPut" }); // da modificare in srmPrepareToPutOverwrite se il flag e' true
+			put("DELETE", new String[] { "srmRemove" }); // lato StoRM poi viene controllata anche la srmRemoveDir
+			put("PROPFIND", new String[] { "srmLs" });
+			put("MKCOL", new String[] { "srmMakeDir" });
+			put("COPY", new String[] { "srmCopyFrom", "srmCopyTo" });
+			put("MOVE", new String[] { "srmMoveSource", "srmMoveDest" });
 		};
-
 	};
 
 	/* Constants for prepareURI */
@@ -115,7 +112,7 @@ public class StormHttpsUtils {
 		return response;
 	}
 
-	public static String prepareResourcePath(String uri_string)
+	public static String convertToStorageAreaPath(String uri_string)
 			throws ServletException {
 		URI uri;
 		try {

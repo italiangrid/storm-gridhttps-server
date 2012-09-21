@@ -1,4 +1,4 @@
-package it.grid.storm.webdav;
+package it.grid.storm.webdav.authorization;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -40,6 +40,7 @@ public class StormHttpsAuthorization {
 		String methodName = null;
 		String resourcePath = null;
 		String destinationPath = null;
+		boolean overwriteFlag = true;
 
 		/* *********************************************** */
 
@@ -128,40 +129,44 @@ public class StormHttpsAuthorization {
 		/* *********************************************** */
 
 		// Setting resourcePath
-
-		resourcePath = StormHttpsUtils.prepareResourcePath(HTTPRequest
+		resourcePath = StormHttpsUtils.convertToStorageAreaPath(HTTPRequest
 				.getRequestURI());
 
-		/* *********************************************** */
-
 		// Setting destinationPath (if it exists)
+		destinationPath = getDestinationFromHeader(HTTPRequest);
 
-		String destinationURI = HTTPRequest.getHeader("Destination");
-		if (destinationURI != null)
-			destinationPath = StormHttpsUtils
-					.prepareResourcePath(destinationURI);
-
-		/* *********************************************** */
-
-		// log.info("methodName is : " + methodName);
-		// log.info("fqans are : " + Arrays.toString(fqans));
-		// log.info("subjectDN is : " + subjectDN);
-		// log.info("resourcePath is : " + resourcePath);
-		// if (destinationPath != null) log.info("destinationPath is : " +
-		// destinationPath);
+		// Setting overwriteFlag (default is true)
+		overwriteFlag = getOverwriteFromHeader(HTTPRequest);
 
 		/* *********************************************** */
 
 		// Retriving sourceOperation and destinationOperation
 
 		String sourceOperation = StormHttpsUtils.sourceOperation(methodName);
+
+		if (sourceOperation == null) {
+			log.info("No operations found for the allowed method "
+					+ methodName
+					+ ". It seems that authorization is not needed fot this method.");
+			return true;
+		}
+
+		/* ************ Temporary customization *********** */
+
+		if (methodName.contentEquals("PUT") && (overwriteFlag == true)) {
+			sourceOperation = "srmPrepareToPutOverwrite";
+		}
+
+		/* ************************************************* */
+
 		String destinationOperation = StormHttpsUtils
 				.destinationOperation(methodName);
 
 		if ((destinationOperation != null) && (destinationPath == null)) {
 			throw new ServletException(
-					"No Destination header found in the request for the method "
-							+ methodName);
+					"No Destination header found in the request for the operation "
+							+ destinationOperation + "(method " + methodName
+							+ ")");
 		}
 
 		String summary = "The method " + methodName
@@ -169,7 +174,7 @@ public class StormHttpsAuthorization {
 		summary = summary + " -> '" + sourceOperation + "' on " + resourcePath;
 		if (destinationOperation != null)
 			summary = summary + "\n" + " -> '" + destinationOperation + "' on "
-					+ resourcePath;
+					+ destinationPath;
 		log.debug(summary);
 
 		/* *********************************************** */
@@ -217,6 +222,21 @@ public class StormHttpsAuthorization {
 			return false;
 		}
 
+	}
+
+	private static String getDestinationFromHeader(
+			HttpServletRequest HTTPRequest) throws ServletException {
+		String destinationHeader = HTTPRequest.getHeader("Destination");
+		if (destinationHeader != null)
+			return StormHttpsUtils.convertToStorageAreaPath(destinationHeader);
+		return null;
+	}
+
+	private static boolean getOverwriteFromHeader(HttpServletRequest HTTPRequest) {
+		String overwriteHeader = HTTPRequest.getHeader("Overwrite");
+		if ((overwriteHeader != null) && (overwriteHeader.contentEquals("F")))
+			return false;
+		return true;
 	}
 
 	private static boolean isUserAuthorizedFake(String path, String operation,

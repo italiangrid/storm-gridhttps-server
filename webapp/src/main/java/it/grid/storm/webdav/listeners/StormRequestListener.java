@@ -1,19 +1,13 @@
 package it.grid.storm.webdav.listeners;
 
-import javax.servlet.ServletException;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import io.milton.event.Event;
 import io.milton.event.RequestEvent;
 import io.milton.http.Request;
-import io.milton.servlet.ServletRequest;
-
-//import it.grid.storm.webdav.StormAuthorizationUtils;
 import it.grid.storm.webdav.handlers.StormHandler;
 
-//import it.grid.storm.webdav.StormAuthorizationConstants;
 
 @SuppressWarnings({ "rawtypes" })
 public class StormRequestListener<T> extends StormEventListener {
