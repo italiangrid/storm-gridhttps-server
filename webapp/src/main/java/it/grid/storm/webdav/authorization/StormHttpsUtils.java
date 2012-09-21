@@ -64,8 +64,7 @@ public class StormHttpsUtils {
 	public static final int STORM_BE_PORT = 9998;
 
 	public static final String SUBJECT_DN = "CN=Matteo Manzali,L=CNAF,OU=Personal Certificate,O=INFN,C=IT";
-	public static final String STORM_SA_ROOTDIR = "/storage/dteam";
-	public static final String SERVLET_CONTEXT_PATH = "WebDAV-fs-server";
+
 	/* Public methods */
 
 	public static boolean methodAllowed(String method) {
@@ -112,19 +111,7 @@ public class StormHttpsUtils {
 		return response;
 	}
 
-	public static String convertToStorageAreaPath(String uri_string)
-			throws ServletException {
-		URI uri;
-		try {
-			uri = new URI(uri_string);
-		} catch (URISyntaxException e) {
-			throw new ServletException(
-					"Unable to create URI object from the string: "
-							+ uri_string);
-		}
-		String path = uri.getPath().replaceFirst(SERVLET_CONTEXT_PATH, "").replace("//", "/");
-		return STORM_SA_ROOTDIR + path;
-	}
+
 
 	public static URI prepareURI(String resourcePath, String operation,
 			String subjectDN, String[] fqans) throws ServletException,

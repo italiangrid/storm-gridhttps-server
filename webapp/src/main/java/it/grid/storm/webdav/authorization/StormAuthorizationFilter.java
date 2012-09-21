@@ -1,11 +1,17 @@
 package it.grid.storm.webdav.authorization;
 
+import io.milton.http.fs.FileSystemResourceFactory;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.security.cert.X509Certificate;
 
+import javax.servlet.Filter;
+import javax.servlet.FilterChain;
+import javax.servlet.FilterConfig;
 import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
@@ -22,14 +28,48 @@ import org.apache.http.impl.client.DefaultHttpClient;
 import org.italiangrid.utils.voms.VOMSSecurityContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.context.support.ClassPathXmlApplicationContext;
+import org.springframework.context.support.StaticApplicationContext;
 
-public class StormHttpsAuthorization {
+public class StormAuthorizationFilter implements Filter {
 
+	private String StormStorageAreaRootDir;
+	private String ServletContextPath;
+	
 	private static final Logger log = LoggerFactory
-			.getLogger(StormHttpsAuthorization.class);
+			.getLogger(StormAuthorizationFilter.class);
 
-	public static boolean isUserAuthorized(ServletRequest request,
-			ServletResponse response) throws IOException, ServletException {
+	public void destroy() {
+		// TODO Auto-generated method stub
+
+	}
+	
+	public void init(FilterConfig arg0) throws ServletException {
+
+		// Setting paths from applicationContext.xml
+		
+		StaticApplicationContext parent = new StaticApplicationContext();
+		parent.refresh();
+		ClassPathXmlApplicationContext context = new ClassPathXmlApplicationContext(
+				new String[] { "applicationContext.xml" }, parent);
+		Object beanFactory;
+		
+		if (context.containsBean("milton.fs.resource.factory")) {
+			beanFactory = context.getBean("milton.fs.resource.factory");
+			if (beanFactory instanceof FileSystemResourceFactory) {
+				this.StormStorageAreaRootDir = ((FileSystemResourceFactory) beanFactory)
+						.getRoot().getAbsolutePath();
+				this.ServletContextPath = ((FileSystemResourceFactory) beanFactory)
+						.getContextPath();
+				log.info("storageAreaRootPath: " + this.StormStorageAreaRootDir);
+				log.info("contextPath: " + this.ServletContextPath);
+			}
+		}
+
+	}
+
+	public void doFilter(ServletRequest request,
+			ServletResponse response,FilterChain chain) throws IOException, ServletException {
 
 		/* *********************************************** */
 
@@ -123,13 +163,13 @@ public class StormHttpsAuthorization {
 					+ methodName);
 			HTTPResponse.sendError(HttpServletResponse.SC_METHOD_NOT_ALLOWED,
 					"Method " + methodName + " not allowed!");
-			return false;
+			return;
 		}
 
 		/* *********************************************** */
 
 		// Setting resourcePath
-		resourcePath = StormHttpsUtils.convertToStorageAreaPath(HTTPRequest
+		resourcePath = convertToStorageAreaPath(HTTPRequest
 				.getRequestURI());
 
 		// Setting destinationPath (if it exists)
@@ -148,7 +188,8 @@ public class StormHttpsAuthorization {
 			log.info("No operations found for the allowed method "
 					+ methodName
 					+ ". It seems that authorization is not needed fot this method.");
-			return true;
+			chain.doFilter(request, response);
+			return;
 		}
 
 		/* ************ Temporary customization *********** */
@@ -192,7 +233,7 @@ public class StormHttpsAuthorization {
 			HTTPResponse.sendError(
 					HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
 					"Error testing user authorization: " + e.getMessage());
-			return false;
+			return;
 		}
 
 		if (destinationOperation != null) {
@@ -208,44 +249,44 @@ public class StormHttpsAuthorization {
 				HTTPResponse.sendError(
 						HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
 						"Error testing user authorization: " + e.getMessage());
-				return false;
+				return;
 			}
 		}
 
 		if (isAuthorized) {
 			log.info("User is authorized to access the requested resource");
-			return true;
+			chain.doFilter(request, response);
 		} else {
 			log.warn("User is not authorized to access the requested resource");
 			HTTPResponse.sendError(HttpServletResponse.SC_FORBIDDEN,
 					"You are not authorized to access the requested resource");
-			return false;
+			return;
 		}
 
 	}
 
-	private static String getDestinationFromHeader(
-			HttpServletRequest HTTPRequest) throws ServletException {
+	private String getDestinationFromHeader(HttpServletRequest HTTPRequest)
+			throws ServletException {
 		String destinationHeader = HTTPRequest.getHeader("Destination");
 		if (destinationHeader != null)
-			return StormHttpsUtils.convertToStorageAreaPath(destinationHeader);
+			return convertToStorageAreaPath(destinationHeader);
 		return null;
 	}
 
-	private static boolean getOverwriteFromHeader(HttpServletRequest HTTPRequest) {
+	private boolean getOverwriteFromHeader(HttpServletRequest HTTPRequest) {
 		String overwriteHeader = HTTPRequest.getHeader("Overwrite");
 		if ((overwriteHeader != null) && (overwriteHeader.contentEquals("F")))
 			return false;
 		return true;
 	}
 
-	private static boolean isUserAuthorizedFake(String path, String operation,
+	private boolean isUserAuthorizedFake(String path, String operation,
 			String subjectDN, String[] fqans) throws ServletException,
 			IllegalArgumentException {
 		return true;
 	}
 
-	private static boolean isUserAuthorized(String path, String operation,
+	private boolean isUserAuthorized(String path, String operation,
 			String subjectDN, String[] fqans) throws ServletException,
 			IllegalArgumentException {
 		if (path == null || operation == null || subjectDN == null
@@ -330,4 +371,18 @@ public class StormHttpsAuthorization {
 		return response.booleanValue();
 	}
 
+	private String convertToStorageAreaPath(String uri_string)
+			throws ServletException {
+		URI uri;
+		try {
+			uri = new URI(uri_string);
+		} catch (URISyntaxException e) {
+			throw new ServletException(
+					"Unable to create URI object from the string: "
+							+ uri_string);
+		}
+		String path = uri.getPath().replaceFirst(this.ServletContextPath, "").replace("//", "/");
+		return this.StormStorageAreaRootDir + path;
+	}
+	
 }
