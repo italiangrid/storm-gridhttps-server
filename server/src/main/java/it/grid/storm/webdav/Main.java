@@ -11,6 +11,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.italiangrid.utils.https.SSLOptions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -28,8 +29,8 @@ public class Main {
 	 * http://docs.codehaus.org/display/JETTY/How+to+configure+SSL) If you want
 	 * to use your own key and certificate you have to generate your own.
 	 */
-	private static String keystoreFile = getExeDirectory()
-			+ "/classes/keystore";;
+//	private static String keystoreFile = getExeDirectory()
+//			+ "/classes/keystore";
 	private static int serverPort;
 	private final static int defaultPort = 8085;
 
@@ -48,11 +49,20 @@ public class Main {
 			return;
 		}
 		
-		server = new JServer(serverPort);
-		if ((new File(keystoreFile)).exists() && isHttps) {
-			server.initAsHttpsServer(keystoreFile, "password", "password");
+		//server = new JServer(serverPort);
+		//if ((new File(keystoreFile)).exists() && isHttps) {
+		if (isHttps) {
+			
+			SSLOptions options = new SSLOptions();
+			options.setCertificateFile("/etc/grid-security/hostcert.pem");
+			options.setKeyFile("/etc/grid-security/hostkey.pem");
+			options.setTrustStoreDirectory("/etc/grid-security/certificates"); 
+			
+			server = new JServer(serverPort, options);
+			//server.initAsHttpsServer(keystoreFile, "password", "password");
 		} else {
-			server.initAsHttpServer();
+			server = new JServer(serverPort);
+			//server.initAsHttpServer();
 		}
 		server.setWebappsDirectory(getExeDirectory()+"/webapps");
 		
@@ -101,10 +111,12 @@ public class Main {
 			}
 			log.info("WEBAPPS-SA-LIST: " + webapps.toString());
 			try {
-				server.start();
+				//server.start();
 				for (int i = 0; i<webapps.size(); i++) {
 					server.deploy(webapps.get(i));
 				}
+				server.start();
+				
 			} catch (Exception e) {
 				e.printStackTrace();
 				try {

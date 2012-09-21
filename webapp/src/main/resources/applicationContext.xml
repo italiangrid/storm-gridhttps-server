@@ -68,7 +68,6 @@
 		<!-- start desabling some useless (I think) features -->
 		
 		<property name="enabledJson" value="false" /> 
-		
 
 	</bean>
 

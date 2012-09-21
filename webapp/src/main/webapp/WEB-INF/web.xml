@@ -5,8 +5,8 @@
 	version="2.4">
 
 	<filter>
-		<filter-name>stormHttpsFilter</filter-name>
-		<filter-class>it.grid.storm.webdav.StormHttpsFilter</filter-class>
+		<filter-name>stormAuthorizationFilter</filter-name>
+		<filter-class>it.grid.storm.webdav.authorization.StormAuthorizationFilter</filter-class>
 	</filter>
 
 	<filter>
@@ -19,7 +19,7 @@
 	</filter>
 
 	<filter-mapping>
-		<filter-name>stormHttpsFilter</filter-name>
+		<filter-name>stormAuthorizationFilter</filter-name>
 		<url-pattern>/*</url-pattern>
 	</filter-mapping>
 

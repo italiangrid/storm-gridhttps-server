@@ -14,6 +14,23 @@
 		<slf4jVersion>1.5.2</slf4jVersion>
 	</properties>
 
+	<repositories>
+		<repository>
+			<id>cnaf-snapshots</id>
+			<name>CNAF snapshots</name>
+			<url>http://radiohead.cnaf.infn.it:8081/nexus/content/repositories/cnaf-snapshots/</url>
+			<snapshots>
+				<enabled>true</enabled>
+			</snapshots>
+		</repository>
+		<repository>
+			<id>cnaf-repositories</id>
+			<name>CNAF repositories</name>
+			<url>http://radiohead.cnaf.infn.it:8081/nexus/content/repositories/public/</url>
+		</repository>
+	</repositories>
+
+
 	<dependencies>
 
 		<!-- 
@@ -38,16 +55,16 @@
             
 		
 		<!-- Jetty artifacts. Note: They do have transitive dependencies. -->
-		<dependency>
-			<groupId>org.eclipse.jetty</groupId>
-			<artifactId>jetty-server</artifactId>
-			<version>${jetty.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>org.eclipse.jetty</groupId>
-			<artifactId>jetty-webapp</artifactId>
-			<version>${jetty.version}</version>
-		</dependency>
+<!-- 		<dependency> -->
+<!-- 			<groupId>org.eclipse.jetty</groupId> -->
+<!-- 			<artifactId>jetty-server</artifactId> -->
+<!-- 			<version>${jetty.version}</version> -->
+<!-- 		</dependency> -->
+<!-- 		<dependency> -->
+<!-- 			<groupId>org.eclipse.jetty</groupId> -->
+<!-- 			<artifactId>jetty-webapp</artifactId> -->
+<!-- 			<version>${jetty.version}</version> -->
+<!-- 		</dependency> -->
 
 		<dependency>
 			<groupId>org.jdom</groupId>
@@ -72,13 +89,13 @@
 			<artifactId>httpclient</artifactId>
 			<version>4.0-beta1</version>
 		</dependency>
-<!-- 
+ 
 		<dependency>
 			<groupId>org.italiangrid</groupId>
 			<artifactId>https-utils</artifactId>
 			<version>0.0.1-SNAPSHOT</version>
 		</dependency>
- -->
+
 
 	</dependencies>
 
@@ -103,6 +120,16 @@
 									<mainClass>it.grid.storm.webdav.Main</mainClass>
 								</transformer>
 							</transformers>
+							<filters>
+								<filter>
+									<artifact>*:*</artifact>
+									<excludes>
+										<exclude>META-INF/*.SF</exclude>
+										<exclude>META-INF/*.DSA</exclude>
+										<exclude>META-INF/*.RSA</exclude>
+									</excludes>
+								</filter>
+							</filters>
 						</configuration>
 					</execution>
 				</executions>

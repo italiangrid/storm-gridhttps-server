@@ -9,15 +9,18 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-import org.eclipse.jetty.server.Connector;
+//import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.Handler;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.handler.ContextHandlerCollection;
 import org.eclipse.jetty.server.handler.HandlerCollection;
-import org.eclipse.jetty.server.nio.SelectChannelConnector;
-import org.eclipse.jetty.server.ssl.SslSelectChannelConnector;
 import org.eclipse.jetty.util.thread.QueuedThreadPool;
+//import org.eclipse.jetty.server.nio.SelectChannelConnector;
+//import org.eclipse.jetty.server.ssl.SslSelectChannelConnector;
+//import org.eclipse.jetty.util.thread.QueuedThreadPool;
 import org.eclipse.jetty.webapp.WebAppContext;
+import org.italiangrid.utils.https.SSLOptions;
+import org.italiangrid.utils.https.ServerFactory;
 import org.jdom.Document;
 import org.jdom.Element;
 import org.jdom.JDOMException;
@@ -57,12 +60,16 @@ public class JServer {
 	public ContextHandlerCollection getContextHandlerCollection() {
 		return contextHandlerCollection;
 	}
-
+	
 	public JServer() {
 		this(JServer.defaultPort);
 	}
-
+	
 	public JServer(int port) {
+	
+		
+		
+		/*
 		server = new Server();
 		setRunningPort(port);
 		server.setStopAtShutdown(true);
@@ -77,18 +84,79 @@ public class JServer {
 		contextHandlerCollection = new ContextHandlerCollection();
 		hc.setHandlers(new Handler[] { contextHandlerCollection });
 		server.setHandler(hc);
+		*/
+		
+		//server = ServerFactory.newServer("localhost", port);
+		server = new Server(port);
+		setRunningPort(port);
+		server.setStopAtShutdown(true);
+		
+		// Increase thread pool
+		QueuedThreadPool threadPool = new QueuedThreadPool();
+		threadPool.setMaxThreads(100);
+		server.setThreadPool(threadPool);
+		
+		// Initialize collection of web-applications' handlers
+		HandlerCollection hc = new HandlerCollection();
+		contextHandlerCollection = new ContextHandlerCollection();
+		hc.setHandlers(new Handler[] { contextHandlerCollection });
+		server.setHandler(hc);
+		
+		log.info("SERVER: I'm working on HTTP");
+	}
+
+	public JServer(int port, SSLOptions options) {
+		
+		/*
+		SSLOptions options = new SSLOptions();
+		options.setCertificateFile("/etc/grid-security/hostcert.pem");
+		options.setKeyFile("/etc/grid-security/hostkey.pem");
+		options.setTrustStoreDirectory("/etc/grid-security/certificates"); 
+		*/
+		
+		server = ServerFactory.newServer("localhost", port, options);
+		setRunningPort(port);
+		server.setStopAtShutdown(true);
+		
+		// Initialize collection of web-applications' handlers
+		HandlerCollection hc = new HandlerCollection();
+		contextHandlerCollection = new ContextHandlerCollection();
+		hc.setHandlers(new Handler[] { contextHandlerCollection });
+		server.setHandler(hc);
+		
+		log.info("SERVER: I'm working on HTTPS");
+		
+		/*
+		server = new Server();
+		setRunningPort(port);
+		server.setStopAtShutdown(true);
+
+		// Increase thread pool
+		QueuedThreadPool threadPool = new QueuedThreadPool();
+		threadPool.setMaxThreads(100);
+		server.setThreadPool(threadPool);
+
+		// Initialize collection of web-applications' handlers
+		HandlerCollection hc = new HandlerCollection();
+		contextHandlerCollection = new ContextHandlerCollection();
+		hc.setHandlers(new Handler[] { contextHandlerCollection });
+		server.setHandler(hc);
+		*/
 	}
 		
 	public void initAsHttpServer() {
+		/*
 		Connector connector = new SelectChannelConnector();
 		connector.setPort(getRunningPort());
 		connector.setMaxIdleTime(30000);
 		server.setConnectors(new Connector[] { connector });
 		log.info("SERVER: I'm working on HTTP");
+		*/
 	}
 
 	public void initAsHttpsServer(String keystoreFilepath,
 			String keystorePassword, String trustPassword) {
+		/*
 		SslSelectChannelConnector ssl_connector = new SslSelectChannelConnector();
 		ssl_connector.setPort(getRunningPort());
 		ssl_connector.setKeystore(keystoreFilepath);
@@ -98,6 +166,7 @@ public class JServer {
 		
 		server.setConnectors(new Connector[] { ssl_connector });
 		log.info("SERVER: I'm working on HTTPS");
+		*/
 	}
 
 	public boolean isInitialized() {
@@ -155,6 +224,7 @@ public class JServer {
 		context.setResourceBase(webappPath);
 		context.setContextPath(contextPath);
 		context.setParentLoaderPriority(true);
+		//((HandlerCollection) server.getHandler()).addHandler(context);
 		getContextHandlerCollection().addHandler(context);
 		context.start();
 
@@ -183,7 +253,7 @@ public class JServer {
 		context.setContextPath(contextPath);
 		context.setParentLoaderPriority(true);
 		getContextHandlerCollection().removeHandler(context);
-
+		//((HandlerCollection) server.getHandler()).removeHandler(context);
 		deleteDirectory(new File(webappPath));
 		webApps.remove(toUndeploy);
 
