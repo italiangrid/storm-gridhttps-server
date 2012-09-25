@@ -10,8 +10,6 @@
 
 	<properties>
 		<bundle.name>${project.artifactId}-${project.version}</bundle.name>
-		<jetty.version>7.2.2.v20101205</jetty.version>
-		<slf4jVersion>1.5.2</slf4jVersion>
 	</properties>
 
 	<repositories>
@@ -33,38 +31,17 @@
 
 	<dependencies>
 
-		<!-- 
-		<dependency>
-			<groupId>org.slf4j</groupId>
-			<artifactId>slf4j-log4j12</artifactId>
-			<version>${slf4jVersion}</version>
-		</dependency>
-		-->
-
 		<dependency>
 			<groupId>ch.qos.logback</groupId>
 			<artifactId>logback-classic</artifactId>
 			<version>1.0.6</version>
 		</dependency>
-		
+
 		<dependency>
 			<groupId>ch.qos.logback</groupId>
 			<artifactId>logback-core</artifactId>
 			<version>1.0.6</version>
 		</dependency>
-            
-		
-		<!-- Jetty artifacts. Note: They do have transitive dependencies. -->
-<!-- 		<dependency> -->
-<!-- 			<groupId>org.eclipse.jetty</groupId> -->
-<!-- 			<artifactId>jetty-server</artifactId> -->
-<!-- 			<version>${jetty.version}</version> -->
-<!-- 		</dependency> -->
-<!-- 		<dependency> -->
-<!-- 			<groupId>org.eclipse.jetty</groupId> -->
-<!-- 			<artifactId>jetty-webapp</artifactId> -->
-<!-- 			<version>${jetty.version}</version> -->
-<!-- 		</dependency> -->
 
 		<dependency>
 			<groupId>org.jdom</groupId>
@@ -89,11 +66,25 @@
 			<artifactId>httpclient</artifactId>
 			<version>4.0-beta1</version>
 		</dependency>
- 
+
 		<dependency>
 			<groupId>org.italiangrid</groupId>
 			<artifactId>https-utils</artifactId>
 			<version>0.0.1-SNAPSHOT</version>
+			<exclusions>
+				<exclusion>
+					<artifactId>slf4j-api</artifactId>
+					<groupId>org.slf4j</groupId>
+				</exclusion>
+				<exclusion>
+					<artifactId>bcprov-jdk16</artifactId>
+					<groupId>org.bouncycastle</groupId>
+				</exclusion>
+				<exclusion>
+					<artifactId>log4j</artifactId>
+					<groupId>log4j</groupId>
+				</exclusion>
+			</exclusions>
 		</dependency>
 
 

@@ -18,12 +18,12 @@
 		<appender-ref ref="STDOUT" />
 	</logger>
 	
-	<logger name="it.grid.storm" level="INFO">
+	<logger name="it.grid.storm" level="DEBUG">
 		<appender-ref ref="FILE" />
 		<appender-ref ref="STDOUT" />
 	</logger>
 
-	<root level="INFO">
+	<root level="DEBUG">
 		
 	</root>
 	
