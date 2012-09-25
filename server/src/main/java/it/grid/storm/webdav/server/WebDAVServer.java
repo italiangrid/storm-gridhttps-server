@@ -204,14 +204,13 @@ public class WebDAVServer {
 	public void undeployAll() throws ServerException {
 		
 		for (WebApp webapp : httpOptions.getWebApps()) {
-			if (httpsOptions.getWebApps().contains(webapp)) {
-				httpsOptions.getWebApps().remove(webapp);
-			}
 			doUndeploy(webapp);
 		}
+		httpOptions.getWebApps().clear();
 		for (WebApp webapp : httpsOptions.getWebApps()) {
 			doUndeploy(webapp);
 		}
+		httpsOptions.getWebApps().clear();
 		FileUtils.deleteDirectory(new File(this.getWebappsDirectory()));
 
 	}
@@ -245,8 +244,6 @@ public class WebDAVServer {
 			context.setContextPath(contextPath);
 			context.setParentLoaderPriority(true);
 			httpOptions.getContextHandlerCollection().removeHandler(context);
-			
-			httpOptions.getWebApps().remove(toUndeploy);
 
 			log.info(httpOptions.getName() + " > WEBAPP {" + contextPath + "} UNDEPLOYED!");
 		}
@@ -259,8 +256,7 @@ public class WebDAVServer {
 			context.setContextPath(contextPath);
 			context.setParentLoaderPriority(true);
 			httpsOptions.getContextHandlerCollection().removeHandler(context);
-			httpsOptions.getWebApps().remove(toUndeploy);
-
+			
 			log.info(httpsOptions.getName() + " > WEBAPP {" + contextPath + "} UNDEPLOYED!");
 			
 		}
