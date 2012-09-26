@@ -3,6 +3,7 @@ package it.grid.storm.webdav.utils;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.Iterator;
 import java.util.List;
 
@@ -24,6 +25,11 @@ public class XML {
 		builder = new SAXBuilder();
 		xmlFile = new File(filename);
 		document = (Document) builder.build(xmlFile);
+	}
+
+	public XML(InputStream input) throws JDOMException, IOException {
+		builder = new SAXBuilder();
+		document = (Document) builder.build(input);
 	}
 	
 	public Element getRootElement() {
@@ -47,6 +53,23 @@ public class XML {
 		throw new Exception("node with '"+key+"' = '"+value+"' not found!");
 	}
 	
+	public Element getNode(String nodeName) throws Exception {
+		return this.getNode(this.getRootElement(), nodeName);
+	}
+	
+	public Element getNode(Element node, String nodeName) throws Exception {
+		assert node!=null;
+		List<?> children = node.getChildren();
+		Iterator<?> i = children.iterator();
+		Element current = null;
+		while (i.hasNext()) {
+			current = (Element) i.next();
+			if (current.getName().equals(nodeName))
+				return current;
+		}
+		throw new Exception("node '"+nodeName+"' not found!");
+	}
+	
 	public String getAttribute(Element node, String attributeName) {
 		assert node!=null;
 		assert node.getAttribute(attributeName) != null;
@@ -57,6 +80,20 @@ public class XML {
 		assert node!=null;
 		return node.setAttribute(attributeName, attributeValue);
 	}
+	
+	public Element addNode(Element nodeFather, String nodeName) throws Exception {
+		if (nodeFather.getChild(nodeName) != null)
+			throw new Exception("node '"+nodeName+"' already exists!");
+		Element element = new Element(nodeName);
+		nodeFather.addContent(element);
+		return nodeFather.getChild(nodeName);
+	}
+	
+	public Element setNodeValue(Element node, String nodeValue) throws Exception {
+		node.setText(nodeValue);
+		return node;
+	}
+	
 	
 	public void close() throws IOException {
 		/* output new file */

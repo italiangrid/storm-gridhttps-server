@@ -18,7 +18,6 @@ import org.eclipse.jetty.server.handler.HandlerCollection;
 import org.eclipse.jetty.server.nio.SelectChannelConnector;
 import org.eclipse.jetty.util.thread.QueuedThreadPool;
 import org.eclipse.jetty.webapp.WebAppContext;
-import org.italiangrid.utils.https.SSLOptions;
 import org.italiangrid.utils.https.ServerFactory;
 import org.jdom.Element;
 import org.slf4j.Logger;
@@ -27,52 +26,55 @@ import org.slf4j.LoggerFactory;
 public class WebDAVServer {
 	
 	private static final Logger log = LoggerFactory.getLogger(WebDAVServer.class);
-	private String webappsDirectory = "./webapps";
+	private String webappsDirectory;
 	
 	private ServerInfo httpOptions, httpsOptions;
+	private Server httpServer, httpsServer;
+	private ContextHandlerCollection httpContext, httpsContext;
+	private List<WebApp> httpWebApps, httpsWebApps;
 	
-	public WebDAVServer() {	
-		initHttpServer();
-		initHttpsServer();
+	public WebDAVServer(ServerInfo httpOptions, ServerInfo httpsOptions) {
+		log.info("HTTP-OPTIONS: " + httpOptions.toString());
+		log.info("HTTPS-OPTIONS: " + httpsOptions.toString());
+		this.httpOptions = httpOptions;
+		this.httpsOptions = httpsOptions;
+		this.initHttpServer();
+		this.initHttpsServer();
 	}
 	
 	private void initHttpServer() {
 		
-		httpOptions = new ServerInfo("HTTP-SERVER", 8085);
-		httpOptions.setServer(new Server(httpOptions.getPort()));
-		httpOptions.getServer().setStopAtShutdown(true);
+		httpServer = new Server(httpOptions.getPort());
+		httpServer.setStopAtShutdown(true);
 		
 		QueuedThreadPool threadPool = new QueuedThreadPool();
 		threadPool.setMaxThreads(100);
-		httpOptions.getServer().setThreadPool(threadPool);
+		httpServer.setThreadPool(threadPool);
 		
 		HandlerCollection hc = new HandlerCollection();
-		hc.setHandlers(new Handler[] { httpOptions.getContextHandlerCollection() });
-		httpOptions.getServer().setHandler(hc);
+		httpContext = new ContextHandlerCollection();
+		hc.setHandlers(new Handler[] { httpContext });
+		httpServer.setHandler(hc);
 		
 		Connector connector = new SelectChannelConnector();
 		connector.setPort(httpOptions.getPort());
 		connector.setMaxIdleTime(30000);
-		httpOptions.getServer().setConnectors(new Connector[] { connector });
+		httpServer.setConnectors(new Connector[] { connector });
 		
+		httpWebApps = new ArrayList<WebApp>();
 	}
 
 	private void initHttpsServer() {
-	
-		SSLOptions options = new SSLOptions();
-		options.setCertificateFile("/etc/grid-security/hostcert.pem");
-		options.setKeyFile("/etc/grid-security/hostkey.pem");
-		options.setTrustStoreDirectory("/etc/grid-security/certificates");
-		String hostname = "omii006-vm03.cnaf.infn.it";
-		
-		httpsOptions = new ServerInfo("HTTPS-SERVER", 8443);
-		httpsOptions.setServer(ServerFactory.newServer(hostname, httpsOptions.getPort(), options));
-		httpsOptions.getServer().setStopAtShutdown(true);
+				
+		httpsServer = ServerFactory.newServer(httpsOptions.getHostname(), httpsOptions.getPort(), httpsOptions.getSslOptions());
+		httpsServer.setStopAtShutdown(true);
 		
 		HandlerCollection hc = new HandlerCollection();
-		hc.setHandlers(new Handler[] { httpsOptions.getContextHandlerCollection() });
-		httpsOptions.getServer().setHandler(hc);
+		httpsContext = new ContextHandlerCollection();
+		hc.setHandlers(new Handler[] { httpsContext });
+		httpsServer.setHandler(hc);
 		
+		httpsWebApps = new ArrayList<WebApp>();
 	}
 	
 	public String getWebappsDirectory() {
@@ -85,9 +87,9 @@ public class WebDAVServer {
 	
 	public void start() throws ServerException {
 		try {
-			httpOptions.getServer().start();
+			httpServer.start();
 			log.info(httpOptions.getName() + " > STARTED on port " + httpOptions.getPort());
-			httpsOptions.getServer().start();
+			httpsServer.start();
 			log.info(httpsOptions.getName() + " > STARTED on port " + httpsOptions.getPort());
 		} catch (Exception e) {
 			throw new ServerException(e.getMessage());
@@ -96,9 +98,9 @@ public class WebDAVServer {
 
 	public void stop() throws ServerException {	
 		try {
-			httpOptions.getServer().stop();
+			httpServer.stop();
 			log.info(httpOptions.getName() + " > STOPPED ");
-			httpsOptions.getServer().stop();
+			httpsServer.stop();
 			log.info(httpsOptions.getName() + " > STOPPED ");
 		} catch (Exception e) {
 			throw new ServerException(e.getMessage());
@@ -106,25 +108,24 @@ public class WebDAVServer {
 	}
 	
 	private boolean isHttpDeployed(WebApp webapp) {
-		return (httpOptions.getWebApps().indexOf(webapp) != -1);
+		return (httpWebApps.indexOf(webapp) != -1);
 	}
 	
 	private boolean isHttpsDeployed(WebApp webapp) {
-		return (httpsOptions.getWebApps().indexOf(webapp) != -1);
+		return (httpsWebApps.indexOf(webapp) != -1);
 	}
 	
 	public boolean isDeployed(WebApp webapp) {
 		return (isHttpDeployed(webapp) || isHttpsDeployed(webapp));
 	}
 
-	private void doDeploy(ServerInfo options, WebApp webAppToDeploy) throws ServerException {
+	private void doDeploy(WebApp webAppToDeploy) throws ServerException {
 	
 		String contextPath = webAppToDeploy.getContextPath();
-		String webappPath = this.getWebappsDirectory() + contextPath;
+		String webappPath = getWebappsDirectory() + contextPath;
 		String contextFile = webappPath + "/WEB-INF/classes/applicationContext.xml";
 
 		log.info("WEBDAV-SERVER > WEBAPP {" + contextPath + "} DEPLOY STARTED ...");
-		
 		
 		try {
 			// STEP 1: uncompress war file
@@ -134,7 +135,7 @@ public class WebDAVServer {
 		}
 		// STEP 2: modify application context file
 		buildContextFile(contextFile, webAppToDeploy);
-			
+		
 		if (webAppToDeploy.getProtocol() == StorageArea.HTTP_PROTOCOL || webAppToDeploy.getProtocol() == StorageArea.HTTP_AND_HTTPS_PROTOCOLS) {
 
 			// STEP 3a: create and add to the server the WebAppContext handler for HTTP
@@ -143,16 +144,14 @@ public class WebDAVServer {
 			context.setResourceBase(webappPath);
 			context.setContextPath(contextPath);
 			context.setParentLoaderPriority(true);
-			httpOptions.getContextHandlerCollection().addHandler(context);
+			httpContext.addHandler(context);
+			httpWebApps.add(webAppToDeploy);
 			try {
 				context.start();
 			} catch (Exception e) {
 				throw new ServerException(e.getMessage());
 			}
-			httpOptions.webApps.add(webAppToDeploy);
-			
 			log.info(httpOptions.getName() + " > WEBAPP {" + contextPath + "} DEPLOYED! ");
-			
 		}
 		
 		if (webAppToDeploy.getProtocol() == StorageArea.HTTPS_PROTOCOL || webAppToDeploy.getProtocol() == StorageArea.HTTP_AND_HTTPS_PROTOCOLS) {
@@ -163,18 +162,15 @@ public class WebDAVServer {
 			context.setResourceBase(webappPath);
 			context.setContextPath(contextPath);
 			context.setParentLoaderPriority(true);
-			httpsOptions.getContextHandlerCollection().addHandler(context);
+			httpsContext.addHandler(context);
+			httpsWebApps.add(webAppToDeploy);			
 			try {
 				context.start();
 			} catch (Exception e) {
 				throw new ServerException(e.getMessage());
 			}
-			httpsOptions.webApps.add(webAppToDeploy);
-			
-			log.info(httpsOptions.getName() + " > WEBAPP {" + contextPath + "} DEPLOYED! ");
-			
+			log.info(httpsOptions.getName() + " > WEBAPP {" + contextPath + "} DEPLOYED! ");	
 		}
-		
 		
 	}
 	
@@ -188,30 +184,23 @@ public class WebDAVServer {
 			return;
 		}
 		
-		if (isHttpDeployed(webAppToDeploy))
-			throw new ServerException(httpOptions.getName() + " > DEPLOY ERROR: webapp already deployed!");
-		doDeploy(httpOptions, webAppToDeploy);
+		if (isDeployed(webAppToDeploy))
+			throw new ServerException("WEBDAV-SERVER > DEPLOY ERROR: webapp already deployed!");
+		doDeploy(webAppToDeploy);
 		
 	}
 
-	
-	
-	
-	
-	
-	
-	
 	public void undeployAll() throws ServerException {
 		
-		for (WebApp webapp : httpOptions.getWebApps()) {
+		for (WebApp webapp : httpWebApps) {
 			doUndeploy(webapp);
 		}
-		httpOptions.getWebApps().clear();
-		for (WebApp webapp : httpsOptions.getWebApps()) {
+		httpWebApps.clear();
+		for (WebApp webapp : httpsWebApps) {
 			doUndeploy(webapp);
 		}
-		httpsOptions.getWebApps().clear();
-		FileUtils.deleteDirectory(new File(this.getWebappsDirectory()));
+		httpsWebApps.clear();
+		FileUtils.deleteDirectory(new File(getWebappsDirectory()));
 
 	}
 
@@ -225,8 +214,8 @@ public class WebDAVServer {
 			return;
 		}
 		
-		if (!isHttpDeployed(toUndeploy))
-			throw new ServerException(httpOptions.getName() + " > UNDEPLOY ERROR: webapp already undeployed!");
+		if (!isDeployed(toUndeploy))
+			throw new ServerException("WEBDAV-SERVER > UNDEPLOY ERROR: webapp already undeployed!");
 		doUndeploy(toUndeploy);
 		
 	}
@@ -234,8 +223,8 @@ public class WebDAVServer {
 	private void doUndeploy(WebApp toUndeploy) throws ServerException {
 		
 		String contextPath = toUndeploy.getContextPath();
-		String webappPath = this.getWebappsDirectory() + contextPath;
-
+		String webappPath = getWebappsDirectory() + contextPath;
+		
 		if (toUndeploy.getProtocol() == StorageArea.HTTP_PROTOCOL || toUndeploy.getProtocol() == StorageArea.HTTP_AND_HTTPS_PROTOCOLS) {
 			
 			WebAppContext context = new WebAppContext();
@@ -243,8 +232,7 @@ public class WebDAVServer {
 			context.setResourceBase(webappPath);
 			context.setContextPath(contextPath);
 			context.setParentLoaderPriority(true);
-			httpOptions.getContextHandlerCollection().removeHandler(context);
-
+			httpContext.removeHandler(context);
 			log.info(httpOptions.getName() + " > WEBAPP {" + contextPath + "} UNDEPLOYED!");
 		}
 		
@@ -255,14 +243,11 @@ public class WebDAVServer {
 			context.setResourceBase(webappPath);
 			context.setContextPath(contextPath);
 			context.setParentLoaderPriority(true);
-			httpsOptions.getContextHandlerCollection().removeHandler(context);
-			
-			log.info(httpsOptions.getName() + " > WEBAPP {" + contextPath + "} UNDEPLOYED!");
-			
+			httpsContext.removeHandler(context);
+			log.info(httpsOptions.getName() + " > WEBAPP {" + contextPath + "} UNDEPLOYED!");	
 		}
 		
 		FileUtils.deleteDirectory(new File(webappPath));
-
 	}
 
 	private void buildContextFile(String xmlfilesrc, WebApp webapp)
@@ -280,57 +265,6 @@ public class WebDAVServer {
 			throw new ServerException(e.getMessage());
 		}
 	}
-	
-	
-	
-	private class ServerInfo {
-		private int port;
-		private String name;
-		private Server server;
-		private ContextHandlerCollection contextHandlerCollection;
-		private List<WebApp> webApps = new ArrayList<WebApp>();
-		
-		public ServerInfo(String name, int port) {
-			this.name = name;
-			this.port = port;
-			this.contextHandlerCollection = new ContextHandlerCollection();
-		}
-		
-		public ContextHandlerCollection getContextHandlerCollection() {
-			return contextHandlerCollection;
-		}
-		
-//		public void setContextHandlerCollection(
-//				ContextHandlerCollection contextHandlerCollection) {
-//			this.contextHandlerCollection = contextHandlerCollection;
-//		}
-		
-		public List<WebApp> getWebApps() {
-			return webApps;
-		}
-		
-//		public void setWebApps(List<WebApp> webApps) {
-//			this.webApps = webApps;
-//		}
-		
-		public int getPort() {
-			return port;
-		}
-		
-		public String getName() {
-			return name;
-		}
-		
-		public Server getServer() {
-			return server;
-		}
-		
-		public void setServer(Server server) {
-			this.server = server;
-		}
-		
-	}
-	
 	
 	public class ServerException extends Exception {
 
