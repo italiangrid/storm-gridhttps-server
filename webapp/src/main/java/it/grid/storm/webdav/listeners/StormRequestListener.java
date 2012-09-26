@@ -31,7 +31,7 @@ public class StormRequestListener<T> extends StormEventListener {
 		String methodName = req.getMethod().toString();
 		log.debug("methodName: " + methodName);
 
-		log.info("getHeaders: " + req.getHeaders().toString());
+//		log.info("getHeaders: " + req.getHeaders().toString());
 
 		/* calls the right handler, if there is one */
 		if (super.handlersMapContainsKey(methodName)) {
