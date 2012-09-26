@@ -22,11 +22,6 @@ public class StormPutRequestHandler implements StormHandler {
 	public void exec(Event e) {
 
 		log.info("this is the exec function of " + StormPutRequestHandler.class);
-//
-//		((RequestEvent) e).getRequest().getAttributes().put("KEY", "VALUE");
-//		
-//		log.info("attributes of put request:\n"
-//				+ ((RequestEvent) e).getRequest().getAttributes().toString());
 
 	}
 

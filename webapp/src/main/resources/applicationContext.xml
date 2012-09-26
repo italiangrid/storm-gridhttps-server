@@ -3,9 +3,8 @@
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-2.0.xsd">
 
-	<bean id="milton.fs.resource.factory" class="io.milton.http.fs.FileSystemResourceFactory">
+	<bean id="milton.fs.resource.factory" class="it.grid.storm.webdav.factory.StormResourceFactory">
 		<property name="securityManager" ref="milton.fs.security.manager" />
-		<property name="lockManager" ref="milton.fs.lock.manager" />
 		<property name="root" value="$rootPath" />
 		<property name="contextPath" value="$contextPath" />
 	</bean>
@@ -14,51 +13,48 @@
 		<property name="realm" value="aRealm" />
 	</bean>
 
-	<bean id="webdav-fs-webapp.listeners.request" class="it.grid.storm.webdav.listeners.StormRequestListener"
-		init-method="init">
-		<property name="handlersList">
-			<list>
-				<value type="java.lang.Class">it.grid.storm.webdav.handlers.requests.StormPropfindRequestHandler
-				</value>
-				<value type="java.lang.Class">it.grid.storm.webdav.handlers.requests.StormPutRequestHandler
-				</value>
-				<value type="java.lang.Class">it.grid.storm.webdav.handlers.requests.StormOptionsRequestHandler
-				</value>
-			</list>
-		</property>
-	</bean>
+<!-- 	<bean id="webdav-fs-webapp.listeners.mkcol" class="it.grid.storm.webdav.listeners.resources.StormNewFolderListener" /> -->
 
-<!-- 	<bean id="webdav-fs-webapp.listeners.response" class="it.grid.storm.webdav.listeners.StormResponseListener" -->
+<!-- 	<bean id="webdav-fs-webapp.listeners.request" class="it.grid.storm.webdav.listeners.StormRequestListener" -->
 <!-- 		init-method="init"> -->
 <!-- 		<property name="handlersList"> -->
 <!-- 			<list> -->
-<!-- 				<value type="java.lang.Class">it.grid.storm.webdav.handlers.StormPropfindResponseHandler -->
+<!-- 				<value type="java.lang.Class">it.grid.storm.webdav.handlers.requests.StormPropfindRequestHandler -->
 <!-- 				</value> -->
-<!-- 				<value type="java.lang.Class">it.grid.storm.webdav.handlers.StormPutResponseHandler -->
+<!-- 				<value type="java.lang.Class">it.grid.storm.webdav.handlers.requests.StormPutRequestHandler -->
+<!-- 				</value> -->
+<!-- 				<value type="java.lang.Class">it.grid.storm.webdav.handlers.requests.StormOptionsRequestHandler -->
 <!-- 				</value> -->
 <!-- 			</list> -->
 <!-- 		</property> -->
 <!-- 	</bean> -->
 
-	<bean id="webdav-fs-webapp.listeners.mkcol" class="it.grid.storm.webdav.listeners.resources.StormNewFolderListener" />
+<!-- 	<bean id="webdav-fs-webapp.listeners.response" class="it.grid.storm.webdav.listeners.StormResponseListener" -->
+<!-- 		init-method="init"> -->
+<!-- 		<property name="handlersList"> -->
+<!-- 			<list> -->
+<!-- 				<value type="java.lang.Class">it.grid.storm.webdav.handlers.responses.StormPropfindResponseHandler -->
+<!-- 				</value> -->
+<!-- 				<value type="java.lang.Class">it.grid.storm.webdav.handlers.responses.StormPutResponseHandler -->
+<!-- 				</value> -->
+<!-- 			</list> -->
+<!-- 		</property> -->
+<!-- 	</bean> -->
 
-	<bean id="webdav-fs-webapp.event.manager" class="it.grid.storm.webdav.StormEventManager"
-		init-method="init">
-		<property name="listenersList">
-			<list>
-				<ref bean="webdav-fs-webapp.listeners.request" />
-<!-- 				<ref bean="webdav-fs-webapp.listeners.response" /> -->
-				<ref bean="webdav-fs-webapp.listeners.mkcol" />
-			</list>
-		</property>
-	</bean>
-
-	<bean id="milton.fs.lock.manager" class="io.milton.http.fs.FsMemoryLockManager" />
+<!-- 	<bean id="webdav-fs-webapp.event.manager" class="it.grid.storm.webdav.StormEventManager" -->
+<!-- 		init-method="init"> -->
+<!-- 		<property name="listenersList"> -->
+<!-- 			<list> -->
+<!-- 				<ref bean="webdav-fs-webapp.listeners.request" /> -->
+<!--  				<ref bean="webdav-fs-webapp.listeners.response" /> -->
+<!-- 				<ref bean="webdav-fs-webapp.listeners.mkcol" /> -->
+<!-- 			</list> -->
+<!-- 		</property> -->
+<!-- 	</bean> -->
 
 	<bean id="milton.http.manager" class="io.milton.config.HttpManagerBuilder">
 		<property name="mainResourceFactory" ref="milton.fs.resource.factory" />
-		<property name="eventManager" ref="webdav-fs-webapp.event.manager" />
-
+<!-- 		<property name="eventManager" ref="webdav-fs-webapp.event.manager" /> -->
 		<!-- the default namespace is "DAV:" -->
 		<!-- resourceTypeHelper is explicit in order to avoid the default huge 
 			configuration (that include also caldav and carddav) -->

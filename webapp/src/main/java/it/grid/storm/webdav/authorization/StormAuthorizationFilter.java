@@ -1,13 +1,15 @@
 package it.grid.storm.webdav.authorization;
 
-import io.milton.http.fs.FileSystemResourceFactory;
+
+import it.grid.storm.webdav.authorization.methods.AbstractMethodAuthorization;
+import it.grid.storm.webdav.factory.StormResourceFactory;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URI;
-import java.net.URISyntaxException;
 import java.security.cert.X509Certificate;
+import java.util.Map;
 
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;
@@ -33,15 +35,14 @@ import org.springframework.context.support.StaticApplicationContext;
 
 public class StormAuthorizationFilter implements Filter {
 
-	private String StormStorageAreaRootDir;
-	private String ServletContextPath;
+	private String stormStorageAreaRootDir;
+	private String servletContextPath;
 	
 	private static final Logger log = LoggerFactory
 			.getLogger(StormAuthorizationFilter.class);
 
 	public void destroy() {
 		// TODO Auto-generated method stub
-
 	}
 	
 	public void init(FilterConfig arg0) throws ServletException {
@@ -56,13 +57,13 @@ public class StormAuthorizationFilter implements Filter {
 		
 		if (context.containsBean("milton.fs.resource.factory")) {
 			beanFactory = context.getBean("milton.fs.resource.factory");
-			if (beanFactory instanceof FileSystemResourceFactory) {
-				this.StormStorageAreaRootDir = ((FileSystemResourceFactory) beanFactory)
+			if (beanFactory instanceof StormResourceFactory) {
+				this.stormStorageAreaRootDir = ((StormResourceFactory) beanFactory)
 						.getRoot().getAbsolutePath();
-				this.ServletContextPath = ((FileSystemResourceFactory) beanFactory)
+				this.servletContextPath = ((StormResourceFactory) beanFactory)
 						.getContextPath();
-				log.info("storageAreaRootPath: " + this.StormStorageAreaRootDir);
-				log.info("contextPath: " + this.ServletContextPath);
+				log.info("storageAreaRootPath: " + this.stormStorageAreaRootDir);
+				log.info("contextPath: " + this.servletContextPath);
 			}
 		}
 
@@ -78,10 +79,7 @@ public class StormAuthorizationFilter implements Filter {
 		String subjectDN = null;
 		String[] fqans = {};
 		String methodName = null;
-		String resourcePath = null;
-		String destinationPath = null;
-		boolean overwriteFlag = true;
-
+		
 		/* *********************************************** */
 
 		// Setting HTTPRequest and HTTPResponse
@@ -97,20 +95,6 @@ public class StormAuthorizationFilter implements Filter {
 			log.error("Received non HTTP request. Class is : "
 					+ request.getClass());
 			throw new ServletException("Protocol not supported. Use HTTP(S)");
-		}
-
-		/* *********************************************** */
-
-		// Checking schema
-
-		// Is needed???
-
-		String schema = request.getScheme();
-		log.debug("Requested schema is : " + schema);
-		if (!StormHttpsUtils.checkSchema(schema)) {
-			log.warn("Received a request with au unknown schema. Schema is : "
-					+ schema);
-			throw new ServletException("Schema not supported. Use HTTP(S)");
 		}
 
 		/* *********************************************** */
@@ -149,16 +133,16 @@ public class StormAuthorizationFilter implements Filter {
 
 		// Instead of getting info from the certificate...
 
-		subjectDN = StormHttpsUtils.SUBJECT_DN;
+		subjectDN = StormAuthorizationUtils.SUBJECT_DN;
 		// fqans are already null
 
 		/* *********************************************** */
-
+		
 		// Setting methodName
 
 		methodName = HTTPRequest.getMethod();
 		log.debug("Requested method is : " + methodName);
-		if (!StormHttpsUtils.methodAllowed(methodName)) {
+		if (!StormAuthorizationUtils.methodAllowed(methodName)) {
 			log.warn("Received a request for a not allowed method : "
 					+ methodName);
 			HTTPResponse.sendError(HttpServletResponse.SC_METHOD_NOT_ALLOWED,
@@ -167,82 +151,23 @@ public class StormAuthorizationFilter implements Filter {
 		}
 
 		/* *********************************************** */
-
-		// Setting resourcePath
-		resourcePath = convertToStorageAreaPath(HTTPRequest
-				.getRequestURI());
-
-		// Setting destinationPath (if it exists)
-		destinationPath = getDestinationFromHeader(HTTPRequest);
-
-		// Setting overwriteFlag (default is true)
-		overwriteFlag = getOverwriteFromHeader(HTTPRequest);
-
-		/* *********************************************** */
-
-		// Retriving sourceOperation and destinationOperation
-
-		String sourceOperation = StormHttpsUtils.sourceOperation(methodName);
-
-		if (sourceOperation == null) {
-			log.info("No operations found for the allowed method "
-					+ methodName
-					+ ". It seems that authorization is not needed fot this method.");
-			chain.doFilter(request, response);
-			return;
-		}
-
-		/* ************ Temporary customization *********** */
-
-		if (methodName.contentEquals("PUT") && (overwriteFlag == true)) {
-			sourceOperation = "srmPrepareToPutOverwrite";
-		}
-
-		/* ************************************************* */
-
-		String destinationOperation = StormHttpsUtils
-				.destinationOperation(methodName);
-
-		if ((destinationOperation != null) && (destinationPath == null)) {
-			throw new ServletException(
-					"No Destination header found in the request for the operation "
-							+ destinationOperation + "(method " + methodName
-							+ ")");
-		}
-
-		String summary = "The method " + methodName
-				+ " requires authorization for these operations:\n";
-		summary = summary + " -> '" + sourceOperation + "' on " + resourcePath;
-		if (destinationOperation != null)
-			summary = summary + "\n" + " -> '" + destinationOperation + "' on "
-					+ destinationPath;
-		log.debug(summary);
-
-		/* *********************************************** */
-
+		
 		// Checking if the user is authorized
-
-		boolean isAuthorized = false;
-		log.debug("Asking for '" + sourceOperation + "' on " + resourcePath);
-		try {
-			isAuthorized = isUserAuthorizedFake(resourcePath, sourceOperation,
-					subjectDN, fqans);
-		} catch (ServletException e) {
-			log.error("Unable to verify user authorization. ServletException : "
-					+ e.getMessage());
-			HTTPResponse.sendError(
-					HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
-					"Error testing user authorization: " + e.getMessage());
-			return;
-		}
-
-		if (destinationOperation != null) {
-			log.debug("Asking for '" + destinationOperation + "' on "
-					+ destinationPath);
+		
+		AbstractMethodAuthorization m = StormAuthorizationUtils.METHODS_MAP.get(methodName);
+		m.init(stormStorageAreaRootDir,servletContextPath);
+		Map<String, String> operationsMap = m.getOperationsMap(HTTPRequest);
+		
+		boolean isAuthorized = true;
+		
+		for(Map.Entry<String, String> entry : operationsMap.entrySet()){
+			String op = entry.getKey();
+			String path = entry.getValue();
+						
+			log.debug("Asking authorization for operation " + op + " on " + path);
 			try {
-				isAuthorized = isAuthorized
-						&& isUserAuthorizedFake(resourcePath, sourceOperation,
-								subjectDN, fqans);
+				isAuthorized = isAuthorized && isUserAuthorizedFake(path, op,
+						subjectDN, fqans);
 			} catch (ServletException e) {
 				log.error("Unable to verify user authorization. ServletException : "
 						+ e.getMessage());
@@ -251,8 +176,9 @@ public class StormAuthorizationFilter implements Filter {
 						"Error testing user authorization: " + e.getMessage());
 				return;
 			}
+			
 		}
-
+		
 		if (isAuthorized) {
 			log.info("User is authorized to access the requested resource");
 			chain.doFilter(request, response);
@@ -263,21 +189,6 @@ public class StormAuthorizationFilter implements Filter {
 			return;
 		}
 
-	}
-
-	private String getDestinationFromHeader(HttpServletRequest HTTPRequest)
-			throws ServletException {
-		String destinationHeader = HTTPRequest.getHeader("Destination");
-		if (destinationHeader != null)
-			return convertToStorageAreaPath(destinationHeader);
-		return null;
-	}
-
-	private boolean getOverwriteFromHeader(HttpServletRequest HTTPRequest) {
-		String overwriteHeader = HTTPRequest.getHeader("Overwrite");
-		if ((overwriteHeader != null) && (overwriteHeader.contentEquals("F")))
-			return false;
-		return true;
 	}
 
 	private boolean isUserAuthorizedFake(String path, String operation,
@@ -296,7 +207,7 @@ public class StormAuthorizationFilter implements Filter {
 					+ subjectDN + " fqans=" + fqans);
 			throw new IllegalArgumentException("Received null parameter(s)");
 		}
-		URI uri = StormHttpsUtils.prepareURI(path, operation, subjectDN, fqans);
+		URI uri = StormAuthorizationUtils.prepareURI(path, operation, subjectDN, fqans);
 		log.debug("Authorization request uri = " + uri.toString());
 		HttpGet httpget = new HttpGet(uri);
 		HttpClient httpclient = new DefaultHttpClient();
@@ -357,32 +268,18 @@ public class StormAuthorizationFilter implements Filter {
 			throw new ServletException(
 					"Unable to get a valid authorization response from the server.");
 		}
-		log.debug("Authorization response is : \'" + output + "\'");
+		log.debug("Authorization response is : '" + output + "'");
 		if (httpCode != HttpURLConnection.HTTP_OK) {
-			log.warn("Unable to get a valid response from server. Received a non HTTP 200 response from the server : \'"
-					+ httpCode + "\' " + httpMessage);
+			log.warn("Unable to get a valid response from server. Received a non HTTP 200 response from the server : '"
+					+ httpCode + "' " + httpMessage);
 			throw new ServletException(
-					"Unable to get a valid response from server. Received a non HTTP 200 response from the server : \'"
-							+ httpCode + "\' " + httpMessage);
+					"Unable to get a valid response from server. Received a non HTTP 200 response from the server : '"
+							+ httpCode + "' " + httpMessage);
 		}
 		Boolean response = new Boolean(output);
-		log.debug("Authorization response (Boolean value): \'" + response
-				+ "\'");
+		log.debug("Authorization response (Boolean value): '" + response
+				+ "'");
 		return response.booleanValue();
 	}
 
-	private String convertToStorageAreaPath(String uri_string)
-			throws ServletException {
-		URI uri;
-		try {
-			uri = new URI(uri_string);
-		} catch (URISyntaxException e) {
-			throw new ServletException(
-					"Unable to create URI object from the string: "
-							+ uri_string);
-		}
-		String path = uri.getPath().replaceFirst(this.ServletContextPath, "").replace("//", "/");
-		return this.StormStorageAreaRootDir + path;
-	}
-	
 }

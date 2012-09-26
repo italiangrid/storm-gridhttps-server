@@ -24,10 +24,5 @@ public class StormPropfindRequestHandler implements StormHandler {
 		log.info("this is the exec function of "
 				+ StormPropfindRequestHandler.class);
 
-//		((RequestEvent) e).getRequest().getAttributes().put("KEY", "VALUE");
-		
-//		log.info("attributes of propfind request:\n"
-//				+ ((RequestEvent) e).getRequest().getAttributes().toString());
-
 	}
 }
