@@ -1,20 +1,19 @@
 package it.grid.storm.webdav;
 
+import it.grid.storm.webdav.server.ServerException;
 import it.grid.storm.webdav.server.ServerInfo;
 import it.grid.storm.webdav.server.WebApp;
 import it.grid.storm.webdav.server.WebApp.WebAppException;
 import it.grid.storm.webdav.server.WebDAVServer;
-import it.grid.storm.webdav.server.WebDAVServer.ServerException;
 import it.grid.storm.webdav.storagearea.StorageArea;
 import it.grid.storm.webdav.storagearea.StorageAreaManager;
+import it.grid.storm.webdav.utils.FileUtils;
 import it.grid.storm.webdav.utils.MyCommandLineParser;
 
 import org.italiangrid.utils.https.SSLOptions;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
 
 import org.ini4j.InvalidFileFormatException;
 import org.ini4j.Wini;
@@ -25,14 +24,13 @@ public class Main {
 	private static String warTemplateFile;
 	// private static String defaultConfigurationFile;
 	private static String configurationFile;
-	private static List<WebApp> webapps = new ArrayList<WebApp>();;
 	private static boolean isTest = false;
 
 	private static ServerInfo httpOptions, httpsOptions;
 	private static String stormBEHostname;
 	private static int stormBEPort;
 	private static String hostname;
-	private static String webappsDir;
+	private static String webappsDir = "/webapps";
 
 	public static void main(String[] args) {
 
@@ -47,22 +45,18 @@ public class Main {
 			server = new WebDAVServer(httpOptions, httpsOptions);
 			server.setWebappsDirectory(getExeDirectory() + webappsDir);
 			if (isTest) {
-				// create a test WebDAV file-system web-application on '/tmp'
-				// directory
-				WebApp webDAVfsServer;
-				webDAVfsServer = new WebApp("/WebDAV-fs-server", "/tmp", warTemplateFile, StorageArea.HTTPS_PROTOCOL);
-				webapps.add(webDAVfsServer);
+				// create a test WebDAV file-system web-application on '/tmp' directory
+				String contextPath = "/WebDAV-fs-server";
+				String rootDirectory = "/tmp";
+				String fsPath = server.getWebappsDirectory();
+				server.deploy(new WebApp(contextPath, rootDirectory, warTemplateFile, StorageArea.HTTP_AND_HTTPS_PROTOCOLS, fsPath));
 			} else {
-				// Retrieve the Storage-Area list from Storm Back-end and
-				// generate the Web-Application List
+				// Retrieve the Storage-Area list and for every SA deploy a webapp
 				StorageAreaManager.initFromStormBackend(stormBEHostname, stormBEPort);
 				for (StorageArea SA : StorageAreaManager.getStorageAreas()) {
-					webapps.add(new WebApp(SA, warTemplateFile));
+					server.deploy(new WebApp(SA, warTemplateFile, server.getWebappsDirectory()));
 				}
 			}
-			// deploy web-applications
-			for (WebApp webapp : webapps)
-				server.deploy(webapp);
 			server.start();
 		} catch (ServerException e) {
 			e.printStackTrace();
@@ -82,6 +76,7 @@ public class Main {
 				try {
 					server.undeployAll();
 					server.stop();
+					FileUtils.deleteDirectory(new File(server.getWebappsDirectory()));
 				} catch (Exception e1) {
 					e1.printStackTrace();
 				}
@@ -110,8 +105,6 @@ public class Main {
 
 	private static void loadConfiguration(String filename) throws InvalidFileFormatException, IOException {
 		Wini configuration = new Wini(new File(filename));
-		// Web-Applications directory
-		webappsDir = configuration.get("options", "webapps_directory");
 		// This hostname
 		hostname = configuration.get("options", "hostname");
 		// Storm BE hostname and port
