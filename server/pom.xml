@@ -4,12 +4,13 @@
 	<parent>
 		<groupId>it.grid.storm</groupId>
 		<artifactId>fs-WebDAV</artifactId>
-		<version>0.0.1</version>
+		<version>1.0</version>
 	</parent>
 	<artifactId>server</artifactId>
 
 	<properties>
-		<bundle.name>${project.artifactId}-${project.version}</bundle.name>
+<!-- 		<bundle.name>${project.artifactId}-${project.version}</bundle.name> -->
+		<bundle.name>${project.artifactId}</bundle.name>
 	</properties>
 
 	<repositories>
