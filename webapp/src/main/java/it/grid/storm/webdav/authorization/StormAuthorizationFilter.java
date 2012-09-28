@@ -4,11 +4,8 @@ import it.grid.storm.webdav.authorization.methods.AbstractMethodAuthorization;
 import it.grid.storm.webdav.factory.StormResourceFactory;
 
 import java.io.IOException;
-import java.io.InputStream;
-import java.net.HttpURLConnection;
-import java.net.URI;
-import java.util.Map;
 import java.security.cert.X509Certificate;
+import java.util.Map;
 
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;
@@ -19,13 +16,6 @@ import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.http.HttpEntity;
-import org.apache.http.HttpResponse;
-import org.apache.http.StatusLine;
-import org.apache.http.client.ClientProtocolException;
-import org.apache.http.client.HttpClient;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.impl.client.DefaultHttpClient;
 import org.italiangrid.utils.voms.VOMSSecurityContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -64,16 +54,6 @@ public class StormAuthorizationFilter implements Filter {
 
 	public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
 
-		/* *********************************************** */
-
-		// Initializing parameters
-
-		String subjectDN = null;
-		String[] fqans = {};
-		String methodName = null;
-
-		/* *********************************************** */
-
 		// Setting HTTPRequest and HTTPResponse
 
 		HttpServletResponse HTTPResponse = null;
@@ -87,44 +67,39 @@ public class StormAuthorizationFilter implements Filter {
 			throw new ServletException("Protocol not supported. Use HTTP(S)");
 		}
 
+		HTTPRequest.setAttribute("STORAGE_AREA_ROOT", this.storageAreaRootDir);
+		HTTPRequest.setAttribute("STORAGE_AREA_NAME", this.storageAreaName);
+
+		HTTPRequest.setAttribute("STORM_BACKEND_HOST", StormAuthorizationUtils.STORM_BE_HOSTNAME);
+		HTTPRequest.setAttribute("STORM_BACKEND_PORT", StormAuthorizationUtils.STORM_BE_PORT);
+		
 		/* *********************************************** */
 
-		// Setting subjectDN and fqans from certificate and VOMS attributes
+		// Setting subjectDN and FQANS from certificate and VOMS attributes
 
-		VOMSSecurityContext.clearCurrentContext();
-		VOMSSecurityContext sc = new VOMSSecurityContext();
-		VOMSSecurityContext.setCurrentContext(sc);
-
-		X509Certificate[] certChain = null;
-
+		String subjectDN;
+		String[] fqans;
 		try {
-			certChain = (X509Certificate[]) request.getAttribute("javax.servlet.request.X509Certificate");
+			VOMSSecurityContext.clearCurrentContext();
+			VOMSSecurityContext sc = new VOMSSecurityContext();
+			VOMSSecurityContext.setCurrentContext(sc);
+			X509Certificate[] certChain = getCertChain(HTTPRequest);
+			sc.setClientCertChain(certChain);
+			subjectDN = sc.getClientDN().getRFCDNv2();
+			fqans = sc.getFQANs();
 		} catch (Exception e) {
-			log.warn("Error fetching certificate from http request: " + e.getMessage());
-		}
-
-		if (certChain == null) {
-			log.warn("Unauthenticated connection from " + request.getRemoteAddr());
+			log.warn(e.getMessage());
 			return;
 		}
 
-		sc.setClientCertChain(certChain);
-
-		subjectDN = sc.getClientDN().getRFCDNv2();
-		fqans = sc.getFQANs();
+		HTTPRequest.setAttribute("SUBJECT_DN", subjectDN);
+		HTTPRequest.setAttribute("FQANS", fqans);
 
 		/* *********************************************** */
 
-		// Instead of getting info from the certificate...
+		// Check if method is allowed
 
-		//subjectDN = StormAuthorizationUtils.SUBJECT_DN;
-		// fqans are already null
-
-		/* *********************************************** */
-
-		// Setting methodName
-
-		methodName = HTTPRequest.getMethod();
+		String methodName = HTTPRequest.getMethod();
 		log.debug("Requested method is : " + methodName);
 		if (!StormAuthorizationUtils.methodAllowed(methodName)) {
 			log.warn("Received a request for a not allowed method : " + methodName);
@@ -134,12 +109,10 @@ public class StormAuthorizationFilter implements Filter {
 
 		/* *********************************************** */
 
-		// Checking if the user is authorized
+		// Check if the user is authorized
 
 		AbstractMethodAuthorization m = StormAuthorizationUtils.METHODS_MAP.get(methodName);
-		m.init(storageAreaRootDir, storageAreaName);
 		Map<String, String> operationsMap = m.getOperationsMap(HTTPRequest);
-
 		boolean isAuthorized = true;
 
 		for (Map.Entry<String, String> entry : operationsMap.entrySet()) {
@@ -148,8 +121,8 @@ public class StormAuthorizationFilter implements Filter {
 
 			log.debug("Asking authorization for operation " + op + " on " + path);
 			try {
-				isAuthorized = isAuthorized && isUserAuthorized(path, op, subjectDN, fqans);
-			} catch (ServletException e) {
+				isAuthorized = isAuthorized && StormAuthorizationUtils.isUserAuthorized(subjectDN, fqans, op, path);
+			} catch (Exception e) {
 				log.error("Unable to verify user authorization. ServletException : " + e.getMessage());
 				HTTPResponse.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Error testing user authorization: " + e.getMessage());
 				return;
@@ -168,77 +141,17 @@ public class StormAuthorizationFilter implements Filter {
 
 	}
 
-//	private boolean isUserAuthorizedFake(String path, String operation, String subjectDN, String[] fqans) throws ServletException,
-//			IllegalArgumentException {
-//		return true;
-//	}
+	private X509Certificate[] getCertChain(HttpServletRequest request) throws Exception {
 
-	private boolean isUserAuthorized(String path, String operation, String subjectDN, String[] fqans) throws ServletException,
-			IllegalArgumentException {
-		if (path == null || operation == null || subjectDN == null || fqans == null) {
-			log.error("Received null parameter(s) at isUserAuthorized: path=" + path + " operation=" + operation + " subjectDN="
-					+ subjectDN + " fqans=" + fqans);
-			throw new IllegalArgumentException("Received null parameter(s)");
-		}
-		URI uri = StormAuthorizationUtils.prepareURI(path, operation, subjectDN, fqans);
-		log.debug("Authorization request uri = " + uri.toString());
-		HttpGet httpget = new HttpGet(uri);
-		HttpClient httpclient = new DefaultHttpClient();
-		HttpResponse httpResponse;
+		X509Certificate[] certChain = null;
 		try {
-			httpResponse = httpclient.execute(httpget);
-		} catch (ClientProtocolException e) {
-			log.error("Error executing http call. ClientProtocolException " + e.getLocalizedMessage());
-			throw new ServletException("Error contacting authorization service.");
-		} catch (IOException e) {
-			log.error("Error executing http call. IOException " + e.getLocalizedMessage());
-			throw new ServletException("Error contacting authorization service.");
+			certChain = (X509Certificate[]) request.getAttribute("javax.servlet.request.X509Certificate");
+		} catch (Exception e) {
+			log.warn("Error fetching certificate from http request: " + e.getMessage());
 		}
-		StatusLine status = httpResponse.getStatusLine();
-		if (status == null) {
-			// never return null
-			log.error("Unexpected error! response.getStatusLine() returned null!");
-			throw new ServletException("Unexpected error! response.getStatusLine() returned null! Please contact storm support");
-		}
-		int httpCode = status.getStatusCode();
-		String httpMessage = status.getReasonPhrase();
-		HttpEntity entity = httpResponse.getEntity();
-		String output = "";
-		if (entity != null) {
-			InputStream responseIS;
-			try {
-				responseIS = entity.getContent();
-			} catch (IllegalStateException e) {
-				log.error("unable to get the input content stream from server answer. IllegalStateException " + e.getLocalizedMessage());
-				throw new ServletException("Error comunicationg with the authorization service.");
-			} catch (IOException e) {
-				log.error("unable to get the input content stream from server answer. IOException " + e.getLocalizedMessage());
-				throw new ServletException("Error comunicationg with the authorization service.");
-			}
-			int l;
-			byte[] tmp = new byte[512];
-			try {
-				while ((l = responseIS.read(tmp)) != -1) {
-					output = output + (new String(tmp, 0, l));
-				}
-			} catch (IOException e) {
-				log.error("Error reading from the connection error stream. IOException " + e.getMessage());
-				throw new ServletException("Error comunicationg with the authorization service.");
-			}
-		} else {
-			log.error("No HttpEntity found in the response. Unable to determine the answer");
-			throw new ServletException("Unable to get a valid authorization response from the server.");
-		}
-		log.debug("Authorization response is : '" + output + "'");
-		if (httpCode != HttpURLConnection.HTTP_OK) {
-			log.warn("Unable to get a valid response from server. Received a non HTTP 200 response from the server : '" + httpCode + "' "
-					+ httpMessage);
-			throw new ServletException("Unable to get a valid response from server. Received a non HTTP 200 response from the server : '"
-					+ httpCode + "' " + httpMessage);
-		}
-		Boolean response = new Boolean(output);
-		log.debug("Authorization response (Boolean value): '" + response + "'");
-		return response.booleanValue();
+		if (certChain == null)
+			throw new Exception("Unauthenticated connection from " + request.getRemoteAddr());
+		return certChain;
 	}
 
 }

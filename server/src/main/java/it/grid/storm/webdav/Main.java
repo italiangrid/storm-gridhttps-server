@@ -49,7 +49,7 @@ public class Main {
 				String contextPath = "/WebDAV-fs-server";
 				String rootDirectory = "/tmp";
 				String fsPath = server.getWebappsDirectory();
-				server.deploy(new WebApp(contextPath, rootDirectory, warTemplateFile, StorageArea.HTTP_AND_HTTPS_PROTOCOLS, fsPath));
+				server.deploy(new WebApp(contextPath, rootDirectory, warTemplateFile, StorageArea.HTTP_PROTOCOL, fsPath));
 			} else {
 				// Retrieve the Storage-Area list and for every SA deploy a webapp
 				StorageAreaManager.initFromStormBackend(stormBEHostname, stormBEPort);

@@ -1,13 +1,20 @@
-
 package it.grid.storm.webdav.factory;
 
-
-import io.milton.http.*;
+import io.milton.http.Auth;
+import io.milton.http.Range;
+import io.milton.http.Request;
+import io.milton.http.XmlWriter;
 import io.milton.http.exceptions.NotAuthorizedException;
 import io.milton.http.fs.FileContentService;
 import io.milton.resource.*;
+import io.milton.servlet.MiltonServlet;
+import it.grid.storm.xmlrpc.ApiException;
+import it.grid.storm.xmlrpc.BackendApi;
 
-import java.io.*;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -81,9 +88,52 @@ public class StormDirectoryResource extends StormResource implements MakeCollect
 
     public Resource createNew(String name, InputStream in, Long length, String contentType) throws IOException {
     	log.info("Called function for PUT FILE");
-		File dest = new File(this.getFile(), name);
+		
+    	//prepare to put
+    	String BEHostname = (String)MiltonServlet.request().getAttribute("STORM_BACKEND_HOST");
+    	long BEPort = Integer.valueOf((String)MiltonServlet.request().getAttribute("STORM_BACKEND_PORT"));
+    	String contextPath = (String)MiltonServlet.request().getAttribute("STORAGE_AREA_NAME");
+    	BackendApi be;
+    	try {
+			be = new BackendApi(BEHostname, BEPort);
+		} catch (ApiException e) {
+			throw new IOException(e.getMessage());
+		}
+    	List<String> surls = new ArrayList<String>();
+    	String surl = "srm://"+BEHostname+":"+BEPort+"/"+contextPath+"/"+this.getFile().getPath();
+    	surls.add(surl);
+    	log.debug("prepare to put:");
+    	log.debug(" # surl = " + surl);
+    	
+    	String userDN = (String)MiltonServlet.request().getAttribute("SUBJECT_DN");
+    	log.debug(" # userDN = " + userDN);
+    	
+    	List<String> userFQANS = new ArrayList<String>();
+    	
+    	for (String s : (String[])MiltonServlet.request().getAttribute("FQANS"))
+    		userFQANS.add(s);
+    	log.debug(" # fqANs = ( " + userFQANS.toArray().toString() + ")");
+    	
+    	log.debug(" > prepareToPut("+userDN+","+userFQANS.toString()+","+surls.toString()+")");
+//    	try {
+//			be.prepareToPut(userDN, userFQANS, surls);
+//		} catch (ApiException e) {
+//			throw new IOException(e.getMessage());
+//		}
+    	
+    	//put
+    	File dest = new File(this.getFile(), name);
 		contentService.setFileContent(dest, in);        
-        return factory.resolveFile(this.host, dest);
+    	
+		log.debug(" > putDone("+userDN+","+userFQANS.toString()+","+surls.toString()+", null)");
+		//put done
+//    	try {
+//			be.putDone(userDN, userFQANS, surls, null);			
+//		} catch (ApiException e) {
+//			throw new IOException(e.getMessage());
+//		}
+
+    	return factory.resolveFile(this.host, dest);
 
     }
 

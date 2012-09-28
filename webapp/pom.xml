@@ -90,6 +90,12 @@
 			<artifactId>trustmanager</artifactId>
 			<version>${trustmanagerVersion}</version>
 		</dependency>
+		
+		<dependency>
+			<groupId>igi.storm.backend</groupId>
+			<artifactId>xmlrpc-api</artifactId>
+			<version>0.0.9</version>
+		</dependency>
 
 	</dependencies>
 
