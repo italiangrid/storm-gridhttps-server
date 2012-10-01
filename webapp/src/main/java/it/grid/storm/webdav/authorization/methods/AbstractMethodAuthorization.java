@@ -10,30 +10,21 @@ import javax.servlet.http.HttpServletRequest;
 
 public abstract class AbstractMethodAuthorization {
 
-	private String stormStorageAreaRootDir;
-	private String servletContextPath;
+	public abstract Map<String, String> getOperationsMap(HttpServletRequest HTTPRequest) throws IOException, ServletException;
 
-	public void init(String stormStorageAreaRootDir,
-			String servletContextPath) {
-		this.stormStorageAreaRootDir = stormStorageAreaRootDir;
-		this.servletContextPath = servletContextPath;
-	}
-	
-	public abstract Map<String, String> getOperationsMap(
-			HttpServletRequest HTTPRequest) throws IOException,
-			ServletException;
-
-	protected String getDestinationFromHeader(HttpServletRequest HTTPRequest)
-			throws ServletException {
+	protected String getDestinationFromHeader(HttpServletRequest HTTPRequest) throws ServletException {
 		String destinationHeader = HTTPRequest.getHeader("Destination");
+		String contextPath = (String) HTTPRequest.getAttribute("STORAGE_AREA_NAME");
+		String rootDir = (String) HTTPRequest.getAttribute("STORAGE_AREA_ROOT");
 		if (destinationHeader != null)
-			return convertToStorageAreaPath(destinationHeader);
+			return convertToStorageAreaPath(destinationHeader, contextPath, rootDir);
 		return null;
 	}
 
-	protected String getResourcePath(HttpServletRequest HTTPRequest)
-			throws ServletException {
-		return convertToStorageAreaPath(HTTPRequest.getRequestURI());
+	protected String getResourcePath(HttpServletRequest HTTPRequest) throws ServletException {
+		String contextPath = (String) HTTPRequest.getAttribute("STORAGE_AREA_NAME");
+		String rootDir = (String) HTTPRequest.getAttribute("STORAGE_AREA_ROOT");
+		return convertToStorageAreaPath(HTTPRequest.getRequestURI(), contextPath, rootDir);
 	}
 
 	protected boolean getOverwriteFromHeader(HttpServletRequest HTTPRequest) {
@@ -43,19 +34,15 @@ public abstract class AbstractMethodAuthorization {
 		return true;
 	}
 
-	private String convertToStorageAreaPath(String uri_string)
-			throws ServletException {
+	private String convertToStorageAreaPath(String uriStr, String contextPath, String rootDir) throws ServletException {
 		URI uri;
 		try {
-			uri = new URI(uri_string);
+			uri = new URI(uriStr);
 		} catch (URISyntaxException e) {
-			throw new ServletException(
-					"Unable to create URI object from the string: "
-							+ uri_string);
+			throw new ServletException("Unable to create URI object from the string: " + uriStr);
 		}
-		String path = uri.getPath().replaceFirst(servletContextPath, "")
-				.replace("//", "/");
-		return stormStorageAreaRootDir + path;
+		String path = uri.getPath().replaceFirst(contextPath, "").replace("//", "/");
+		return rootDir + path;
 	}
 
 }

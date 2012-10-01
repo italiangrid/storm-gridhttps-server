@@ -12,101 +12,114 @@
  */
 package it.grid.storm.webdav.storagearea;
 
-
 import java.io.File;
 
 /**
  * @author Michele Dibenedetto
  */
-public class StorageArea
-{
+public class StorageArea {
 
+	private String name;
+	private String FSRoot;
+	private String stfnRoot;
+	private int protocol;
 
-    private String name;
-    private String FSRoot;
-    private String stfnRoot;
+	public final static int NONE_PROTOCOL = 0;
+	public final static int HTTP_PROTOCOL = 1;
+	public final static int HTTPS_PROTOCOL = 2;
+	public final static int HTTP_AND_HTTPS_PROTOCOLS = 3;
 
+	/**
+	 * @param name
+	 *            the name of the storage area
+	 * @param FSRoot
+	 *            the File System root of the storage area
+	 * @param stfnRoot
+	 *            the storage file name root of the storage area
+	 */
+	public StorageArea(String name, String FSRoot, String stfnRoot, int protocol) {
+		this.name = name;
+		this.FSRoot = normalizePath(FSRoot);
+		this.stfnRoot = normalizePath(stfnRoot);
+		this.protocol = protocol;
+	}
 
-    /**
-     * @param name the name of the storage area
-     * @param FSRoot the File System root of the storage area
-     * @param stfnRoot the storage file name root of the storage area
-     */
-    public StorageArea(String name, String FSRoot, String stfnRoot)
-    {
-        this.name = name;
-        this.FSRoot = normalizePath(FSRoot);
-        this.stfnRoot = normalizePath(stfnRoot);
-    }
+	/**
+	 * @return the name
+	 */
+	public final String getName() {
+		return name;
+	}
 
+	/**
+	 * @return the http protocol to use to access resources via webdav server
+	 */
+	public final int getProtocol() {
+		return protocol;
+	}
 
-    /**
-     * @return the name
-     */
-    public final String getName()
-    {
-        return name;
-    }
+	/**
+	 * @return the root
+	 */
+	public final String getFSRoot() {
+		return FSRoot;
+	}
 
+	/**
+	 * Given a path string builds from it a path string with starting slash and
+	 * without ending slash
+	 * 
+	 * @param path
+	 *            a path string
+	 * @return a path string with starting slash and without ending slash
+	 */
+	private final String normalizePath(String path) {
+		if (path.charAt(path.length() - 1) == File.separatorChar) {
+			if (path.charAt(0) != File.separatorChar) {
+				return File.separatorChar
+						+ path.substring(0, path.length() - 1);
+			} else {
+				return path.substring(0, path.length() - 1);
+			}
+		} else {
+			if (path.charAt(0) != File.separatorChar) {
+				return File.separatorChar + path;
+			} else {
+				return path;
+			}
+		}
+	}
 
-    /**
-     * @return the root
-     */
-    public final String getFSRoot()
-    {
-        return FSRoot;
-    }
+	/**
+	 * @return the stfnRoot
+	 */
+	public final String getStfnRoot() {
+		return stfnRoot;
+	}
 
+	public static String protocolToStr(int protocol) {
+		switch (protocol) {
+		case 0:
+			return "NONE_PROTOCOL";
+		case 1:
+			return "HTTP_PROTOCOL";
+		case 2:
+			return "HTTPS_PROTOCOL";
+		case 3:
+			return "HTTP_AND_HTTPS_PROTOCOLS";
+		default:
+			return "UNDEFINED";
+		}
+	}
 
-    /**
-     * Given a path string builds from it a path string with starting slash and without ending slash
-     * 
-     * @param path a path string
-     * @return a path string with starting slash and without ending slash
-     */
-    private final String normalizePath(String path)
-    {
-        if (path.charAt(path.length() - 1) == File.separatorChar)
-        {
-            if (path.charAt(0) != File.separatorChar)
-            {
-                return File.separatorChar + path.substring(0, path.length() - 1);
-            }
-            else
-            {
-                return path.substring(0, path.length() - 1);
-            }
-        }
-        else
-        {
-            if (path.charAt(0) != File.separatorChar)
-            {
-                return File.separatorChar + path;
-            }
-            else
-            {
-                return path;
-            }
-        }
-    }
-
-
-    /**
-     * @return the stfnRoot
-     */
-    public final String getStfnRoot()
-    {
-        return stfnRoot;
-    }
-
-
-    /*
-     * (non-Javadoc)
-     * @see java.lang.Object#toString()
-     */
-    @Override
-    public String toString()
-    {
-        return "StorageArea [name=" + name + ", root=" + FSRoot + ", stfnRoot=" + stfnRoot + "]";
-    }
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see java.lang.Object#toString()
+	 */
+	@Override
+	public String toString() {
+		return "StorageArea [name=" + name + ", root=" + FSRoot + ", stfnRoot="
+				+ stfnRoot + ", protocol=" + protocolToStr(this.protocol) + "]";
+	}
 }

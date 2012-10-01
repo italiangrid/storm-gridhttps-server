@@ -50,12 +50,14 @@ public class Zip {
 	}
 
 	public void unzip(String zipfile, String outputDirectory) throws IOException {
+		
+		log.info("ZIP > decompressing template file {" + zipfile + "} into {" + outputDirectory + "}");
 		ZipFile zfile = new ZipFile(zipfile);
 		Enumeration<? extends ZipEntry> entries = zfile.entries();
 		while (entries.hasMoreElements()) {
 			ZipEntry entry = entries.nextElement();
 			File file = new File(outputDirectory, entry.getName());
-			log.debug("\t"+entry.getName()+" ["+entry.getSize()/1024 + "KB]");
+			//log.debug("\t"+entry.getName()+" ["+entry.getSize()/1024 + "KB]");
 			if (entry.isDirectory()) {
 				file.mkdirs();
 			} else {
@@ -69,6 +71,8 @@ public class Zip {
 			}
 		}
 		zfile.close();
+		log.info("ZIP > decompressed! ");
+		
 	}
 	
 }

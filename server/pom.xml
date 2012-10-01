@@ -4,49 +4,44 @@
 	<parent>
 		<groupId>it.grid.storm</groupId>
 		<artifactId>fs-WebDAV</artifactId>
-		<version>0.0.1</version>
+		<version>1.0</version>
 	</parent>
 	<artifactId>server</artifactId>
 
 	<properties>
-		<bundle.name>${project.artifactId}-${project.version}</bundle.name>
-		<jetty.version>7.2.2.v20101205</jetty.version>
-		<slf4jVersion>1.5.2</slf4jVersion>
+<!-- 		<bundle.name>${project.artifactId}-${project.version}</bundle.name> -->
+		<bundle.name>${project.artifactId}</bundle.name>
 	</properties>
 
-	<dependencies>
+	<repositories>
+		<repository>
+			<id>cnaf-snapshots</id>
+			<name>CNAF snapshots</name>
+			<url>http://radiohead.cnaf.infn.it:8081/nexus/content/repositories/cnaf-snapshots/</url>
+			<snapshots>
+				<enabled>true</enabled>
+			</snapshots>
+		</repository>
+		<repository>
+			<id>cnaf-repositories</id>
+			<name>CNAF repositories</name>
+			<url>http://radiohead.cnaf.infn.it:8081/nexus/content/repositories/public/</url>
+		</repository>
+	</repositories>
 
-		<!-- 
-		<dependency>
-			<groupId>org.slf4j</groupId>
-			<artifactId>slf4j-log4j12</artifactId>
-			<version>${slf4jVersion}</version>
-		</dependency>
-		-->
+
+	<dependencies>
 
 		<dependency>
 			<groupId>ch.qos.logback</groupId>
 			<artifactId>logback-classic</artifactId>
 			<version>1.0.6</version>
 		</dependency>
-		
+
 		<dependency>
 			<groupId>ch.qos.logback</groupId>
 			<artifactId>logback-core</artifactId>
 			<version>1.0.6</version>
-		</dependency>
-            
-		
-		<!-- Jetty artifacts. Note: They do have transitive dependencies. -->
-		<dependency>
-			<groupId>org.eclipse.jetty</groupId>
-			<artifactId>jetty-server</artifactId>
-			<version>${jetty.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>org.eclipse.jetty</groupId>
-			<artifactId>jetty-webapp</artifactId>
-			<version>${jetty.version}</version>
 		</dependency>
 
 		<dependency>
@@ -72,13 +67,32 @@
 			<artifactId>httpclient</artifactId>
 			<version>4.0-beta1</version>
 		</dependency>
-<!-- 
+
 		<dependency>
 			<groupId>org.italiangrid</groupId>
 			<artifactId>https-utils</artifactId>
 			<version>0.0.1-SNAPSHOT</version>
+			<exclusions>
+				<exclusion>
+					<artifactId>slf4j-api</artifactId>
+					<groupId>org.slf4j</groupId>
+				</exclusion>
+				<exclusion>
+					<artifactId>bcprov-jdk16</artifactId>
+					<groupId>org.bouncycastle</groupId>
+				</exclusion>
+				<exclusion>
+					<artifactId>log4j</artifactId>
+					<groupId>log4j</groupId>
+				</exclusion>
+			</exclusions>
 		</dependency>
- -->
+
+		<dependency>
+			<groupId>org.ini4j</groupId>
+			<artifactId>ini4j</artifactId>
+			<version>0.5.2</version>
+		</dependency>
 
 	</dependencies>
 
@@ -103,6 +117,16 @@
 									<mainClass>it.grid.storm.webdav.Main</mainClass>
 								</transformer>
 							</transformers>
+							<filters>
+								<filter>
+									<artifact>*:*</artifact>
+									<excludes>
+										<exclude>META-INF/*.SF</exclude>
+										<exclude>META-INF/*.DSA</exclude>
+										<exclude>META-INF/*.RSA</exclude>
+									</excludes>
+								</filter>
+							</filters>
 						</configuration>
 					</execution>
 				</executions>
