@@ -2,20 +2,20 @@ package it.grid.storm.webdav.server;
 
 import it.grid.storm.webdav.storagearea.StorageArea;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+//import org.slf4j.Logger;
+//import org.slf4j.LoggerFactory;
 
 public class WebDAVServer {
 	
-	private static final Logger log = LoggerFactory.getLogger(WebDAVServer.class);
+	//private static final Logger log = LoggerFactory.getLogger(WebDAVServer.class);
 	private String webappsDirectory = "./webapps";
 	
 	private HttpServer httpServer;
 	private HttpsServer httpsServer;
 	
 	public WebDAVServer(ServerInfo httpOptions, ServerInfo httpsOptions) {
-		log.info("HTTP-OPTIONS: " + httpOptions.toString());
-		log.info("HTTPS-OPTIONS: " + httpsOptions.toString());
+		//log.info("HTTP-OPTIONS: " + httpOptions.toString());
+		//log.info("HTTPS-OPTIONS: " + httpsOptions.toString());
 		httpServer = new HttpServer(httpOptions);
 		httpsServer = new HttpsServer(httpsOptions);
 	}
@@ -44,6 +44,11 @@ public class WebDAVServer {
 		} catch (Exception e) {
 			throw new ServerException(e.getMessage());
 		}
+	}
+	
+	public void status() {	
+		httpServer.status();
+		httpsServer.status();
 	}
 	
 	private boolean isHttpDeployed(WebApp webapp) {

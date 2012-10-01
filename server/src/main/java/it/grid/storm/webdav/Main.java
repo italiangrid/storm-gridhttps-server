@@ -58,6 +58,7 @@ public class Main {
 				}
 			}
 			server.start();
+			server.status();
 		} catch (ServerException e) {
 			e.printStackTrace();
 			System.exit(1);

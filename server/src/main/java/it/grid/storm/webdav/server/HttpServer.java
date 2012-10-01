@@ -68,6 +68,7 @@ public class HttpServer {
 		connector.setPort(port);
 		connector.setMaxIdleTime(30000);
 		server.setConnectors(new Connector[] { connector });
+		server.setGracefulShutdown(1000);
 	}
 
 	public void start() throws ServerException {
@@ -88,6 +89,21 @@ public class HttpServer {
 		}
 	}
 
+	public void status() {
+		if (!server.isStarted()) {
+			log.info(name + " is not running ");
+			return;
+		}
+		log.info(name + " is running on port " + port);
+		if (webapps.size() == 0) {
+			log.info(" - " + webapps.size() + " webapp(s) are deployed ");
+			return;
+		}
+		log.info(" - " + webapps.size() + " webapp(s) are deployed for the following storage areas: ");
+		for (WebApp w : webapps)
+			log.info("    |- '" + w.getContextPath() + "' (root = '" + w.getRootDirectory() + "')");
+	}
+	
 	private boolean isDeployed(WebApp webapp) {
 		return (webapps.indexOf(webapp) != -1);
 	}
@@ -114,7 +130,8 @@ public class HttpServer {
 				throw new ServerException(e.getMessage());
 			}
 			
-			log.info(name + " > DEPLOYED WEBAPP: " + webapp.toString());
+			log.info(name + " > DEPLOYED WEBAPP '" + webapp.getContextPath().substring(1) + "'");
+			log.debug(name + " >  |- WEBAPP: " + webapp.toString());
 		}
 	}
 

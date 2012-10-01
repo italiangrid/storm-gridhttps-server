@@ -3,13 +3,13 @@
 	<appender name="FILE" class="ch.qos.logback.core.FileAppender">
 		<file>/tmp/fsWebDAV.log</file>
 		<encoder>
-			<pattern>%date{HH:mm:ss.SSS} |- %-5level [%thread] %logger - %msg%n</pattern>
+			<pattern>%date{HH:mm:ss} [%thread] %highlight(%-5level) %msg - %logger:%-4line %n</pattern>
 		</encoder>
 	</appender>
 
 	<appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
 		<encoder>
-			<pattern>%date{HH:mm:ss.SSS} |- %-5level [%thread] %logger - %msg%n</pattern>
+			<pattern>%date{HH:mm:ss} [%thread] %highlight(%-5level) %msg - %logger:%-4line %n</pattern>
 		</encoder>
 	</appender>
 
@@ -22,9 +22,5 @@
 		<appender-ref ref="FILE" />
 		<appender-ref ref="STDOUT" />
 	</logger>
-
-	<root level="DEBUG">
-		
-	</root>
 	
 </configuration>

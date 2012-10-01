@@ -17,7 +17,7 @@ import org.slf4j.LoggerFactory;
 
 public class HttpsServer {
 
-	private static final Logger log = LoggerFactory.getLogger(HttpServer.class);
+	private static final Logger log = LoggerFactory.getLogger(HttpsServer.class);
 
 	private String name;
 	private int port;
@@ -70,6 +70,7 @@ public class HttpsServer {
 		contextHandlerCollection = new ContextHandlerCollection();
 		hc.setHandlers(new Handler[] { contextHandlerCollection });
 		server.setHandler(hc);
+		server.setGracefulShutdown(1000);
 	}
 
 	public void start() throws ServerException {
@@ -88,6 +89,21 @@ public class HttpsServer {
 		} catch (Exception e) {
 			throw new ServerException(e.getMessage());
 		}
+	}
+	
+	public void status() {
+		if (!server.isStarted()) {
+			log.info(name + " is not running ");
+			return;
+		}
+		log.info(name + " is running on port " + port);
+		if (webapps.size() == 0) {
+			log.info(" - " + webapps.size() + " webapp(s) are deployed ");
+			return;
+		}
+		log.info(" - " + webapps.size() + " webapp(s) are deployed for the following storage areas: ");
+		for (WebApp w : webapps)
+			log.info("    |- '" + w.getContextPath() + "' (root = '" + w.getRootDirectory() + "')");
 	}
 
 	private boolean isDeployed(WebApp webapp) {
@@ -116,7 +132,8 @@ public class HttpsServer {
 				throw new ServerException(e.getMessage());
 			}
 			
-			log.info(name + " > DEPLOYED WEBAPP: " + webapp.toString());
+			log.info(name + " > DEPLOYED WEBAPP '" + webapp.getContextPath().substring(1) + "'");
+			log.debug(name + " >  |- WEBAPP: " + webapp.toString());
 		}
 	}
 
