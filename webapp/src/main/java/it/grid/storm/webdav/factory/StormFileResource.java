@@ -112,6 +112,12 @@ public class StormFileResource extends StormResource implements CopyableResource
         }
     }
 
+    public String getName() {
+    	String name = super.getName();
+    	log.debug("StormFileResource.getName() = "+name);
+		return name;
+    }
+    
 	public void replaceContent(InputStream in, Long length) throws BadRequestException, ConflictException, NotAuthorizedException {
 		try {
 			contentService.setFileContent(file, in);

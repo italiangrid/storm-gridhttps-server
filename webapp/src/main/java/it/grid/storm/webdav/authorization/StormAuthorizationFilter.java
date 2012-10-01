@@ -115,6 +115,8 @@ public class StormAuthorizationFilter implements Filter {
 		Map<String, String> operationsMap = m.getOperationsMap(HTTPRequest);
 		boolean isAuthorized = true;
 
+		if (!this.storageAreaName.equals("WebDAV-fs-server")) { //TO REMOVE - ONLY FOR TEST
+		
 		for (Map.Entry<String, String> entry : operationsMap.entrySet()) {
 			String op = entry.getKey();
 			String path = entry.getValue();
@@ -130,6 +132,8 @@ public class StormAuthorizationFilter implements Filter {
 
 		}
 
+		} //TO REMOVE - ONLY FOR TEST
+		
 		if (isAuthorized) {
 			log.info("User is authorized to access the requested resource");
 			chain.doFilter(request, response);
