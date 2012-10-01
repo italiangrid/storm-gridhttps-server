@@ -1,6 +1,6 @@
-package it.grid.storm.webdav.authorization.methods;
+package it.grid.storm.webdav.webapp.authorization.methods;
 
-import it.grid.storm.webdav.authorization.Constants;
+import it.grid.storm.webdav.webapp.authorization.Constants;
 
 import java.io.IOException;
 import java.util.Map;
@@ -12,11 +12,11 @@ import javax.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class CopyMethodAuthorization extends AbstractMethodAuthorization {
+public class GetMethodAuthorization extends AbstractMethodAuthorization {
 
 	private static final Logger log = LoggerFactory
-			.getLogger(CopyMethodAuthorization.class);
-	
+			.getLogger(GetMethodAuthorization.class);
+
 	@Override
 	public Map<String, String> getOperationsMap(HttpServletRequest HTTPRequest)
 			throws IOException, ServletException {
@@ -26,18 +26,11 @@ public class CopyMethodAuthorization extends AbstractMethodAuthorization {
 		String op = null;
 
 		path = getResourcePath(HTTPRequest);
-		op = Constants.CP_FROM_OPERATION;
-		log.debug("Putting operation: '" + op + "' , path: '" + path
-				+ "' into the map.");
-		operationsMap.put(op, path);
-
-		path = getDestinationFromHeader(HTTPRequest);
-		op = Constants.CP_TO_OPERATION;
+		op = Constants.PREPARE_TO_GET_OPERATION;
 		log.debug("Putting operation: '" + op + "' , path: '" + path
 				+ "' into the map.");
 		operationsMap.put(op, path);
 
 		return operationsMap;
 	}
-
 }

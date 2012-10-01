@@ -1,4 +1,4 @@
-package it.grid.storm.webdav.authorization.methods;
+package it.grid.storm.webdav.webapp.authorization.methods;
 
 import java.io.IOException;
 import java.net.URI;

@@ -1,6 +1,6 @@
-package it.grid.storm.webdav.authorization;
+package it.grid.storm.webdav.webapp.authorization;
 
-import it.grid.storm.webdav.authorization.methods.*;
+import it.grid.storm.webdav.webapp.authorization.methods.*;
 
 import java.io.IOException;
 import java.io.InputStream;

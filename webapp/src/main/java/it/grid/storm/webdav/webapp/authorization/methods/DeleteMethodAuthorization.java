@@ -1,6 +1,6 @@
-package it.grid.storm.webdav.authorization.methods;
+package it.grid.storm.webdav.webapp.authorization.methods;
 
-import it.grid.storm.webdav.authorization.Constants;
+import it.grid.storm.webdav.webapp.authorization.Constants;
 
 import java.io.IOException;
 import java.util.Map;
@@ -12,11 +12,11 @@ import javax.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class MkcolMethodAuthorization extends AbstractMethodAuthorization {
+public class DeleteMethodAuthorization extends AbstractMethodAuthorization {
 
 	private static final Logger log = LoggerFactory
-			.getLogger(MkcolMethodAuthorization.class);
-
+			.getLogger(DeleteMethodAuthorization.class);
+	
 	@Override
 	public Map<String, String> getOperationsMap(HttpServletRequest HTTPRequest)
 			throws IOException, ServletException {
@@ -26,7 +26,7 @@ public class MkcolMethodAuthorization extends AbstractMethodAuthorization {
 		String op = null;
 
 		path = getResourcePath(HTTPRequest);
-		op = Constants.MKDIR_OPERATION;
+		op = Constants.RM_OPERATION;
 		log.debug("Putting operation: '" + op + "' , path: '" + path
 				+ "' into the map.");
 		operationsMap.put(op, path);

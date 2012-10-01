@@ -11,7 +11,7 @@
  * limitations under the License.
  */
 
-package it.grid.storm.webdav.authorization;
+package it.grid.storm.webdav.webapp.authorization;
 /**
  * @author Michele Dibenedetto
  *

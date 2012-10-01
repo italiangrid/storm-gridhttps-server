@@ -1,4 +1,4 @@
-package it.grid.storm.webdav.factory;
+package it.grid.storm.webdav.webapp.factory;
 
 import io.milton.http.Auth;
 import io.milton.http.Range;

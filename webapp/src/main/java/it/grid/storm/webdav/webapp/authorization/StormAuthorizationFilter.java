@@ -1,7 +1,7 @@
-package it.grid.storm.webdav.authorization;
+package it.grid.storm.webdav.webapp.authorization;
 
-import it.grid.storm.webdav.authorization.methods.AbstractMethodAuthorization;
-import it.grid.storm.webdav.factory.StormResourceFactory;
+import it.grid.storm.webdav.webapp.authorization.methods.AbstractMethodAuthorization;
+import it.grid.storm.webdav.webapp.factory.StormResourceFactory;
 
 import java.io.IOException;
 import java.security.cert.X509Certificate;

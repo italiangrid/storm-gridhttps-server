@@ -6,7 +6,7 @@
 
 	<filter>
 		<filter-name>stormAuthorizationFilter</filter-name>
-		<filter-class>it.grid.storm.webdav.authorization.StormAuthorizationFilter</filter-class>
+		<filter-class>it.grid.storm.webdav.webapp.authorization.StormAuthorizationFilter</filter-class>
 	</filter>
 
 	<filter>
