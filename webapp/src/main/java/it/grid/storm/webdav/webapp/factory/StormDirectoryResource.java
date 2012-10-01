@@ -93,12 +93,12 @@ public class StormDirectoryResource extends StormResource implements MakeCollect
     	String BEHostname = (String)MiltonServlet.request().getAttribute("STORM_BACKEND_HOST");
     	long BEPort = Integer.valueOf((String)MiltonServlet.request().getAttribute("STORM_BACKEND_PORT"));
     	String contextPath = (String)MiltonServlet.request().getAttribute("STORAGE_AREA_NAME");
-    	BackendApi be;
-    	try {
-			be = new BackendApi(BEHostname, BEPort);
-		} catch (ApiException e) {
-			throw new IOException(e.getMessage());
-		}
+//    	BackendApi be;
+//    	try {
+//			be = new BackendApi(BEHostname, BEPort);
+//		} catch (ApiException e) {
+//			throw new IOException(e.getMessage());
+//		}
     	List<String> surls = new ArrayList<String>();
     	String surl = "srm://"+BEHostname+":"+BEPort+"/"+contextPath+"/"+this.getFile().getPath();
     	surls.add(surl);
