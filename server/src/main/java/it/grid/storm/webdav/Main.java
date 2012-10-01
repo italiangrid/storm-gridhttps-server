@@ -17,9 +17,13 @@ import java.io.IOException;
 
 import org.ini4j.InvalidFileFormatException;
 import org.ini4j.Wini;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class Main {
 
+	private static final Logger log = LoggerFactory.getLogger(Main.class);
+	
 	private static WebDAVServer server;
 	private static String warTemplateFile;
 	// private static String defaultConfigurationFile;
@@ -37,6 +41,7 @@ public class Main {
 		try {
 			parseCommandLine(args);
 			loadConfiguration(configurationFile);
+			log.info("Configuration file loaded successfully");
 		} catch (Exception e) {
 			e.printStackTrace();
 			System.exit(1);

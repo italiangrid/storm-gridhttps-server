@@ -1,6 +1,9 @@
 package it.grid.storm.webdav.server;
 
+import java.io.File;
+
 import it.grid.storm.webdav.storagearea.StorageArea;
+import it.grid.storm.webdav.utils.FileUtils;
 
 //import org.slf4j.Logger;
 //import org.slf4j.LoggerFactory;
@@ -85,6 +88,7 @@ public class WebDAVServer {
 	public void undeployAll() throws ServerException {
 		httpServer.undeployAll();
 		httpsServer.undeployAll();
+		FileUtils.deleteDirectory(new File(this.webappsDirectory));
 	}
 	
 

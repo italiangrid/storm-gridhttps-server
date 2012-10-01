@@ -87,8 +87,7 @@ public class StorageAreaManager {
 	private static LinkedList<StorageArea> populateStorageAreaConfiguration(final ConfigurationParameters stormBackendParameters)
 			throws Exception {
 		URI uri = buildConfigDiscoveryServiceUri(stormBackendParameters);
-		log.info("Calling Configuration Discovery service at uri: ");
-		log.info(uri.toString());
+		log.info("Calling Configuration Discovery service at uri: " + uri);
 		HttpGet httpget = new HttpGet(uri);
 		HttpClient httpclient = new DefaultHttpClient();
 		HttpResponse httpResponse;

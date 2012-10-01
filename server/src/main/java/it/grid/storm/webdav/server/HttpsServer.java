@@ -152,12 +152,14 @@ public class HttpsServer {
 			context.setContextPath(webapp.getContextPath());
 			context.setParentLoaderPriority(true);
 			this.contextHandlerCollection.removeHandler(context);
+			webapps.remove(webapp);
 		}				
 	}
 
 	public void undeployAll() throws ServerException {
 		for (WebApp webapp : webapps)
 			undeploy(webapp);
+		webapps.clear();
 	}
 	
 }
