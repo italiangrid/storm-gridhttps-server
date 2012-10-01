@@ -24,5 +24,7 @@ public class StormPropfindRequestHandler implements StormHandler {
 		log.info("this is the exec function of "
 				+ StormPropfindRequestHandler.class);
 
+		log.info("Header:\n"+((RequestEvent) e).getRequest().getHeaders().toString());
+		
 	}
 }

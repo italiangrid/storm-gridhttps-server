@@ -15,6 +15,7 @@ import io.milton.http.exceptions.NotAuthorizedException;
 import io.milton.http.exceptions.NotFoundException;
 import io.milton.http.fs.FileContentService;
 import io.milton.property.MultiNamespaceCustomPropertySource;
+import io.milton.property.PropertySource.PropertySetException;
 import io.milton.resource.*;
 
 import java.io.*;
@@ -43,13 +44,7 @@ public class StormFileResource extends StormResource implements CopyableResource
      */
     public StormFileResource(String host, StormResourceFactory fileSystemResourceFactory, File file, FileContentService contentService) {
         super(host, fileSystemResourceFactory, file);
-//        log.info("StormFileResource ########################");
-//        log.info("host: "+host);
-//        log.info("file: "+file.getAbsolutePath());
         this.contentService = contentService;
-//        MultiNamespaceCustomPropertySource n=new MultiNamespaceCustomPropertySource();
-//        List<QName> l = n.getAllPropertyNames(this);
-        
     }
 
     public Long getContentLength() {

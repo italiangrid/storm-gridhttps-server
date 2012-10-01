@@ -13,57 +13,61 @@
 		<property name="realm" value="aRealm" />
 	</bean>
 
-<!-- 	<bean id="webdav-fs-webapp.listeners.mkcol" class="it.grid.storm.webdav.listeners.resources.StormNewFolderListener" /> -->
+	<!-- <bean id="webdav-fs-webapp.listeners.mkcol" class="it.grid.storm.webdav.listeners.resources.StormNewFolderListener" 
+		/> -->
 
 <!-- 	<bean id="webdav-fs-webapp.listeners.request" class="it.grid.storm.webdav.listeners.StormRequestListener" -->
-<!-- 		init-method="init"> -->
-<!-- 		<property name="handlersList"> -->
-<!-- 			<list> -->
-<!-- 				<value type="java.lang.Class">it.grid.storm.webdav.handlers.requests.StormPropfindRequestHandler -->
-<!-- 				</value> -->
-<!-- 				<value type="java.lang.Class">it.grid.storm.webdav.handlers.requests.StormPutRequestHandler -->
-<!-- 				</value> -->
-<!-- 				<value type="java.lang.Class">it.grid.storm.webdav.handlers.requests.StormOptionsRequestHandler -->
-<!-- 				</value> -->
-<!-- 			</list> -->
-<!-- 		</property> -->
+<!-- 	init-method="init"> -->
+<!-- 	<property name="handlersList"> -->
+<!-- 	<list> -->
+<!-- 	<value type="java.lang.Class">it.grid.storm.webdav.handlers.requests.StormPropfindRequestHandler -->
+<!-- 	</value> -->
+<!-- 	<value type="java.lang.Class">it.grid.storm.webdav.handlers.requests.StormPutRequestHandler -->
+<!-- 	</value> -->
+<!-- 	<value type="java.lang.Class">it.grid.storm.webdav.handlers.requests.StormOptionsRequestHandler -->
+<!-- 	</value> -->
+<!-- 	</list> -->
+<!-- 	</property> -->
 <!-- 	</bean> -->
 
-<!-- 	<bean id="webdav-fs-webapp.listeners.response" class="it.grid.storm.webdav.listeners.StormResponseListener" -->
-<!-- 		init-method="init"> -->
-<!-- 		<property name="handlersList"> -->
-<!-- 			<list> -->
-<!-- 				<value type="java.lang.Class">it.grid.storm.webdav.handlers.responses.StormPropfindResponseHandler -->
-<!-- 				</value> -->
-<!-- 				<value type="java.lang.Class">it.grid.storm.webdav.handlers.responses.StormPutResponseHandler -->
-<!-- 				</value> -->
-<!-- 			</list> -->
-<!-- 		</property> -->
-<!-- 	</bean> -->
+	<!-- <bean id="webdav-fs-webapp.listeners.response" class="it.grid.storm.webdav.listeners.StormResponseListener" -->
+	<!-- init-method="init"> -->
+	<!-- <property name="handlersList"> -->
+	<!-- <list> -->
+	<!-- <value type="java.lang.Class">it.grid.storm.webdav.handlers.responses.StormPropfindResponseHandler -->
+	<!-- </value> -->
+	<!-- <value type="java.lang.Class">it.grid.storm.webdav.handlers.responses.StormPutResponseHandler -->
+	<!-- </value> -->
+	<!-- </list> -->
+	<!-- </property> -->
+	<!-- </bean> -->
 
 <!-- 	<bean id="webdav-fs-webapp.event.manager" class="it.grid.storm.webdav.StormEventManager" -->
-<!-- 		init-method="init"> -->
-<!-- 		<property name="listenersList"> -->
-<!-- 			<list> -->
-<!-- 				<ref bean="webdav-fs-webapp.listeners.request" /> -->
-<!--  				<ref bean="webdav-fs-webapp.listeners.response" /> -->
-<!-- 				<ref bean="webdav-fs-webapp.listeners.mkcol" /> -->
-<!-- 			</list> -->
-<!-- 		</property> -->
+<!-- 	init-method="init"> -->
+<!-- 	<property name="listenersList"> -->
+<!-- 	<list> -->
+<!-- 	<ref bean="webdav-fs-webapp.listeners.request" /> -->
+<!-- 	<ref bean="webdav-fs-webapp.listeners.response" /> -->
+<!-- 	<ref bean="webdav-fs-webapp.listeners.mkcol" /> -->
+<!-- 	</list> -->
+<!-- 	</property> -->
 <!-- 	</bean> -->
+
+
+	<bean id="webdav-fs-webapp.extra.property" class="it.grid.storm.webdav.factory.StormPropertySource" />
 
 	<bean id="milton.http.manager" class="io.milton.config.HttpManagerBuilder">
 		<property name="mainResourceFactory" ref="milton.fs.resource.factory" />
+
+		<property name="extraPropertySources">
+			<list>
+				<ref bean="webdav-fs-webapp.extra.property" />
+			</list>
+		</property>
+
 <!-- 		<property name="eventManager" ref="webdav-fs-webapp.event.manager" /> -->
-		<!-- the default namespace is "DAV:" -->
-		<!-- resourceTypeHelper is explicit in order to avoid the default huge 
-			configuration (that include also caldav and carddav) -->
-		<!-- 
-		<property name="resourceTypeHelper" ref="milton.resource.type.helper" /> 
-		-->
-		<!-- start desabling some useless (I think) features -->
 		
-		<property name="enabledJson" value="false" /> 
+		<property name="enabledJson" value="false" />
 
 	</bean>
 
