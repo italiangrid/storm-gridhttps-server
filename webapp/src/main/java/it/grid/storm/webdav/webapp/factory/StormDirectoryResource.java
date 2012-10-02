@@ -7,7 +7,6 @@ import io.milton.http.XmlWriter;
 import io.milton.http.exceptions.NotAuthorizedException;
 import io.milton.http.fs.FileContentService;
 import io.milton.resource.*;
-import io.milton.servlet.MiltonServlet;
 import it.grid.storm.xmlrpc.ApiException;
 import it.grid.storm.xmlrpc.BackendApi;
 
@@ -42,18 +41,32 @@ public class StormDirectoryResource extends StormResource implements MakeCollect
 
     public CollectionResource createCollection(String name) {
     	log.info("Called function for MKCOL DIRECTORY");
-        File fnew = new File(file, name);
-        boolean ok = fnew.mkdir();
-        if (!ok) {
-            throw new RuntimeException("Failed to create: " + fnew.getAbsolutePath());
-        }
+    	
+    	StormResourceHelper helper = new StormResourceHelper(this);
+    	
+    	//mkdir
+    	BackendApi be;
+		try {
+			be = helper.createBackend();
+		} catch (IOException e) {
+			throw new RuntimeException(e.getMessage());
+		}
+
+    	log.debug("mkdir:");
+    	String newDirSurl = helper.getSurl() + name;
+    	try {
+			be.mkdir(helper.getUserDN(), helper.getUserFQANS(), newDirSurl);
+		} catch (ApiException e) {
+			throw new RuntimeException(e.getMessage());
+		}    	
+        File fnew = new File(this.file, name);
+
         return new StormDirectoryResource(host, factory, fnew, contentService);
     }
 
     public Resource child(String name) {
-        File fchild = new File(file, name);
+        File fchild = new File(this.file, name);
         return factory.resolveFile(this.host, fchild);
-
     }
 
     public List<? extends Resource> getChildren() {
@@ -89,49 +102,30 @@ public class StormDirectoryResource extends StormResource implements MakeCollect
     public Resource createNew(String name, InputStream in, Long length, String contentType) throws IOException {
     	log.info("Called function for PUT FILE");
 		
+    	StormResourceHelper helper = new StormResourceHelper(this);
+    	
     	//prepare to put
-    	String BEHostname = (String)MiltonServlet.request().getAttribute("STORM_BACKEND_HOST");
-    	long BEPort = Integer.valueOf((String)MiltonServlet.request().getAttribute("STORM_BACKEND_PORT"));
-    	String contextPath = (String)MiltonServlet.request().getAttribute("STORAGE_AREA_NAME");
-//    	BackendApi be;
-//    	try {
-//			be = new BackendApi(BEHostname, BEPort);
-//		} catch (ApiException e) {
-//			throw new IOException(e.getMessage());
-//		}
-    	List<String> surls = new ArrayList<String>();
-    	String surl = "srm://"+BEHostname+":"+BEPort+"/"+contextPath+"/"+this.getFile().getPath();
-    	surls.add(surl);
+    	BackendApi be = helper.createBackend();
+
     	log.debug("prepare to put:");
-    	log.debug(" # surl = " + surl);
     	
-    	String userDN = (String)MiltonServlet.request().getAttribute("SUBJECT_DN");
-    	log.debug(" # userDN = " + userDN);
-    	
-    	List<String> userFQANS = new ArrayList<String>();
-    	
-    	for (String s : (String[])MiltonServlet.request().getAttribute("FQANS"))
-    		userFQANS.add(s);
-    	log.debug(" # fqANs = ( " + userFQANS.toArray().toString() + ")");
-    	
-    	log.debug(" > prepareToPut("+userDN+","+userFQANS.toString()+","+surls.toString()+")");
-//    	try {
-//			be.prepareToPut(userDN, userFQANS, surls);
-//		} catch (ApiException e) {
-//			throw new IOException(e.getMessage());
-//		}
+    	try {
+			be.prepareToPut(helper.getUserDN(), helper.getUserFQANS(), helper.getSurls());
+		} catch (ApiException e) {
+			throw new IOException(e.getMessage());
+		}
     	
     	//put
     	File dest = new File(this.getFile(), name);
 		contentService.setFileContent(dest, in);        
     	
-		log.debug(" > putDone("+userDN+","+userFQANS.toString()+","+surls.toString()+", null)");
 		//put done
-//    	try {
-//			be.putDone(userDN, userFQANS, surls, null);			
-//		} catch (ApiException e) {
-//			throw new IOException(e.getMessage());
-//		}
+	   	log.debug("put done:");
+    	try {
+			be.putDone(helper.getUserDN(), helper.getUserFQANS(), helper.getSurls(), null);			
+		} catch (ApiException e) {
+			throw new IOException(e.getMessage());
+		}
 
     	return factory.resolveFile(this.host, dest);
 
@@ -162,7 +156,6 @@ public class StormDirectoryResource extends StormResource implements MakeCollect
     public void sendContent(OutputStream out, Range range, Map<String, String> params, String contentType) throws IOException, NotAuthorizedException {
     	log.info("Called function for GET DIRECTORY");
     	String subpath = getFile().getCanonicalPath().substring(factory.getRoot().getCanonicalPath().length()).replace('\\', '/');
-//        String uri = subpath;
         String uri = "/" + factory.getContextPath() + subpath;
         XmlWriter w = new XmlWriter(out);
         w.open("html");
