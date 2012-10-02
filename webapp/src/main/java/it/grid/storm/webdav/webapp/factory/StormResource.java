@@ -1,4 +1,3 @@
-
 package it.grid.storm.webdav.webapp.factory;
 
 
@@ -6,108 +5,134 @@ import io.milton.http.*;
 import io.milton.http.Request.Method;
 import io.milton.http.http11.auth.DigestResponse;
 import io.milton.resource.*;
+import it.grid.storm.webdav.webapp.authorization.Constants;
+
 import java.io.File;
 import java.util.Date;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public abstract class StormResource implements Resource, MoveableResource, CopyableResource, DigestResource {
 
-    private static final Logger log = LoggerFactory.getLogger(StormResource.class);
-    File file;
-    final StormResourceFactory factory;
-    final String host;
-    String ssoPrefix;
+public abstract class StormResource implements Resource, MoveableResource,
+		CopyableResource, DigestResource {
 
-    protected abstract void doCopy(File dest);
+	private static final Logger log = LoggerFactory
+			.getLogger(StormResource.class);
+	File file;
+	final StormResourceFactory factory;
+	final String host;
+	String ssoPrefix;
 
-    public StormResource(String host, StormResourceFactory factory, File file) {
-        this.host = host;
-        this.file = file;
-        this.factory = factory;
-    }
+	protected abstract void doCopy(File dest);
 
-    public File getFile() {
-        return file;
-    }
+	public StormResource(String host, StormResourceFactory factory, File file) {
+		this.host = host;
+		this.file = file;
+		this.factory = factory;
+	}
 
-    public String getUniqueId() {
-        String s = file.lastModified() + "_" + file.length() + "_" + file.getAbsolutePath();
-        return s.hashCode() + "";
-    }
+	public File getFile() {
+		return file;
+	}
 
-    public String getName() {
-        return file.getName();
-    }
+	public String getUniqueId() {
+		String s = file.lastModified() + "_" + file.length() + "_"
+				+ file.getAbsolutePath();
+		return s.hashCode() + "";
+	}
 
-    public Object authenticate(String user, String password) {
-        return factory.getSecurityManager().authenticate(user, password);
-    }
+	public String getName() {
+		return file.getName();
+	}
 
-    public Object authenticate(DigestResponse digestRequest) {
-        return factory.getSecurityManager().authenticate(digestRequest);
-    }
+	public Object authenticate(String user, String password) {
+		return factory.getSecurityManager().authenticate(user, password);
+	}
 
-    public boolean isDigestAllowed() {
-        return factory.isDigestAllowed();
-    }
+	public Object authenticate(DigestResponse digestRequest) {
+		return factory.getSecurityManager().authenticate(digestRequest);
+	}
 
-    public boolean authorise(Request request, Method method, Auth auth) {
-        boolean b = factory.getSecurityManager().authorise(request, method, auth, this);
-        if( log.isTraceEnabled()) {
-            log.trace("authorise: result=" + b);
-        }
-        return b;
-    }
+	public boolean isDigestAllowed() {
+		return factory.isDigestAllowed();
+	}
 
-    public String getRealm() {
-        return factory.getRealm(this.host);
-    }
+	public boolean authorise(Request request, Method method, Auth auth) {
+		boolean b = factory.getSecurityManager().authorise(request, method,
+				auth, this);
+		if (log.isTraceEnabled()) {
+			log.trace("authorise: result=" + b);
+		}
+		return b;
+	}
 
-    public Date getModifiedDate() {
-        return new Date(file.lastModified());
-    }
+	public String getRealm() {
+		return factory.getRealm(this.host);
+	}
 
-    public Date getCreateDate() {
-        return null;
-    }
+	public Date getModifiedDate() {
+		return new Date(file.lastModified());
+	}
 
-    public int compareTo(Resource o) {
-        return this.getName().compareTo(o.getName());
-    }
+	public Date getCreateDate() {
+		return null;
+	}
 
-    public void moveTo(CollectionResource newParent, String newName) {
-    	log.info("Called function for MOVE FILE or DIRECTORY");
-        if (newParent instanceof StormDirectoryResource) {
-        	StormDirectoryResource newFsParent = (StormDirectoryResource) newParent;
-            File dest = new File(newFsParent.getFile(), newName);
-            boolean ok = this.file.renameTo(dest);
-            if (!ok) {
-                throw new RuntimeException("Failed to move to: " + dest.getAbsolutePath());
-            }
-            this.file = dest;
-        } else {
-            throw new RuntimeException("Destination is an unknown type. Must be a StormDirectoryResource, is a: " + newParent.getClass());
-        }
-    }
+	public int compareTo(Resource o) {
+		return this.getName().compareTo(o.getName());
+	}
 
-    public void copyTo(CollectionResource newParent, String newName) {
-    	log.info("Called function for COPY FILE or DIRECTORY");
-        if (newParent instanceof StormDirectoryResource) {
-        	StormDirectoryResource newFsParent = (StormDirectoryResource) newParent;
-            File dest = new File(newFsParent.getFile(), newName);
-            doCopy(dest);
-        } else {
-            throw new RuntimeException("Destination is an unknown type. Must be a StormDirectoryResource, is a: " + newParent.getClass());
-        }
-    }
+	public void delete() {
+		log.info("Called function for DELETE FILE or DIRECTORY");
+		StormResourceHelper helper = new StormResourceHelper(this);
+		boolean ok = false;
+		try {
+			if (helper.isUserAuthorized(Constants.RM_OPERATION)) {
+				ok = file.delete();
+			} else {
+				throw new RuntimeException(
+						"User is not authorized to delete the resource");
+			}
+		} catch (IllegalArgumentException e) {
+			throw new RuntimeException(e.getMessage());
+		} catch (Exception e) {
+			throw new RuntimeException(e.getMessage());
+		}
+		if (!ok) {
+			throw new RuntimeException("Failed to delete the resource");
+		}
+	}
 
-    public void delete() {
-    	log.info("Called function for DELETE FILE or DIRECTORY");
-        boolean ok = file.delete();
-        if (!ok) {
-            throw new RuntimeException("Failed to delete");
-        }
-    }
+	public void moveTo(CollectionResource newParent, String newName) {
+		log.info("Called function for MOVE FILE or DIRECTORY");
+		if (newParent instanceof StormDirectoryResource) {
+			StormDirectoryResource newFsParent = (StormDirectoryResource) newParent;
+			File dest = new File(newFsParent.getFile(), newName);
+			boolean ok = this.file.renameTo(dest);
+			if (!ok) {
+				throw new RuntimeException("Failed to move to: "
+						+ dest.getAbsolutePath());
+			}
+			this.file = dest;
+		} else {
+			throw new RuntimeException(
+					"Destination is an unknown type. Must be a StormDirectoryResource, is a: "
+							+ newParent.getClass());
+		}
+	}
 
+	public void copyTo(CollectionResource newParent, String newName) {
+		log.info("Called function for COPY FILE or DIRECTORY");
+		if (newParent instanceof StormDirectoryResource) {
+			StormDirectoryResource newFsParent = (StormDirectoryResource) newParent;
+			File dest = new File(newFsParent.getFile(), newName);
+			doCopy(dest);
+		} else {
+			throw new RuntimeException(
+					"Destination is an unknown type. Must be a StormDirectoryResource, is a: "
+							+ newParent.getClass());
+		}
+	}
+	
 }

@@ -1,5 +1,9 @@
 package it.grid.storm.webdav.webapp.authorization.methods;
 
+import it.grid.storm.webdav.webapp.factory.StormResourceHelper;
+import it.grid.storm.xmlrpc.ApiException;
+import it.grid.storm.xmlrpc.BackendApi;
+import it.grid.storm.xmlrpc.outputdata.PingOutputData;
 
 import java.io.IOException;
 import java.util.Map;
@@ -23,6 +27,21 @@ public class OptionsMethodAuthorization extends AbstractMethodAuthorization {
 		Map<String, String> operationsMap = new HashMap<String, String>();
 
 		log.debug("For the method OPTIONS no authorization is needed.");
+
+		StormResourceHelper helper = new StormResourceHelper();
+
+		// ping
+		BackendApi be = helper.createBackend();
+
+		log.debug("ping:");
+
+		try {
+			PingOutputData pud = be.ping(helper.getUserDN(),
+					helper.getUserFQANS());
+			log.debug("ping output:\n" + pud.toString());
+		} catch (ApiException e) {
+			log.warn(e.getMessage());
+		}
 
 		return operationsMap;
 	}

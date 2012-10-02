@@ -14,15 +14,12 @@ import io.milton.http.exceptions.ConflictException;
 import io.milton.http.exceptions.NotAuthorizedException;
 import io.milton.http.exceptions.NotFoundException;
 import io.milton.http.fs.FileContentService;
-import io.milton.property.MultiNamespaceCustomPropertySource;
-import io.milton.property.PropertySource.PropertySetException;
 import io.milton.resource.*;
+import it.grid.storm.xmlrpc.ApiException;
+import it.grid.storm.xmlrpc.BackendApi;
 
 import java.io.*;
-import java.util.List;
 import java.util.Map;
-
-import javax.xml.namespace.QName;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
@@ -66,6 +63,20 @@ public class StormFileResource extends StormResource implements CopyableResource
 
     public void sendContent(OutputStream out, Range range, Map<String, String> params, String contentType) throws IOException, NotFoundException {
     	log.info("Called function for GET FILE");
+    	
+    	StormResourceHelper helper = new StormResourceHelper(this);
+    	
+    	//prepare to get
+    	BackendApi be = helper.createBackend();
+
+    	log.debug("prepare to get:");
+    	
+    	try {
+			be.prepareToGet(helper.getUserDN(), helper.getUserFQANS(), helper.getSurls(),(String[])helper.getProtocols().toArray());
+		} catch (ApiException e) {
+			throw new IOException(e.getMessage());
+		}
+    	
         InputStream in = null;
         try {
             in = contentService.getFileContent(file);
@@ -86,6 +97,14 @@ public class StormFileResource extends StormResource implements CopyableResource
         } finally {
             IOUtils.closeQuietly(in);
         }
+        
+        // releaseFiles
+    	try {
+			be.releaseFiles(helper.getUserDN(), helper.getUserFQANS(), helper.getSurls(),null);
+		} catch (ApiException e) {
+			throw new IOException(e.getMessage());
+		}
+        
     }
 
     /**
