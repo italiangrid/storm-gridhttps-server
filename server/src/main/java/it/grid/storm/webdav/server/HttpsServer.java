@@ -19,6 +19,7 @@ public class HttpsServer {
 
 	private static final Logger log = LoggerFactory.getLogger(HttpsServer.class);
 
+	private boolean enabled;
 	private String name;
 	private int port;
 	private Server server;
@@ -28,12 +29,14 @@ public class HttpsServer {
 	private List<WebApp> webapps;
 
 	public HttpsServer(ServerInfo options) {
+		enabled = options.isEnabled();
+		contextHandlerCollection = new ContextHandlerCollection();
+		webapps = new ArrayList<WebApp>();
+		if (!enabled) return;
 		name = options.getName();
 		port = options.getPort();
 		sslOptions = options.getSslOptions();
 		hostname = options.getHostname();
-		contextHandlerCollection = new ContextHandlerCollection();
-		webapps = new ArrayList<WebApp>();
 		initServer();
 	}
 
@@ -74,6 +77,7 @@ public class HttpsServer {
 	}
 
 	public void start() throws ServerException {
+		if (!enabled) return;
 		try {
 			server.start();
 			log.info(name + " > STARTED on port " + port);
@@ -83,6 +87,7 @@ public class HttpsServer {
 	}
 
 	public void stop() throws ServerException {
+		if (!enabled) return;
 		try {
 			server.stop();
 			log.info(name + " > STOPPED");
@@ -92,6 +97,7 @@ public class HttpsServer {
 	}
 	
 	public void status() {
+		if (!enabled) return;
 		if (!server.isStarted()) {
 			log.info(name + " is not running ");
 			return;
@@ -111,7 +117,7 @@ public class HttpsServer {
 	}
 
 	public void deploy(WebApp webapp) throws ServerException {
-
+		if (!enabled) return;
 		if (webapp == null)
 			throw new ServerException("webapp is null!");
 		if (isDeployed(webapp))
@@ -133,12 +139,11 @@ public class HttpsServer {
 			}
 			
 			log.info(name + " > DEPLOYED WEBAPP '" + webapp.getContextPath().substring(1) + "'");
-			log.debug(name + " >  |- WEBAPP: " + webapp.toString());
 		}
 	}
 
 	public void undeploy(WebApp webapp) throws ServerException {
-
+		if (!enabled) return;
 		if (webapp == null)
 			throw new ServerException("webapp is null!");
 		if (!isDeployed(webapp))
@@ -157,9 +162,9 @@ public class HttpsServer {
 	}
 
 	public void undeployAll() throws ServerException {
-		for (WebApp webapp : webapps)
-			undeploy(webapp);
-		webapps.clear();
+		if (!enabled) return;
+		while (!webapps.isEmpty())
+			undeploy(webapps.get(0));
 	}
 	
 }

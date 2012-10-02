@@ -20,6 +20,7 @@ public class HttpServer {
 
 	private static final Logger log = LoggerFactory.getLogger(HttpServer.class);
 
+	private boolean enabled;
 	private String name;
 	private int port;
 	private Server server;
@@ -27,10 +28,12 @@ public class HttpServer {
 	private List<WebApp> webapps;
 
 	public HttpServer(ServerInfo options) {
-		name = options.getName();
-		port = options.getPort();
+		enabled = options.isEnabled();
 		contextHandlerCollection = new ContextHandlerCollection();
 		webapps = new ArrayList<WebApp>();
+		if (!enabled) return;
+		name = options.getName();
+		port = options.getPort();
 		initServer();
 	}
 
@@ -72,6 +75,7 @@ public class HttpServer {
 	}
 
 	public void start() throws ServerException {
+		if (!enabled) return;
 		try {
 			server.start();
 			log.info(name + " > STARTED on port " + port);
@@ -81,6 +85,7 @@ public class HttpServer {
 	}
 
 	public void stop() throws ServerException {
+		if (!enabled) return;
 		try {
 			server.stop();
 			log.info(name + " > STOPPED");
@@ -90,6 +95,7 @@ public class HttpServer {
 	}
 
 	public void status() {
+		if (!enabled) return;
 		if (!server.isStarted()) {
 			log.info(name + " is not running ");
 			return;
@@ -109,7 +115,7 @@ public class HttpServer {
 	}
 
 	public void deploy(WebApp webapp) throws ServerException {
-
+		if (!enabled) return;
 		if (webapp == null)
 			throw new ServerException("webapp is null!");
 		if (isDeployed(webapp))
@@ -131,12 +137,11 @@ public class HttpServer {
 			}
 			
 			log.info(name + " > DEPLOYED WEBAPP '" + webapp.getContextPath().substring(1) + "'");
-			log.debug(name + " >  |- WEBAPP: " + webapp.toString());
 		}
 	}
 
 	public void undeploy(WebApp webapp) throws ServerException {
-
+		if (!enabled) return;
 		if (webapp == null)
 			throw new ServerException("webapp is null!");
 		if (!isDeployed(webapp))
@@ -155,9 +160,9 @@ public class HttpServer {
 	}
 	
 	public void undeployAll() throws ServerException {
-		for (WebApp webapp : webapps)
-			undeploy(webapp);
-		webapps.clear();
+		if (!enabled) return;
+		while (!webapps.isEmpty())
+			undeploy(webapps.get(0));
 	}
 
 }

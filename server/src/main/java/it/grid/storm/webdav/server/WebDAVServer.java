@@ -17,8 +17,6 @@ public class WebDAVServer {
 	private HttpsServer httpsServer;
 	
 	public WebDAVServer(ServerInfo httpOptions, ServerInfo httpsOptions) {
-		//log.info("HTTP-OPTIONS: " + httpOptions.toString());
-		//log.info("HTTPS-OPTIONS: " + httpsOptions.toString());
 		httpServer = new HttpServer(httpOptions);
 		httpsServer = new HttpsServer(httpsOptions);
 	}
@@ -83,6 +81,7 @@ public class WebDAVServer {
 		if (webapp.getProtocol() == StorageArea.HTTPS_PROTOCOL || webapp.getProtocol() == StorageArea.HTTP_AND_HTTPS_PROTOCOLS) {
 			httpsServer.undeploy(webapp);
 		}
+		FileUtils.deleteDirectory(new File(webapp.getFsPath()));
 	}
 	
 	public void undeployAll() throws ServerException {

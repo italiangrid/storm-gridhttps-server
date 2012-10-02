@@ -13,7 +13,6 @@
 	<properties>
 		<miltonVersion>2.2.0</miltonVersion>
 		<junitVersion>4.8.1</junitVersion>
-		<!-- <slf4jVersion>1.6.6</slf4jVersion> -->
 		<logbackVersion>1.0.6</logbackVersion>
 		<springVersion>3.1.2.RELEASE</springVersion>
 		<httpComponentsVersion>4.2.1</httpComponentsVersion>
@@ -55,11 +54,6 @@
 			<version>${logbackVersion}</version>
 		</dependency>
 		<dependency>
-			<groupId>ch.qos.logback</groupId>
-			<artifactId>logback-core</artifactId>
-			<version>${logbackVersion}</version>
-		</dependency>
-		<dependency>
 			<groupId>io.milton</groupId>
 			<artifactId>milton-server-ce</artifactId>
 			<version>${miltonVersion}</version>
@@ -84,6 +78,12 @@
 			<groupId>org.italiangrid</groupId>
 			<artifactId>https-utils</artifactId>
 			<version>${https-utilsVersion}</version>
+			<exclusions>
+				<exclusion>
+					<artifactId>logback-core</artifactId>
+					<groupId>ch.qos.logback</groupId>
+				</exclusion>
+			</exclusions>
 		</dependency>
 		<dependency>
 			<groupId>emi</groupId>
