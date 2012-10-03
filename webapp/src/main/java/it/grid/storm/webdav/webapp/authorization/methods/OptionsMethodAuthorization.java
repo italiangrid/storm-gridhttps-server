@@ -17,18 +17,16 @@ import org.slf4j.LoggerFactory;
 
 public class OptionsMethodAuthorization extends AbstractMethodAuthorization {
 
-	private static final Logger log = LoggerFactory
-			.getLogger(OptionsMethodAuthorization.class);
+	private static final Logger log = LoggerFactory.getLogger(OptionsMethodAuthorization.class);
 
 	@Override
-	public Map<String, String> getOperationsMap(HttpServletRequest HTTPRequest)
-			throws IOException, ServletException {
+	public Map<String, String> getOperationsMap(HttpServletRequest HTTPRequest) throws IOException, ServletException {
 
 		Map<String, String> operationsMap = new HashMap<String, String>();
 
 		log.debug("For the method OPTIONS no authorization is needed.");
 
-		StormResourceHelper helper = new StormResourceHelper();
+		StormResourceHelper helper = new StormResourceHelper(HTTPRequest);
 
 		// ping
 		BackendApi be = helper.createBackend();
@@ -36,10 +34,9 @@ public class OptionsMethodAuthorization extends AbstractMethodAuthorization {
 		log.debug("ping:");
 
 		try {
-			PingOutputData pud = be.ping(helper.getUserDN(),
-					helper.getUserFQANS());
+			PingOutputData pud = be.ping(helper.getUserDN(), helper.getUserFQANS());
 			log.debug("ping output:\n" + pud.toString());
-		} catch (ApiException e) {
+		} catch (Exception e) {
 			log.warn(e.getMessage());
 		}
 

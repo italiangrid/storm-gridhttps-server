@@ -92,7 +92,7 @@ public class StormAuthorizationFilter implements Filter {
 
 		if (certChain != null) {
 			sc.setClientCertChain(certChain);
-			subjectDN = sc.getClientDN().getRFCDNv2();
+			subjectDN = sc.getClientDN().getX500();
 			fqans = sc.getFQANs();
 		}
 

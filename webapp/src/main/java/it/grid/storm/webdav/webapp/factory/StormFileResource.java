@@ -15,6 +15,7 @@ import io.milton.http.exceptions.NotAuthorizedException;
 import io.milton.http.exceptions.NotFoundException;
 import io.milton.http.fs.FileContentService;
 import io.milton.resource.*;
+import io.milton.servlet.MiltonServlet;
 import it.grid.storm.xmlrpc.ApiException;
 import it.grid.storm.xmlrpc.BackendApi;
 
@@ -64,7 +65,7 @@ public class StormFileResource extends StormResource implements CopyableResource
     public void sendContent(OutputStream out, Range range, Map<String, String> params, String contentType) throws IOException, NotFoundException {
     	log.info("Called function for GET FILE");
     	
-    	StormResourceHelper helper = new StormResourceHelper(this);
+    	StormResourceHelper helper = new StormResourceHelper(MiltonServlet.request(), this);
     	
     	//prepare to get
     	BackendApi be = helper.createBackend();
