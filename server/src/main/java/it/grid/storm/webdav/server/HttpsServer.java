@@ -124,7 +124,7 @@ public class HttpsServer {
 			throw new ServerException("webapp already deployed!");
 		
 		if (webapp.getProtocol() == StorageArea.HTTPS_PROTOCOL || webapp.getProtocol() == StorageArea.HTTP_AND_HTTPS_PROTOCOLS) {
-
+			
 			WebAppContext context = new WebAppContext();
 			context.setDescriptor(webapp.getFsPath() + "/WEB-INF/web.xml");
 			context.setResourceBase(webapp.getFsPath());
@@ -132,17 +132,17 @@ public class HttpsServer {
 			context.setParentLoaderPriority(true);
 			this.contextHandlerCollection.addHandler(context);
 			webapps.add(webapp);
-			try {
-				context.start();
-			} catch (Exception e) {
-				throw new ServerException(e.getMessage());
-			}
+//			try {
+//				context.start();
+//			} catch (Exception e) {
+//				throw new ServerException(e.getMessage());
+//			}
 			
 			log.info(name + " > DEPLOYED WEBAPP '" + webapp.getContextPath().substring(1) + "'");
 		}
 	}
 
-	public void undeploy(WebApp webapp) throws ServerException {
+	public void undeploy(WebApp webapp) throws Exception {
 		if (!enabled) return;
 		if (webapp == null)
 			throw new ServerException("webapp is null!");
@@ -151,17 +151,20 @@ public class HttpsServer {
 		
 		if (webapp.getProtocol() == StorageArea.HTTPS_PROTOCOL || webapp.getProtocol() == StorageArea.HTTP_AND_HTTPS_PROTOCOLS) {
 
+			log.debug(name + ": undeploying '" + webapp.getContextPath() + "' webapp...");
+			
 			WebAppContext context = new WebAppContext();
 			context.setDescriptor(webapp.getFsPath() + "/WEB-INF/web.xml");
 			context.setResourceBase(webapp.getFsPath());
 			context.setContextPath(webapp.getContextPath());
 			context.setParentLoaderPriority(true);
+			log.debug(name + ": removing context from handler collection...");
 			this.contextHandlerCollection.removeHandler(context);
 			webapps.remove(webapp);
 		}				
 	}
 
-	public void undeployAll() throws ServerException {
+	public void undeployAll() throws Exception {
 		if (!enabled) return;
 		while (!webapps.isEmpty())
 			undeploy(webapps.get(0));
