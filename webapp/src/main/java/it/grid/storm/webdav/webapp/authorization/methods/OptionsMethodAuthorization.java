@@ -1,7 +1,6 @@
 package it.grid.storm.webdav.webapp.authorization.methods;
 
 import it.grid.storm.webdav.webapp.factory.StormResourceHelper;
-import it.grid.storm.xmlrpc.ApiException;
 import it.grid.storm.xmlrpc.BackendApi;
 import it.grid.storm.xmlrpc.outputdata.PingOutputData;
 
