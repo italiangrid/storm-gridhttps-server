@@ -5,6 +5,7 @@ package it.grid.storm.webdav.webapp.factory;
 import io.milton.common.Path;
 import io.milton.http.ResourceFactory;
 import io.milton.http.fs.FileContentService;
+import io.milton.http.SecurityManager;
 import io.milton.http.fs.NullSecurityManager;
 import io.milton.http.fs.SimpleFileContentService;
 import io.milton.resource.Resource;
@@ -18,15 +19,33 @@ public final class StormResourceFactory implements ResourceFactory {
     private static final Logger log = LoggerFactory.getLogger(StormResourceFactory.class);
     private FileContentService contentService;
     File root;
-    io.milton.http.SecurityManager securityManager;
+    SecurityManager securityManager;
     Long maxAgeSeconds;
     String contextPath;
     boolean allowDirectoryBrowsing;
     String defaultPage;
     boolean digestAllowed = true;
     private String ssoPrefix;
+    private String stormBackendHostname;
+    private int stormBackendPort;
 
-    /**
+    public void setStormBackendHostname(String stormBackendHostname) {
+		this.stormBackendHostname = stormBackendHostname;
+	}
+
+	public void setStormBackendPort(int stormBackendPort) {
+		this.stormBackendPort = stormBackendPort;
+	}
+
+	public String getStormBackendHostname() {
+		return stormBackendHostname;
+	}
+
+	public int getStormBackendPort() {
+		return stormBackendPort;
+	}
+
+	/**
      * Creates and (optionally) initialises the factory. This looks for a
      * properties file FileSystemResourceFactory.properties in the classpath If
      * one is found it uses the root and realm properties to initialise
@@ -79,6 +98,14 @@ public final class StormResourceFactory implements ResourceFactory {
         setRoot(root);
         setSecurityManager(securityManager);
         setContextPath(contextPath);
+    }
+    
+    public StormResourceFactory(File root, SecurityManager securityManager, String contextPath, String stormBackendHostname, int stormBackendPort) {
+        setRoot(root);
+        setSecurityManager(securityManager);
+        setContextPath(contextPath);
+        setStormBackendHostname(stormBackendHostname);
+        setStormBackendPort(stormBackendPort);
     }
 
     public File getRoot() {
@@ -141,7 +168,7 @@ public final class StormResourceFactory implements ResourceFactory {
         return maxAgeSeconds;
     }
 
-    public void setSecurityManager(io.milton.http.SecurityManager securityManager) {
+    public void setSecurityManager(SecurityManager securityManager) {
         if (securityManager != null) {
             log.debug("securityManager: " + securityManager.getClass());
         } else {
@@ -150,7 +177,7 @@ public final class StormResourceFactory implements ResourceFactory {
         this.securityManager = securityManager;
     }
 
-    public io.milton.http.SecurityManager getSecurityManager() {
+    public SecurityManager getSecurityManager() {
         return securityManager;
     }
 

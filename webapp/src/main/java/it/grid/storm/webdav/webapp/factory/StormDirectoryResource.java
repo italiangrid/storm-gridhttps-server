@@ -7,6 +7,7 @@ import io.milton.http.XmlWriter;
 import io.milton.http.exceptions.NotAuthorizedException;
 import io.milton.http.fs.FileContentService;
 import io.milton.resource.*;
+import io.milton.servlet.MiltonServlet;
 import it.grid.storm.xmlrpc.ApiException;
 import it.grid.storm.xmlrpc.BackendApi;
 
@@ -42,7 +43,7 @@ public class StormDirectoryResource extends StormResource implements MakeCollect
     public CollectionResource createCollection(String name) {
     	log.info("Called function for MKCOL DIRECTORY");
     	
-    	StormResourceHelper helper = new StormResourceHelper(this);
+    	StormResourceHelper helper = new StormResourceHelper(MiltonServlet.request(), this);
     	
     	//mkdir
     	BackendApi be;
@@ -102,7 +103,7 @@ public class StormDirectoryResource extends StormResource implements MakeCollect
     public Resource createNew(String name, InputStream in, Long length, String contentType) throws IOException {
     	log.info("Called function for PUT FILE");
 		
-    	StormResourceHelper helper = new StormResourceHelper(this);
+    	StormResourceHelper helper = new StormResourceHelper(MiltonServlet.request(), this);
     	
     	//prepare to put
     	BackendApi be = helper.createBackend();

@@ -3,10 +3,9 @@ package it.grid.storm.webdav.storagearea;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class ConfigurationParameters {
+public class StormBackendInfo {
 
-	private static final Logger log = LoggerFactory
-			.getLogger(StorageAreaManager.class);
+	private static final Logger log = LoggerFactory.getLogger(StorageAreaManager.class);
 
 	// Backend configuration
 
@@ -14,8 +13,7 @@ public class ConfigurationParameters {
 	private Integer stormBackendRestPort = null;
 	private String stormBackendIP = null;
 
-	public ConfigurationParameters(String hostname, String stormBackendIP,
-			int port) {
+	public StormBackendInfo(String hostname, String stormBackendIP, int port) {
 		setStormBackendHostname(hostname);
 		setStormBackendIP(stormBackendIP);
 		setStormBackendRestPort(port);

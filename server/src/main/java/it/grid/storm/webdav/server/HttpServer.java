@@ -20,6 +20,7 @@ public class HttpServer {
 
 	private static final Logger log = LoggerFactory.getLogger(HttpServer.class);
 
+	private boolean enabled;
 	private String name;
 	private int port;
 	private Server server;
@@ -27,10 +28,12 @@ public class HttpServer {
 	private List<WebApp> webapps;
 
 	public HttpServer(ServerInfo options) {
-		name = options.getName();
-		port = options.getPort();
+		enabled = options.isEnabled();
 		contextHandlerCollection = new ContextHandlerCollection();
 		webapps = new ArrayList<WebApp>();
+		if (!enabled) return;
+		name = options.getName();
+		port = options.getPort();
 		initServer();
 	}
 
@@ -68,9 +71,11 @@ public class HttpServer {
 		connector.setPort(port);
 		connector.setMaxIdleTime(30000);
 		server.setConnectors(new Connector[] { connector });
+		server.setGracefulShutdown(1000);
 	}
 
 	public void start() throws ServerException {
+		if (!enabled) return;
 		try {
 			server.start();
 			log.info(name + " > STARTED on port " + port);
@@ -80,6 +85,7 @@ public class HttpServer {
 	}
 
 	public void stop() throws ServerException {
+		if (!enabled) return;
 		try {
 			server.stop();
 			log.info(name + " > STOPPED");
@@ -88,12 +94,28 @@ public class HttpServer {
 		}
 	}
 
+	public void status() {
+		if (!enabled) return;
+		if (!server.isStarted()) {
+			log.info(name + " is not running ");
+			return;
+		}
+		log.info(name + " is running on port " + port);
+		if (webapps.size() == 0) {
+			log.info(" - " + webapps.size() + " webapp(s) are deployed ");
+			return;
+		}
+		log.info(" - " + webapps.size() + " webapp(s) are deployed for the following storage areas: ");
+		for (WebApp w : webapps)
+			log.info("    |- '" + w.getContextPath() + "' (root = '" + w.getRootDirectory() + "')");
+	}
+	
 	private boolean isDeployed(WebApp webapp) {
 		return (webapps.indexOf(webapp) != -1);
 	}
 
 	public void deploy(WebApp webapp) throws ServerException {
-
+		if (!enabled) return;
 		if (webapp == null)
 			throw new ServerException("webapp is null!");
 		if (isDeployed(webapp))
@@ -114,12 +136,12 @@ public class HttpServer {
 				throw new ServerException(e.getMessage());
 			}
 			
-			log.info(name + " > DEPLOYED WEBAPP: " + webapp.toString());
+			log.info(name + " > DEPLOYED WEBAPP '" + webapp.getContextPath().substring(1) + "'");
 		}
 	}
 
 	public void undeploy(WebApp webapp) throws ServerException {
-
+		if (!enabled) return;
 		if (webapp == null)
 			throw new ServerException("webapp is null!");
 		if (!isDeployed(webapp))
@@ -133,12 +155,14 @@ public class HttpServer {
 			context.setContextPath(webapp.getContextPath());
 			context.setParentLoaderPriority(true);
 			this.contextHandlerCollection.removeHandler(context);
+			webapps.remove(webapp);
 		}				
 	}
 	
 	public void undeployAll() throws ServerException {
-		for (WebApp webapp : webapps)
-			undeploy(webapp);
+		if (!enabled) return;
+		while (!webapps.isEmpty())
+			undeploy(webapps.get(0));
 	}
 
 }

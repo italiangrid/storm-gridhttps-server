@@ -26,9 +26,10 @@ public class StormAuthorizationFilter implements Filter {
 
 	private String storageAreaRootDir;
 	private String storageAreaName;
+	private String stormBackendHostname;
+	private int stormBackendPort;
 
-	private static final Logger log = LoggerFactory
-			.getLogger(StormAuthorizationFilter.class);
+	private static final Logger log = LoggerFactory.getLogger(StormAuthorizationFilter.class);
 
 	public void destroy() {
 		// TODO Auto-generated method stub
@@ -39,48 +40,43 @@ public class StormAuthorizationFilter implements Filter {
 		// Setting paths from applicationContext.xml
 		StaticApplicationContext parent = new StaticApplicationContext();
 		parent.refresh();
-		ClassPathXmlApplicationContext context = new ClassPathXmlApplicationContext(
-				new String[] { "applicationContext.xml" }, parent);
+		ClassPathXmlApplicationContext context = new ClassPathXmlApplicationContext(new String[] { "applicationContext.xml" }, parent);
 
 		if (context.containsBean("milton.fs.resource.factory")) {
 			Object beanFactory = context.getBean("milton.fs.resource.factory");
 			if (beanFactory instanceof StormResourceFactory) {
-				this.storageAreaRootDir = ((StormResourceFactory) beanFactory)
-						.getRoot().getAbsolutePath();
-				this.storageAreaName = ((StormResourceFactory) beanFactory)
-						.getContextPath();
+				this.storageAreaRootDir = ((StormResourceFactory) beanFactory).getRoot().getAbsolutePath();
+				this.storageAreaName = ((StormResourceFactory) beanFactory).getContextPath();
+				this.stormBackendHostname = ((StormResourceFactory) beanFactory).getStormBackendHostname();
+				this.stormBackendPort = ((StormResourceFactory) beanFactory).getStormBackendPort();
 				log.info("storageAreaRootDir: " + this.storageAreaRootDir);
 				log.info("storageAreaName: " + this.storageAreaName);
+				log.info("stormBackendHostname: " + this.stormBackendHostname);
+				log.info("stormBackendPort: " + this.stormBackendPort);
 			}
 		}
 
 	}
 
-	public void doFilter(ServletRequest request, ServletResponse response,
-			FilterChain chain) throws IOException, ServletException {
+	public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
 
 		// Setting HTTPRequest and HTTPResponse
 
 		HttpServletResponse HTTPResponse = null;
 		HttpServletRequest HTTPRequest = null;
 		if (HttpServletRequest.class.isAssignableFrom(request.getClass())
-				&& HttpServletResponse.class.isAssignableFrom(response
-						.getClass())) {
+				&& HttpServletResponse.class.isAssignableFrom(response.getClass())) {
 			HTTPRequest = (HttpServletRequest) request;
 			HTTPResponse = (HttpServletResponse) response;
 		} else {
-			log.error("Received non HTTP request. Class is : "
-					+ request.getClass());
+			log.error("Received non HTTP request. Class is : " + request.getClass());
 			throw new ServletException("Protocol not supported. Use HTTP(S)");
 		}
 
 		HTTPRequest.setAttribute("STORAGE_AREA_ROOT", this.storageAreaRootDir);
 		HTTPRequest.setAttribute("STORAGE_AREA_NAME", this.storageAreaName);
-
-		HTTPRequest.setAttribute("STORM_BACKEND_HOST",
-				StormAuthorizationUtils.STORM_BE_HOSTNAME);
-		HTTPRequest.setAttribute("STORM_BACKEND_PORT",
-				StormAuthorizationUtils.STORM_BE_PORT);
+		HTTPRequest.setAttribute("STORM_BACKEND_HOST", this.stormBackendHostname);
+		HTTPRequest.setAttribute("STORM_BACKEND_PORT", this.stormBackendPort);
 
 		/* *********************************************** */
 
@@ -96,7 +92,7 @@ public class StormAuthorizationFilter implements Filter {
 
 		if (certChain != null) {
 			sc.setClientCertChain(certChain);
-			subjectDN = sc.getClientDN().getRFCDNv2();
+			subjectDN = sc.getClientDN().getX500();
 			fqans = sc.getFQANs();
 		}
 
@@ -110,10 +106,8 @@ public class StormAuthorizationFilter implements Filter {
 		String methodName = HTTPRequest.getMethod();
 		log.debug("Requested method is : " + methodName);
 		if (!StormAuthorizationUtils.methodAllowed(methodName)) {
-			log.warn("Received a request for a not allowed method : "
-					+ methodName);
-			HTTPResponse.sendError(HttpServletResponse.SC_METHOD_NOT_ALLOWED,
-					"Method " + methodName + " not allowed!");
+			log.warn("Received a request for a not allowed method : " + methodName);
+			HTTPResponse.sendError(HttpServletResponse.SC_METHOD_NOT_ALLOWED, "Method " + methodName + " not allowed!");
 			return;
 		}
 
@@ -121,45 +115,33 @@ public class StormAuthorizationFilter implements Filter {
 
 		// Check if the user is authorized
 
-		AbstractMethodAuthorization m = StormAuthorizationUtils.METHODS_MAP
-				.get(methodName);
+		AbstractMethodAuthorization m = StormAuthorizationUtils.METHODS_MAP.get(methodName);
 		Map<String, String> operationsMap = m.getOperationsMap(HTTPRequest);
 		boolean isAuthorized = true;
 
-		if (!this.storageAreaName.equals("WebDAV-fs-server")) { // TO REMOVE -
-																// ONLY FOR TEST
+		for (Map.Entry<String, String> entry : operationsMap.entrySet()) {
+			String op = entry.getKey();
+			String path = entry.getValue();
 
-			for (Map.Entry<String, String> entry : operationsMap.entrySet()) {
-				String op = entry.getKey();
-				String path = entry.getValue();
-
-				log.debug("Asking authorization for operation " + op + " on "
-						+ path);
-				try {
-					isAuthorized = isAuthorized
-							&& StormAuthorizationUtils.isUserAuthorized(
-									subjectDN, fqans, op, path);
-				} catch (Exception e) {
-					log.error("Unable to verify user authorization. ServletException : "
-							+ e.getMessage());
-					HTTPResponse.sendError(
-							HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
-							"Error testing user authorization: "
-									+ e.getMessage());
-					return;
-				}
-
+			log.debug("Asking authorization for operation " + op + " on " + path);
+			try {
+				isAuthorized = isAuthorized
+						&& StormAuthorizationUtils.isUserAuthorized(stormBackendHostname, stormBackendPort, subjectDN, fqans, op, path);
+			} catch (Exception e) {
+				log.error("Unable to verify user authorization. ServletException : " + e.getMessage());
+				HTTPResponse.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
+						"Error testing user authorization: " + e.getMessage());
+				return;
 			}
 
-		} // TO REMOVE - ONLY FOR TEST
+		}
 
 		if (isAuthorized) {
 			log.info("User is authorized to access the requested resource");
 			chain.doFilter(request, response);
 		} else {
 			log.warn("User is not authorized to access the requested resource");
-			HTTPResponse.sendError(HttpServletResponse.SC_FORBIDDEN,
-					"You are not authorized to access the requested resource");
+			HTTPResponse.sendError(HttpServletResponse.SC_FORBIDDEN, "You are not authorized to access the requested resource");
 			return;
 		}
 
@@ -169,11 +151,9 @@ public class StormAuthorizationFilter implements Filter {
 
 		X509Certificate[] certChain = null;
 		try {
-			certChain = (X509Certificate[]) request
-					.getAttribute("javax.servlet.request.X509Certificate");
+			certChain = (X509Certificate[]) request.getAttribute("javax.servlet.request.X509Certificate");
 		} catch (Exception e) {
-			log.warn("Error fetching certificate from http request: "
-					+ e.getMessage());
+			log.warn("Error fetching certificate from http request: " + e.getMessage());
 		}
 		// if (certChain == null)
 		// throw new Exception("Unauthenticated connection from " +

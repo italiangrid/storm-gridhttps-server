@@ -10,13 +10,8 @@ import java.util.Enumeration;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 public class Zip {
-	
-	private static final Logger log = LoggerFactory.getLogger(Zip.class);
-	
+		
 	private static final int BUFFER = 2048;
 	
 	private void copy(InputStream in, OutputStream out) throws IOException {
@@ -51,7 +46,6 @@ public class Zip {
 
 	public void unzip(String zipfile, String outputDirectory) throws IOException {
 		
-		log.info("ZIP > decompressing template file {" + zipfile + "} into {" + outputDirectory + "}");
 		ZipFile zfile = new ZipFile(zipfile);
 		Enumeration<? extends ZipEntry> entries = zfile.entries();
 		while (entries.hasMoreElements()) {
@@ -71,7 +65,6 @@ public class Zip {
 			}
 		}
 		zfile.close();
-		log.info("ZIP > decompressed! ");
 		
 	}
 	

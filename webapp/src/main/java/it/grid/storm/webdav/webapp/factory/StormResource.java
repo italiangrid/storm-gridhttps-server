@@ -5,6 +5,7 @@ import io.milton.http.*;
 import io.milton.http.Request.Method;
 import io.milton.http.http11.auth.DigestResponse;
 import io.milton.resource.*;
+import io.milton.servlet.MiltonServlet;
 import it.grid.storm.webdav.webapp.authorization.Constants;
 
 import java.io.File;
@@ -85,7 +86,7 @@ public abstract class StormResource implements Resource, MoveableResource,
 
 	public void delete() {
 		log.info("Called function for DELETE FILE or DIRECTORY");
-		StormResourceHelper helper = new StormResourceHelper(this);
+		StormResourceHelper helper = new StormResourceHelper(MiltonServlet.request(), this);
 		boolean ok = false;
 		try {
 			if (helper.isUserAuthorized(Constants.RM_OPERATION)) {

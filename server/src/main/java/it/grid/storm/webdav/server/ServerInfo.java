@@ -4,13 +4,19 @@ import org.italiangrid.utils.https.SSLOptions;
 
 public class ServerInfo {
 	
+	private boolean enabled;
 	private String name;
 	private int port;
 	private boolean ssl;
 	private SSLOptions sslOptions;
 	private String hostname;
 	
+	public ServerInfo() {
+		this.enabled = false;
+	}
+	
 	public ServerInfo(String name, String hostname, int port) {
+		this.enabled = true;
 		this.name = name;
 		this.hostname = hostname;
 		this.port = port;
@@ -37,6 +43,10 @@ public class ServerInfo {
 	
 	public boolean isSsl() {
 		return ssl;
+	}
+	
+	public boolean isEnabled() {
+		return enabled;
 	}
 
 	public SSLOptions getSslOptions() {

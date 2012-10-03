@@ -26,7 +26,7 @@ public class OptionsMethodAuthorization extends AbstractMethodAuthorization {
 
 		log.debug("For the method OPTIONS no authorization is needed.");
 
-		StormResourceHelper helper = new StormResourceHelper();
+		StormResourceHelper helper = new StormResourceHelper(HTTPRequest);
 
 		// ping
 		BackendApi be = helper.createBackend();
@@ -36,7 +36,7 @@ public class OptionsMethodAuthorization extends AbstractMethodAuthorization {
 		try {
 			PingOutputData pud = be.ping(helper.getUserDN(), helper.getUserFQANS());
 			log.debug("ping output:\n" + pud.toString());
-		} catch (ApiException e) {
+		} catch (Exception e) {
 			log.warn(e.getMessage());
 		}
 
