@@ -44,64 +44,10 @@ public final class StormResourceFactory implements ResourceFactory {
 	public int getStormBackendPort() {
 		return stormBackendPort;
 	}
-
-	/**
-     * Creates and (optionally) initialises the factory. This looks for a
-     * properties file FileSystemResourceFactory.properties in the classpath If
-     * one is found it uses the root and realm properties to initialise
-     *
-     * If not found the factory is initialised with the defaults root: user.home
-     * system property realm: milton-fs-test
-     *
-     * These initialised values are not final, and may be changed through the
-     * setters or init method
-     *
-     * To be honest its pretty naf configuring like this, but i don't want to
-     * force people to use spring or any other particular configuration tool
-     *
-     */
-    public StormResourceFactory() {
-        log.debug("setting default configuration...");
-        String sRoot = System.getProperty("user.home");
-        io.milton.http.SecurityManager sm = new NullSecurityManager();
-        contentService = new SimpleFileContentService();
-        init(sRoot, sm);
-    }
-
-    protected void init(String sRoot, io.milton.http.SecurityManager securityManager) {
-        setRoot(new File(sRoot));
-        setSecurityManager(securityManager);
-    }
-
-    /**
-     *
-     * @param root - the root folder of the filesystem to expose. This must
-     * include the context path. Eg, if you've deployed to webdav-fs, root must
-     * contain a folder called webdav-fs
-     * @param securityManager
-     */
-    public StormResourceFactory(File root, io.milton.http.SecurityManager securityManager) {
-        setRoot(root);
-        setSecurityManager(securityManager);
-    }
-
-    /**
-     *
-     * @param root - the root folder of the filesystem to expose. called
-     * webdav-fs
-     * @param securityManager
-     * @param contextPath - this is the leading part of URL's to ignore. For
-     * example if you're application is deployed to
-     * http://localhost:8080/webdav-fs, the context path should be webdav-fs
-     */
-    public StormResourceFactory(File root, io.milton.http.SecurityManager securityManager, String contextPath) {
-        setRoot(root);
-        setSecurityManager(securityManager);
-        setContextPath(contextPath);
-    }
     
-    public StormResourceFactory(File root, SecurityManager securityManager, String contextPath, String stormBackendHostname, int stormBackendPort) {
-        setRoot(root);
+    public StormResourceFactory(String root, String contextPath, String stormBackendHostname, int stormBackendPort) {
+        setRoot(new File(root));
+    	io.milton.http.SecurityManager securityManager = new NullSecurityManager();
         setSecurityManager(securityManager);
         setContextPath(contextPath);
         setStormBackendHostname(stormBackendHostname);

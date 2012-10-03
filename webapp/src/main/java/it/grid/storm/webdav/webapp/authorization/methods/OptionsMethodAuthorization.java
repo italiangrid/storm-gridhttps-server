@@ -36,7 +36,7 @@ public class OptionsMethodAuthorization extends AbstractMethodAuthorization {
 			PingOutputData pud = be.ping(helper.getUserDN(), helper.getUserFQANS());
 			log.debug("ping output:\n" + pud.toString());
 		} catch (Exception e) {
-			log.warn(e.getMessage());
+			log.error(e.getMessage());
 		}
 
 		return operationsMap;
