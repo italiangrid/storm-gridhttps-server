@@ -4,73 +4,27 @@
 	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-2.0.xsd">
 
 	<bean id="milton.fs.resource.factory" class="it.grid.storm.webdav.webapp.factory.StormResourceFactory">
-		<property name="securityManager" ref="milton.fs.security.manager" />
-		<property name="root" value="$rootPath" />
-		<property name="contextPath" value="$contextPath" />
-		<property name="stormBackendHostname" value="$stormBEHostname" />
-		<property name="stormBackendPort" value="$stormBEPort" />
+  		<constructor-arg index="0" value="$rootPath" />
+  		<constructor-arg index="1" value="$contextPath" />  
+  		<constructor-arg index="2" value="$stormBEHostname" />
+   		<constructor-arg index="3" value="$stormBEPort" />
 	</bean>
-
-	<bean id="milton.fs.security.manager" class="io.milton.http.fs.NullSecurityManager">
-		<property name="realm" value="aRealm" />
-	</bean>
-
-	<!-- <bean id="webdav-fs-webapp.listeners.mkcol" class="it.grid.storm.webdav.listeners.resources.StormNewFolderListener" 
-		/> -->
-
-<!-- 	<bean id="webdav-fs-webapp.listeners.request" class="it.grid.storm.webdav.listeners.StormRequestListener" -->
-<!-- 	init-method="init"> -->
-<!-- 	<property name="handlersList"> -->
-<!-- 	<list> -->
-<!-- 	<value type="java.lang.Class">it.grid.storm.webdav.handlers.requests.StormPropfindRequestHandler -->
-<!-- 	</value> -->
-<!-- 	<value type="java.lang.Class">it.grid.storm.webdav.handlers.requests.StormPutRequestHandler -->
-<!-- 	</value> -->
-<!-- 	<value type="java.lang.Class">it.grid.storm.webdav.handlers.requests.StormOptionsRequestHandler -->
-<!-- 	</value> -->
-<!-- 	</list> -->
-<!-- 	</property> -->
-<!-- 	</bean> -->
-
-	<!-- <bean id="webdav-fs-webapp.listeners.response" class="it.grid.storm.webdav.listeners.StormResponseListener" -->
-	<!-- init-method="init"> -->
-	<!-- <property name="handlersList"> -->
-	<!-- <list> -->
-	<!-- <value type="java.lang.Class">it.grid.storm.webdav.handlers.responses.StormPropfindResponseHandler -->
-	<!-- </value> -->
-	<!-- <value type="java.lang.Class">it.grid.storm.webdav.handlers.responses.StormPutResponseHandler -->
-	<!-- </value> -->
-	<!-- </list> -->
-	<!-- </property> -->
-	<!-- </bean> -->
-
-<!-- 	<bean id="webdav-fs-webapp.event.manager" class="it.grid.storm.webdav.StormEventManager" -->
-<!-- 	init-method="init"> -->
-<!-- 	<property name="listenersList"> -->
-<!-- 	<list> -->
-<!-- 	<ref bean="webdav-fs-webapp.listeners.request" /> -->
-<!-- 	<ref bean="webdav-fs-webapp.listeners.response" /> -->
-<!-- 	<ref bean="webdav-fs-webapp.listeners.mkcol" /> -->
-<!-- 	</list> -->
-<!-- 	</property> -->
-<!-- 	</bean> -->
-
 
 	<bean id="webdav-fs-webapp.extra.property" class="it.grid.storm.webdav.webapp.factory.StormPropertySource" />
 
 	<bean id="milton.http.manager" class="io.milton.config.HttpManagerBuilder">
 		<property name="mainResourceFactory" ref="milton.fs.resource.factory" />
-
+<!-- 		<property name="enableFormAuth" value="false" /> -->
+<!-- 		<property name="authenticationHandlers"> -->
+<!-- 			<list> -->
+<!-- 			</list> -->
+<!-- 		</property> -->
 		<property name="extraPropertySources">
 			<list>
 				<ref bean="webdav-fs-webapp.extra.property" />
 			</list>
 		</property>
-
-<!-- 		<property name="eventManager" ref="webdav-fs-webapp.event.manager" /> -->
-		
 		<property name="enabledJson" value="false" />
-
 	</bean>
 
 </beans>

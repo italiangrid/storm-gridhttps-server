@@ -155,19 +155,19 @@ public class Main {
 		Element resourceFactory = doc.getNodeFromKeyValue("id", "milton.fs.resource.factory");
 		// set root directory:
 		log.debug("setting root directory as '" + rootDirectory + "'...");
-		Element rootNode = doc.getNodeFromKeyValue(resourceFactory, "name", "root");
+		Element rootNode = doc.getNodeFromKeyValue(resourceFactory, "index", "0");
 		doc.setAttribute(rootNode, "value", rootDirectory);
 		// set context path:
 		log.debug("setting context path as '" + contextPath + "'...");
-		Element contextPathNode = doc.getNodeFromKeyValue(resourceFactory, "name", "contextPath");
+		Element contextPathNode = doc.getNodeFromKeyValue(resourceFactory, "index", "1");
 		doc.setAttribute(contextPathNode, "value", contextPath);
 		// set backend hostname:
 		log.debug("setting storm backend hostname as '" + stormBEHostname + "'...");
-		Element stormBackendHostname = doc.getNodeFromKeyValue(resourceFactory, "name", "stormBackendHostname");
+		Element stormBackendHostname = doc.getNodeFromKeyValue(resourceFactory, "index", "2");
 		doc.setAttribute(stormBackendHostname, "value", stormBEHostname);
 		// set backend port:
 		log.debug("setting storm backend port as '" + stormBEPort + "'...");
-		Element stormBackendPort = doc.getNodeFromKeyValue(resourceFactory, "name", "stormBackendPort");
+		Element stormBackendPort = doc.getNodeFromKeyValue(resourceFactory, "index", "3");
 		doc.setAttribute(stormBackendPort, "value", String.valueOf(stormBEPort));
 		doc.close();	
 	}

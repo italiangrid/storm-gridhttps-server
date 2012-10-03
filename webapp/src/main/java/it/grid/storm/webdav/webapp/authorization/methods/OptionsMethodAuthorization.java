@@ -1,7 +1,6 @@
 package it.grid.storm.webdav.webapp.authorization.methods;
 
 import it.grid.storm.webdav.webapp.factory.StormResourceHelper;
-import it.grid.storm.xmlrpc.ApiException;
 import it.grid.storm.xmlrpc.BackendApi;
 import it.grid.storm.xmlrpc.outputdata.PingOutputData;
 
@@ -37,7 +36,7 @@ public class OptionsMethodAuthorization extends AbstractMethodAuthorization {
 			PingOutputData pud = be.ping(helper.getUserDN(), helper.getUserFQANS());
 			log.debug("ping output:\n" + pud.toString());
 		} catch (Exception e) {
-			log.warn(e.getMessage());
+			log.error(e.getMessage());
 		}
 
 		return operationsMap;
