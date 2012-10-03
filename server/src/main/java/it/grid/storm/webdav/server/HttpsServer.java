@@ -5,10 +5,12 @@ import it.grid.storm.webdav.storagearea.StorageArea;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.Handler;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.handler.ContextHandlerCollection;
 import org.eclipse.jetty.server.handler.HandlerCollection;
+import org.eclipse.jetty.server.nio.SelectChannelConnector;
 import org.eclipse.jetty.webapp.WebAppContext;
 import org.italiangrid.utils.https.SSLOptions;
 import org.italiangrid.utils.https.ServerFactory;
@@ -74,6 +76,13 @@ public class HttpsServer {
 		hc.setHandlers(new Handler[] { contextHandlerCollection });
 		server.setHandler(hc);
 		server.setGracefulShutdown(1000);
+		
+		// Server Connector:
+		Connector connector = new SelectChannelConnector();
+		connector.setPort(8085);
+		connector.setMaxIdleTime(30000);
+		server.addConnector(connector);
+		
 	}
 
 	public void start() throws ServerException {

@@ -13,11 +13,11 @@ public class WebDAVServer {
 	//private static final Logger log = LoggerFactory.getLogger(WebDAVServer.class);
 	private String webappsDirectory = "./webapps";
 	
-	private HttpServer httpServer;
+//	private HttpServer httpServer;
 	private HttpsServer httpsServer;
 	
 	public WebDAVServer(ServerInfo httpOptions, ServerInfo httpsOptions) {
-		httpServer = new HttpServer(httpOptions);
+//		httpServer = new HttpServer(httpOptions);
 		httpsServer = new HttpsServer(httpsOptions);
 	}
 	
@@ -31,7 +31,7 @@ public class WebDAVServer {
 	
 	public void start() throws ServerException {
 		try {
-			httpServer.start();
+//			httpServer.start();
 			httpsServer.start();
 		} catch (Exception e) {
 			throw new ServerException(e.getMessage());
@@ -40,7 +40,7 @@ public class WebDAVServer {
 
 	public void stop() throws ServerException {	
 		try {
-			httpServer.stop();
+			//httpServer.stop();
 			httpsServer.stop();
 		} catch (Exception e) {
 			throw new ServerException(e.getMessage());
@@ -48,12 +48,13 @@ public class WebDAVServer {
 	}
 	
 	public void status() {	
-		httpServer.status();
+		//httpServer.status();
 		httpsServer.status();
 	}
 	
 	private boolean isHttpDeployed(WebApp webapp) {
-		return (httpServer.getWebapps().indexOf(webapp) != -1);
+		return false;
+//		return (httpServer.getWebapps().indexOf(webapp) != -1);
 	}
 	
 	private boolean isHttpsDeployed(WebApp webapp) {
@@ -66,18 +67,18 @@ public class WebDAVServer {
 
 	public void deploy(WebApp webapp) throws ServerException {
 
-		if (webapp.getProtocol() == StorageArea.HTTP_PROTOCOL || webapp.getProtocol() == StorageArea.HTTP_AND_HTTPS_PROTOCOLS) {
-			httpServer.deploy(webapp);
-		}
+//		if (webapp.getProtocol() == StorageArea.HTTP_PROTOCOL || webapp.getProtocol() == StorageArea.HTTP_AND_HTTPS_PROTOCOLS) {
+//			httpServer.deploy(webapp);
+//		}
 		if (webapp.getProtocol() == StorageArea.HTTPS_PROTOCOL || webapp.getProtocol() == StorageArea.HTTP_AND_HTTPS_PROTOCOLS) {
 			httpsServer.deploy(webapp);
 		}
 	}
 
 	public void undeploy(WebApp webapp) throws Exception {
-		if (webapp.getProtocol() == StorageArea.HTTP_PROTOCOL || webapp.getProtocol() == StorageArea.HTTP_AND_HTTPS_PROTOCOLS) {
-			httpServer.undeploy(webapp);			
-		}
+//		if (webapp.getProtocol() == StorageArea.HTTP_PROTOCOL || webapp.getProtocol() == StorageArea.HTTP_AND_HTTPS_PROTOCOLS) {
+//			httpServer.undeploy(webapp);			
+//		}
 		if (webapp.getProtocol() == StorageArea.HTTPS_PROTOCOL || webapp.getProtocol() == StorageArea.HTTP_AND_HTTPS_PROTOCOLS) {
 			httpsServer.undeploy(webapp);
 		}
@@ -85,7 +86,7 @@ public class WebDAVServer {
 	}
 	
 	public void undeployAll() throws Exception {
-		httpServer.undeployAll();
+//		httpServer.undeployAll();
 		httpsServer.undeployAll();
 		FileUtils.deleteDirectory(new File(this.webappsDirectory));
 	}
