@@ -7,15 +7,20 @@ import it.grid.storm.webdav.storagearea.StorageArea;
 import it.grid.storm.webdav.storagearea.StorageAreaManager;
 import it.grid.storm.webdav.utils.FileUtils;
 import it.grid.storm.webdav.utils.MyCommandLineParser;
+import it.grid.storm.webdav.utils.XML;
+import it.grid.storm.webdav.utils.Zip;
 
 import org.italiangrid.utils.https.SSLOptions;
 
 import java.io.File;
 import java.io.IOException;
+import java.sql.Timestamp;
+import java.util.Date;
 import java.util.List;
 
 import org.ini4j.InvalidFileFormatException;
 import org.ini4j.Wini;
+import org.jdom.Element;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -53,11 +58,25 @@ public class Main {
 			log.info("Retrieving the Storage Area list from Storm Backend...");
 			storageareas = StorageAreaManager.retrieveStorageAreasFromStormBackend(stormBEHostname, stormBEPort);
 			log.info("Deploying webapps...");
-			for (StorageArea SA : storageareas)
-				server.deploy(new WebApp(SA, warTemplateFile, server.getWebappsDirectory(), stormBEHostname, stormBEPort));
+			String tempDir = server.getWebappsDirectory() + "/.tmp_" + new Timestamp((new Date()).getTime());
+			log.info("Decompressing the template file '" + warTemplateFile + "' on '"+tempDir+"'...");
+			File templateDir = new File(tempDir);
+			templateDir.mkdir();
+			(new Zip()).unzip(warTemplateFile, tempDir);
+			for (StorageArea SA : storageareas) {
+				File webappDir = new File(server.getWebappsDirectory() + "/" + SA.getStfnRoot());
+				log.info("Copying the template directory on '"+ webappDir.getPath() +"'...");
+				FileUtils.copyFolder(templateDir, webappDir);
+				File contextFile = new File(webappDir.getAbsolutePath() + "/WEB-INF/classes/applicationContext.xml");
+				log.info("Configuring the context file '"+ contextFile.getPath() +"'...");
+				configureContextFile(contextFile, SA);
+				log.info("Deploying '"+ SA.getName() +"' webapp...");
+				server.deploy(new WebApp(webappDir, SA));
+			}
 			log.info("Starting WebDAV-server...");
 			server.start();
 			server.status();
+			FileUtils.deleteDirectory(templateDir);
 		} catch (Exception e) {
 			e.printStackTrace();
 			try {
@@ -65,7 +84,6 @@ public class Main {
 				server.undeployAll();
 				log.info("Stopping WebDAV-server...");
 				server.stop();
-				FileUtils.deleteDirectory(new File(server.getWebappsDirectory()));
 			} catch (Exception e1) {
 				e1.printStackTrace();
 			}
@@ -81,7 +99,6 @@ public class Main {
 					server.undeployAll();
 					log.info("Stopping WebDAV-server...");
 					server.stop();
-					FileUtils.deleteDirectory(new File(server.getWebappsDirectory()));
 				} catch (Exception e1) {
 					e1.printStackTrace();
 				}
@@ -129,4 +146,30 @@ public class Main {
 		} else
 			httpsOptions = new ServerInfo();
 	}
+	
+	private static void configureContextFile(File contextFile, StorageArea SA) throws Exception {
+		// modify application context file
+		String rootDirectory = SA.getFSRoot();
+		String contextPath = SA.getStfnRoot().substring(1);
+		XML doc = new XML(contextFile);
+		Element resourceFactory = doc.getNodeFromKeyValue("id", "milton.fs.resource.factory");
+		// set root directory:
+		log.debug("setting root directory as '" + rootDirectory + "'...");
+		Element rootNode = doc.getNodeFromKeyValue(resourceFactory, "name", "root");
+		doc.setAttribute(rootNode, "value", rootDirectory);
+		// set context path:
+		log.debug("setting context path as '" + contextPath + "'...");
+		Element contextPathNode = doc.getNodeFromKeyValue(resourceFactory, "name", "contextPath");
+		doc.setAttribute(contextPathNode, "value", contextPath);
+		// set backend hostname:
+		log.debug("setting storm backend hostname as '" + stormBEHostname + "'...");
+		Element stormBackendHostname = doc.getNodeFromKeyValue(resourceFactory, "name", "stormBackendHostname");
+		doc.setAttribute(stormBackendHostname, "value", stormBEHostname);
+		// set backend port:
+		log.debug("setting storm backend port as '" + stormBEPort + "'...");
+		Element stormBackendPort = doc.getNodeFromKeyValue(resourceFactory, "name", "stormBackendPort");
+		doc.setAttribute(stormBackendPort, "value", String.valueOf(stormBEPort));
+		doc.close();	
+	}
+	
 }

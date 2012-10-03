@@ -74,7 +74,7 @@ public class WebDAVServer {
 		}
 	}
 
-	public void undeploy(WebApp webapp) throws ServerException {
+	public void undeploy(WebApp webapp) throws Exception {
 		if (webapp.getProtocol() == StorageArea.HTTP_PROTOCOL || webapp.getProtocol() == StorageArea.HTTP_AND_HTTPS_PROTOCOLS) {
 			httpServer.undeploy(webapp);			
 		}
@@ -84,7 +84,7 @@ public class WebDAVServer {
 		FileUtils.deleteDirectory(new File(webapp.getFsPath()));
 	}
 	
-	public void undeployAll() throws ServerException {
+	public void undeployAll() throws Exception {
 		httpServer.undeployAll();
 		httpsServer.undeployAll();
 		FileUtils.deleteDirectory(new File(this.webappsDirectory));

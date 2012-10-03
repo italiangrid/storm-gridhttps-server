@@ -20,11 +20,14 @@ public class XML {
 	private File xmlFile;
 	private Document document;
 	
+	public XML(File xmlFile) throws JDOMException, IOException {
+		this.xmlFile = xmlFile;
+		builder = new SAXBuilder();
+		document = (Document) builder.build(xmlFile);
+	}
 	
 	public XML(String filename) throws JDOMException, IOException {
-		builder = new SAXBuilder();
-		xmlFile = new File(filename);
-		document = (Document) builder.build(xmlFile);
+		this(new File(filename));
 	}
 
 	public XML(InputStream input) throws JDOMException, IOException {
