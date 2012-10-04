@@ -9,7 +9,7 @@
 	<artifactId>server</artifactId>
 
 	<properties>
-<!-- 		<bundle.name>${project.artifactId}-${project.version}</bundle.name> -->
+		<!-- <bundle.name>${project.artifactId}-${project.version}</bundle.name> -->
 		<bundle.name>${project.artifactId}</bundle.name>
 	</properties>
 
@@ -45,9 +45,9 @@
 		</dependency>
 
 		<dependency>
-			<groupId>org.jdom</groupId>
-			<artifactId>jdom</artifactId>
-			<version>1.1</version>
+		<groupId>org.jdom</groupId>
+		<artifactId>jdom</artifactId>
+		<version>1.1</version>
 		</dependency>
 
 		<dependency>

@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
@@ -37,6 +38,16 @@ public class XML {
 	
 	public Element getRootElement() {
 		return document.getRootElement();
+	}
+	
+	public ArrayList<Element> getChildren(Element e, String tagName) {
+		ArrayList<Element> list = new ArrayList<Element>();
+		List<?> childs = e.getChildren();
+		for (Object node : childs) {
+			if (tagName.equals(((Element) node).getName()))
+				list.add((Element) node);
+		}
+		return list;
 	}
 	
 	public Element getNodeFromKeyValue(String key, String value) throws Exception {

@@ -4,69 +4,37 @@ import org.italiangrid.utils.https.SSLOptions;
 
 public class ServerInfo {
 	
-	private boolean enabled;
-	private String name;
-	private int port;
-	private boolean ssl;
-	private SSLOptions sslOptions;
 	private String hostname;
+	private int httpPort, httpsPort;
+	private boolean httpEnabled;
+	private SSLOptions sslOptions;
 	
-	public ServerInfo() {
-		this.enabled = false;
-	}
-	
-	public ServerInfo(String name, String hostname, int port) {
-		this.enabled = true;
-		this.name = name;
+	public ServerInfo(String hostname, int httpPort, int httpsPort, SSLOptions options, boolean useHttp) {
 		this.hostname = hostname;
-		this.port = port;
-		ssl = false;
-	}
-
-	public ServerInfo(String name, String hostname, int port, SSLOptions options) {
-		this(name, hostname, port);
-		this.ssl = true;
-		this.sslOptions = options; 
+		this.httpPort = httpPort;
+		this.httpsPort = httpsPort;
+		this.httpEnabled = useHttp;
+		this.sslOptions = options;
 	}
 	
-	public int getPort() {
-		return port;
+	public int getHttpPort() {
+		return httpPort;
 	}
-
-	public String getName() {
-		return name;
+	
+	public int getHttpsPort() {
+		return httpsPort;
 	}
-
+	
 	public String getHostname() {
 		return hostname;
 	}
 	
-	public boolean isSsl() {
-		return ssl;
-	}
-	
-	public boolean isEnabled() {
-		return enabled;
+	public boolean isHttpEnabled() {
+		return httpEnabled;
 	}
 
 	public SSLOptions getSslOptions() {
 		return sslOptions;
 	}	
 	
-	public String toString() {
-		String output = "(";
-		output += "name="+this.name;
-		output += ", hostname="+this.hostname;
-		output += ", port="+this.port;
-		output += ", isSsl="+this.ssl;
-		if (this.isSsl()) {
-			output += ", sslOptions=(";
-			output += "certificate_file="+this.sslOptions.getCertificateFile();
-			output += ", key_file="+this.sslOptions.getKeyFile();
-			output += ", trust_store="+this.sslOptions.getTrustStoreDirectory();
-			output += ")";
-		}
-		output += ")";
-		return output;
-	}
 }

@@ -16,10 +16,10 @@ public class WebApp {
 	private String fsPath;
 	private int protocol = StorageArea.NONE_PROTOCOL;
 
-	public WebApp(File baseDirectory, String contextPath, String rootDirectory, int protocol) throws WebAppException {
+	public WebApp(File baseDirectory, String contextPath, String rootDirectory, int protocol) throws Exception {
 				
 		if ((baseDirectory == null) || (!baseDirectory.exists()))
-			throw new WebAppException("Directory '" + baseDirectory.getPath() + "' does not exist! ");
+			throw new Exception("Directory '" + baseDirectory.getPath() + "' does not exist! ");
 		
 		this.setRootDirectory(rootDirectory);
 		this.setContextPath(contextPath);
@@ -28,7 +28,7 @@ public class WebApp {
 		
 	}
 
-	public WebApp(File baseDirectory, StorageArea SA) throws WebAppException {
+	public WebApp(File baseDirectory, StorageArea SA) throws Exception {
 		this(baseDirectory, SA.getStfnRoot(), SA.getFSRoot(), SA.getProtocol());
 	}
 

@@ -1,95 +1,139 @@
 package it.grid.storm.webdav.server;
 
 import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
 
 import it.grid.storm.webdav.storagearea.StorageArea;
 import it.grid.storm.webdav.utils.FileUtils;
 
-//import org.slf4j.Logger;
-//import org.slf4j.LoggerFactory;
+import org.eclipse.jetty.server.Connector;
+import org.eclipse.jetty.server.Handler;
+import org.eclipse.jetty.server.Server;
+import org.eclipse.jetty.server.handler.ContextHandlerCollection;
+import org.eclipse.jetty.server.handler.HandlerCollection;
+import org.eclipse.jetty.server.nio.SelectChannelConnector;
+import org.eclipse.jetty.webapp.WebAppContext;
+import org.italiangrid.utils.https.ServerFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class WebDAVServer {
-	
-	//private static final Logger log = LoggerFactory.getLogger(WebDAVServer.class);
+
+	private static final Logger log = LoggerFactory.getLogger(WebDAVServer.class);
 	private String webappsDirectory = "./webapps";
-	
-//	private HttpServer httpServer;
-	private HttpsServer httpsServer;
-	
-	public WebDAVServer(ServerInfo httpOptions, ServerInfo httpsOptions) {
-//		httpServer = new HttpServer(httpOptions);
-		httpsServer = new HttpsServer(httpsOptions);
+	private ServerInfo options;
+	private String name = "WebDAV-SERVER";
+	private Server server;
+	private ContextHandlerCollection contextHandlerCollection;
+	private List<WebApp> webapps;
+
+	public WebDAVServer(ServerInfo options) {
+		this.options = options;
+		contextHandlerCollection = new ContextHandlerCollection();
+		webapps = new ArrayList<WebApp>();
+		initServer();
 	}
-	
+
+	private void initServer() {
+		// Server:
+		server = ServerFactory.newServer(options.getHostname(), options.getHttpPort(), options.getSslOptions());
+		// Handler:
+		HandlerCollection hc = new HandlerCollection();
+		contextHandlerCollection = new ContextHandlerCollection();
+		hc.setHandlers(new Handler[] { contextHandlerCollection });
+		server.setHandler(hc);
+		if (options.isHttpEnabled()) {
+			// Add HTTP Connector:
+			Connector connector = new SelectChannelConnector();
+			connector.setPort(options.getHttpPort());
+			connector.setMaxIdleTime(30000);
+			server.addConnector(connector);
+		}
+		// Others:
+		server.setStopAtShutdown(true);
+		server.setGracefulShutdown(1000);
+	}
+
 	public String getWebappsDirectory() {
 		return this.webappsDirectory;
 	}
-	
+
 	public void setWebappsDirectory(String webappsDirectory) {
 		this.webappsDirectory = webappsDirectory;
 	}
-	
-	public void start() throws ServerException {
-		try {
-//			httpServer.start();
-			httpsServer.start();
-		} catch (Exception e) {
-			throw new ServerException(e.getMessage());
-		}
+
+	public void start() throws Exception {
+		server.start();
+		log.info(name + " > STARTED");
 	}
 
-	public void stop() throws ServerException {	
-		try {
-			//httpServer.stop();
-			httpsServer.stop();
-		} catch (Exception e) {
-			throw new ServerException(e.getMessage());
+	public void stop() throws Exception {
+		server.stop();
+		log.info(name + " > STOPPED");
+	}
+
+	public void status() {
+		if (!server.isStarted()) {
+			log.info(name + " is not running ");
+			return;
 		}
+		log.info(name + " is running on HTTPS on port " + options.getHttpsPort());
+		if (options.isHttpEnabled())
+			log.info(name + " supports HTTP connections on port " + options.getHttpPort());
+		log.info(name + " has " + webapps.size() + " webapp(s) deployed ");
+		for (WebApp w : webapps)
+			log.info(" - '" + w.getContextPath() + "' (root = '" + w.getRootDirectory() + "')");
 	}
-	
-	public void status() {	
-		//httpServer.status();
-		httpsServer.status();
-	}
-	
-	private boolean isHttpDeployed(WebApp webapp) {
-		return false;
-//		return (httpServer.getWebapps().indexOf(webapp) != -1);
-	}
-	
-	private boolean isHttpsDeployed(WebApp webapp) {
-		return (httpsServer.getWebapps().indexOf(webapp) != -1);
-	}
-	
+
 	public boolean isDeployed(WebApp webapp) {
-		return (isHttpDeployed(webapp) || isHttpsDeployed(webapp));
+		return (webapps.indexOf(webapp) != -1);
 	}
 
-	public void deploy(WebApp webapp) throws ServerException {
+	public void deploy(WebApp webapp) throws Exception {
 
-//		if (webapp.getProtocol() == StorageArea.HTTP_PROTOCOL || webapp.getProtocol() == StorageArea.HTTP_AND_HTTPS_PROTOCOLS) {
-//			httpServer.deploy(webapp);
-//		}
-		if (webapp.getProtocol() == StorageArea.HTTPS_PROTOCOL || webapp.getProtocol() == StorageArea.HTTP_AND_HTTPS_PROTOCOLS) {
-			httpsServer.deploy(webapp);
-		}
+		if (webapp == null)
+			throw new Exception("webapp is null!");
+		if (isDeployed(webapp))
+			throw new Exception("webapp already deployed!");
+		if (webapp.getProtocol() == StorageArea.NONE_PROTOCOL)
+			return;
+
+		WebAppContext context = new WebAppContext();
+		context.setDescriptor(webapp.getFsPath() + "/WEB-INF/web.xml");
+		context.setResourceBase(webapp.getFsPath());
+		context.setContextPath(webapp.getContextPath());
+		context.setParentLoaderPriority(true);
+		this.contextHandlerCollection.addHandler(context);
+		webapps.add(webapp);
+		log.info(name + " > DEPLOYED WEBAPP '" + webapp.getContextPath().substring(1) + "'");
 	}
 
 	public void undeploy(WebApp webapp) throws Exception {
-//		if (webapp.getProtocol() == StorageArea.HTTP_PROTOCOL || webapp.getProtocol() == StorageArea.HTTP_AND_HTTPS_PROTOCOLS) {
-//			httpServer.undeploy(webapp);			
-//		}
-		if (webapp.getProtocol() == StorageArea.HTTPS_PROTOCOL || webapp.getProtocol() == StorageArea.HTTP_AND_HTTPS_PROTOCOLS) {
-			httpsServer.undeploy(webapp);
-		}
+		
+		if (webapp == null)
+			throw new Exception("webapp is null!");
+		if (!isDeployed(webapp))
+			throw new Exception("webapp not deployed!");
+		
+		log.debug(name + ": undeploying '" + webapp.getContextPath() + "' webapp...");
+
+		WebAppContext context = new WebAppContext();
+		context.setDescriptor(webapp.getFsPath() + "/WEB-INF/web.xml");
+		context.setResourceBase(webapp.getFsPath());
+		context.setContextPath(webapp.getContextPath());
+		context.setParentLoaderPriority(true);
+		log.debug(name + ": removing context from handler collection...");
+		this.contextHandlerCollection.removeHandler(context);
+		webapps.remove(webapp);
+		
 		FileUtils.deleteDirectory(new File(webapp.getFsPath()));
 	}
-	
+
 	public void undeployAll() throws Exception {
-//		httpServer.undeployAll();
-		httpsServer.undeployAll();
+		while (!webapps.isEmpty())
+			undeploy(webapps.get(0));
 		FileUtils.deleteDirectory(new File(this.webappsDirectory));
 	}
-	
 
 }
