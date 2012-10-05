@@ -14,6 +14,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.NameValuePair;
@@ -50,25 +51,25 @@ public class StormAuthorizationUtils {
 		{
 			put("HTTP_PROTOCOL", new String[] { "HTTP" });
 			put("HTTPS_PROTOCOL", new String[] { "HTTPS" });
-			put("HTTP_AND_HTTP_PROTOCOLS", new String[] { "HTTP", "HTTPS" });
+			put("HTTP_AND_HTTPS_PROTOCOLS", new String[] { "HTTP", "HTTPS" });
 		};
 	};
 
 	/* Public methods */
 
 	public static boolean protocolAllowed(String protocolConfiguration, String requestProtocol) throws Exception {		
-		if (PROTOCOL_MAP.containsKey(protocolConfiguration)) {
-			if(Arrays.asList(PROTOCOL_MAP.get(protocolConfiguration)).contains(requestProtocol)) return true;
+		if (PROTOCOL_MAP.containsKey(protocolConfiguration.toUpperCase())) {
+			if(Arrays.asList(PROTOCOL_MAP.get(protocolConfiguration.toUpperCase())).contains(requestProtocol.toUpperCase())) return true;
 			else return false;
 		} else
-			throw new Exception("protocolConfiguration '" + protocolConfiguration
+			throw new Exception("protocolConfiguration '" + protocolConfiguration.toUpperCase()
 					+ "' is not contained in  PROTOCOL_MAP");
 	}
 
 	public static boolean methodAllowed(String method) {
 		boolean response = false;
-		if (METHODS_MAP.containsKey(method)) {
-			log.debug("Method " + method + " is allowed");
+		if (METHODS_MAP.containsKey(method.toUpperCase())) {
+			log.debug("Method " + method.toUpperCase() + " is allowed");
 			response = true;
 		}
 		return response;
@@ -158,33 +159,25 @@ public class StormAuthorizationUtils {
 		}
 		log.debug("Encoding Authorization request parameters");
 		String path;
+		boolean hasSubjectDN = (subjectDN != null && subjectDN.length() > 0);
+		boolean hasVOMSExtension = (fqans.length > 0);
 		try {
-			path = buildpath(URLEncoder.encode(resourcePath, Constants.ENCODING_SCHEME), operation, subjectDN != null,
-					fqans.length > 0);
+			path = buildpath(URLEncoder.encode(resourcePath, Constants.ENCODING_SCHEME), operation, hasSubjectDN, hasVOMSExtension);
 		} catch (UnsupportedEncodingException e) {
 			log.error("Exception encoding the path \'" + resourcePath + "\' UnsupportedEncodingException: "
 					+ e.getMessage());
 			throw new Exception("Unable to encode resourcePath paramether, unsupported encoding \'"
 					+ Constants.ENCODING_SCHEME + "\'");
 		}
-		String fqansList = null;
-		if (fqans.length > 0) {
-			fqansList = "";
-			for (int i = 0; i < fqans.length; i++) {
-				if (i > 0) {
-					fqansList += Constants.FQANS_SEPARATOR;
-				}
-				fqansList += fqans[i];
-			}
-		}
 		List<NameValuePair> qparams = new ArrayList<NameValuePair>();
-		if (subjectDN != null) {
+		if (hasSubjectDN) {
 			qparams.add(new BasicNameValuePair(Constants.DN_KEY, subjectDN));
-		}
-		if (fqansList != null) {
+		}	
+		if (hasVOMSExtension) {
+			String fqansList = StringUtils.join(fqans, Constants.FQANS_SEPARATOR);
+			log.debug("fqanslist = '"+fqansList+"'");
 			qparams.add(new BasicNameValuePair(Constants.FQANS_KEY, fqansList));
 		}
-
 		URI uri;
 		try {
 			uri = new URI("http", null, stormBackendHostname, stormBackendPort, path, qparams.isEmpty() ? null

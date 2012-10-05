@@ -36,23 +36,28 @@ public class WebDAVServer {
 	}
 
 	private void initServer() {
+		
 		// Server:
-		server = ServerFactory.newServer(options.getHostname(), options.getHttpPort(), options.getSslOptions());
+		server = ServerFactory.newServer(options.getHostname(), options.getHttpsPort(), options.getSslOptions());
+		log.debug("httpsPort: " + options.getHttpsPort());
+		server.setStopAtShutdown(true);
+		
+		if (options.isHttpEnabled()) {
+			// Add HTTP Connector:
+			Connector connector = new SelectChannelConnector();
+			log.debug("httpPort: " + options.getHttpPort());
+			connector.setPort(options.getHttpPort());
+			connector.setMaxIdleTime(30000);
+			server.addConnector(connector);
+		}	
+		
 		// Handler:
 		HandlerCollection hc = new HandlerCollection();
 		contextHandlerCollection = new ContextHandlerCollection();
 		hc.setHandlers(new Handler[] { contextHandlerCollection });
 		server.setHandler(hc);
-		if (options.isHttpEnabled()) {
-			// Add HTTP Connector:
-			Connector connector = new SelectChannelConnector();
-			connector.setPort(options.getHttpPort());
-			connector.setMaxIdleTime(30000);
-			server.addConnector(connector);
-		}
-		// Others:
-		server.setStopAtShutdown(true);
 		server.setGracefulShutdown(1000);
+	
 	}
 
 	public String getWebappsDirectory() {
