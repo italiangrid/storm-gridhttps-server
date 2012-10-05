@@ -32,7 +32,6 @@
 	<filter>
 		<filter-name>springMiltonFilter</filter-name>
 		<filter-class>io.milton.servlet.SpringMiltonFilter</filter-class>
-<!-- 		<filter-class>it.grid.storm.webdav.StormSpringMiltonFilter</filter-class> -->
 		<init-param>
 			<param-name>milton.exclude.paths</param-name>
 			<param-value>/index.jsp</param-value>

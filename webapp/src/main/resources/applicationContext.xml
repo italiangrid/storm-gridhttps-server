@@ -3,22 +3,24 @@
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-2.0.xsd">
 
-	<bean id="milton.fs.resource.factory" class="it.grid.storm.webdav.webapp.factory.StormResourceFactory">
-  		<constructor-arg index="0" value="$rootPath" />
-  		<constructor-arg index="1" value="$contextPath" />  
-  		<constructor-arg index="2" value="$stormBEHostname" />
-   		<constructor-arg index="3" value="$stormBEPort" />
+	<bean id="milton.fs.resource.factory"
+		class="it.grid.storm.webdav.webapp.factory.StormResourceFactory">
+		<constructor-arg index="0" value="_TO_DEFINE_" />
+		<constructor-arg index="1" value="_TO_DEFINE_" />
+		<constructor-arg index="2" value="_TO_DEFINE_" />
+		<constructor-arg index="3" value="_TO_DEFINE_" />
 	</bean>
 
 	<bean id="webdav-fs-webapp.extra.property" class="it.grid.storm.webdav.webapp.factory.StormPropertySource" />
 
 	<bean id="milton.http.manager" class="io.milton.config.HttpManagerBuilder">
 		<property name="mainResourceFactory" ref="milton.fs.resource.factory" />
-<!-- 		<property name="enableFormAuth" value="false" /> -->
-<!-- 		<property name="authenticationHandlers"> -->
-<!-- 			<list> -->
-<!-- 			</list> -->
-<!-- 		</property> -->
+		<property name="enableBasicAuth" value="false" />
+<!-- 		<property name="enableDigestAuth" value="false" /> -->
+		<property name="enableFormAuth" value="false" />
+		<property name="enableCookieAuth" value="false" />
+		<property name="enableCompression" value="false" />
+		<!-- enableCompression may be true...? -->
 		<property name="extraPropertySources">
 			<list>
 				<ref bean="webdav-fs-webapp.extra.property" />
