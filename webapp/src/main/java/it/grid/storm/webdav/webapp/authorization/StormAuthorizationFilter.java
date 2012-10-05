@@ -34,12 +34,16 @@ public class StormAuthorizationFilter implements Filter {
 	}
 
 	public void init(FilterConfig fc) throws ServletException {
-
-		this.storageAreaRootDir = fc.getInitParameter("storageAreaRootDir");
-		this.storageAreaName = fc.getInitParameter("storageAreaRootDir");
-		this.storageAreaProtocol = fc.getInitParameter("storageAreaProtocol");
-		this.stormBackendHostname = fc.getInitParameter("storageAreaRootDir");
-		this.stormBackendPort = Integer.valueOf(fc.getInitParameter("storageAreaRootDir"));
+		try {
+			this.storageAreaRootDir = fc.getInitParameter("storageAreaRootDir");
+			this.storageAreaName = fc.getInitParameter("storageAreaName");
+			this.storageAreaProtocol = fc.getInitParameter("storageAreaProtocol");
+			this.stormBackendHostname = fc.getInitParameter("stormBackendHostname");
+			this.stormBackendPort = Integer.valueOf(fc.getInitParameter("stormBackendPort"));
+		} catch (Exception e) {
+			e.printStackTrace();
+			throw new ServletException(e.getMessage());
+		}
 
 		log.info("storageAreaRootDir: " + this.storageAreaRootDir);
 		log.info("storageAreaName: " + this.storageAreaName);
@@ -94,7 +98,8 @@ public class StormAuthorizationFilter implements Filter {
 
 		// Setting subjectDN and FQANS from certificate and VOMS attributes
 
-		String subjectDN = ""; // in case of HTTP it is an empty String and not null!
+		String subjectDN = ""; // in case of HTTP it is an empty String and not
+								// null!
 		String[] fqans = {};
 
 		VOMSSecurityContext.clearCurrentContext();

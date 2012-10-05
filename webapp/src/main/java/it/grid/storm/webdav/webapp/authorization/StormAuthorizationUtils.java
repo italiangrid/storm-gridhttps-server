@@ -50,7 +50,7 @@ public class StormAuthorizationUtils {
 		{
 			put("HTTP_PROTOCOL", new String[] { "HTTP" });
 			put("HTTPS_PROTOCOL", new String[] { "HTTPS" });
-			put("HTTP_AND_HTTP_PROTOCOL", new String[] { "HTTP", "HTTPS" });
+			put("HTTP_AND_HTTP_PROTOCOLS", new String[] { "HTTP", "HTTPS" });
 		};
 	};
 
