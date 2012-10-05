@@ -10,6 +10,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URLEncoder;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 
@@ -44,7 +45,25 @@ public class StormAuthorizationUtils {
 		};
 	};
 
+	private static final HashMap<String, String[]> PROTOCOL_MAP = new HashMap<String, String[]>() {
+		private static final long serialVersionUID = 1L;
+		{
+			put("HTTP_PROTOCOL", new String[] { "HTTP" });
+			put("HTTPS_PROTOCOL", new String[] { "HTTPS" });
+			put("HTTP_AND_HTTP_PROTOCOL", new String[] { "HTTP", "HTTPS" });
+		};
+	};
+
 	/* Public methods */
+
+	public static boolean protocolAllowed(String protocolConfiguration, String requestProtocol) throws Exception {		
+		if (PROTOCOL_MAP.containsKey(protocolConfiguration)) {
+			if(Arrays.asList(PROTOCOL_MAP.get(protocolConfiguration)).contains(requestProtocol)) return true;
+			else return false;
+		} else
+			throw new Exception("protocolConfiguration '" + protocolConfiguration
+					+ "' is not contained in  PROTOCOL_MAP");
+	}
 
 	public static boolean methodAllowed(String method) {
 		boolean response = false;
@@ -55,13 +74,15 @@ public class StormAuthorizationUtils {
 		return response;
 	}
 
-	public static boolean isUserAuthorized(String stormBackendHostname, int stormBackendPort, String subjectDN, String[] fqans,
-			String operation, String path) throws Exception, IllegalArgumentException {
+	public static boolean isUserAuthorized(String stormBackendHostname, int stormBackendPort, String subjectDN,
+			String[] fqans, String operation, String path) throws Exception, IllegalArgumentException {
 		if (path == null || operation == null) {
-			log.error("Received null mandatory parameter(s) at isUserAuthorized: path=" + path + " operation=" + operation);
+			log.error("Received null mandatory parameter(s) at isUserAuthorized: path=" + path + " operation="
+					+ operation);
 			throw new IllegalArgumentException("Received null mandatory parameter(s)");
 		}
-		URI uri = StormAuthorizationUtils.prepareURI(stormBackendHostname, stormBackendPort, path, operation, subjectDN, fqans);
+		URI uri = StormAuthorizationUtils.prepareURI(stormBackendHostname, stormBackendPort, path, operation,
+				subjectDN, fqans);
 		log.debug("Authorization request uri = " + uri.toString());
 		HttpGet httpget = new HttpGet(uri);
 		HttpClient httpclient = new DefaultHttpClient();
@@ -79,7 +100,8 @@ public class StormAuthorizationUtils {
 		if (status == null) {
 			// never return null
 			log.error("Unexpected error! response.getStatusLine() returned null!");
-			throw new Exception("Unexpected error! response.getStatusLine() returned null! Please contact storm support");
+			throw new Exception(
+					"Unexpected error! response.getStatusLine() returned null! Please contact storm support");
 		}
 		int httpCode = status.getStatusCode();
 		String httpMessage = status.getReasonPhrase();
@@ -90,10 +112,12 @@ public class StormAuthorizationUtils {
 			try {
 				responseIS = entity.getContent();
 			} catch (IllegalStateException e) {
-				log.error("unable to get the input content stream from server answer. IllegalStateException " + e.getLocalizedMessage());
+				log.error("unable to get the input content stream from server answer. IllegalStateException "
+						+ e.getLocalizedMessage());
 				throw new Exception("Error comunicationg with the authorization service.");
 			} catch (IOException e) {
-				log.error("unable to get the input content stream from server answer. IOException " + e.getLocalizedMessage());
+				log.error("unable to get the input content stream from server answer. IOException "
+						+ e.getLocalizedMessage());
 				throw new Exception("Error comunicationg with the authorization service.");
 			}
 			int l;
@@ -112,10 +136,11 @@ public class StormAuthorizationUtils {
 		}
 		log.debug("Authorization response is : '" + output + "'");
 		if (httpCode != HttpURLConnection.HTTP_OK) {
-			log.warn("Unable to get a valid response from server. Received a non HTTP 200 response from the server : '" + httpCode + "' "
-					+ httpMessage);
-			throw new Exception("Unable to get a valid response from server. Received a non HTTP 200 response from the server : '"
+			log.warn("Unable to get a valid response from server. Received a non HTTP 200 response from the server : '"
 					+ httpCode + "' " + httpMessage);
+			throw new Exception(
+					"Unable to get a valid response from server. Received a non HTTP 200 response from the server : '"
+							+ httpCode + "' " + httpMessage);
 		}
 		Boolean response = new Boolean(output);
 		log.debug("Authorization response (Boolean value): '" + response + "'");
@@ -124,20 +149,23 @@ public class StormAuthorizationUtils {
 
 	/* Private methods */
 
-	private static URI prepareURI(String stormBackendHostname, int stormBackendPort, String resourcePath, String operation, String subjectDN, String[] fqans) throws Exception,
-			IllegalArgumentException {
+	private static URI prepareURI(String stormBackendHostname, int stormBackendPort, String resourcePath,
+			String operation, String subjectDN, String[] fqans) throws Exception, IllegalArgumentException {
 		if (resourcePath == null || operation == null || fqans == null) {
-			log.error("Received null mandatory parameter(s) at prepareURL: resourcePath=" + resourcePath + " operation=" + operation
-					+ " fqans=" + fqans.toString());
+			log.error("Received null mandatory parameter(s) at prepareURL: resourcePath=" + resourcePath
+					+ " operation=" + operation + " fqans=" + fqans.toString());
 			throw new IllegalArgumentException("Received null mandatory parameter(s)");
 		}
 		log.debug("Encoding Authorization request parameters");
 		String path;
 		try {
-			path = buildpath(URLEncoder.encode(resourcePath, Constants.ENCODING_SCHEME), operation, subjectDN != null, fqans.length > 0);
+			path = buildpath(URLEncoder.encode(resourcePath, Constants.ENCODING_SCHEME), operation, subjectDN != null,
+					fqans.length > 0);
 		} catch (UnsupportedEncodingException e) {
-			log.error("Exception encoding the path \'" + resourcePath + "\' UnsupportedEncodingException: " + e.getMessage());
-			throw new Exception("Unable to encode resourcePath paramether, unsupported encoding \'" + Constants.ENCODING_SCHEME + "\'");
+			log.error("Exception encoding the path \'" + resourcePath + "\' UnsupportedEncodingException: "
+					+ e.getMessage());
+			throw new Exception("Unable to encode resourcePath paramether, unsupported encoding \'"
+					+ Constants.ENCODING_SCHEME + "\'");
 		}
 		String fqansList = null;
 		if (fqans.length > 0) {
@@ -160,7 +188,7 @@ public class StormAuthorizationUtils {
 		URI uri;
 		try {
 			uri = new URI("http", null, stormBackendHostname, stormBackendPort, path, qparams.isEmpty() ? null
-							: URLEncodedUtils.format(qparams, "UTF-8"), null);
+					: URLEncodedUtils.format(qparams, "UTF-8"), null);
 		} catch (URISyntaxException e) {
 			log.error("Unable to build Authorization Service URI. URISyntaxException " + e.getLocalizedMessage());
 			throw new Exception("Unable to build Authorization Service URI");
@@ -169,8 +197,8 @@ public class StormAuthorizationUtils {
 		return uri;
 	}
 
-	private static String buildpath(String resourcePath, String operation, boolean hasSubjectDN, boolean hasVOMSExtension)
-			throws UnsupportedEncodingException {
+	private static String buildpath(String resourcePath, String operation, boolean hasSubjectDN,
+			boolean hasVOMSExtension) throws UnsupportedEncodingException {
 		String path = "/" + Constants.RESOURCE + "/" + Constants.VERSION + "/" + resourcePath + "/"
 				+ URLEncoder.encode(operation, Constants.ENCODING_SCHEME) + "/";
 		if (hasSubjectDN) {

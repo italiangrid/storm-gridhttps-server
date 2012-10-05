@@ -7,12 +7,31 @@
 	<filter>
 		<filter-name>stormAuthorizationFilter</filter-name>
 		<filter-class>it.grid.storm.webdav.webapp.authorization.StormAuthorizationFilter</filter-class>
+		<init-param>
+			<param-name>storageAreaRootDir</param-name>
+			<param-value>_TO_DEFINE_</param-value>
+		</init-param>
+		<init-param>
+			<param-name>storageAreaName</param-name>
+			<param-value>_TO_DEFINE_</param-value>
+		</init-param>
+		<init-param>
+			<param-name>storageAreaProtocol</param-name>
+			<param-value>_TO_DEFINE_</param-value>
+		</init-param>
+		<init-param>
+			<param-name>stormBackendHostname</param-name>
+			<param-value>_TO_DEFINE_</param-value>
+		</init-param>
+		<init-param>
+			<param-name>stormBackendPort</param-name>
+			<param-value>_TO_DEFINE_</param-value>
+		</init-param>
 	</filter>
 
 	<filter>
 		<filter-name>springMiltonFilter</filter-name>
 		<filter-class>io.milton.servlet.SpringMiltonFilter</filter-class>
-<!-- 		<filter-class>it.grid.storm.webdav.StormSpringMiltonFilter</filter-class> -->
 		<init-param>
 			<param-name>milton.exclude.paths</param-name>
 			<param-value>/index.jsp</param-value>
