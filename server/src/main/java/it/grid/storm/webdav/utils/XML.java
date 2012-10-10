@@ -1,119 +1,91 @@
 package it.grid.storm.webdav.utils;
 
 import java.io.File;
-import java.io.FileWriter;
 import java.io.IOException;
-import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
 
-import org.jdom.Document;
-import org.jdom.input.SAXBuilder;
-import org.jdom.Element;
-import org.jdom.JDOMException;
-import org.jdom.output.Format;
-import org.jdom.output.XMLOutputter;
+import javax.xml.namespace.NamespaceContext;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.transform.Result;
+import javax.xml.transform.Source;
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerConfigurationException;
+import javax.xml.transform.TransformerException;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.stream.StreamResult;
+import javax.xml.xpath.XPath;
+import javax.xml.xpath.XPathConstants;
+import javax.xml.xpath.XPathExpressionException;
+import javax.xml.xpath.XPathFactory;
+
+//import org.slf4j.Logger;
+//import org.slf4j.LoggerFactory;
+import org.w3c.dom.Document;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
+import org.xml.sax.SAXException;
 
 public class XML {
-	
-	private SAXBuilder builder;
+
+	// private static final Logger log = LoggerFactory.getLogger(XML.class);
+
+	private DocumentBuilderFactory domFactory;
+	private DocumentBuilder builder;
 	private File xmlFile;
 	private Document document;
-	
-	public XML(File xmlFile) throws JDOMException, IOException {
-		this.xmlFile = xmlFile;
-		builder = new SAXBuilder();
-		document = (Document) builder.build(xmlFile);
+	private Transformer transformer;
+	private XPath xpath;
+
+	private XML() throws ParserConfigurationException, TransformerConfigurationException {
+		domFactory = DocumentBuilderFactory.newInstance();
+		domFactory.setNamespaceAware(true); // never forget this!
+		builder = domFactory.newDocumentBuilder();
+		transformer = TransformerFactory.newInstance().newTransformer();
+		xpath = XPathFactory.newInstance().newXPath();
 	}
-	
-	public XML(String filename) throws JDOMException, IOException {
+
+	public XML(String filename) throws IOException, SAXException, ParserConfigurationException, TransformerConfigurationException {
 		this(new File(filename));
 	}
 
-	public XML(InputStream input) throws JDOMException, IOException {
-		builder = new SAXBuilder();
-		document = (Document) builder.build(input);
+	public XML(File xmlFile) throws IOException, SAXException, ParserConfigurationException, TransformerConfigurationException {
+		this();
+		this.xmlFile = xmlFile;
+		document = builder.parse(xmlFile);
+	}
+
+	public Document getDocument() {
+		return document;
+	}
+
+	public File getFile() {
+		return xmlFile;
+	}
+
+	public void addNamespace() {
+
+	}
+
+	public void saveToFile(File outputFile) throws IOException, TransformerException {
+		Result result = new StreamResult(outputFile);
+		Source source = new DOMSource(document);
+		transformer.transform(source, result);
+	}
+
+	public void save() throws IOException, TransformerException {
+		saveToFile(getFile());
+	}
+
+	public NodeList getNodes(String expression, NamespaceContext namespaceContext) throws XPathExpressionException {
+		xpath.setNamespaceContext(namespaceContext);
+		return (NodeList) xpath.evaluate(expression, getDocument(), XPathConstants.NODESET);
 	}
 	
-	public Element getRootElement() {
-		return document.getRootElement();
-	}
-	
-	public ArrayList<Element> getChildren(Element e, String tagName) {
-		ArrayList<Element> list = new ArrayList<Element>();
-		List<?> childs = e.getChildren();
-		for (Object node : childs) {
-			if (tagName.equals(((Element) node).getName()))
-				list.add((Element) node);
-		}
-		return list;
-	}
-	
-	public Element getNodeFromKeyValue(String key, String value) throws Exception {
-		return this.getNodeFromKeyValue(this.getRootElement(), key, value);
-	}
-	
-	public Element getNodeFromKeyValue(Element node, String key, String value) throws Exception {
-		assert node!=null;
-		List<?> children = node.getChildren();
-		Iterator<?> i = children.iterator();
-		Element current = null;
-		while (i.hasNext()) {
-			current = (Element) i.next();
-			if (current.getAttributeValue(key).equals(value))
-				return current;
-		}
-		throw new Exception("node with '"+key+"' = '"+value+"' not found!");
-	}
-	
-	public Element getNode(String nodeName) throws Exception {
-		return this.getNode(this.getRootElement(), nodeName);
-	}
-	
-	public Element getNode(Element node, String nodeName) throws Exception {
-		assert node!=null;
-		List<?> children = node.getChildren();
-		Iterator<?> i = children.iterator();
-		Element current = null;
-		while (i.hasNext()) {
-			current = (Element) i.next();
-			if (current.getName().equals(nodeName))
-				return current;
-		}
-		throw new Exception("node '"+nodeName+"' not found!");
-	}
-	
-	public String getAttribute(Element node, String attributeName) {
-		assert node!=null;
-		assert node.getAttribute(attributeName) != null;
-		return node.getAttributeValue(attributeName);
-	}
-	
-	public Element setAttribute(Element node, String attributeName, String attributeValue) {
-		assert node!=null;
-		return node.setAttribute(attributeName, attributeValue);
-	}
-	
-	public Element addNode(Element nodeFather, String nodeName) throws Exception {
-		if (nodeFather.getChild(nodeName) != null)
-			throw new Exception("node '"+nodeName+"' already exists!");
-		Element element = new Element(nodeName);
-		nodeFather.addContent(element);
-		return nodeFather.getChild(nodeName);
-	}
-	
-	public Element setNodeValue(Element node, String nodeValue) throws Exception {
-		node.setText(nodeValue);
-		return node;
-	}
-	
-	
-	public void close() throws IOException {
-		/* output new file */
-		XMLOutputter xmlOutput = new XMLOutputter();
-		xmlOutput.setFormat(Format.getPrettyFormat());
-		xmlOutput.output(this.document, new FileWriter(this.xmlFile));
+	public Node getNode(String expression, NamespaceContext namespaceContext) throws XPathExpressionException {
+		xpath.setNamespaceContext(namespaceContext);
+		return (Node) xpath.evaluate(expression, getDocument(), XPathConstants.NODE);
 	}
 	
 }

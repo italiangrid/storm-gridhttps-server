@@ -1,38 +1,33 @@
 package it.grid.storm.webdav;
 
-import it.grid.storm.webdav.server.ServerInfo;
-import it.grid.storm.webdav.server.WebApp;
-import it.grid.storm.webdav.server.WebDAVServer;
+import it.grid.storm.webdav.server.*;
 import it.grid.storm.webdav.storagearea.StorageArea;
 import it.grid.storm.webdav.storagearea.StorageAreaManager;
-import it.grid.storm.webdav.utils.FileUtils;
-import it.grid.storm.webdav.utils.MyCommandLineParser;
-import it.grid.storm.webdav.utils.XML;
-import it.grid.storm.webdav.utils.Zip;
+import it.grid.storm.webdav.utils.*;
 
 import org.italiangrid.utils.https.SSLOptions;
 
 import java.io.File;
 import java.io.IOException;
 import java.sql.Timestamp;
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
 import org.ini4j.InvalidFileFormatException;
 import org.ini4j.Wini;
-import org.jdom.Element;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.w3c.dom.Element;
+import org.w3c.dom.NodeList;
 
 public class Main {
 
 	private static final Logger log = LoggerFactory.getLogger(Main.class);
-	
+
 	private static String warTemplateFile;
 	private static String stormBEHostname;
 	private static int stormBEPort;
-	
+
 	private static String configurationFile;
 	private static WebDAVServer server;
 	private static ServerInfo options;
@@ -54,29 +49,30 @@ public class Main {
 		try {
 			log.info("Creating WebDAV server...");
 			server = new WebDAVServer(options);
-			log.info("Setting webapps directory to '"+ getExeDirectory() + webappsDir +"'");
+			log.info("Setting webapps directory to '" + getExeDirectory() + webappsDir + "'");
 			server.setWebappsDirectory(getExeDirectory() + webappsDir);
 			log.info("Retrieving the Storage Area list from Storm Backend...");
 			storageareas = StorageAreaManager.retrieveStorageAreasFromStormBackend(stormBEHostname, stormBEPort);
 			log.info("Deploying webapps...");
 			String tempDir = server.getWebappsDirectory() + "/.tmp_" + new Timestamp((new Date()).getTime());
-			log.info("Decompressing the template file '" + warTemplateFile + "' on '"+tempDir+"'...");
+			log.info("Decompressing the template file '" + warTemplateFile + "' on '" + tempDir + "'...");
 			File templateDir = new File(tempDir);
 			templateDir.mkdir();
 			(new Zip()).unzip(warTemplateFile, tempDir);
 			for (StorageArea SA : storageareas) {
-				if (SA.getProtocol() == StorageArea.NONE_PROTOCOL) continue;
-				//SA protocol is HTTP or HTTPS or both:
+				if (SA.getProtocol() == StorageArea.NONE_PROTOCOL)
+					continue;
+				// SA protocol is HTTP or HTTPS or both:
 				File webappDir = new File(server.getWebappsDirectory() + "/" + SA.getStfnRoot());
-				log.info("Copying the template directory on '"+ webappDir.getPath() +"'...");
+				log.info("Copying the template directory on '" + webappDir.getPath() + "'...");
 				FileUtils.copyFolder(templateDir, webappDir);
 				File contextFile = new File(webappDir.getAbsolutePath() + "/WEB-INF/classes/applicationContext.xml");
-				log.info("Configuring the context file '"+ contextFile.getPath() +"'...");
+				log.info("Configuring the context file '" + contextFile.getPath() + "'...");
 				configureContextFile(contextFile, SA);
 				File webFile = new File(webappDir.getAbsolutePath() + "/WEB-INF/web.xml");
-				log.info("Configuring the web.xml file '"+ webFile.getPath() +"'...");
+				log.info("Configuring the web.xml file '" + webFile.getPath() + "'...");
 				configureWebFile(webFile, SA);
-				log.info("Deploying '"+ SA.getName() +"' webapp...");
+				log.info("Deploying '" + SA.getName() + "' webapp...");
 				server.deploy(new WebApp(webappDir, SA));
 			}
 			log.info("Starting WebDAV-server...");
@@ -128,7 +124,7 @@ public class Main {
 	}
 
 	private static void loadConfiguration(String filename) throws InvalidFileFormatException, IOException {
-		Wini configuration = new Wini(new File(filename));	
+		Wini configuration = new Wini(new File(filename));
 		SSLOptions ssloptions = new SSLOptions();
 		// Storm BE hostname and port
 		stormBEHostname = configuration.get("storm_backend", "hostname");
@@ -143,59 +139,44 @@ public class Main {
 		ssloptions.setTrustStoreDirectory(configuration.get("server", "trust_store_directory"));
 		options = new ServerInfo(hostname, httpPort, httpsPort, ssloptions, useHttp);
 	}
-	
+
 	private static void configureContextFile(File contextFile, StorageArea SA) throws Exception {
 		// modify application context file
 		String rootDirectory = SA.getFSRoot();
 		String contextPath = SA.getStfnRoot().substring(1);
 		XML doc = new XML(contextFile);
-		Element resourceFactory = doc.getNodeFromKeyValue("id", "milton.fs.resource.factory");
-		// set root directory:
+		String query = "/spring:beans/spring:bean[@id='milton.fs.resource.factory']/spring:constructor-arg";
+		NodeList arguments = doc.getNodes(query, new AppNamespaceContext(null));
 		log.debug("setting root directory as '" + rootDirectory + "'...");
-		Element rootNode = doc.getNodeFromKeyValue(resourceFactory, "index", "0");
-		doc.setAttribute(rootNode, "value", rootDirectory);
-		// set context path:
+		((Element) arguments.item(0)).setAttribute("value", rootDirectory);
 		log.debug("setting context path as '" + contextPath + "'...");
-		Element contextPathNode = doc.getNodeFromKeyValue(resourceFactory, "index", "1");
-		doc.setAttribute(contextPathNode, "value", contextPath);
-		// set backend hostname:
+		((Element) arguments.item(1)).setAttribute("value", contextPath);
 		log.debug("setting storm backend hostname as '" + stormBEHostname + "'...");
-		Element stormBackendHostname = doc.getNodeFromKeyValue(resourceFactory, "index", "2");
-		doc.setAttribute(stormBackendHostname, "value", stormBEHostname);
-		// set backend port:
+		((Element) arguments.item(2)).setAttribute("value", stormBEHostname);
 		log.debug("setting storm backend port as '" + stormBEPort + "'...");
-		Element stormBackendPort = doc.getNodeFromKeyValue(resourceFactory, "index", "3");
-		doc.setAttribute(stormBackendPort, "value", String.valueOf(stormBEPort));
-		doc.close();	
+		((Element) arguments.item(3)).setAttribute("value", String.valueOf(stormBEPort));
+		doc.save();
 	}
-	
+
 	private static void configureWebFile(File webFile, StorageArea SA) throws Exception {
 		// modify web.xml file
 		String rootDirectory = SA.getFSRoot();
 		String contextPath = SA.getStfnRoot().substring(1);
 		String protocol = StorageArea.protocolToStr(SA.getProtocol());
 		XML doc = new XML(webFile);
-		
-		ArrayList<Element> filters = doc.getChildren(doc.getRootElement(), "filter");
-		for (Element filter : filters) {
-			String filterName = doc.getChildren(filter, "filter-name").get(0).getValue();
-			if (!filterName.equals("stormAuthorizationFilter")) continue;
-			log.debug("stormAuthorizationFilter node found...");
-			assert(filterName.equals("stormAuthorizationFilter"));
-			ArrayList<Element> initParams = doc.getChildren(filter, "init-param");
-			log.debug("setting root directory as '" + rootDirectory + "'...");
-			doc.getChildren(initParams.get(0), "param-value").get(0).setText(rootDirectory);
-			log.debug("setting context path as '" + contextPath + "'...");
-			doc.getChildren(initParams.get(1), "param-value").get(0).setText(contextPath);
-			log.debug("setting protocol as '" + protocol + "'...");
-			doc.getChildren(initParams.get(2), "param-value").get(0).setText(protocol);
-			log.debug("setting storm backend hostname as '" + stormBEHostname + "'...");
-			doc.getChildren(initParams.get(3), "param-value").get(0).setText(stormBEHostname);
-			log.debug("setting storm backend port as '" + stormBEPort + "'...");
-			doc.getChildren(initParams.get(4), "param-value").get(0).setText(String.valueOf(stormBEPort));
-		}
-		
-		doc.close();
+		String query = "/j2ee:web-app/j2ee:filter[@id='stormAuthorizationFilter']/j2ee:init-param/j2ee:param-value";
+		NodeList initParams = doc.getNodes(query, new WebNamespaceContext(null));	
+		log.debug("setting root directory as '" + rootDirectory + "'...");
+		((Element) initParams.item(0)).setTextContent(rootDirectory);
+		log.debug("setting context path as '" + contextPath + "'...");
+		((Element) initParams.item(1)).setTextContent(contextPath);
+		log.debug("setting protocol as '" + protocol + "'...");
+		((Element) initParams.item(2)).setTextContent(protocol);
+		log.debug("setting storm backend hostname as '" + stormBEHostname + "'...");
+		((Element) initParams.item(3)).setTextContent(stormBEHostname);
+		log.debug("setting storm backend port as '" + stormBEPort + "'...");
+		((Element) initParams.item(4)).setTextContent(String.valueOf(stormBEPort));
+		doc.save();
 	}
-	
+
 }

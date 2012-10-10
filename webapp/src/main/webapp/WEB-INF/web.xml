@@ -4,7 +4,7 @@
 	xsi:schemaLocation="http://java.sun.com/xml/ns/j2ee http://java.sun.com/xml/ns/j2ee/web-app_2_4.xsd"
 	version="2.4">
 	
-	<filter>
+	<filter id="stormAuthorizationFilter">
 		<filter-name>stormAuthorizationFilter</filter-name>
 		<filter-class>it.grid.storm.webdav.webapp.authorization.StormAuthorizationFilter</filter-class>
 		<init-param>

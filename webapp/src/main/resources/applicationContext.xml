@@ -16,7 +16,6 @@
 	<bean id="milton.http.manager" class="io.milton.config.HttpManagerBuilder">
 		<property name="mainResourceFactory" ref="milton.fs.resource.factory" />
 		<property name="enableBasicAuth" value="false" />
-<!-- 		<property name="enableDigestAuth" value="false" /> -->
 		<property name="enableFormAuth" value="false" />
 		<property name="enableCookieAuth" value="false" />
 		<property name="enableCompression" value="false" />
