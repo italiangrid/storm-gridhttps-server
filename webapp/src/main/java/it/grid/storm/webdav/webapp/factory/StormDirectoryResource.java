@@ -19,6 +19,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -42,21 +43,24 @@ public class StormDirectoryResource extends StormResource implements MakeCollect
 
     public CollectionResource createCollection(String name) {
     	log.info("Called function for MKCOL DIRECTORY");
-    	
+
     	StormResourceHelper helper = new StormResourceHelper(MiltonServlet.request(), this);
+    	String userDN = helper.getUserDN();
+    	log.debug("userDN = " + userDN);
+    	List<String> userFQANs = helper.getUserFQANS();
+    	log.debug("userFQANs = " + StringUtils.join(userFQANs.toArray(), ","));
+    	String surl = helper.getSurl();
+    	log.debug("surl = " + surl);
+    	String newDirSurl = surl + "/" + name;
+    	log.debug("new directory surl: " + newDirSurl);
     	
-    	//mkdir
-    	BackendApi be;
-		try {
-			be = helper.createBackend();
+    	try {
+    		//mkdir
+    		BackendApi be = helper.createBackend();
+    		log.debug("mkdir:");
+    		be.mkdir(userDN, userFQANs, newDirSurl);
 		} catch (IOException e) {
 			throw new RuntimeException(e.getMessage());
-		}
-
-    	log.debug("mkdir:");
-    	String newDirSurl = helper.getSurl() + name;
-    	try {
-			be.mkdir(helper.getUserDN(), helper.getUserFQANS(), newDirSurl);
 		} catch (ApiException e) {
 			throw new RuntimeException(e.getMessage());
 		}    	
@@ -102,16 +106,19 @@ public class StormDirectoryResource extends StormResource implements MakeCollect
 
     public Resource createNew(String name, InputStream in, Long length, String contentType) throws IOException {
     	log.info("Called function for PUT FILE");
-		
     	StormResourceHelper helper = new StormResourceHelper(MiltonServlet.request(), this);
+    	String userDN = helper.getUserDN();
+    	log.debug("userDN = " + userDN);
+    	List<String> userFQANs = helper.getUserFQANS();
+    	log.debug("userFQANs = " + StringUtils.join(userFQANs.toArray(), ","));
+    	List<String> surls = helper.getSurls();
+    	log.debug("surls = " + StringUtils.join(surls.toArray(), ","));
     	
-    	//prepare to put
     	BackendApi be = helper.createBackend();
-
-    	log.debug("prepare to put:");
-    	
     	try {
-			be.prepareToPut(helper.getUserDN(), helper.getUserFQANS(), helper.getSurls());
+    		//prepare to put:
+    		log.debug("prepare to put:");
+        	be.prepareToPut(userDN, userFQANs, surls);
 		} catch (ApiException e) {
 			throw new IOException(e.getMessage());
 		}
@@ -119,17 +126,16 @@ public class StormDirectoryResource extends StormResource implements MakeCollect
     	//put
     	File dest = new File(this.getFile(), name);
 		contentService.setFileContent(dest, in);        
-    	
-		//put done
-	   	log.debug("put done:");
-    	try {
-			be.putDone(helper.getUserDN(), helper.getUserFQANS(), helper.getSurls(), null);			
+ 
+		try {
+			//put done
+		   	log.debug("put done:");
+	    	be.putDone(userDN, userFQANs, surls, null);			
 		} catch (ApiException e) {
 			throw new IOException(e.getMessage());
 		}
-
+		
     	return factory.resolveFile(this.host, dest);
-
     }
 
     @Override

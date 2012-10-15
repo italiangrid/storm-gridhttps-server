@@ -73,7 +73,7 @@ public class StormFileResource extends StormResource implements CopyableResource
     	log.debug("prepare to get:");
     	
     	try {
-			be.prepareToGet(helper.getUserDN(), helper.getUserFQANS(), helper.getSurls(),(String[])helper.getProtocols().toArray());
+			be.prepareToGet(helper.getUserDN(), helper.getUserFQANS(), helper.getSurls(),helper.getProtocols());
 		} catch (ApiException e) {
 			throw new IOException(e.getMessage());
 		}

@@ -10,6 +10,7 @@ import java.util.List;
 
 import javax.servlet.http.HttpServletRequest;
 
+import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -59,19 +60,19 @@ public class StormResourceHelper {
 
 	public List<String> getUserFQANS() {
 		List<String> userFQANS = new ArrayList<String>();
+		String [] fqans = StringUtils.split((String) HTTPRequest.getAttribute("FQANS"), ",");
 		log.debug(" # fqANs = ( ");
-		for (String s : (String[]) HTTPRequest.getAttribute("FQANS")) {
+		for (String s : fqans) {
 			userFQANS.add(s);
 			log.debug("  " + s);
 		}
 		log.debug(" )");
-		//log.debug(" # fqANs = ( " + ((String[])userFQANS.toArray()).toString() + ")");
 		return userFQANS;
 	}
 
-	public List<String> getProtocols() {
-		List<String> protocols = new ArrayList<String>();
-		protocols.add(HTTPRequest.getProtocol()); // to check
+	public String[] getProtocols() {
+		String[] protocols = new String[1]; 
+		protocols[0] = HTTPRequest.getProtocol(); // to check
 		log.debug(" # protocols = " + protocols.toString());
 		return protocols;
 	}
@@ -83,7 +84,9 @@ public class StormResourceHelper {
 	}
 
 	protected String getSurl() {
-		String surl = "srm://" + getBEHostname() + ":" + getBEPort() + "/" + getContextPath() + "/" + this.res.getFile().getPath();
+		String rootDir = this.res.factory.getRoot().getPath();
+		String surl = "srm://" + getBEHostname() + ":" + getBEPort();
+		surl += this.res.file.getPath().replaceFirst(rootDir, "/"+getContextPath());
 		log.debug(" # surl = " + surl);
 		return surl;
 	}

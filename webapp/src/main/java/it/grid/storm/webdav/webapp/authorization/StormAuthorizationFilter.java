@@ -15,6 +15,7 @@ import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.commons.lang.StringUtils;
 import org.italiangrid.utils.voms.VOMSSecurityContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,11 +27,14 @@ public class StormAuthorizationFilter implements Filter {
 	private String storageAreaProtocol;
 	private String stormBackendHostname;
 	private int stormBackendPort;
+	private String subjectDN = "";
+	private String[] fqans = {};
+	private HttpServletRequest HTTPRequest;
+	private HttpServletResponse HTTPResponse;
 
 	private static final Logger log = LoggerFactory.getLogger(StormAuthorizationFilter.class);
 
 	public void destroy() {
-		// TODO Auto-generated method stub
 	}
 
 	public void init(FilterConfig fc) throws ServletException {
@@ -45,140 +49,139 @@ public class StormAuthorizationFilter implements Filter {
 			throw new ServletException(e.getMessage());
 		}
 
-		log.info("storageAreaRootDir: " + this.storageAreaRootDir);
-		log.info("storageAreaName: " + this.storageAreaName);
-		log.info("storageAreaProtocol: " + this.storageAreaProtocol);
-		log.info("stormBackendHostname: " + this.stormBackendHostname);
-		log.info("stormBackendPort: " + this.stormBackendPort);
+		log.debug("Init-Parameters' values:");
+		log.debug(" - storageAreaRootDir    : " + this.storageAreaRootDir);
+		log.debug(" - storageAreaName       : " + this.storageAreaName);
+		log.debug(" - storageAreaProtocol   : " + this.storageAreaProtocol);
+		log.debug(" - stormBackendHostname  : " + this.stormBackendHostname);
+		log.debug(" - stormBackendPort      : " + this.stormBackendPort);
 	}
 
-	public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException,
-			ServletException {
+	public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
 
 		// Creating HTTPRequest and HTTPResponse
+		HTTPResponse = (HttpServletResponse) response;
+		HTTPRequest = (HttpServletRequest) request;
 
-		HttpServletResponse HTTPResponse = null;
-		HttpServletRequest HTTPRequest = null;
-		if (HttpServletRequest.class.isAssignableFrom(request.getClass())
-				&& HttpServletResponse.class.isAssignableFrom(response.getClass())) {
-			HTTPRequest = (HttpServletRequest) request;
-			HTTPResponse = (HttpServletResponse) response;
-		} else {
-			log.error("Received non HTTP request. Class is : " + request.getClass());
-			throw new ServletException("Protocol not supported. Use HTTP(S)");
-		}
-
-		/* *********************************************** */
-
-		// Checking if the protocol is allowed
-		String requestProtocol = HTTPRequest.getScheme();
-		try {
-			if (!StormAuthorizationUtils.protocolAllowed(this.storageAreaProtocol, requestProtocol)) {
-				log.warn("Received a request with a not allowed protocol: " + requestProtocol);
-				HTTPResponse.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Protocol " + requestProtocol
-						+ " not allowed!");
-				return;
-			}
-		} catch (Exception e) {
-			log.error(e.getMessage());
-			HTTPResponse.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
+		if (!isProtocolAllowed())
 			return;
-		}
-
-		/* *********************************************** */
-
-		// Setting request attributes
-
-		HTTPRequest.setAttribute("STORAGE_AREA_ROOT", this.storageAreaRootDir);
-		HTTPRequest.setAttribute("STORAGE_AREA_NAME", this.storageAreaName);
-		HTTPRequest.setAttribute("STORM_BACKEND_HOST", this.stormBackendHostname);
-		HTTPRequest.setAttribute("STORM_BACKEND_PORT", this.stormBackendPort);
-
-		/* *********************************************** */
 
 		// Setting subjectDN and FQANS from certificate and VOMS attributes
+		initVomsSecurityContext();
 
-		String subjectDN = ""; // in case of HTTP it is an empty String and not
-								// null!
-		String[] fqans = {};
-
-		VOMSSecurityContext.clearCurrentContext();
-		VOMSSecurityContext sc = new VOMSSecurityContext();
-		VOMSSecurityContext.setCurrentContext(sc);
-		X509Certificate[] certChain = getCertChain(HTTPRequest);
-
-		if (certChain != null) {
-			sc.setClientCertChain(certChain);
-			subjectDN = sc.getClientDN().getX500();
-			fqans = sc.getFQANs();
+		/********************************TEST***********************************/
+		if (HTTPRequest.getScheme().toUpperCase().equals("HTTPS")) {
+			fqans = new String[2];
+			fqans[0] = "/dteam/Role=NULL/Capability=NULL";
+			fqans[1] = "/dteam/NGI_IT/Role=NULL/Capability=NULL";
 		}
+		/********************************TEST***********************************/
 
-		HTTPRequest.setAttribute("SUBJECT_DN", subjectDN);
-		HTTPRequest.setAttribute("FQANS", fqans);
+		setRequestAttributes();
 
-		/* *********************************************** */
-
-		// Check if method is allowed
-
-		String methodName = HTTPRequest.getMethod();
-		log.debug("Requested method is : " + methodName);
-		if (!StormAuthorizationUtils.methodAllowed(methodName)) {
-			log.warn("Received a request for a not allowed method : " + methodName);
-			HTTPResponse.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Method " + methodName
-					+ " not allowed!");
+		if (!isMethodAllowed())
 			return;
-		}
 
-		/* *********************************************** */
-
-		// Check if the user is authorized
-
-		AbstractMethodAuthorization m = StormAuthorizationUtils.METHODS_MAP.get(methodName);
-		Map<String, String> operationsMap = m.getOperationsMap(HTTPRequest);
-		boolean isAuthorized = true;
-
-		for (Map.Entry<String, String> entry : operationsMap.entrySet()) {
-			String op = entry.getKey();
-			String path = entry.getValue();
-
-			log.debug("Asking authorization for operation " + op + " on " + path);
-			try {
-				isAuthorized = isAuthorized
-						&& StormAuthorizationUtils.isUserAuthorized(stormBackendHostname, stormBackendPort, subjectDN,
-								fqans, op, path);
-			} catch (Exception e) {
-				log.error("Unable to verify user authorization. ServletException : " + e.getMessage());
-				HTTPResponse.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
-						"Error testing user authorization: " + e.getMessage());
-				return;
-			}
-
-		}
-
-		if (isAuthorized) {
+		log.debug("protocol: " + HTTPRequest.getScheme());
+		if (HTTPRequest.getScheme().toUpperCase().equals("HTTP") || isUserAuthorized()) {
 			log.info("User is authorized to access the requested resource");
 			chain.doFilter(request, response);
 		} else {
 			log.warn("User is not authorized to access the requested resource");
-			HTTPResponse.sendError(HttpServletResponse.SC_FORBIDDEN,
-					"You are not authorized to access the requested resource");
-			return;
+			sendError(HttpServletResponse.SC_FORBIDDEN, "You are not authorized to access the requested resource");
 		}
-
 	}
 
-	private X509Certificate[] getCertChain(HttpServletRequest request) {
-
-		X509Certificate[] certChain = null;
+	private boolean isUserAuthorized() {
+		AbstractMethodAuthorization m = StormAuthorizationUtils.METHODS_MAP.get(HTTPRequest.getMethod());
+		Map<String, String> operationsMap;
 		try {
-			certChain = (X509Certificate[]) request.getAttribute("javax.servlet.request.X509Certificate");
+			operationsMap = m.getOperationsMap(HTTPRequest);
+		} catch (Exception e) {
+			e.printStackTrace();
+			return false;
+		}
+		boolean isAuthorized = true;
+		for (Map.Entry<String, String> entry : operationsMap.entrySet()) {
+			String op = entry.getKey();
+			String path = entry.getValue();
+			log.debug("Asking authorization for operation " + op + " on " + path);
+			try {
+				isAuthorized = isAuthorized
+						&& StormAuthorizationUtils.isUserAuthorized(stormBackendHostname, stormBackendPort, subjectDN, fqans, op, path);
+			} catch (Exception e) {
+				log.error("Unable to verify user authorization. ServletException : " + e.getMessage());
+				sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Error testing user authorization: " + e.getMessage());
+				return false;
+			}
+		}
+		return isAuthorized;
+	}
+
+	private boolean isMethodAllowed() {
+		String methodName = HTTPRequest.getMethod();
+		log.debug("Requested method is : " + methodName);
+		boolean isAllowed = StormAuthorizationUtils.methodAllowed(methodName);
+		if (!isAllowed) {
+			log.warn("Received a request for a not allowed method : " + methodName);
+			sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Method " + methodName + " not allowed!");
+		}
+		return isAllowed;
+	}
+
+	private void setRequestAttributes() {
+		HTTPRequest.setAttribute("STORAGE_AREA_ROOT", storageAreaRootDir);
+		HTTPRequest.setAttribute("STORAGE_AREA_NAME", storageAreaName);
+		HTTPRequest.setAttribute("STORM_BACKEND_HOST", stormBackendHostname);
+		HTTPRequest.setAttribute("STORM_BACKEND_PORT", stormBackendPort);
+		HTTPRequest.setAttribute("SUBJECT_DN", subjectDN);
+		HTTPRequest.setAttribute("FQANS", StringUtils.join(fqans, ","));
+	}
+
+	private void initVomsSecurityContext() {
+
+		VOMSSecurityContext.clearCurrentContext();
+		VOMSSecurityContext sc = new VOMSSecurityContext();
+		VOMSSecurityContext.setCurrentContext(sc);
+		X509Certificate[] certChain;
+		try {
+			certChain = (X509Certificate[]) HTTPRequest.getAttribute("javax.servlet.request.X509Certificate");
 		} catch (Exception e) {
 			log.warn("Error fetching certificate from http request: " + e.getMessage());
+			return;
 		}
-		// if (certChain == null)
-		// throw new Exception("Unauthenticated connection from " +
-		// request.getRemoteAddr());
-		return certChain;
+		if (certChain == null)
+			return;
+		sc.setClientCertChain(certChain);
+		subjectDN = sc.getClientDN().getX500();
+		log.debug("subjectDN = " + subjectDN);
+		fqans = sc.getFQANs();
+		log.debug("FQANs = " + StringUtils.join(fqans, ","));
+	}
+
+	private boolean isProtocolAllowed() {
+		String protocol = HTTPRequest.getScheme();
+		boolean isAllowed = false;
+		try {
+			isAllowed = StormAuthorizationUtils.protocolAllowed(this.storageAreaProtocol, protocol);
+		} catch (Exception e) {
+			log.error(e.getMessage());
+			sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
+			return false;
+		}
+		if (!isAllowed) {
+			log.warn("Received a request with a not allowed protocol: " + protocol);
+			sendError(HttpServletResponse.SC_UNAUTHORIZED, "Protocol " + protocol + " not allowed!");
+		}
+		return isAllowed;
+	}
+
+	private void sendError(int errorCode, String errorMessage) {
+		try {
+			HTTPResponse.sendError(errorCode, errorMessage);
+		} catch (IOException e1) {
+			e1.printStackTrace();
+		}
 	}
 
 }

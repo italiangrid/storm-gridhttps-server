@@ -7,7 +7,6 @@ import io.milton.http.ResourceFactory;
 import io.milton.http.fs.FileContentService;
 import io.milton.http.SecurityManager;
 import io.milton.http.fs.NullSecurityManager;
-import io.milton.http.fs.SimpleFileContentService;
 import io.milton.resource.Resource;
 import java.io.File;
 import org.slf4j.Logger;
@@ -80,7 +79,7 @@ public final class StormResourceFactory implements ResourceFactory {
     public StormResource resolveFile(String host, File file) {
         StormResource r;
         if (!file.exists()) {
-            log.debug("file not found: " + file.getAbsolutePath());
+            log.warn("file not found: " + file.getAbsolutePath());
             return null;
         } else if (file.isDirectory()) {
             r = new StormDirectoryResource(host, this, file, contentService);
@@ -94,11 +93,14 @@ public final class StormResourceFactory implements ResourceFactory {
     }
 
     public File resolvePath(File root, String url) {
+    	log.debug("resolve path url: " + url);
         Path path = Path.path(url);
         File f = root;
         for (String s : path.getParts()) {
             f = new File(f, s);
         }
+        log.debug("resolve path return file name: " + f.getName());
+        log.debug("resolve path return file path: " + f.getPath());
         return f;
     }
 
