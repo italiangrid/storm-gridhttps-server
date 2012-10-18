@@ -30,6 +30,7 @@ public class WebDAVServer {
 
 	public WebDAVServer(ServerInfo options) {
 		this.options = options;
+		log.debug("WebDAVServer > create context handler collection...");
 		contextHandlerCollection = new ContextHandlerCollection();
 		webapps = new ArrayList<WebApp>();
 		initServer();
@@ -37,6 +38,7 @@ public class WebDAVServer {
 
 	private void initServer() {
 		
+		log.debug("WebDAVServer > new ssl server...");
 		// Server:
 		server = ServerFactory.newServer(options.getHostname(), options.getHttpsPort(), options.getSslOptions());
 		log.debug("httpsPort: " + options.getHttpsPort());

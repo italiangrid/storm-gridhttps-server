@@ -9,10 +9,13 @@ import java.net.HttpURLConnection;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URLEncoder;
+import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
+
+import javax.servlet.http.HttpServletRequest;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.http.HttpEntity;
@@ -25,6 +28,7 @@ import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.utils.URLEncodedUtils;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.message.BasicNameValuePair;
+import org.italiangrid.utils.voms.VOMSSecurityContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -32,20 +36,29 @@ public class StormAuthorizationUtils {
 
 	private static final Logger log = LoggerFactory.getLogger(StormAuthorizationUtils.class);
 
-	public static final HashMap<String, AbstractMethodAuthorization> METHODS_MAP = new HashMap<String, AbstractMethodAuthorization>() {
-		private static final long serialVersionUID = 1L;
-		{
-			put("PROPFIND", new PropfindMethodAuthorization());
-			put("OPTIONS", new OptionsMethodAuthorization());
-			put("GET", new GetMethodAuthorization());
-			put("DELETE", new DeleteMethodAuthorization());
-			put("PUT", new PutMethodAuthorization());
-			put("MKCOL", new MkcolMethodAuthorization());
-			put("MOVE", new MoveMethodAuthorization());
-			put("COPY", new CopyMethodAuthorization());
-		};
-	};
+	public static String storageAreaRootDir;
+	public static String storageAreaName;
+	public static String storageAreaProtocol;
+	public static String stormBackendHostname;
+	public static int stormBackendPort;
+	public static int stormBackendServicePort;
+	public static String stormFrontendHostname;
+	public static int stormFrontendPort;
 
+	public static HashMap<String, AbstractMethodAuthorization> METHODS_MAP = new HashMap<String, AbstractMethodAuthorization>();
+	
+	public static void doInitMethodMap(HttpServletRequest HTTPRequest) {
+		METHODS_MAP.clear();
+		METHODS_MAP.put("PROPFIND", new PropfindMethodAuthorization(HTTPRequest));
+		METHODS_MAP.put("OPTIONS", new OptionsMethodAuthorization(HTTPRequest));
+		METHODS_MAP.put("GET", new GetMethodAuthorization(HTTPRequest));
+		METHODS_MAP.put("DELETE", new DeleteMethodAuthorization(HTTPRequest));
+		METHODS_MAP.put("PUT", new PutMethodAuthorization(HTTPRequest));
+		METHODS_MAP.put("MKCOL", new MkcolMethodAuthorization(HTTPRequest));
+		METHODS_MAP.put("MOVE", new MoveMethodAuthorization(HTTPRequest));
+		METHODS_MAP.put("COPY", new CopyMethodAuthorization(HTTPRequest));
+	}
+	
 	private static final HashMap<String, String[]> PROTOCOL_MAP = new HashMap<String, String[]>() {
 		private static final long serialVersionUID = 1L;
 		{
@@ -57,14 +70,31 @@ public class StormAuthorizationUtils {
 
 	/* Public methods */
 
-	public static boolean protocolAllowed(String protocolConfiguration, String requestProtocol) throws Exception {
-		if (PROTOCOL_MAP.containsKey(protocolConfiguration.toUpperCase())) {
-			if (Arrays.asList(PROTOCOL_MAP.get(protocolConfiguration.toUpperCase())).contains(requestProtocol.toUpperCase()))
+	public static VOMSSecurityContext getVomsSecurityContext(HttpServletRequest HTTPRequest) {
+		VOMSSecurityContext.clearCurrentContext();
+		VOMSSecurityContext vomsSecurityContext = new VOMSSecurityContext();
+		VOMSSecurityContext.setCurrentContext(vomsSecurityContext);
+		X509Certificate[] certChain;
+		try {
+			certChain = (X509Certificate[]) HTTPRequest.getAttribute("javax.servlet.request.X509Certificate");
+		} catch (Exception e) {
+			log.error("Error fetching certificate from http request: " + e.getMessage());
+			return vomsSecurityContext;
+		}
+		if (certChain != null)
+			vomsSecurityContext.setClientCertChain(certChain);
+		return vomsSecurityContext;
+	}
+
+	public static boolean protocolAllowed(String requestProtocol) throws Exception {
+		String key = StormAuthorizationUtils.storageAreaProtocol.toUpperCase();
+		if (PROTOCOL_MAP.containsKey(key)) {
+			if (Arrays.asList(PROTOCOL_MAP.get(key)).contains(requestProtocol.toUpperCase()))
 				return true;
 			else
 				return false;
 		} else
-			throw new Exception("protocolConfiguration '" + protocolConfiguration.toUpperCase() + "' is not contained in  PROTOCOL_MAP");
+			throw new Exception("protocolConfiguration '" + key + "' is not contained in  PROTOCOL_MAP");
 	}
 
 	public static boolean methodAllowed(String method) {
@@ -76,14 +106,41 @@ public class StormAuthorizationUtils {
 		return response;
 	}
 
-	public static boolean isUserAuthorized(String stormBackendHostname, int stormBackendPort, String subjectDN, String[] fqans,
-			String operation, String path) throws Exception, IllegalArgumentException {
-		if (path == null || operation == null) {
-			log.error("Received null mandatory parameter(s) at isUserAuthorized: path=" + path + " operation=" + operation);
+	public static String getUserDN(VOMSSecurityContext vomsSecurityContext) {
+		return vomsSecurityContext.getClientDN().getX500();
+	}
+
+	public static ArrayList<String> getUserFQANs(VOMSSecurityContext vomsSecurityContext) {
+		String[] userFQANs = vomsSecurityContext.getFQANs();
+		ArrayList<String> fqans = new ArrayList<String>();
+		for (String s : userFQANs)
+			fqans.add(s);
+		return fqans;
+	}
+
+	public static boolean isUserAuthorized(VOMSSecurityContext vomsSecurityContext, String operation, String path) throws Exception,
+			IllegalArgumentException {
+
+		if (path == null || operation == null || vomsSecurityContext == null) {
+			log.error("Received null mandatory parameter(s) at isUserAuthorized: path=" + path + " operation=" + operation
+					+ " vomsSecurityContext=" + vomsSecurityContext);
 			throw new IllegalArgumentException("Received null mandatory parameter(s)");
 		}
-		URI uri = StormAuthorizationUtils.prepareURI(stormBackendHostname, stormBackendPort, path, operation, subjectDN, fqans);
-		log.debug("Authorization request uri = " + uri.toString());
+
+		String userDN = StormAuthorizationUtils.getUserDN(vomsSecurityContext);
+		ArrayList<String> fqans = StormAuthorizationUtils.getUserFQANs(vomsSecurityContext);
+		
+		/********************************TEST***********************************/
+		fqans.clear();
+		fqans.add("/dteam/Role=NULL/Capability=NULL");
+		fqans.add("/dteam/NGI_IT/Role=NULL/Capability=NULL");
+		/********************************TEST***********************************/
+
+		URI uri = StormAuthorizationUtils.prepareURI(path, operation, userDN, fqans);
+		log.debug("Auth request userDN = " + userDN);
+		log.debug("Auth request fqans = " + StringUtils.join(fqans, ","));
+		log.debug("Auth request uri = " + uri.toString());
+		
 		HttpGet httpget = new HttpGet(uri);
 		HttpClient httpclient = new DefaultHttpClient();
 		HttpResponse httpResponse;
@@ -145,8 +202,8 @@ public class StormAuthorizationUtils {
 
 	/* Private methods */
 
-	private static URI prepareURI(String stormBackendHostname, int stormBackendPort, String resourcePath, String operation,
-			String subjectDN, String[] fqans) throws Exception, IllegalArgumentException {
+	private static URI prepareURI(String resourcePath, String operation, String userDN, ArrayList<String> fqans) throws Exception,
+			IllegalArgumentException {
 		if (resourcePath == null || operation == null || fqans == null) {
 			log.error("Received null mandatory parameter(s) at prepareURL: resourcePath=" + resourcePath + " operation=" + operation
 					+ " fqans=" + fqans.toString());
@@ -154,8 +211,8 @@ public class StormAuthorizationUtils {
 		}
 		log.debug("Encoding Authorization request parameters");
 		String path;
-		boolean hasSubjectDN = (subjectDN != null && subjectDN.length() > 0);
-		boolean hasVOMSExtension = (fqans.length > 0);
+		boolean hasSubjectDN = (userDN != null && userDN.length() > 0);
+		boolean hasVOMSExtension = (fqans.size() > 0);
 		try {
 			path = buildpath(URLEncoder.encode(resourcePath, Constants.ENCODING_SCHEME), operation, hasSubjectDN, hasVOMSExtension);
 		} catch (UnsupportedEncodingException e) {
@@ -164,7 +221,7 @@ public class StormAuthorizationUtils {
 		}
 		List<NameValuePair> qparams = new ArrayList<NameValuePair>();
 		if (hasSubjectDN) {
-			qparams.add(new BasicNameValuePair(Constants.DN_KEY, subjectDN));
+			qparams.add(new BasicNameValuePair(Constants.DN_KEY, userDN));
 		}
 		if (hasVOMSExtension) {
 			String fqansList = StringUtils.join(fqans, Constants.FQANS_SEPARATOR);
@@ -173,8 +230,8 @@ public class StormAuthorizationUtils {
 		}
 		URI uri;
 		try {
-			uri = new URI("http", null, stormBackendHostname, stormBackendPort, path, qparams.isEmpty() ? null : URLEncodedUtils.format(
-					qparams, "UTF-8"), null);
+			uri = new URI("http", null, stormBackendHostname, stormBackendServicePort, path, qparams.isEmpty() ? null
+					: URLEncodedUtils.format(qparams, "UTF-8"), null);
 		} catch (URISyntaxException e) {
 			log.error("Unable to build Authorization Service URI. URISyntaxException " + e.getLocalizedMessage());
 			throw new Exception("Unable to build Authorization Service URI");

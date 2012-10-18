@@ -1,25 +1,26 @@
 package it.grid.storm.webdav.webapp.factory;
 
-
 import io.milton.http.*;
 import io.milton.http.Request.Method;
 import io.milton.http.http11.auth.DigestResponse;
 import io.milton.resource.*;
 import io.milton.servlet.MiltonServlet;
-import it.grid.storm.webdav.webapp.authorization.Constants;
+import it.grid.storm.webdav.webapp.authorization.StormAuthorizationUtils;
+import it.grid.storm.xmlrpc.ApiException;
+import it.grid.storm.xmlrpc.outputdata.LsOutputData;
+import it.grid.storm.xmlrpc.outputdata.LsOutputData.SurlInfo;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.Date;
 
+import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+public abstract class StormResource implements Resource, MoveableResource, CopyableResource, DigestResource {
 
-public abstract class StormResource implements Resource, MoveableResource,
-		CopyableResource, DigestResource {
-
-	private static final Logger log = LoggerFactory
-			.getLogger(StormResource.class);
+	private static final Logger log = LoggerFactory.getLogger(StormResource.class);
 	File file;
 	final StormResourceFactory factory;
 	final String host;
@@ -38,8 +39,7 @@ public abstract class StormResource implements Resource, MoveableResource,
 	}
 
 	public String getUniqueId() {
-		String s = file.lastModified() + "_" + file.length() + "_"
-				+ file.getAbsolutePath();
+		String s = file.lastModified() + "_" + file.length() + "_" + file.getAbsolutePath();
 		return s.hashCode() + "";
 	}
 
@@ -60,8 +60,7 @@ public abstract class StormResource implements Resource, MoveableResource,
 	}
 
 	public boolean authorise(Request request, Method method, Auth auth) {
-		boolean b = factory.getSecurityManager().authorise(request, method,
-				auth, this);
+		boolean b = factory.getSecurityManager().authorise(request, method, auth, this);
 		if (log.isTraceEnabled()) {
 			log.trace("authorise: result=" + b);
 		}
@@ -84,27 +83,6 @@ public abstract class StormResource implements Resource, MoveableResource,
 		return this.getName().compareTo(o.getName());
 	}
 
-	public void delete() {
-		log.info("Called function for DELETE FILE or DIRECTORY");
-		StormResourceHelper helper = new StormResourceHelper(MiltonServlet.request(), this);
-		boolean ok = false;
-		try {
-			if (helper.isUserAuthorized(Constants.RM_OPERATION)) {
-				ok = file.delete();
-			} else {
-				throw new RuntimeException(
-						"User is not authorized to delete the resource");
-			}
-		} catch (IllegalArgumentException e) {
-			throw new RuntimeException(e.getMessage());
-		} catch (Exception e) {
-			throw new RuntimeException(e.getMessage());
-		}
-		if (!ok) {
-			throw new RuntimeException("Failed to delete the resource");
-		}
-	}
-
 	public void moveTo(CollectionResource newParent, String newName) {
 		log.info("Called function for MOVE FILE or DIRECTORY");
 		if (newParent instanceof StormDirectoryResource) {
@@ -112,14 +90,11 @@ public abstract class StormResource implements Resource, MoveableResource,
 			File dest = new File(newFsParent.getFile(), newName);
 			boolean ok = this.file.renameTo(dest);
 			if (!ok) {
-				throw new RuntimeException("Failed to move to: "
-						+ dest.getAbsolutePath());
+				throw new RuntimeException("Failed to move to: " + dest.getAbsolutePath());
 			}
 			this.file = dest;
 		} else {
-			throw new RuntimeException(
-					"Destination is an unknown type. Must be a StormDirectoryResource, is a: "
-							+ newParent.getClass());
+			throw new RuntimeException("Destination is an unknown type. Must be a StormDirectoryResource, is a: " + newParent.getClass());
 		}
 	}
 
@@ -130,10 +105,73 @@ public abstract class StormResource implements Resource, MoveableResource,
 			File dest = new File(newFsParent.getFile(), newName);
 			doCopy(dest);
 		} else {
-			throw new RuntimeException(
-					"Destination is an unknown type. Must be a StormDirectoryResource, is a: "
-							+ newParent.getClass());
+			throw new RuntimeException("Destination is an unknown type. Must be a StormDirectoryResource, is a: " + newParent.getClass());
 		}
 	}
-	
+
+	public String getSurl() {
+		String rootDir = this.factory.getRoot().getPath();
+		String frontendHostname = this.factory.getStormFrontendHostname();
+		int frontendPort = this.factory.getStormFrontendPort();
+		String path = this.file.getPath().replaceFirst(rootDir, "/" + this.factory.getContextPath());
+		String surl = "srm://" + frontendHostname + ":" + frontendPort + path;
+		return surl;
+	}
+
+	protected boolean isUserAuthorized(String operation) throws IllegalArgumentException, Exception {
+		// String userDN = StormResourceHelper.getUserDN();
+		// ArrayList<String> userFQANs = StormResourceHelper.getUserFQANs();
+		String filename = this.getFile().toString();
+		return StormAuthorizationUtils.isUserAuthorized(StormAuthorizationUtils.getVomsSecurityContext(MiltonServlet.request()), 
+				operation, filename);
+	}
+
+	private SurlInfo doLsDetailed() {
+		String userDN = StormResourceHelper.getUserDN();
+		ArrayList<String> userFQANs = StormResourceHelper.getUserFQANs();
+		String surl = this.getSurl();
+		ArrayList<String> surls = new ArrayList<String>();
+		surls.add(surl);
+
+		log.debug("userDN = " + userDN);
+		log.debug("userFQANs = " + StringUtils.join(userFQANs.toArray(), ","));
+		log.debug("surl = " + surl);
+
+		LsOutputData output;
+		try {
+			log.info("lsDetailed " + surl);
+			output = this.factory.getBackendApi().lsDetailed(userDN, userFQANs, surls);
+			log.info("success: " + output.isSuccess());
+			ArrayList<SurlInfo> infos = (ArrayList<SurlInfo>) output.getInfos();
+			return infos.get(0);
+		} catch (ApiException e) {
+			e.printStackTrace();
+		}
+		return null;
+	}
+
+	public String getChecksumType() {
+		if (this instanceof StormFileResource) {
+			SurlInfo info = doLsDetailed();
+			return info.getCheckSumType() == null ? "" : info.getCheckSumType().getValue();
+		}
+		return "";
+	}
+
+	public String getChecksumValue() {
+		if (this instanceof StormFileResource) {
+			SurlInfo info = doLsDetailed();
+			return info.getCheckSumValue() == null ? "" : info.getCheckSumValue().getValue();
+		}
+		return "";
+	}
+
+	public String getStatus() {
+		if (this instanceof StormFileResource) {
+			SurlInfo info = doLsDetailed();
+			return info.getStatus() == null ? "" : info.getStatus().getExplanation();
+		}
+		return "";
+	}
+
 }

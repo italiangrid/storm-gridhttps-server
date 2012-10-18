@@ -1,99 +1,42 @@
 package it.grid.storm.webdav.webapp.factory;
 
-import it.grid.storm.webdav.webapp.authorization.StormAuthorizationUtils;
-import it.grid.storm.xmlrpc.ApiException;
-import it.grid.storm.xmlrpc.BackendApi;
-
-import java.io.IOException;
 import java.util.ArrayList;
-import java.util.List;
 
-import javax.servlet.http.HttpServletRequest;
+import io.milton.servlet.MiltonServlet;
+import it.grid.storm.webdav.webapp.authorization.StormAuthorizationFilter;
+import it.grid.storm.webdav.webapp.authorization.StormAuthorizationUtils;
 
 import org.apache.commons.lang.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+//import org.slf4j.Logger;
+//import org.slf4j.LoggerFactory;
+import org.italiangrid.utils.voms.VOMSSecurityContext;
 
 public class StormResourceHelper {
 
-	private static final Logger log = LoggerFactory.getLogger(StormResourceHelper.class);
+//	private static final Logger log = LoggerFactory.getLogger(StormResourceHelper.class);
 
-	private HttpServletRequest HTTPRequest;
-	private StormResource res;
-
-	public StormResourceHelper(HttpServletRequest HTTPRequest) {
-		this.HTTPRequest = HTTPRequest;
-	}
-
-	public StormResourceHelper(HttpServletRequest HTTPRequest, StormResource res) {
-		this(HTTPRequest);
-		this.res = res;
-	}
-
-	public BackendApi createBackend() throws IOException {
-		BackendApi be;
-		try {
-			be = new BackendApi(getBEHostname(), (long)getBEPort());
-		} catch (ApiException e) {
-			throw new IOException(e.getMessage());
-		}
-		return be;
-	}
-
-	public String getBEHostname() {
-		return (String) HTTPRequest.getAttribute("STORM_BACKEND_HOST"); 
+	public static String getUserDN() {
+		VOMSSecurityContext sc = StormAuthorizationUtils.getVomsSecurityContext(MiltonServlet.request());
+		return StormAuthorizationUtils.getUserDN(sc);
+//		return (String) MiltonServlet.request().getAttribute("SUBJECT_DN");
 	}
 	
-	public int getBEPort() {
-		return (Integer) HTTPRequest.getAttribute("STORM_BACKEND_PORT");
+	public static ArrayList<String> getUserFQANs() {
+		VOMSSecurityContext sc = StormAuthorizationUtils.getVomsSecurityContext(MiltonServlet.request());
+		ArrayList<String> userFQANs = StormAuthorizationUtils.getUserFQANs(sc);
+		
+		/********************************TEST***********************************/
+		userFQANs.clear();
+		userFQANs.add("/dteam/Role=NULL/Capability=NULL");
+		userFQANs.add("/dteam/NGI_IT/Role=NULL/Capability=NULL");
+		/********************************TEST***********************************/
+		
+		
+//		ArrayList<String> userFQANs = new ArrayList<String>();
+//		String[] fqansArr = StringUtils.split((String) MiltonServlet.request().getAttribute("FQANS"), ",");
+//		for (String s : fqansArr)			
+//			userFQANs.add(s);
+		return userFQANs;
 	}
 	
-	public String getContextPath() {
-		return (String) HTTPRequest.getAttribute("STORAGE_AREA_NAME"); 
-	}
-	
-	public String getUserDN() {
-		String userDN = (String) HTTPRequest.getAttribute("SUBJECT_DN"); 
-		log.debug(" # userDN = " + userDN);
-		return userDN;
-	}
-
-	public List<String> getUserFQANS() {
-		List<String> userFQANS = new ArrayList<String>();
-		String [] fqans = StringUtils.split((String) HTTPRequest.getAttribute("FQANS"), ",");
-		log.debug(" # fqANs = ( ");
-		for (String s : fqans) {
-			userFQANS.add(s);
-			log.debug("  " + s);
-		}
-		log.debug(" )");
-		return userFQANS;
-	}
-
-	public String[] getProtocols() {
-		String[] protocols = new String[1]; 
-		protocols[0] = HTTPRequest.getProtocol(); // to check
-		log.debug(" # protocols = " + protocols.toString());
-		return protocols;
-	}
-
-	public List<String> getSurls() {
-		List<String> surls = new ArrayList<String>();
-		surls.add(this.getSurl());
-		return surls;
-	}
-
-	protected String getSurl() {
-		String rootDir = this.res.factory.getRoot().getPath();
-		String surl = "srm://" + getBEHostname() + ":" + getBEPort();
-		surl += this.res.file.getPath().replaceFirst(rootDir, "/"+getContextPath());
-		log.debug(" # surl = " + surl);
-		return surl;
-	}
-
-	protected boolean isUserAuthorized(String operation) throws IllegalArgumentException, Exception {
-		return StormAuthorizationUtils.isUserAuthorized(getBEHostname(), (int)getBEPort(), getUserDN(), (String[]) getUserFQANS().toArray(), operation, this.res
-				.getFile().toString());
-	}
-
 }

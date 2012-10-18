@@ -1,5 +1,8 @@
 package it.grid.storm.webdav.webapp.authorization.methods;
 
+import it.grid.storm.webdav.webapp.authorization.StormAuthorizationFilter;
+import it.grid.storm.webdav.webapp.authorization.StormAuthorizationUtils;
+
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -10,28 +13,27 @@ import javax.servlet.http.HttpServletRequest;
 
 public abstract class AbstractMethodAuthorization {
 
-	public abstract Map<String, String> getOperationsMap(HttpServletRequest HTTPRequest) throws IOException, ServletException;
+	HttpServletRequest HTTPRequest;
+	
+	public AbstractMethodAuthorization(HttpServletRequest HTTPRequest) {
+		this.HTTPRequest = HTTPRequest;
+	}
+	
+	public abstract Map<String, String> getOperationsMap() throws IOException, ServletException;
 
-	protected String getDestinationFromHeader(HttpServletRequest HTTPRequest) throws ServletException {
-		String destinationHeader = HTTPRequest.getHeader("Destination");
-		String contextPath = (String) HTTPRequest.getAttribute("STORAGE_AREA_NAME");
-		String rootDir = (String) HTTPRequest.getAttribute("STORAGE_AREA_ROOT");
+	protected String getDestinationFromHeader() throws ServletException {
+		String destinationHeader = this.HTTPRequest.getHeader("Destination");
+		String contextPath = StormAuthorizationUtils.storageAreaName;
+		String rootDir = StormAuthorizationUtils.storageAreaRootDir;
 		if (destinationHeader != null)
 			return convertToStorageAreaPath(destinationHeader, contextPath, rootDir);
 		return null;
 	}
 
-	protected String getResourcePath(HttpServletRequest HTTPRequest) throws ServletException {
-		String contextPath = (String) HTTPRequest.getAttribute("STORAGE_AREA_NAME");
-		String rootDir = (String) HTTPRequest.getAttribute("STORAGE_AREA_ROOT");
-		return convertToStorageAreaPath(HTTPRequest.getRequestURI(), contextPath, rootDir);
-	}
-
-	protected boolean getOverwriteFromHeader(HttpServletRequest HTTPRequest) {
-		String overwriteHeader = HTTPRequest.getHeader("Overwrite");
-		if ((overwriteHeader != null) && (overwriteHeader.contentEquals("F")))
-			return false;
-		return true;
+	protected String getResourcePath() throws ServletException {
+		String contextPath = StormAuthorizationUtils.storageAreaName;
+		String rootDir = StormAuthorizationUtils.storageAreaRootDir;
+		return convertToStorageAreaPath(this.HTTPRequest.getRequestURI(), contextPath, rootDir);
 	}
 
 	private String convertToStorageAreaPath(String uriStr, String contextPath, String rootDir) throws ServletException {

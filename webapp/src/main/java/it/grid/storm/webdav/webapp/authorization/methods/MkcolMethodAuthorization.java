@@ -14,21 +14,21 @@ import org.slf4j.LoggerFactory;
 
 public class MkcolMethodAuthorization extends AbstractMethodAuthorization {
 
-	private static final Logger log = LoggerFactory
-			.getLogger(MkcolMethodAuthorization.class);
+	public MkcolMethodAuthorization(HttpServletRequest HTTPRequest) {
+		super(HTTPRequest);
+		this.HTTPRequest = HTTPRequest;
+	}
+
+	private static final Logger log = LoggerFactory.getLogger(MkcolMethodAuthorization.class);
 
 	@Override
-	public Map<String, String> getOperationsMap(HttpServletRequest HTTPRequest)
-			throws IOException, ServletException {
+	public Map<String, String> getOperationsMap() throws IOException, ServletException {
 
 		Map<String, String> operationsMap = new HashMap<String, String>();
-		String path = null;
-		String op = null;
 
-		path = getResourcePath(HTTPRequest);
-		op = Constants.MKDIR_OPERATION;
-		log.debug("Putting operation: '" + op + "' , path: '" + path
-				+ "' into the map.");
+		String path = getResourcePath();
+		String op = Constants.MKDIR_OPERATION;
+		log.debug("Putting operation: '" + op + "' , path: '" + path + "' into the map.");
 		operationsMap.put(op, path);
 
 		return operationsMap;

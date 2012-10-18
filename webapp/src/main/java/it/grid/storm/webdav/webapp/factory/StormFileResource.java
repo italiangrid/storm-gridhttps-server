@@ -1,11 +1,7 @@
-
 package it.grid.storm.webdav.webapp.factory;
 
 
 import io.milton.common.ContentTypeUtils;
-import io.milton.common.RangeUtils;
-import io.milton.common.ReadingException;
-import io.milton.common.WritingException;
 import io.milton.http.Auth;
 import io.milton.http.Range;
 import io.milton.http.Request;
@@ -15,15 +11,14 @@ import io.milton.http.exceptions.NotAuthorizedException;
 import io.milton.http.exceptions.NotFoundException;
 import io.milton.http.fs.FileContentService;
 import io.milton.resource.*;
-import io.milton.servlet.MiltonServlet;
 import it.grid.storm.xmlrpc.ApiException;
-import it.grid.storm.xmlrpc.BackendApi;
+import it.grid.storm.xmlrpc.outputdata.RequestOutputData;
 
 import java.io.*;
+import java.util.ArrayList;
 import java.util.Map;
 
-import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -65,46 +60,52 @@ public class StormFileResource extends StormResource implements CopyableResource
     public void sendContent(OutputStream out, Range range, Map<String, String> params, String contentType) throws IOException, NotFoundException {
     	log.info("Called function for GET FILE");
     	
-    	StormResourceHelper helper = new StormResourceHelper(MiltonServlet.request(), this);
-    	
-    	//prepare to get
-    	BackendApi be = helper.createBackend();
+    	String userDN = StormResourceHelper.getUserDN();
+		ArrayList<String> userFQANs = StormResourceHelper.getUserFQANs();
+    	String surl = this.getSurl();
+    	ArrayList<String> surls = new ArrayList<String>();
+		surls.add(surl);
+		
+    	log.debug("userDN = " + userDN);
+		log.debug("userFQANs = " + StringUtils.join(userFQANs.toArray(), ","));
+		log.debug("surl = " + surl);
 
-    	log.debug("prepare to get:");
-    	
-    	try {
-			be.prepareToGet(helper.getUserDN(), helper.getUserFQANS(), helper.getSurls(),helper.getProtocols());
-		} catch (ApiException e) {
-			throw new IOException(e.getMessage());
-		}
-    	
-        InputStream in = null;
-        try {
-            in = contentService.getFileContent(file);
-            if (range != null) {
-                log.debug("sendContent: ranged content: " + file.getAbsolutePath());
-                RangeUtils.writeRange(in, range, out);
-            } else {
-                log.debug("sendContent: send whole file " + file.getAbsolutePath());
-                IOUtils.copy(in, out);
-            }
-            out.flush();
-        } catch (FileNotFoundException e) {
-            throw new NotFoundException("Couldnt locate content");
-        } catch (ReadingException e) {
-            throw new IOException(e);
-        } catch (WritingException e) {
-            throw new IOException(e);
-        } finally {
-            IOUtils.closeQuietly(in);
-        }
-        
-        // releaseFiles
-    	try {
-			be.releaseFiles(helper.getUserDN(), helper.getUserFQANS(), helper.getSurls(),null);
-		} catch (ApiException e) {
-			throw new IOException(e.getMessage());
-		}
+//    	//prepare to get
+//    	try {
+//    		log.debug("prepare to get");
+//			this.factory.getBackendApi().prepareToGet(userDN, userFQANs, surl);
+//		} catch (ApiException e) {
+//			throw new IOException(e.getMessage());
+//		}
+//    	
+//        InputStream in = null;
+//        try {
+//            in = contentService.getFileContent(file);
+//            if (range != null) {
+//                log.debug("sendContent: ranged content: " + file.getAbsolutePath());
+//                RangeUtils.writeRange(in, range, out);
+//            } else {
+//                log.debug("sendContent: send whole file " + file.getAbsolutePath());
+//                IOUtils.copy(in, out);
+//            }
+//            out.flush();
+//        } catch (FileNotFoundException e) {
+//            throw new NotFoundException("Couldn't locate content");
+//        } catch (ReadingException e) {
+//            throw new IOException(e);
+//        } catch (WritingException e) {
+//            throw new IOException(e);
+//        } finally {
+//            IOUtils.closeQuietly(in);
+//        }
+//        
+//        // releaseFiles
+//    	try {
+//    		log.debug("release files");
+//    		helper.getBackendApi().releaseFiles(userDN, userFQANs, helper.getSurls(), null);
+//		} catch (ApiException e) {
+//			throw new IOException(e.getMessage());
+//		}
         
     }
 
@@ -120,16 +121,17 @@ public class StormFileResource extends StormResource implements CopyableResource
      */
     @Override
     protected void doCopy(File dest) {
-        try {
-            FileUtils.copyFile(file, dest);
-        } catch (IOException ex) {
-            throw new RuntimeException("Failed doing copy to: " + dest.getAbsolutePath(), ex);
-        }
+    	log.info("Called function for COPY FILE");
+    	return;
+//        try {
+//            FileUtils.copyFile(file, dest);
+//        } catch (IOException ex) {
+//            throw new RuntimeException("Failed doing copy to: " + dest.getAbsolutePath(), ex);
+//        }
     }
 
     public String getName() {
     	String name = super.getName();
-    	log.debug("StormFileResource.getName() = "+name);
 		return name;
     }
     
@@ -140,4 +142,28 @@ public class StormFileResource extends StormResource implements CopyableResource
 			throw new BadRequestException("Couldnt write to: " + file.getAbsolutePath(), ex);
 		}
 	}
+
+	public void delete(){
+		log.info("Called function for DELETE FILE");
+		
+		String userDN = StormResourceHelper.getUserDN();
+		ArrayList<String> userFQANs = StormResourceHelper.getUserFQANs();
+		String surl = this.getSurl();
+		ArrayList<String> surls = new ArrayList<String>();
+		surls.add(surl);
+		
+		log.debug("userDN = " + userDN);
+		log.debug("userFQANs = " + StringUtils.join(userFQANs.toArray(), ","));
+		log.debug("surl = " + surl);
+			    			
+		try {
+			log.info("delete file: " + file.toString());
+			RequestOutputData output = this.factory.getBackendApi().rm(userDN, userFQANs, surls);
+			log.info("success: " + output.isSuccess());
+		} catch (ApiException e) {
+			log.error(e.getMessage());
+			e.printStackTrace();
+		}
+	}
+	
 }

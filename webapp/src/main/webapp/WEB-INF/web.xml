@@ -27,6 +27,18 @@
 			<param-name>stormBackendPort</param-name>
 			<param-value>_TO_DEFINE_</param-value>
 		</init-param>
+		<init-param>
+			<param-name>stormBackendServicePort</param-name>
+			<param-value>_TO_DEFINE_</param-value>
+		</init-param>
+		<init-param>
+			<param-name>stormFrontendHostname</param-name>
+			<param-value>_TO_DEFINE_</param-value>
+		</init-param>
+		<init-param>
+			<param-name>stormFrontendPort</param-name>
+			<param-value>_TO_DEFINE_</param-value>
+		</init-param>
 	</filter>
 
 	<filter>

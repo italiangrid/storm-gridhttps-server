@@ -14,26 +14,32 @@ import org.slf4j.LoggerFactory;
 
 public class PutMethodAuthorization extends AbstractMethodAuthorization {
 
-	private static final Logger log = LoggerFactory
-			.getLogger(PutMethodAuthorization.class);
+	public PutMethodAuthorization(HttpServletRequest HTTPRequest) {
+		super(HTTPRequest);
+		this.HTTPRequest = HTTPRequest;
+	}
+
+	private static final Logger log = LoggerFactory.getLogger(PutMethodAuthorization.class);
+	
+	protected boolean getOverwriteFromHeader() {
+		String overwriteHeader = HTTPRequest.getHeader("Overwrite");
+		if ((overwriteHeader != null) && (overwriteHeader.contentEquals("F")))
+			return false;
+		return true;
+	}
 
 	@Override
-	public Map<String, String> getOperationsMap(HttpServletRequest HTTPRequest)
-			throws IOException, ServletException {
-
+	public Map<String, String> getOperationsMap() throws IOException, ServletException {
 		Map<String, String> operationsMap = new HashMap<String, String>();
-		String path = null;
-		String op = null;
-
-		path = getResourcePath(HTTPRequest);
-		if (getOverwriteFromHeader(HTTPRequest))
-			op = Constants.PREPARE_TO_PUT_OVERWRITE_OPERATION;
-		else
-			op = Constants.PREPARE_TO_PUT_OPERATION;
-		log.debug("Putting operation: '" + op + "' , path: '" + path
-				+ "' into the map.");
-		operationsMap.put(op, path);
-
+		String path = getResourcePath();
+		if (getOverwriteFromHeader()) {
+			operationsMap.put(Constants.PREPARE_TO_PUT_OVERWRITE_OPERATION, path);
+			log.debug("operation '" + Constants.PREPARE_TO_PUT_OVERWRITE_OPERATION + "' on path '" + path + "'");
+		} else {
+			operationsMap.put(Constants.PREPARE_TO_PUT_OPERATION, path);
+			log.debug("operation '" + Constants.PREPARE_TO_PUT_OPERATION + "' on path '" + path + "'");
+		}
 		return operationsMap;
 	}
+	
 }

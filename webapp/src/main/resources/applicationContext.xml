@@ -9,6 +9,9 @@
 		<constructor-arg index="1" value="_TO_DEFINE_" />
 		<constructor-arg index="2" value="_TO_DEFINE_" />
 		<constructor-arg index="3" value="_TO_DEFINE_" />
+		<constructor-arg index="4" value="_TO_DEFINE_" />
+		<constructor-arg index="5" value="_TO_DEFINE_" />
+		<constructor-arg index="6" value="_TO_DEFINE_" />
 	</bean>
 
 	<bean id="webdav-fs-webapp.extra.property" class="it.grid.storm.webdav.webapp.factory.StormPropertySource" />
