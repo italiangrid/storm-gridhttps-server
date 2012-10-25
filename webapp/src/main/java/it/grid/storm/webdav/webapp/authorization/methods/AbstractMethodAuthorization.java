@@ -1,48 +1,62 @@
 package it.grid.storm.webdav.webapp.authorization.methods;
 
-import it.grid.storm.webdav.webapp.authorization.StormAuthorizationFilter;
+import it.grid.storm.webdav.webapp.Configuration;
 import it.grid.storm.webdav.webapp.authorization.StormAuthorizationUtils;
 
-import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.Map;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 public abstract class AbstractMethodAuthorization {
 
-	HttpServletRequest HTTPRequest;
-	
+	private static final Logger log = LoggerFactory.getLogger(AbstractMethodAuthorization.class);
+
+	protected HttpServletRequest HTTPRequest;
+	protected String contextPath;
+	protected String rootDir;
+
 	public AbstractMethodAuthorization(HttpServletRequest HTTPRequest) {
 		this.HTTPRequest = HTTPRequest;
+		this.contextPath = Configuration.storageAreaName;
+		this.rootDir = Configuration.storageAreaRootDir;
 	}
-	
-	public abstract Map<String, String> getOperationsMap() throws IOException, ServletException;
 
-	protected String getDestinationFromHeader() throws ServletException {
-		String destinationHeader = this.HTTPRequest.getHeader("Destination");
-		String contextPath = StormAuthorizationUtils.storageAreaName;
-		String rootDir = StormAuthorizationUtils.storageAreaRootDir;
-		if (destinationHeader != null)
-			return convertToStorageAreaPath(destinationHeader, contextPath, rootDir);
-		return null;
+	protected boolean askAuth(String operation, String path) {
+		log.debug("Asking authorization for operation " + operation + " on " + path);
+		boolean response = false;
+		try {
+			response = StormAuthorizationUtils.isUserAuthorized(operation, path);
+		} catch (Exception e) {
+			log.error(e.getMessage());
+			return false;
+		}
+		log.debug("Response: " + response);
+		return response;
 	}
+
+	public abstract boolean isUserAuthorized() throws ServletException;
 
 	protected String getResourcePath() throws ServletException {
-		String contextPath = StormAuthorizationUtils.storageAreaName;
-		String rootDir = StormAuthorizationUtils.storageAreaRootDir;
-		return convertToStorageAreaPath(this.HTTPRequest.getRequestURI(), contextPath, rootDir);
+		return convertToStorageAreaPath(this.HTTPRequest.getRequestURI());
 	}
 
-	private String convertToStorageAreaPath(String uriStr, String contextPath, String rootDir) throws ServletException {
+	protected URI fromStringToURI(String uriStr) throws ServletException {
 		URI uri;
 		try {
 			uri = new URI(uriStr);
 		} catch (URISyntaxException e) {
 			throw new ServletException("Unable to create URI object from the string: " + uriStr);
 		}
+		return uri;
+	}
+
+	protected String convertToStorageAreaPath(String uriStr) throws ServletException {
+		URI uri = fromStringToURI(uriStr);
 		String path = uri.getPath().replaceFirst(contextPath, "").replace("//", "/");
 		return rootDir + path;
 	}

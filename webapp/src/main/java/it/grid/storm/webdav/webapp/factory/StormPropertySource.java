@@ -31,17 +31,16 @@ class StormPropertySource implements PropertySource {
 
 	public String getProperty(QName name, Resource r) throws NotAuthorizedException {
 		if (checkPropery(name, r)) {
-			StormResource srmRes = (StormResource) r;
+			StormFileResource srmFile = (StormFileResource) r;
 			if (name.getLocalPart().equals("checksumType")) {
-				return srmRes.getChecksumType();
+				return srmFile.getChecksumType();
 			} else if (name.getLocalPart().equals("checksumValue")) {
-				return srmRes.getChecksumValue();
+				return srmFile.getChecksumValue();
 			} else if (name.getLocalPart().equals("status")) {
-				return srmRes.getStatus();
+				return srmFile.getStatus();
 			}
-			return "";
 		}
-		return null;
+		return "";
 	}
 
 	public void setProperty(QName name, Object value, Resource r) {
@@ -70,7 +69,7 @@ class StormPropertySource implements PropertySource {
 	}
 
 	private boolean checkPropery(QName name, Resource r) {
-		if ((r instanceof StormResource) 
+		if ((r instanceof StormFileResource) 
 				&& (name.getNamespaceURI().contentEquals(this.propertyNamespace))
 				&& (properties.contains(name.getLocalPart())))
 			return true;

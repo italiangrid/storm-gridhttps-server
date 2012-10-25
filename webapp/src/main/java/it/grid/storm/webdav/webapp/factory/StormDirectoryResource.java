@@ -9,11 +9,6 @@ import io.milton.http.exceptions.ConflictException;
 import io.milton.http.exceptions.NotAuthorizedException;
 import io.milton.http.fs.FileContentService;
 import io.milton.resource.*;
-import io.milton.servlet.MiltonServlet;
-import it.grid.storm.xmlrpc.ApiException;
-import it.grid.storm.xmlrpc.outputdata.FileTransferOutputData;
-import it.grid.storm.xmlrpc.outputdata.RequestOutputData;
-import it.grid.storm.xmlrpc.outputdata.SurlArrayRequestOutputData;
 
 import java.io.File;
 import java.io.IOException;
@@ -22,7 +17,6 @@ import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -31,7 +25,7 @@ public class StormDirectoryResource extends StormResource implements MakeCollect
 
 	private static final Logger log = LoggerFactory.getLogger(StormDirectoryResource.class);
 
-	private final FileContentService contentService;
+	final FileContentService contentService;
 
 	public StormDirectoryResource(String host, StormResourceFactory factory, File dir, FileContentService contentService) {
 		super(host, factory, dir);
@@ -44,46 +38,23 @@ public class StormDirectoryResource extends StormResource implements MakeCollect
 		}
 	}
 
-	public CollectionResource createCollection(String name) {
+	public CollectionResource createCollection(String name) throws NotAuthorizedException, ConflictException, BadRequestException {
 		log.info("Called function for MKCOL DIRECTORY");
 
-		File fnew = new File(this.file, name);
-
-		/*
-		 * if is called mkdir to create a new directory during a PUT request
-		 * then abort it and send to the client an http response 409
-		 */
-		if (MiltonServlet.request().getMethod().toUpperCase().equals("PUT")) {
-			log.warn("Auto-creation of directory for PUT requests is disabled!");
-			try {
-				MiltonServlet.response().sendError(409, "Absent father");
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
-			return null;			
+		String methodName = StormHTTPHelper.getRequestMethod();
+		if (methodName.equals("PUT")) {
+			/*
+			 * it is a PUT with a path that contains a directory that does not
+			 * exist, so send a 409 error to the client method can't be COPY
+			 * because error 409 is handled by CopyHandler MOVE? Check if it can
+			 * be a problem!!!
+			 */
+			log.warn("Auto-creation of directory for " + methodName + " requests is disabled!");
+			StormHTTPHelper.sendError(409, "Conflict");
+			return null;
 		}
-
-		String userDN = StormResourceHelper.getUserDN();
-		ArrayList<String> userFQANs = StormResourceHelper.getUserFQANs();
-		String surl = this.getSurl();
-		String newDirSurl = surl + "/" + name;
-		ArrayList<String> surls = new ArrayList<String>();
-		surls.add(surl);
-
-		log.debug("userDN = " + userDN);
-		log.debug("userFQANs = " + StringUtils.join(userFQANs.toArray(), ","));
-		log.debug("surl = " + surl);
-		log.debug("new directory surl = " + newDirSurl);
-
-		try {
-			// mkdir
-			log.info("mkdir: " + newDirSurl);
-			RequestOutputData output = this.factory.getBackendApi().mkdir(userDN, userFQANs, newDirSurl);
-			log.info("success: " + output.isSuccess());
-		} catch (ApiException e) {
-			throw new RuntimeException(e.getMessage());
-		}
-
+		StormResourceHelper.doMkCol(this, name);
+		File fnew = new File(file, name);
 		return new StormDirectoryResource(host, factory, fnew, contentService);
 	}
 
@@ -122,57 +93,12 @@ public class StormDirectoryResource extends StormResource implements MakeCollect
 		}
 	}
 
-	public Resource createNew(String name, InputStream in, Long length, String contentType) throws IOException {
+	public Resource createNew(String name, InputStream in, Long length, String contentType) throws IOException, NotAuthorizedException,
+			ConflictException, BadRequestException {
 		log.info("Called function for PUT FILE");
-
-		String userDN = StormResourceHelper.getUserDN();
-		ArrayList<String> userFQANs = StormResourceHelper.getUserFQANs();
-		String surl = this.getSurl() + "/" + name;
-		ArrayList<String> surls = new ArrayList<String>();
-		surls.add(surl);
-
-		log.debug("userDN = " + userDN);
-		log.debug("userFQANs = " + StringUtils.join(userFQANs.toArray(), ","));
-		log.debug("surl = " + surl);
-
-		FileTransferOutputData outputPtp;
-		SurlArrayRequestOutputData outputPd;
-		try {
-			// prepare to put:
-			log.info("prepare to put " + surl);
-			outputPtp = this.factory.getBackendApi().prepareToPut(userDN, userFQANs, surl);
-			log.info("success: " + outputPtp.isSuccess());
-		} catch (ApiException e) {
-			throw new IOException(e.getMessage());
-		}
-
-		// put
-		File dest = new File(this.getFile(), name);
-		contentService.setFileContent(dest, in);
-
-		try {
-			// put done
-			log.info("put done " + surl);
-			outputPd = this.factory.getBackendApi().putDone(userDN, userFQANs, surls, outputPtp.getToken());
-			log.info("success: " + outputPd.isSuccess());
-			log.info("status: " + outputPd.getStatus().getExplanation());
-		} catch (ApiException e) {
-			throw new IOException(e.getMessage());
-		}
-
-		return factory.resolveFile(this.host, dest);
-	}
-
-	@Override
-	protected void doCopy(File dest) {
-		log.info("Called function for COPY DIRECTORY");
-		return;
-		// try {
-		// FileUtils.copyDirectory(this.getFile(), dest);
-		// } catch (IOException ex) {
-		// throw new RuntimeException("Failed to copy to:" +
-		// dest.getAbsolutePath(), ex);
-		// }
+		StormResourceHelper.doPut(this, name, in);
+		File destinationFile = new File(this.file, name);
+		return factory.resolveFile(this.host, destinationFile);
 	}
 
 	/**
@@ -202,13 +128,10 @@ public class StormDirectoryResource extends StormResource implements MakeCollect
 		w.open("table");
 		for (Resource r : getChildren()) {
 			w.open("tr");
-
 			w.open("td");
 			String path = buildHref(uri, r.getName());
 			w.begin("a").writeAtt("href", path).open().writeText(r.getName()).close();
-
 			w.close("td");
-
 			w.begin("td").open().writeText(r.getModifiedDate() + "").close();
 			w.close("tr");
 		}
@@ -232,7 +155,6 @@ public class StormDirectoryResource extends StormResource implements MakeCollect
 
 	private String buildHref(String uri, String name) {
 		String abUrl = uri;
-
 		if (!abUrl.endsWith("/")) {
 			abUrl += "/";
 		}
@@ -254,33 +176,32 @@ public class StormDirectoryResource extends StormResource implements MakeCollect
 		return s;
 	}
 
+	public boolean hasChildren() {
+		return (file.list().length > 0);
+	}
+
 	public void delete() throws NotAuthorizedException, ConflictException, BadRequestException {
 		log.info("Called function for DELETE DIRECTORY");
-
-		String userDN = (String) MiltonServlet.request().getAttribute("SUBJECT_DN");
-		ArrayList<String> userFQANs = new ArrayList<String>();
-		String[] fqansArr = StringUtils.split((String) MiltonServlet.request().getAttribute("FQANS"), ",");
-		for (String s : fqansArr)
-			userFQANs.add(s);
-		String surl = this.getSurl();
-		ArrayList<String> surls = new ArrayList<String>();
-		surls.add(surl);
-
-		log.debug("userDN = " + userDN);
-		log.debug("userFQANs = " + StringUtils.join(userFQANs.toArray(), ","));
-		log.debug("surl = " + surl);
-
-		try {
-			log.info("delete directory: " + file.toString());
-			RequestOutputData output;
-			if (file.list().length == 0)
-				output = this.factory.getBackendApi().rmdir(userDN, userFQANs, surl);
-			else
-				output = this.factory.getBackendApi().rmdirRecursively(userDN, userFQANs, surl);
-			log.info("success: " + output.isSuccess());
-		} catch (ApiException e) {
-			log.error(e.getMessage());
-			e.printStackTrace();
-		}
+		StormResourceHelper.doDelete(this);
 	}
+
+	public void moveTo(CollectionResource newParent, String newName) throws NotAuthorizedException, ConflictException, BadRequestException {
+		log.info("Called function for MOVE DIRECTORY");
+		if (newParent instanceof StormDirectoryResource) {
+			StormDirectoryResource newFsParent = (StormDirectoryResource) newParent;
+			StormResourceHelper.doMoveTo(this, newFsParent, newName);
+			file = newFsParent.file;
+		} else
+			log.error("Directory Resource class " + newParent.getClass().getName() + " not supported!");
+	}
+
+	public void copyTo(CollectionResource newParent, String newName) throws NotAuthorizedException, ConflictException, BadRequestException {
+		log.info("Called function for COPY DIRECTORY");
+		if (newParent instanceof StormDirectoryResource) {
+			StormDirectoryResource newFsParent = (StormDirectoryResource) newParent;
+			StormResourceHelper.doCopyDirectory(this, newFsParent, newName);
+		} else
+			log.error("Directory Resource class " + newParent.getClass().getName() + " not supported!");
+	}
+
 }

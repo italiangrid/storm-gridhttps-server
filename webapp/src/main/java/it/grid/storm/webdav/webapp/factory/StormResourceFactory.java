@@ -7,10 +7,13 @@ import io.milton.http.fs.SimpleFileContentService;
 import io.milton.http.SecurityManager;
 import io.milton.http.fs.NullSecurityManager;
 import io.milton.resource.Resource;
+import it.grid.storm.webdav.webapp.Configuration;
 import it.grid.storm.xmlrpc.ApiException;
 import it.grid.storm.xmlrpc.BackendApi;
 
 import java.io.File;
+import java.net.MalformedURLException;
+import java.net.UnknownHostException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,26 +33,14 @@ public final class StormResourceFactory implements ResourceFactory {
 	
 	private BackendApi backendApi;
 	
-	private String stormBackendHostname;
-	private int stormBackendPort;
-	private int stormBackendServicePort;
-	private String stormFrontendHostname;
-	private int stormFrontendPort;
-	
-	public StormResourceFactory(String root, String contextPath, String stormBackendHostname, int stormBackendPort,
-			int stormBackendServicePort, String stormFrontendHostname, int stormFrontendPort) {
-		setRoot(new File(root));
+	public StormResourceFactory() {
+		setRoot(new File(Configuration.storageAreaRootDir));
 		io.milton.http.SecurityManager securityManager = new NullSecurityManager();
 		setSecurityManager(securityManager);
-		setContextPath(contextPath);
-		setStormBackendHostname(stormBackendHostname);
-		setStormBackendPort(stormBackendPort);
-		setStormBackendServicePort(stormBackendServicePort);
-		setStormFrontendHostname(stormFrontendHostname);
-		setStormFrontendPort(stormFrontendPort);
+		setContextPath(Configuration.storageAreaName);
         contentService = new SimpleFileContentService();
         try {
-			this.backendApi = new BackendApi(getStormBackendHostname(), new Long(getStormBackendPort()));
+			this.backendApi = new BackendApi(Configuration.stormBackendHostname, new Long(Configuration.stormBackendPort));
 		} catch (ApiException e) {
 			log.error(e.getMessage());
 			e.printStackTrace();
@@ -70,12 +61,37 @@ public final class StormResourceFactory implements ResourceFactory {
 			log.warn("Root exists but is not a directory: " + root.getAbsolutePath());
 		}
 	}
+	
+	public boolean isLocalResource(String host) throws UnknownHostException {
+		java.net.InetAddress localMachine = java.net.InetAddress.getLocalHost();
+		log.debug("localhost: " + localMachine.getHostName());
+		log.debug("host: " + host);
+		return localMachine.getHostName().equals(host);
+	}
 
 	public Resource getResource(String host, String url) {
 		log.debug("getResource: host: " + host + " - url:" + url);
-		url = stripContext(url);
-		File requested = resolvePath(root, url);
-		return resolveFile(host, requested);
+		boolean isLocal;
+		try {
+			isLocal = (isLocalResource(host.substring(0,host.indexOf(':'))));
+		} catch (UnknownHostException e) {
+			log.error(e.getMessage());
+			return null;
+		}
+		if (isLocal) {
+			url = stripContext(url);
+			File requested = resolvePath(root, url);
+			return resolveFile(host, requested);
+		}
+		return null;
+//		RemoteResource rr;
+//		try {
+//			rr =  new RemoteResource(host + "/" + url);
+//		} catch (MalformedURLException e) {
+//			log.error(e.getMessage());
+//			return null;
+//		}
+//		return rr;
 	}
 
 	public StormResource resolveFile(String host, File file) {
@@ -208,46 +224,6 @@ public final class StormResourceFactory implements ResourceFactory {
 
 	public void setContentService(FileContentService contentService) {
 		this.contentService = contentService;
-	}
-
-	public int getStormBackendServicePort() {
-		return stormBackendServicePort;
-	}
-
-	public void setStormBackendServicePort(int stormBackendServicePort) {
-		this.stormBackendServicePort = stormBackendServicePort;
-	}
-	
-	public void setStormBackendHostname(String stormBackendHostname) {
-		this.stormBackendHostname = stormBackendHostname;
-	}
-
-	public void setStormBackendPort(int stormBackendPort) {
-		this.stormBackendPort = stormBackendPort;
-	}
-	
-	public void setStormFrontendHostname(String stormFrontendHostname) {
-		this.stormFrontendHostname = stormFrontendHostname;
-	}
-
-	public void setStormFrontendPort(int stormFrontendPort) {
-		this.stormFrontendPort = stormFrontendPort;
-	}
-
-	public String getStormBackendHostname() {
-		return stormBackendHostname;
-	}
-
-	public int getStormBackendPort() {
-		return stormBackendPort;
-	}
-	
-	public String getStormFrontendHostname() {
-		return stormFrontendHostname;
-	}
-
-	public int getStormFrontendPort() {
-		return stormFrontendPort;
 	}
 	
 	public BackendApi getBackendApi() {

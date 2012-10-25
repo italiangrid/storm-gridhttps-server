@@ -4,29 +4,26 @@ import io.milton.http.*;
 import io.milton.http.Request.Method;
 import io.milton.http.http11.auth.DigestResponse;
 import io.milton.resource.*;
-import io.milton.servlet.MiltonServlet;
-import it.grid.storm.webdav.webapp.authorization.StormAuthorizationUtils;
-import it.grid.storm.xmlrpc.ApiException;
-import it.grid.storm.xmlrpc.outputdata.LsOutputData;
+import it.grid.storm.webdav.webapp.Configuration;
 import it.grid.storm.xmlrpc.outputdata.LsOutputData.SurlInfo;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Date;
 
-import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public abstract class StormResource implements Resource, MoveableResource, CopyableResource, DigestResource {
+public abstract class StormResource implements Resource, MoveableResource, CopyableResource, DeletableResource, DigestResource {
 
 	private static final Logger log = LoggerFactory.getLogger(StormResource.class);
 	File file;
 	final StormResourceFactory factory;
 	final String host;
 	String ssoPrefix;
-
-	protected abstract void doCopy(File dest);
 
 	public StormResource(String host, StormResourceFactory factory, File file) {
 		this.host = host;
@@ -83,95 +80,33 @@ public abstract class StormResource implements Resource, MoveableResource, Copya
 		return this.getName().compareTo(o.getName());
 	}
 
-	public void moveTo(CollectionResource newParent, String newName) {
-		log.info("Called function for MOVE FILE or DIRECTORY");
-		if (newParent instanceof StormDirectoryResource) {
-			StormDirectoryResource newFsParent = (StormDirectoryResource) newParent;
-			File dest = new File(newFsParent.getFile(), newName);
-			boolean ok = this.file.renameTo(dest);
-			if (!ok) {
-				throw new RuntimeException("Failed to move to: " + dest.getAbsolutePath());
-			}
-			this.file = dest;
-		} else {
-			throw new RuntimeException("Destination is an unknown type. Must be a StormDirectoryResource, is a: " + newParent.getClass());
-		}
-	}
-
-	public void copyTo(CollectionResource newParent, String newName) {
-		log.info("Called function for COPY FILE or DIRECTORY");
-		if (newParent instanceof StormDirectoryResource) {
-			StormDirectoryResource newFsParent = (StormDirectoryResource) newParent;
-			File dest = new File(newFsParent.getFile(), newName);
-			doCopy(dest);
-		} else {
-			throw new RuntimeException("Destination is an unknown type. Must be a StormDirectoryResource, is a: " + newParent.getClass());
-		}
-	}
-
 	public String getSurl() {
-		String rootDir = this.factory.getRoot().getPath();
-		String frontendHostname = this.factory.getStormFrontendHostname();
-		int frontendPort = this.factory.getStormFrontendPort();
-		String path = this.file.getPath().replaceFirst(rootDir, "/" + this.factory.getContextPath());
-		String surl = "srm://" + frontendHostname + ":" + frontendPort + path;
+		String rootDir = factory.getRoot().getPath();
+		String path = file.getPath().replaceFirst(rootDir, "/" + factory.getContextPath());
+		String surl = "srm://" + Configuration.stormFrontendHostname + ":" + Configuration.stormFrontendPort + path;
 		return surl;
 	}
-
-	protected boolean isUserAuthorized(String operation) throws IllegalArgumentException, Exception {
-		// String userDN = StormResourceHelper.getUserDN();
-		// ArrayList<String> userFQANs = StormResourceHelper.getUserFQANs();
-		String filename = this.getFile().toString();
-		return StormAuthorizationUtils.isUserAuthorized(StormAuthorizationUtils.getVomsSecurityContext(MiltonServlet.request()), 
-				operation, filename);
-	}
-
-	private SurlInfo doLsDetailed() {
-		String userDN = StormResourceHelper.getUserDN();
-		ArrayList<String> userFQANs = StormResourceHelper.getUserFQANs();
-		String surl = this.getSurl();
+	
+	public ArrayList<String> getSurlAsList() {
 		ArrayList<String> surls = new ArrayList<String>();
-		surls.add(surl);
+		surls.add(getSurl());
+		return surls;
+	}
 
-		log.debug("userDN = " + userDN);
-		log.debug("userFQANs = " + StringUtils.join(userFQANs.toArray(), ","));
-		log.debug("surl = " + surl);
-
-		LsOutputData output;
+	protected SurlInfo doLsDetailed() {	
+		ArrayList<SurlInfo> infos = StormResourceHelper.doLsDetailed(this);
+		return infos != null ? infos.get(0) : null;
+	}
+	
+	public InputStream getInputStream() {
+		InputStream in;
 		try {
-			log.info("lsDetailed " + surl);
-			output = this.factory.getBackendApi().lsDetailed(userDN, userFQANs, surls);
-			log.info("success: " + output.isSuccess());
-			ArrayList<SurlInfo> infos = (ArrayList<SurlInfo>) output.getInfos();
-			return infos.get(0);
-		} catch (ApiException e) {
-			e.printStackTrace();
+			in = new FileInputStream(file);
+		} catch (FileNotFoundException e) {
+			log.error(e.getMessage());
+			return null;
 		}
-		return null;
-	}
-
-	public String getChecksumType() {
-		if (this instanceof StormFileResource) {
-			SurlInfo info = doLsDetailed();
-			return info.getCheckSumType() == null ? "" : info.getCheckSumType().getValue();
-		}
-		return "";
-	}
-
-	public String getChecksumValue() {
-		if (this instanceof StormFileResource) {
-			SurlInfo info = doLsDetailed();
-			return info.getCheckSumValue() == null ? "" : info.getCheckSumValue().getValue();
-		}
-		return "";
-	}
-
-	public String getStatus() {
-		if (this instanceof StormFileResource) {
-			SurlInfo info = doLsDetailed();
-			return info.getStatus() == null ? "" : info.getStatus().getExplanation();
-		}
-		return "";
+		return in;
 	}
 
 }

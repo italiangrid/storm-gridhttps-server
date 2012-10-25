@@ -1,5 +1,6 @@
 package it.grid.storm.webdav.webapp.authorization;
 
+import it.grid.storm.webdav.webapp.Configuration;
 import it.grid.storm.webdav.webapp.authorization.methods.*;
 
 import java.io.IOException;
@@ -36,18 +37,9 @@ public class StormAuthorizationUtils {
 
 	private static final Logger log = LoggerFactory.getLogger(StormAuthorizationUtils.class);
 
-	public static String storageAreaRootDir;
-	public static String storageAreaName;
-	public static String storageAreaProtocol;
-	public static String stormBackendHostname;
-	public static int stormBackendPort;
-	public static int stormBackendServicePort;
-	public static String stormFrontendHostname;
-	public static int stormFrontendPort;
+	private static HashMap<String, AbstractMethodAuthorization> METHODS_MAP = new HashMap<String, AbstractMethodAuthorization>();
 
-	public static HashMap<String, AbstractMethodAuthorization> METHODS_MAP = new HashMap<String, AbstractMethodAuthorization>();
-	
-	public static void doInitMethodMap(HttpServletRequest HTTPRequest) {
+	private static void doInitMethodMap(HttpServletRequest HTTPRequest) {
 		METHODS_MAP.clear();
 		METHODS_MAP.put("PROPFIND", new PropfindMethodAuthorization(HTTPRequest));
 		METHODS_MAP.put("OPTIONS", new OptionsMethodAuthorization(HTTPRequest));
@@ -58,7 +50,7 @@ public class StormAuthorizationUtils {
 		METHODS_MAP.put("MOVE", new MoveMethodAuthorization(HTTPRequest));
 		METHODS_MAP.put("COPY", new CopyMethodAuthorization(HTTPRequest));
 	}
-	
+
 	private static final HashMap<String, String[]> PROTOCOL_MAP = new HashMap<String, String[]>() {
 		private static final long serialVersionUID = 1L;
 		{
@@ -68,7 +60,26 @@ public class StormAuthorizationUtils {
 		};
 	};
 
+	private static final ArrayList<String> METHOD_LIST = new ArrayList<String>() {
+		private static final long serialVersionUID = 1L;
+		{
+			add("PROPFIND");
+			add("OPTIONS");
+			add("GET");
+			add("PUT");
+			add("DELETE");
+			add("MOVE");
+			add("MKCOL");
+			add("COPY");
+		};
+	};
+
 	/* Public methods */
+
+	public static AbstractMethodAuthorization getAuthorizationHandler(HttpServletRequest HTTPRequest) {
+		doInitMethodMap(HTTPRequest);
+		return METHODS_MAP.get(HTTPRequest.getMethod().toUpperCase());
+	}
 
 	public static VOMSSecurityContext getVomsSecurityContext(HttpServletRequest HTTPRequest) {
 		VOMSSecurityContext.clearCurrentContext();
@@ -87,7 +98,7 @@ public class StormAuthorizationUtils {
 	}
 
 	public static boolean protocolAllowed(String requestProtocol) throws Exception {
-		String key = StormAuthorizationUtils.storageAreaProtocol.toUpperCase();
+		String key = Configuration.storageAreaProtocol.toUpperCase();
 		if (PROTOCOL_MAP.containsKey(key)) {
 			if (Arrays.asList(PROTOCOL_MAP.get(key)).contains(requestProtocol.toUpperCase()))
 				return true;
@@ -99,7 +110,7 @@ public class StormAuthorizationUtils {
 
 	public static boolean methodAllowed(String method) {
 		boolean response = false;
-		if (METHODS_MAP.containsKey(method.toUpperCase())) {
+		if (METHOD_LIST.contains(method.toUpperCase())) {
 			log.debug("Method " + method.toUpperCase() + " is allowed");
 			response = true;
 		}
@@ -107,40 +118,58 @@ public class StormAuthorizationUtils {
 	}
 
 	public static String getUserDN(VOMSSecurityContext vomsSecurityContext) {
-		return vomsSecurityContext.getClientDN().getX500();
+		return vomsSecurityContext.getClientDN() != null ? vomsSecurityContext.getClientDN().getX500() : "";
+	}
+
+	public static String getUserDN(HttpServletRequest HTTPRequest) {
+		return getUserDN(getVomsSecurityContext(HTTPRequest));
+	}
+
+	public static String getUserDN() {
+		return getUserDN(StormAuthorizationFilter.HTTPRequest);
 	}
 
 	public static ArrayList<String> getUserFQANs(VOMSSecurityContext vomsSecurityContext) {
-		String[] userFQANs = vomsSecurityContext.getFQANs();
 		ArrayList<String> fqans = new ArrayList<String>();
+		if (vomsSecurityContext.isEmpty())
+			return fqans;
+		String[] userFQANs = vomsSecurityContext.getFQANs();
 		for (String s : userFQANs)
 			fqans.add(s);
-		return fqans;
-	}
-
-	public static boolean isUserAuthorized(VOMSSecurityContext vomsSecurityContext, String operation, String path) throws Exception,
-			IllegalArgumentException {
-
-		if (path == null || operation == null || vomsSecurityContext == null) {
-			log.error("Received null mandatory parameter(s) at isUserAuthorized: path=" + path + " operation=" + operation
-					+ " vomsSecurityContext=" + vomsSecurityContext);
-			throw new IllegalArgumentException("Received null mandatory parameter(s)");
-		}
-
-		String userDN = StormAuthorizationUtils.getUserDN(vomsSecurityContext);
-		ArrayList<String> fqans = StormAuthorizationUtils.getUserFQANs(vomsSecurityContext);
-		
-		/********************************TEST***********************************/
+		/******************************** TEST ***********************************/
 		fqans.clear();
 		fqans.add("/dteam/Role=NULL/Capability=NULL");
 		fqans.add("/dteam/NGI_IT/Role=NULL/Capability=NULL");
-		/********************************TEST***********************************/
+		/******************************** TEST ***********************************/
+		return fqans;
+	}
 
-		URI uri = StormAuthorizationUtils.prepareURI(path, operation, userDN, fqans);
-		log.debug("Auth request userDN = " + userDN);
-		log.debug("Auth request fqans = " + StringUtils.join(fqans, ","));
-		log.debug("Auth request uri = " + uri.toString());
+	public static ArrayList<String> getUserFQANs(HttpServletRequest HTTPRequest) {
+		return getUserFQANs(getVomsSecurityContext(HTTPRequest));
+	}
+
+	public static ArrayList<String> getUserFQANs() {
+		return getUserFQANs(StormAuthorizationFilter.HTTPRequest);
+	}
+
+	public static boolean isUserAuthorized(String operation, String path) throws Exception, IllegalArgumentException {
+		String userDN = StormAuthorizationUtils.getUserDN();
+		ArrayList<String> userFQANs = StormAuthorizationUtils.getUserFQANs();
+		return isUserAuthorized(userDN, userFQANs, operation, path);
+	}
+
+	private static boolean isUserAuthorized(String userDN, ArrayList<String> userFQANs, String operation, String path) throws Exception,
+			IllegalArgumentException {
+		if (path == null || operation == null || userFQANs == null || userDN == null) {
+			String errorMsg = "Received null mandatory parameter(s) at isUserAuthorized: ";
+			errorMsg += "path=" + path + " operation=" + operation;
+			errorMsg += " userDN=" + userDN + " FQANs=" + StringUtils.join(userFQANs, ",");
+			log.error(errorMsg);
+			throw new IllegalArgumentException("Received null mandatory parameter(s)");
+		}
 		
+		URI uri = StormAuthorizationUtils.prepareURI(path, operation, userDN, userFQANs);
+
 		HttpGet httpget = new HttpGet(uri);
 		HttpClient httpclient = new DefaultHttpClient();
 		HttpResponse httpResponse;
@@ -225,12 +254,11 @@ public class StormAuthorizationUtils {
 		}
 		if (hasVOMSExtension) {
 			String fqansList = StringUtils.join(fqans, Constants.FQANS_SEPARATOR);
-			log.debug("fqanslist = '" + fqansList + "'");
 			qparams.add(new BasicNameValuePair(Constants.FQANS_KEY, fqansList));
 		}
 		URI uri;
 		try {
-			uri = new URI("http", null, stormBackendHostname, stormBackendServicePort, path, qparams.isEmpty() ? null
+			uri = new URI("http", null, Configuration.stormBackendHostname, Configuration.stormBackendServicePort, path, qparams.isEmpty() ? null
 					: URLEncodedUtils.format(qparams, "UTF-8"), null);
 		} catch (URISyntaxException e) {
 			log.error("Unable to build Authorization Service URI. URISyntaxException " + e.getLocalizedMessage());
@@ -252,7 +280,6 @@ public class StormAuthorizationUtils {
 			}
 			path += Constants.USER;
 		}
-
 		log.debug("Built path " + path);
 		return path;
 	}

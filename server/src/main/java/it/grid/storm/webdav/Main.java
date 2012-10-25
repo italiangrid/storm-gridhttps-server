@@ -39,32 +39,7 @@ public class Main {
 	private static boolean useHttp;
 	private static List<StorageArea> storageareas;
 
-//	static final String hostname2 = "omii005-vm03.cnaf.infn.it";
-//	static final Long xmlrpcPort = new Long(8080);
-//	static final String userDN = "/C=IT/O=INFN/OU=Personal Certificate/L=CNAF/CN=Enrico Vianello";
-//	static final String userFQAN = "/dteam/Role=NULL/Capability=NULL";
-//	static final String userFQAN2 = "/dteam/NGI_IT/Role=NULL/Capability=NULL";
-//	static final ArrayList<String> userFQANS = new ArrayList<String>();
-//	static {
-//		userFQANS.add(userFQAN);
-//		userFQANS.add(userFQAN2);
-//	}
-
 	public static void main(String[] args) {
-
-//		BackendApi client;
-//		try {
-//			client = new BackendApi(hostname2, xmlrpcPort);
-//			PingOutputData output = client.ping(userDN, userFQANS);
-//			log.debug("isSuccess: " + output.isSuccess());
-//			log.debug(" - " + output.getBeOs() + " - " + output.getBeVersion() + " - " + output.getVersionInfo());
-//		} catch (IllegalArgumentException e2) {
-//			e2.printStackTrace();
-//		} catch (ApiException e2) {
-//			e2.printStackTrace();
-//		}
-		
-		
 		
 		try {
 			parseCommandLine(args);
@@ -94,9 +69,9 @@ public class Main {
 				File webappDir = new File(server.getWebappsDirectory() + "/" + SA.getStfnRoot());
 				log.info("Copying the template directory on '" + webappDir.getPath() + "'...");
 				FileUtils.copyFolder(templateDir, webappDir);
-				File contextFile = new File(webappDir.getAbsolutePath() + "/WEB-INF/classes/applicationContext.xml");
-				log.info("Configuring the context file '" + contextFile.getPath() + "'...");
-				configureContextFile(contextFile, SA);
+//				File contextFile = new File(webappDir.getAbsolutePath() + "/WEB-INF/classes/applicationContext.xml");
+//				log.info("Configuring the context file '" + contextFile.getPath() + "'...");
+//				configureContextFile(contextFile, SA);
 				File webFile = new File(webappDir.getAbsolutePath() + "/WEB-INF/web.xml");
 				log.info("Configuring the web.xml file '" + webFile.getPath() + "'...");
 				configureWebFile(webFile, SA);
@@ -207,29 +182,29 @@ public class Main {
 	
 	}
 
-	private static void configureContextFile(File contextFile, StorageArea SA) throws Exception {
-		// modify application context file
-		String rootDirectory = SA.getFSRoot();
-		String contextPath = SA.getStfnRoot().substring(1);
-		XML doc = new XML(contextFile);
-		String query = "/spring:beans/spring:bean[@id='milton.fs.resource.factory']/spring:constructor-arg";
-		NodeList arguments = doc.getNodes(query, new AppNamespaceContext(null));
-		log.debug("setting root directory as '" + rootDirectory + "'...");
-		((Element) arguments.item(0)).setAttribute("value", rootDirectory);
-		log.debug("setting context path as '" + contextPath + "'...");
-		((Element) arguments.item(1)).setAttribute("value", contextPath);
-		log.debug("setting storm backend hostname as '" + stormBEHostname + "'...");
-		((Element) arguments.item(2)).setAttribute("value", stormBEHostname);
-		log.debug("setting storm backend port as '" + stormBEPort + "'...");
-		((Element) arguments.item(3)).setAttribute("value", String.valueOf(stormBEPort));
-		log.debug("setting storm backend service port as '" + stormBEServicePort + "'...");
-		((Element) arguments.item(4)).setAttribute("value", String.valueOf(stormBEServicePort));
-		log.debug("setting storm frontend hostname as '" + stormFEHostname + "'...");
-		((Element) arguments.item(5)).setAttribute("value", stormFEHostname);
-		log.debug("setting storm frontend port as '" + stormFEPort + "'...");
-		((Element) arguments.item(6)).setAttribute("value", String.valueOf(stormFEPort));
-		doc.save();
-	}
+//	private static void configureContextFile(File contextFile, StorageArea SA) throws Exception {
+//		// modify application context file
+//		String rootDirectory = SA.getFSRoot();
+//		String contextPath = SA.getStfnRoot().substring(1);
+//		XML doc = new XML(contextFile);
+//		String query = "/spring:beans/spring:bean[@id='milton.fs.resource.factory']/spring:constructor-arg";
+//		NodeList arguments = doc.getNodes(query, new AppNamespaceContext(null));
+//		log.debug("setting root directory as '" + rootDirectory + "'...");
+//		((Element) arguments.item(0)).setAttribute("value", rootDirectory);
+//		log.debug("setting context path as '" + contextPath + "'...");
+//		((Element) arguments.item(1)).setAttribute("value", contextPath);
+//		log.debug("setting storm backend hostname as '" + stormBEHostname + "'...");
+//		((Element) arguments.item(2)).setAttribute("value", stormBEHostname);
+//		log.debug("setting storm backend port as '" + stormBEPort + "'...");
+//		((Element) arguments.item(3)).setAttribute("value", String.valueOf(stormBEPort));
+//		log.debug("setting storm backend service port as '" + stormBEServicePort + "'...");
+//		((Element) arguments.item(4)).setAttribute("value", String.valueOf(stormBEServicePort));
+//		log.debug("setting storm frontend hostname as '" + stormFEHostname + "'...");
+//		((Element) arguments.item(5)).setAttribute("value", stormFEHostname);
+//		log.debug("setting storm frontend port as '" + stormFEPort + "'...");
+//		((Element) arguments.item(6)).setAttribute("value", String.valueOf(stormFEPort));
+//		doc.save();
+//	}
 
 	private static void configureWebFile(File webFile, StorageArea SA) throws Exception {
 		// modify web.xml file

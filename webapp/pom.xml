@@ -19,7 +19,7 @@
 		<javaxServletVersion>2.5</javaxServletVersion>
 		<https-utilsVersion>0.0.1-SNAPSHOT</https-utilsVersion>
 		<trustmanagerVersion>3.0.5</trustmanagerVersion>
-		<apibackendVersion>0.0.11</apibackendVersion>
+		<apibackendVersion>0.0.14</apibackendVersion>
 	</properties>
 
 	<repositories>
