@@ -3,6 +3,7 @@ package it.grid.storm.webdav.webapp.factory;
 import it.grid.storm.webdav.webapp.authorization.StormAuthorizationFilter;
 
 import java.io.IOException;
+import java.security.cert.X509Certificate;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -38,6 +39,17 @@ public class StormHTTPHelper {
 			log.error(e.getMessage());
 			e.printStackTrace();
 		}
+	}
+	
+	public static X509Certificate[] getX509Certificate() { 
+		X509Certificate[] certChain;
+		try {
+			certChain = (X509Certificate[]) getRequest().getAttribute("javax.servlet.request.X509Certificate");
+		} catch (Exception e) {
+			log.error("Error fetching certificate from http request: " + e.getMessage());
+			return null;
+		}
+		return certChain;
 	}
 	
 	public static String getOverwriteHeader() {

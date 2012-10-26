@@ -1,6 +1,6 @@
 package it.grid.storm.webdav.server;
 
-import it.grid.storm.webdav.storagearea.StorageArea;
+import it.grid.storm.storagearea.StorageArea;
 
 import java.io.File;
 

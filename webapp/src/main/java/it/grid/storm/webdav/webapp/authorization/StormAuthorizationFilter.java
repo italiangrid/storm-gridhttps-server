@@ -28,7 +28,6 @@ public class StormAuthorizationFilter implements Filter {
 
 	public void init(FilterConfig fc) throws ServletException {
 		try {
-			
 			Configuration.storageAreaRootDir = fc.getInitParameter("storageAreaRootDir");
 			Configuration.storageAreaName = fc.getInitParameter("storageAreaName");
 			Configuration.storageAreaProtocol = fc.getInitParameter("storageAreaProtocol");
@@ -37,7 +36,6 @@ public class StormAuthorizationFilter implements Filter {
 			Configuration.stormBackendServicePort = Integer.valueOf(fc.getInitParameter("stormBackendServicePort"));
 			Configuration.stormFrontendHostname = fc.getInitParameter("stormFrontendHostname");
 			Configuration.stormFrontendPort = Integer.valueOf(fc.getInitParameter("stormFrontendPort"));
-			
 		} catch (Exception e) {
 			e.printStackTrace();
 			throw new ServletException(e.getMessage());

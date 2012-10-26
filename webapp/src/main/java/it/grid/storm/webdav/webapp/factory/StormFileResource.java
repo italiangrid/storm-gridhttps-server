@@ -19,17 +19,13 @@ import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.ProtocolException;
 import java.net.URI;
-import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.Map;
 
 import org.apache.commons.io.IOUtils;
-import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.StatusLine;
 import org.apache.http.client.ClientProtocolException;
-import org.apache.http.client.HttpClient;
-import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPut;
 import org.apache.http.entity.ByteArrayEntity;
 import org.apache.http.impl.client.DefaultHttpClient;
@@ -148,76 +144,76 @@ public class StormFileResource extends StormResource implements CopyableResource
 			StormResourceHelper.doCopyFile(this, newFsParent, newName);
 		} else {
 			log.error("Directory Resource class " + newParent.getClass().getName() + " not supported!");
-			log.warn("BETA REMOTE COPY");
-			String destinationStr = MiltonServlet.request().getHeader("Destination");
-			
-			URL url = null;
-			try {
-				url = new URL(destinationStr);
-			} catch (MalformedURLException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-			HttpURLConnection httpCon = null;
-			try {
-				httpCon = (HttpURLConnection) url.openConnection();
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-			httpCon.setDoOutput(true);
-			try {
-				httpCon.setRequestMethod("PUT");
-			} catch (ProtocolException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-			InputStream in = null;
-			try {
-				in = StormResourceHelper.doGetFile(this);
-			} catch (NotFoundException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-			OutputStreamWriter out = null;
-			try {
-				out = new OutputStreamWriter(httpCon.getOutputStream());
-				IOUtils.copy(in, out);
-				out.close();
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
-			
-			DefaultHttpClient client = new DefaultHttpClient();
-			URI uri = URI.create(destinationStr);
-	        HttpPut p = new HttpPut(uri);
-	        byte[] bytes = null;
-			try {
-				bytes = IOUtils.toByteArray(this.getInputStream());
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-            ByteArrayEntity requestEntity = new ByteArrayEntity(bytes);
-            p.setEntity(requestEntity);
-            HttpResponse response = null;
-			try {
-				response = client.execute(p);
-			} catch (ClientProtocolException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}            
-            StatusLine line = response.getStatusLine();
-            log.info("complete: " + line);
-            // return code indicates upload failed so throw exception
-            if( line.getStatusCode() < 200 || line.getStatusCode() >= 300 ) {
-                log.error( "Failed upload" );
-            }
-            // shut down connection
-            client.getConnectionManager().shutdown();
+//			log.warn("BETA REMOTE COPY");
+//			String destinationStr = MiltonServlet.request().getHeader("Destination");
+//			
+//			URL url = null;
+//			try {
+//				url = new URL(destinationStr);
+//			} catch (MalformedURLException e) {
+//				// TODO Auto-generated catch block
+//				e.printStackTrace();
+//			}
+//			HttpURLConnection httpCon = null;
+//			try {
+//				httpCon = (HttpURLConnection) url.openConnection();
+//			} catch (IOException e) {
+//				// TODO Auto-generated catch block
+//				e.printStackTrace();
+//			}
+//			httpCon.setDoOutput(true);
+//			try {
+//				httpCon.setRequestMethod("PUT");
+//			} catch (ProtocolException e) {
+//				// TODO Auto-generated catch block
+//				e.printStackTrace();
+//			}
+//			InputStream in = null;
+//			try {
+//				in = StormResourceHelper.doGetFile(this);
+//			} catch (NotFoundException e) {
+//				// TODO Auto-generated catch block
+//				e.printStackTrace();
+//			}
+//			OutputStreamWriter out = null;
+//			try {
+//				out = new OutputStreamWriter(httpCon.getOutputStream());
+//				IOUtils.copy(in, out);
+//				out.close();
+//			} catch (IOException e) {
+//				e.printStackTrace();
+//			}
+//			
+//			DefaultHttpClient client = new DefaultHttpClient();
+//			URI uri = URI.create(destinationStr);
+//	        HttpPut p = new HttpPut(uri);
+//	        byte[] bytes = null;
+//			try {
+//				bytes = IOUtils.toByteArray(this.getInputStream());
+//			} catch (IOException e) {
+//				// TODO Auto-generated catch block
+//				e.printStackTrace();
+//			}
+//            ByteArrayEntity requestEntity = new ByteArrayEntity(bytes);
+//            p.setEntity(requestEntity);
+//            HttpResponse response = null;
+//			try {
+//				response = client.execute(p);
+//			} catch (ClientProtocolException e) {
+//				// TODO Auto-generated catch block
+//				e.printStackTrace();
+//			} catch (IOException e) {
+//				// TODO Auto-generated catch block
+//				e.printStackTrace();
+//			}            
+//            StatusLine line = response.getStatusLine();
+//            log.info("complete: " + line);
+//            // return code indicates upload failed so throw exception
+//            if( line.getStatusCode() < 200 || line.getStatusCode() >= 300 ) {
+//                log.error( "Failed upload" );
+//            }
+//            // shut down connection
+//            client.getConnectionManager().shutdown();
 			
 			
 		}

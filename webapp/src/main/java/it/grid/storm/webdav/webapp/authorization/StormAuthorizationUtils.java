@@ -2,6 +2,7 @@ package it.grid.storm.webdav.webapp.authorization;
 
 import it.grid.storm.webdav.webapp.Configuration;
 import it.grid.storm.webdav.webapp.authorization.methods.*;
+import it.grid.storm.webdav.webapp.factory.StormHTTPHelper;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -85,13 +86,7 @@ public class StormAuthorizationUtils {
 		VOMSSecurityContext.clearCurrentContext();
 		VOMSSecurityContext vomsSecurityContext = new VOMSSecurityContext();
 		VOMSSecurityContext.setCurrentContext(vomsSecurityContext);
-		X509Certificate[] certChain;
-		try {
-			certChain = (X509Certificate[]) HTTPRequest.getAttribute("javax.servlet.request.X509Certificate");
-		} catch (Exception e) {
-			log.error("Error fetching certificate from http request: " + e.getMessage());
-			return vomsSecurityContext;
-		}
+		X509Certificate[] certChain = StormHTTPHelper.getX509Certificate();
 		if (certChain != null)
 			vomsSecurityContext.setClientCertChain(certChain);
 		return vomsSecurityContext;
@@ -126,7 +121,7 @@ public class StormAuthorizationUtils {
 	}
 
 	public static String getUserDN() {
-		return getUserDN(StormAuthorizationFilter.HTTPRequest);
+		return getUserDN(StormHTTPHelper.getRequest());
 	}
 
 	public static ArrayList<String> getUserFQANs(VOMSSecurityContext vomsSecurityContext) {
@@ -149,7 +144,7 @@ public class StormAuthorizationUtils {
 	}
 
 	public static ArrayList<String> getUserFQANs() {
-		return getUserFQANs(StormAuthorizationFilter.HTTPRequest);
+		return getUserFQANs(StormHTTPHelper.getRequest());
 	}
 
 	public static boolean isUserAuthorized(String operation, String path) throws Exception, IllegalArgumentException {

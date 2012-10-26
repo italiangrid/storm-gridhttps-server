@@ -10,7 +10,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package it.grid.storm.webdav.remotecall;
+package it.grid.storm.remotecall;
 
 /**
  * @author Michele Dibenedetto

@@ -10,9 +10,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package it.grid.storm.webdav.storagearea;
+package it.grid.storm.storagearea;
 
-import it.grid.storm.webdav.remotecall.ConfigDiscoveryServiceConstants;
+import it.grid.storm.remotecall.ConfigDiscoveryServiceConstants;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -36,15 +36,37 @@ import org.slf4j.LoggerFactory;
 public class StorageAreaManager {
 
 	private static final Logger log = LoggerFactory.getLogger(StorageAreaManager.class);
+	private List<StorageArea> storageAreas;
+	private static StorageAreaManager SAManager = null;
+	
+	public static StorageAreaManager getInstance() {
+		return SAManager;
+	}
+	
+	public static void init(String stormBEHostname, int stormBEPort) throws Exception {
+		SAManager = new StorageAreaManager(stormBEHostname, stormBEPort);
+	}
+	
+	public static boolean isInitialized() {
+		return getInstance() != null;
+	}
+	
+	private StorageAreaManager(String stormBEHostname, int stormBEPort) throws Exception {	
+		storageAreas = retrieveStorageAreasFromStormBackend(stormBEHostname, stormBEPort);
+	}
 
-	public static List<StorageArea> retrieveStorageAreasFromStormBackend(String hostname, int port) throws Exception {
+	public List<StorageArea> getStorageAreas() {
+		return storageAreas;
+	}
+	
+	private List<StorageArea> retrieveStorageAreasFromStormBackend(String hostname, int port) throws Exception {
 		String stormBackendIP = InetAddress.getByName(hostname).getHostAddress();
 		StormBackendInfo stormBackendParameters = new StormBackendInfo(hostname, stormBackendIP, port);
 		log.info("Initializing the StorageArea list");
 		return populateStorageAreaConfiguration(stormBackendParameters);
 	}
 
-	private static LinkedList<StorageArea> populateStorageAreaConfiguration(StormBackendInfo stormBackendParameters) throws Exception {
+	private LinkedList<StorageArea> populateStorageAreaConfiguration(StormBackendInfo stormBackendParameters) throws Exception {
 		URI uri = buildConfigDiscoveryServiceUri(stormBackendParameters);
 		log.info("Calling Configuration Discovery service at uri: " + uri);
 		HttpGet httpget = new HttpGet(uri);
@@ -116,7 +138,7 @@ public class StorageAreaManager {
 	 * @return
 	 * @throws ServletException
 	 */
-	private static URI buildConfigDiscoveryServiceUri(StormBackendInfo stormBackendParameters) throws Exception {
+	private URI buildConfigDiscoveryServiceUri(StormBackendInfo stormBackendParameters) throws Exception {
 		log.debug("Building configurationd discovery rest service URI");
 		String path = "/" + ConfigDiscoveryServiceConstants.RESOURCE + "/" + ConfigDiscoveryServiceConstants.VERSION + "/"
 				+ ConfigDiscoveryServiceConstants.LIST_ALL_KEY;
@@ -137,7 +159,7 @@ public class StorageAreaManager {
 	 * @return never null, a list that contains the decoded storage areas. None
 	 *         of the elements can be null
 	 */
-	private static LinkedList<StorageArea> decodeStorageAreaList(String storageAreaListString) {
+	private LinkedList<StorageArea> decodeStorageAreaList(String storageAreaListString) {
 		if (storageAreaListString == null) {
 			log.error("Decoding failed, received a null storage area list string!");
 			throw new IllegalArgumentException("Received a null storage area list string");
@@ -158,7 +180,7 @@ public class StorageAreaManager {
 	 * @return a list of StorageArea instances, never null. None of the elements
 	 *         can be null
 	 */
-	private static List<StorageArea> decodeStorageArea(String sAEncoded) {
+	private List<StorageArea> decodeStorageArea(String sAEncoded) {
 		if (sAEncoded == null) {
 			log.error("Decoding failed, received a null encoded storage area!");
 			throw new IllegalArgumentException("Received a null encoded storage area");
@@ -221,4 +243,43 @@ public class StorageAreaManager {
 		return producedList;
 	}
 
+	/**
+	 * Searches for a storage area in the available list that has an FSRoot that
+	 * is the longest match with the provided file path
+	 * 
+	 * @param localFilePath
+	 *            must not be null
+	 * @return the best match StorageArea, null if none matches
+	 * @throws IllegalArgumentException
+	 *             if localFilePath is null
+	 */
+	public static StorageArea getMatchingSA(String localFilePath) throws IllegalArgumentException, IllegalStateException {
+		if (localFilePath == null) {
+			log.error("Unable to match StorageArea, the provided localFilePath is null");
+			throw new IllegalArgumentException("Provided localFilePath is null!");
+		}
+		if (!isInitialized()) {
+			log.error("Unable to match StorageArea, class not initialized. " + "Call init() first");
+			throw new IllegalStateException("Unable to match any StorageArea, class not initialized.");
+		}
+		log.debug("Looking for a StorageArea that matches " + localFilePath);
+		StorageArea mappedSA = null;
+		int matchedSAFSRootLength = 0;
+		for (StorageArea storageArea : StorageAreaManager.getInstance().getStorageAreas()) {
+			if (localFilePath.startsWith(storageArea.getFSRoot())
+					&& (mappedSA == null || storageArea.getFSRoot().length() > mappedSA.getFSRoot().length())) {
+				if (storageArea.getStfnRoot().length() > matchedSAFSRootLength) {
+					mappedSA = storageArea;
+					matchedSAFSRootLength = storageArea.getStfnRoot().length();
+				}
+			}
+		}
+		if (mappedSA == null) {
+			log.debug("No match found");
+		} else {
+			log.debug("Matched StorageArea " + mappedSA.toString());
+		}
+		return mappedSA;
+	}
+	
 }

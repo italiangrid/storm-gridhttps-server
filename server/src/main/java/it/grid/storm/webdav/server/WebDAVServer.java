@@ -4,7 +4,8 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
-import it.grid.storm.webdav.storagearea.StorageArea;
+import it.grid.storm.gridhttps.servlet.MapperServlet;
+import it.grid.storm.storagearea.StorageArea;
 import it.grid.storm.webdav.utils.FileUtils;
 
 import org.eclipse.jetty.server.Connector;
@@ -13,6 +14,8 @@ import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.handler.ContextHandlerCollection;
 import org.eclipse.jetty.server.handler.HandlerCollection;
 import org.eclipse.jetty.server.nio.SelectChannelConnector;
+import org.eclipse.jetty.servlet.ServletContextHandler;
+import org.eclipse.jetty.servlet.ServletHolder;
 import org.eclipse.jetty.webapp.WebAppContext;
 import org.italiangrid.utils.https.ServerFactory;
 import org.slf4j.Logger;
@@ -30,7 +33,6 @@ public class WebDAVServer {
 
 	public WebDAVServer(ServerInfo options) {
 		this.options = options;
-		log.debug("WebDAVServer > create context handler collection...");
 		contextHandlerCollection = new ContextHandlerCollection();
 		webapps = new ArrayList<WebApp>();
 		initServer();
@@ -38,7 +40,6 @@ public class WebDAVServer {
 
 	private void initServer() {
 		
-		log.debug("WebDAVServer > new ssl server...");
 		// Server:
 		server = ServerFactory.newServer(options.getHostname(), options.getHttpsPort(), options.getSslOptions());
 		log.debug("httpsPort: " + options.getHttpsPort());
@@ -59,7 +60,6 @@ public class WebDAVServer {
 		hc.setHandlers(new Handler[] { contextHandlerCollection });
 		server.setHandler(hc);
 		server.setGracefulShutdown(1000);
-	
 	}
 
 	public String getWebappsDirectory() {
@@ -114,6 +114,17 @@ public class WebDAVServer {
 		this.contextHandlerCollection.addHandler(context);
 		webapps.add(webapp);
 		log.info(name + " > DEPLOYED WEBAPP '" + webapp.getContextPath().substring(1) + "'");
+	}
+	
+	public void deployGridHTTPs(String contextPath, String pathSpec) {
+		log.debug("deploying gridhttps webapp...");
+    
+        ServletContextHandler context = new ServletContextHandler(ServletContextHandler.SESSIONS);
+        context.setContextPath(File.separator + contextPath);
+        context.addServlet(new ServletHolder(new MapperServlet()), File.separator + pathSpec);
+        contextHandlerCollection.addHandler(context);
+        
+		log.info(name + " > DEPLOYED GRIDHTTPS WEBAPP");
 	}
 
 	public void undeploy(WebApp webapp) throws Exception {
