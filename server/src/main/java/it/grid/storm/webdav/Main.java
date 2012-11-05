@@ -36,11 +36,12 @@ public class Main {
 	private static String configurationFile;
 	private static WebDAVServer server;
 	private static ServerInfo options;
-	private static String webappsDir = "/webapps";
+	private static String webappsFolderDir = "/var/lib/storm";
+	private static final String WEBAPPS_FOLDER = "/webapps";
 	private static boolean useHttp;
 	
 	public static void main(String[] args) {
-		
+	
 		try {
 			parseCommandLine(args);
 			loadConfiguration(configurationFile);
@@ -52,9 +53,13 @@ public class Main {
 		
 		try {
 			log.info("Creating WebDAV server...");
+//			Object lock = new Object();
+//			synchronized (lock) {
+//				lock.wait(3 * 1000);
+//			}
 			server = new WebDAVServer(options);
-			log.info("Setting webapps directory to '" + getExeDirectory() + webappsDir + "'");
-			server.setWebappsDirectory(getExeDirectory() + webappsDir);
+			log.info("Setting webapps directory to '" + webappsFolderDir + WEBAPPS_FOLDER + "'");
+			server.setWebappsDirectory(webappsFolderDir + WEBAPPS_FOLDER);
 			log.info("Retrieving the Storage Area list from Storm Backend...");
 			StorageAreaManager.init(stormBEHostname, stormBEServicePort);
 			log.info("Deploying webapps...");
@@ -81,14 +86,18 @@ public class Main {
 			server.status();
 			FileUtils.deleteDirectory(templateDir);
 		} catch (Exception e) {
+			log.error(e.getMessage());
 			e.printStackTrace();
-			try {
-				log.info("Undeploying all webapps...");
-				server.undeployAll();
-				log.info("Stopping WebDAV-server...");
-				server.stop();
-			} catch (Exception e1) {
-				e1.printStackTrace();
+			if (server != null) {
+				try {
+					log.info("Undeploying all webapps...");
+					server.undeployAll();
+					log.info("Stopping WebDAV-server...");
+					server.stop();
+				} catch (Exception e1) {
+					log.error(e.getMessage());
+					e1.printStackTrace();
+				}
 			}
 			System.exit(1);
 		}
@@ -97,6 +106,7 @@ public class Main {
 		// directory
 		Runtime.getRuntime().addShutdownHook(new Thread() {
 			public void run() {
+				if (server == null) return;
 				try {
 					log.info("Undeploying all webapps...");
 					server.undeployAll();
@@ -110,15 +120,18 @@ public class Main {
 
 	}
 
-	private static String getExeDirectory() {
-		return (new File(Main.class.getProtectionDomain().getCodeSource().getLocation().getPath())).getParent();
-	}
+//	private static String getExeDirectory() {
+//		return (new File(Main.class.getProtectionDomain().getCodeSource().getLocation().getPath())).getParent();
+//	}
 
 	private static void parseCommandLine(String[] args) throws Exception {
 		MyCommandLineParser cli = new MyCommandLineParser(args);
-		cli.addOption("w", "the absolute file path of the WebDAV template webapp [necessary]", true, true);
-		cli.addOption("conf", "the absolute file path of server's configuration file", true, true);
+		cli.addOption("w", "the absolute file path of the WebDAV template webapp [mandatory]", true, true);
+		cli.addOption("dir", "the absolute file path of the WebDAV webapps deployed directory", true, false);
+		cli.addOption("conf", "the absolute file path of server's configuration file [mandatory]", true, true);
 		warTemplateFile = cli.getString("w");
+		if (cli.hasOption("dir"))
+			webappsFolderDir = cli.getString("dir");
 		if (cli.hasOption("conf"))
 			configurationFile = cli.getString("conf");
 	}
@@ -159,6 +172,7 @@ public class Main {
 		ssloptions.setKeyFile(getConfigurationValue(configuration, "server", "key_file"));
 		ssloptions.setTrustStoreDirectory(getConfigurationValue(configuration, "server", "trust_store_directory"));
 		java.net.InetAddress localMachine = java.net.InetAddress.getLocalHost();
+		log.debug("Local hostname = " + localMachine.getHostName());
 		options = new ServerInfo(localMachine.getHostName(), httpPort, httpsPort, ssloptions, useHttp);
 		log.debug("stormBEHostname = " + stormBEHostname);
 		log.debug("stormBEServicePort = " + stormBEServicePort);

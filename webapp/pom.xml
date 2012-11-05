@@ -3,8 +3,8 @@
 	<modelVersion>4.0.0</modelVersion>
 	<parent>
 		<groupId>it.grid.storm</groupId>
-		<artifactId>fs-WebDAV</artifactId>
-		<version>0.0.1</version>
+		<artifactId>storm-gridhttps</artifactId>
+		<version>1.0</version>
 	</parent>
 	<artifactId>webapp</artifactId>
 	<packaging>war</packaging>

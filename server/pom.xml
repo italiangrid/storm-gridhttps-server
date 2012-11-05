@@ -3,10 +3,10 @@
 	<modelVersion>4.0.0</modelVersion>
 	<parent>
 		<groupId>it.grid.storm</groupId>
-		<artifactId>fs-WebDAV</artifactId>
 		<version>1.0</version>
+		<artifactId>storm-gridhttps</artifactId>
 	</parent>
-	<artifactId>server</artifactId>
+	<artifactId>storm-gridhttps-server</artifactId>
 
 	<properties>
 		<!-- <bundle.name>${project.artifactId}-${project.version}</bundle.name> -->

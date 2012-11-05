@@ -1,0 +1,302 @@
+#!/bin/sh
+
+NAME=storm-gridhttps-server
+prog="java"
+prog_short=`echo $prog | cut -c1-15`
+PIDDIR=/var/run
+PIDFILE=$PIDDIR/$NAME.pid
+LOCKFOLDER=/var/lock/subsys
+LOCKFILE=${LOCKFOLDER}/${NAME}
+
+SUCCESS=0
+ERROR=1
+FAILURE=-1
+TRUE=1
+FALSE=0
+
+
+if test -e /etc/init.d/functions; then
+    source /etc/init.d/functions
+#else
+#    echo "/etc/init.d/functions not found"
+fi
+
+if [ -f /lib/lsb/init-functions ]; then
+    source /lib/lsb/init-functions
+else
+    alias log_success_msg="echo SUCCESS! '$@'"
+    alias log_failure_msg="echo FAILURE! '$@'"
+    alias log_warning_msg="echo WARNING! '$@'"
+fi
+
+
+if test -e "/etc/profile.d/grid-env.sh"; then
+    source /etc/profile.d/grid-env.sh
+#else
+#    echo "Warning! No grid-env.sh script found in /etc/profile.d!"
+fi
+
+# read config values override (INSTALL_ROOT is from LCG-2's site.def)
+for file in \
+    "$INSTALL_ROOT/etc/sysconfig/globus" \
+    "$INSTALL_ROOT/etc/sysconfig/glite" \
+    "$INSTALL_ROOT/etc/sysconfig/edg" \
+    ;
+do
+  if test -e "$file"; then
+      source "$file"
+  fi
+done
+
+setenv_if_not_set () {
+    # a little black magic makes a script more spicy ;-)
+    # Explaining the magic:
+    # - receives a couple of parameters, the first represent the name of a variable, the second its value
+    # - if the current value for variable is an empty string then set this variable to the provided value
+    if test -z "${!1}"; then
+        eval export $1=\'"$2"\'
+    fi
+}
+
+
+setenv_if_not_set STORM_LOGDIR "/var/log/storm"
+
+# some Java parameters
+if [ -z $JAVA_HOME ]; then
+    if [ ! -z $JAVA_LOCATION ]; then
+         JAVA_HOME=$JAVA_LOCATION
+    #else
+    #     echo "Error! No JAVA_HOME neither JAVA_LOCATION available! Unable to set JAVA_HOME"
+    fi
+fi
+
+JAVA=$JAVA_HOME/bin/java
+
+
+
+if [ -z $STORM_USER ]; then
+   STORM_USER=storm
+fi
+if ! su "$STORM_USER" -s /bin/sh -c "test -w '$STORM_LOGDIR'"; then
+    chown -R $STORM_USER:$STORM_USER $STORM_LOGDIR
+fi
+
+
+start () {
+    if [ ! `whoami` = "root" ]; then
+        echo "Error: you must be root to run this script."
+        return 1
+    fi
+
+    local pid
+    local ppid
+    getRunningPids "PIDS"
+    if [ $? -ne 0 ]; then
+        return -1
+    fi
+    if [ -n "$PIDS" ]; then
+        local old_pid
+        if [ -f $PIDFILE ]; then
+           old_pid=`cat ${PIDFILE}`
+        elif [ -f $LOCKFILE ]; then
+           old_pid=`cat ${LOCKFILE}`
+        else
+           log_warning_msg "$NAME running but no pid stored"
+           return 1
+        fi
+        echo $PIDS | grep $old_pid >> /dev/null
+        if [ $? -eq 0 ]; then
+            log_success_msg "$NAME already running"
+            return 0
+        else
+            log_warning_msg "$NAME running but wrong pid '$old_pid' in pidfile"
+            return 1
+        fi
+    fi
+
+        run () { "$@" 1> /dev/null 2>&1 & : ; }
+
+	echo -n "Starting $NAME as user \"$STORM_USER\"..."
+	cd /usr/share/java/storm-gridhttps
+        export PATH=$JAVA_HOME/bin:$PATH
+        run su "$STORM_USER" -m -s /bin/sh -c "java \
+                -Dstorm.log.dir='$STORM_LOGDIR' \
+                -jar /usr/share/java/storm-gridhttps/storm-gridhttps-server.jar \
+	        -w /usr/share/java/storm-gridhttps/webapp.war \
+	        -conf /etc/storm/gridhttps/conf/server.conf \
+	        1>$STORM_LOGDIR/storm-gridhttps.stdout \
+        	2>$STORM_LOGDIR/storm-gridhttps.stderr "
+    ppid="$!"
+    pid=`ps --ppid $ppid -o pid | grep -v PID | xargs ps --ppid 2> /dev/null | grep -v PID | awk '{print $1}'`
+    if [[ "x" == "x"$pid || ! -d /proc/$pid ]]; then
+        log_failure_msg "The storm-gridhttps process unexpectedly died"
+        return 1
+    fi
+
+
+       # lock subsys (see http://www.redhat.com/magazine/008jun05/departments/tips_tricks/ )
+	if test -w ${LOCKFOLDER}; then
+        	echo $pid > ${LOCKFILE}
+	fi
+        # save pid
+        echo $pid > ${PIDFILE}
+	log_success_msg ""
+	return 0
+}
+
+stop() {
+    local RESPONSE
+    check_if_running
+    if [ "$?" == "$FALSE" ]; then
+       log_success_msg "$NAME already stopped"
+       RESPONSE=$SUCCESS
+    else
+      if [ -f $PIDFILE ]; then
+           echo -n "Stopping $NAME ..."
+           kill SIGHUP `cat $PIDFILE` >& /dev/null
+     elif [ -f $LOCKFILE ]; then
+          echo -n "Stopping $NAME ..."
+          kill SIGHUP `cat $LOCKFILE` >& /dev/null
+     else
+         echo -n "No pid stored for the process, stopping any running..."
+          local PIDS
+          getRunningPids "PIDS"
+          if [ $? -ne 0 ]; then
+             return $FAILURE
+          fi
+          kill SIGHUP $PIDS >& /dev/null
+      fi
+      RESPONSE=0
+      log_success_msg ""
+    fi
+    rm -f ${PIDFILE}
+    # remove subsys lock (see http://www.redhat.com/magazine/008jun05/departments/tips_tricks/ )
+    rm -f ${LOCKFILE}
+    return $RESPONSE
+}
+
+
+check_if_running() {
+    local PIDS
+    getRunningPids "PIDS"
+    if [ -n "$PIDS" ]; then
+       return $TRUE
+    else
+       return $FALSE
+    fi
+}
+
+check_if_boot_completed() {
+
+   local PID
+   get_pid "PID"
+   if [ $? -ne 0 ]; then
+        return $FAILURE
+   fi
+   if [ -n "$PID" ]; then
+       IS_UP=`netstat -lp | grep $PID`
+      if [ -z "$IS_UP" ]; then
+         return $FALSE  # not running
+      else
+         return $TRUE       # is running
+      fi
+   else
+	return $FAILURE
+   fi
+}
+
+
+getRunningPids(){
+   if [ $# -ne 1 ]; then
+       echo -n "INTERNAL ERROR: missing parameters '$'@=$@ required RETURN_PIDS" 1>&2
+       return $FAILURE
+   fi
+   pslist=$( ps -ef | grep $prog_short | grep $NAME | awk '{print $2}' | tr '\n' ' ' | sed -e s/\ $// )
+   export $1="$pslist"
+   return $SUCCESS
+}
+
+
+get_pid() {
+   local local_pid
+   if [ $# -ne 1 ]; then
+       echo -n "INTERNAL ERROR: missing parameters '$'@=$@ required RETURN_PID" 1>&2
+       return $FAILURE
+   fi
+   if [ -e $PIDFILE ]; then
+       local_pid=`cat $PIDFILE`
+   else
+       return $ERROR
+   fi
+   export $1="$local_pid"
+   return $SUCCESS
+}
+
+
+status() {
+    local PIDS
+    getRunningPids "PIDS"
+    if [ $? -ne 0 ]; then
+        return $FAILURE
+    fi
+    if [ -n "$PIDS" ]; then
+        if [ ! -f ${PIDFILE} ]; then
+            log_warning_msg "$NAME running but pid file doesn't exists"
+            return 1
+        fi
+        if [ ! -f ${LOCKFILE} ]; then
+            log_warning_msg "$NAME running but subsys isn't locked"
+            return 2
+        fi
+        local pid=`cat ${PIDFILE}`
+        echo ${PIDS} | grep ${pid} > /dev/null
+        if [ $? -ne 0 ]; then
+            log_warning_msg "$NAME running but wrong pid in PIDFILE"
+            return 3
+        fi
+        check_if_boot_completed
+        if [ $? -eq $TRUE ]; then
+           echo "$NAME (pid ${pid}) is running..."
+
+        else
+           echo "$NAME (pid ${pid}) is bootstrapping..."
+        fi
+    else
+        if [ -f ${PIDFILE} ]; then
+            log_warning_msg "$NAME NOT running but pid file exists"
+            return 1
+        fi
+        if [ -f ${LOCKFILE} ]; then
+            log_warning_msg "$NAME NOT running but subsys locked"
+            return 2
+        fi
+        echo "$NAME is NOT running"
+    fi
+    return 0
+}
+
+case "$1" in
+    start)
+	 if [ $# -gt 1 ]; then
+                if [ $2 = "debug" ]; then
+                    STORM_DEBUG_OPTION="-Xdebug -Xrunjdwp:transport=dt_socket,address=1044,server=y,suspend=n";
+                elif [ $2 = "jmx" ]; then
+			STORM_JMX_OPTION="-Dcom.sun.management.jmxremote.port=8501 -Dcom.sun.management.jmxremote.ssl=false -Dcom.sun.management.jmxremote.authenticate=false";
+                fi
+         fi
+         start;
+	RETVAL=$?
+    ;;
+    stop) 
+	stop;
+	RETVAL=$?
+	;;
+  status)
+    status;
+    RETVAL=$?
+    ;;
+
+esac
+
+exit $RETVAL
+

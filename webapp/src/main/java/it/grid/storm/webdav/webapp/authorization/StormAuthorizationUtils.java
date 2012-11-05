@@ -132,9 +132,9 @@ public class StormAuthorizationUtils {
 		for (String s : userFQANs)
 			fqans.add(s);
 		/******************************** TEST ***********************************/
-		fqans.clear();
-		fqans.add("/dteam/Role=NULL/Capability=NULL");
-		fqans.add("/dteam/NGI_IT/Role=NULL/Capability=NULL");
+//		fqans.clear();
+//		fqans.add("/dteam/Role=NULL/Capability=NULL");
+//		fqans.add("/dteam/NGI_IT/Role=NULL/Capability=NULL");
 		/******************************** TEST ***********************************/
 		return fqans;
 	}
