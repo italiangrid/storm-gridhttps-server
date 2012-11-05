@@ -8,6 +8,8 @@ import it.grid.storm.webdav.utils.*;
 import org.italiangrid.utils.https.SSLOptions;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.sql.Timestamp;
 import java.util.Date;
@@ -19,49 +21,120 @@ import org.slf4j.LoggerFactory;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 
+import ch.qos.logback.classic.LoggerContext;
+import ch.qos.logback.classic.joran.JoranConfigurator;
+import ch.qos.logback.core.joran.spi.JoranException;
+
 public class Main {
 
-	private static final Logger log = LoggerFactory.getLogger(Main.class);
-	
+	private class DefaultConfiguration {
+		public final static String STORM_GRIDHTTPS_CONTEXT_PATH = "gridhttps_webapp";
+		public final static String STORM_GRIDHTTPS_CONTEXT_SPEC = "resourcemapping";
+		public final static int STORM_BE_SERVICE_PORT = 9998;
+		public final static int STORM_BE_PORT = 8080;
+		public final static int STORM_FE_PORT = 8444;
+		public final static String WEBAPPS_DIRECTORY_ROOT = "/var/lib/storm";
+		public final static int STORM_GRIDHTTPS_HTTP_PORT = 8085;
+		public final static int STORM_GRIDHTTPS_HTTPS_PORT = 8443;
+		public final static boolean STORM_GRIDHTTPS_USE_HTTP = true;
+	}
+
+	private static Logger log; // = LoggerFactory.getLogger(Main.class);
+
 	private static String warTemplateFile;
-	private static String stormBEHostname;
-	private static String stormFEHostname;
-	private static int stormBEServicePort;
-	private static int stormBEPort;
-	private static int stormFEPort;
-	private static String gridhttpsContextPath;
-	private static String gridhttpsContextSpec;
-	
-	
+
+	private static class StormBackend {
+		public static String hostname;
+		public static int port;
+		public static int servicePort;
+	}
+
+	private static class StormFrontend {
+		public static String hostname;
+		public static int port;
+	}
+
+	private static class StormGridhttps {
+		public static String hostname;
+		public static int httpPort;
+		public static int httpsPort;
+		public static boolean useHttp;
+		private static String contextPath;
+		private static String contextSpec;
+		private static String webappsDir;
+		private static ServerInfo options;
+		private static final String WEBAPPS_DIRECTORY_NAME = "/webapps";
+	}
+
 	private static String configurationFile;
 	private static WebDAVServer server;
-	private static ServerInfo options;
-	private static String webappsFolderDir = "/var/lib/storm";
-	private static final String WEBAPPS_FOLDER = "/webapps";
-	private static boolean useHttp;
-	
+	private static String logFile;
+
 	public static void main(String[] args) {
-	
+
 		try {
 			parseCommandLine(args);
-			loadConfiguration(configurationFile);
+			loadConfiguration();
 		} catch (Exception e) {
 			log.error(e.getMessage());
 			System.exit(1);
 		}
-		log.info("Configuration file loaded successfully");
+
+		/* INIT LOGGING COMPONENT */
+		LoggerContext loggerContext = (LoggerContext) LoggerFactory.getILoggerFactory();
+		loggerContext.reset();
+        JoranConfigurator configurator = new JoranConfigurator();
+        configurator.setContext(loggerContext);
+        FileInputStream fin;
+		try {
+			fin = new FileInputStream(logFile);
+			configurator.doConfigure(fin);
+			fin.close();
+		} catch (FileNotFoundException e2) {
+			e2.printStackTrace();
+			System.exit(1);
+		} catch (JoranException e2) {
+			e2.printStackTrace();
+			System.exit(1);
+		} catch (IOException e2) {
+			e2.printStackTrace();
+			System.exit(1);
+		}
+        loggerContext.start();
+		log = LoggerFactory.getLogger(Main.class);
+
+		System.out.println("logger loaded successfully");
 		
+		log.info("Configuration file loaded successfully");
+
+		log.debug("gridhttps hostname = " + StormGridhttps.hostname);
+		log.debug("gridhttps http port = " + StormGridhttps.httpPort);
+		log.debug("gridhttps https port = " + StormGridhttps.httpsPort);
+		log.debug("gridhttps use http = " + StormGridhttps.useHttp);
+		log.debug("gridhttps context path = " + StormGridhttps.contextPath);
+		log.debug("gridhttps context spec = " + StormGridhttps.contextSpec);
+		log.debug("gridhttps host certificate = " + StormGridhttps.options.getSslOptions().getCertificateFile());
+		log.debug("gridhttps host certificate key = " + StormGridhttps.options.getSslOptions().getKeyFile());
+		log.debug("gridhttps trust store directory = " + StormGridhttps.options.getSslOptions().getTrustStoreDirectory());
+
+		log.debug("storm backend hostname = " + StormBackend.hostname);
+		log.debug("storm backend service port = " + StormBackend.servicePort);
+		log.debug("storm backend port = " + StormBackend.port);
+
+		log.debug("storm frontend hostname = " + StormFrontend.hostname);
+		log.debug("storm frontend port = " + StormFrontend.port);
+
 		try {
 			log.info("Creating WebDAV server...");
-//			Object lock = new Object();
-//			synchronized (lock) {
-//				lock.wait(3 * 1000);
-//			}
-			server = new WebDAVServer(options);
-			log.info("Setting webapps directory to '" + webappsFolderDir + WEBAPPS_FOLDER + "'");
-			server.setWebappsDirectory(webappsFolderDir + WEBAPPS_FOLDER);
+			// Object lock = new Object();
+			// synchronized (lock) {
+			// lock.wait(3 * 1000);
+			// }
+			server = new WebDAVServer(StormGridhttps.options);
+			log.info("Setting webapps directory to '" + StormGridhttps.webappsDir + StormGridhttps.WEBAPPS_DIRECTORY_NAME + "'");
+			server.setWebappsDirectory(StormGridhttps.webappsDir + StormGridhttps.WEBAPPS_DIRECTORY_NAME);
 			log.info("Retrieving the Storage Area list from Storm Backend...");
-			StorageAreaManager.init(stormBEHostname, stormBEServicePort);
+			StorageAreaManager.init(StormBackend.hostname, StormBackend.servicePort);
 			log.info("Deploying webapps...");
 			String tempDir = server.getWebappsDirectory() + "/.tmp_" + new Timestamp((new Date()).getTime());
 			log.info("Decompressing the template file '" + warTemplateFile + "' on '" + tempDir + "'...");
@@ -80,7 +153,7 @@ public class Main {
 				log.info("Deploying '" + SA.getName() + "' webapp...");
 				server.deploy(new WebApp(webappDir, SA));
 			}
-			server.deployGridHTTPs(gridhttpsContextPath, gridhttpsContextSpec);
+			server.deployGridHTTPs(StormGridhttps.contextPath, StormGridhttps.contextSpec);
 			log.info("Starting WebDAV-server...");
 			server.start();
 			server.status();
@@ -106,7 +179,8 @@ public class Main {
 		// directory
 		Runtime.getRuntime().addShutdownHook(new Thread() {
 			public void run() {
-				if (server == null) return;
+				if (server == null)
+					return;
 				try {
 					log.info("Undeploying all webapps...");
 					server.undeployAll();
@@ -120,73 +194,101 @@ public class Main {
 
 	}
 
-//	private static String getExeDirectory() {
-//		return (new File(Main.class.getProtectionDomain().getCodeSource().getLocation().getPath())).getParent();
-//	}
-
 	private static void parseCommandLine(String[] args) throws Exception {
 		MyCommandLineParser cli = new MyCommandLineParser(args);
 		cli.addOption("w", "the absolute file path of the WebDAV template webapp [mandatory]", true, true);
 		cli.addOption("dir", "the absolute file path of the WebDAV webapps deployed directory", true, false);
 		cli.addOption("conf", "the absolute file path of server's configuration file [mandatory]", true, true);
-		warTemplateFile = cli.getString("w");
-		if (cli.hasOption("dir"))
-			webappsFolderDir = cli.getString("dir");
 		if (cli.hasOption("conf"))
 			configurationFile = cli.getString("conf");
+		if (cli.hasOption("dir"))
+			StormGridhttps.webappsDir = cli.getString("dir");
+		warTemplateFile = cli.getString("w");
 	}
 
 	private static String getConfigurationValue(Wini configuration, String sectionName, String fieldName) throws Exception {
 		return String.valueOf(getConfigurationValue(configuration, sectionName, fieldName, String.class));
 	}
-	
-	private static <T> T getConfigurationValue(Wini configuration, String sectionName, String fieldName, Class<T> classType) throws Exception {
+
+	private static <T> T getConfigurationValue(Wini configuration, String sectionName, String fieldName, Class<T> classType)
+			throws Exception {
 		if (!configuration.keySet().contains(sectionName))
 			throw new Exception("Configuration file: '" + sectionName + "' section missed!");
 		if (!configuration.get(sectionName).containsKey(fieldName))
 			throw new Exception("Configuration file: '" + sectionName + " > " + fieldName + "' missed!");
 		return configuration.get(sectionName, fieldName, classType);
 	}
-	    
-	private static void loadConfiguration(String filename) throws Exception {
+
+	private static void loadConfiguration() throws Exception {
 		Wini configuration;
 		try {
-			configuration = new Wini(new File(filename));
+			configuration = new Wini(new File(configurationFile));
 		} catch (InvalidFileFormatException e) {
 			throw new Exception(e.getMessage());
 		} catch (IOException e) {
 			throw new Exception(e.getMessage());
 		}
-		stormBEHostname = getConfigurationValue(configuration, "storm_backend", "hostname");
-		stormBEServicePort = getConfigurationValue(configuration, "storm_backend", "service_port", int.class);
-		stormBEPort = getConfigurationValue(configuration, "storm_backend", "port",  int.class);
-		stormFEHostname = getConfigurationValue(configuration, "storm_frontend", "hostname");
-		stormFEPort = getConfigurationValue(configuration, "storm_frontend", "port",  int.class);
-		gridhttpsContextPath = getConfigurationValue(configuration, "gridhttps", "context_path");
-		gridhttpsContextSpec = getConfigurationValue(configuration, "gridhttps", "context_spec");
-		useHttp = getConfigurationValue(configuration, "server", "enabled_http", boolean.class);
-		int httpPort = getConfigurationValue(configuration, "server", "http_port", int.class);
-		int httpsPort = getConfigurationValue(configuration, "server", "https_port", int.class);
+		/* LOG CONFIGURATION FILE */
+		logFile = getConfigurationValue(configuration, "server", "log_configuration_file");
+		/* BACKEND CONFIGURATION */
+		StormBackend.hostname = getConfigurationValue(configuration, "storm_backend", "hostname");
+		try {
+			StormBackend.servicePort = getConfigurationValue(configuration, "storm_backend", "service_port", int.class);
+		} catch (Exception e) {
+			StormBackend.servicePort = DefaultConfiguration.STORM_BE_SERVICE_PORT;
+		}
+		try {
+			StormBackend.port = getConfigurationValue(configuration, "storm_backend", "port", int.class);
+		} catch (Exception e) {
+			StormBackend.port = DefaultConfiguration.STORM_BE_PORT;
+		}
+		/* FRONTEND CONFIGURATION */
+		StormFrontend.hostname = getConfigurationValue(configuration, "storm_frontend", "hostname");
+		try {
+			StormFrontend.port = getConfigurationValue(configuration, "storm_frontend", "port", int.class);
+		} catch (Exception e) {
+			StormFrontend.port = DefaultConfiguration.STORM_FE_PORT;
+		}
+		/* GRIDHTTPS CONFIGURATION */
+		try {
+			StormGridhttps.contextPath = getConfigurationValue(configuration, "gridhttps", "context_path");
+		} catch (Exception e) {
+			StormGridhttps.contextPath = DefaultConfiguration.STORM_GRIDHTTPS_CONTEXT_PATH;
+		}
+		try {
+			StormGridhttps.contextSpec = getConfigurationValue(configuration, "gridhttps", "context_spec");
+		} catch (Exception e) {
+			StormGridhttps.contextSpec = DefaultConfiguration.STORM_GRIDHTTPS_CONTEXT_SPEC;
+		}
+		try {
+			StormGridhttps.useHttp = getConfigurationValue(configuration, "server", "enabled_http", boolean.class);
+		} catch (Exception e) {
+			StormGridhttps.useHttp = DefaultConfiguration.STORM_GRIDHTTPS_USE_HTTP;
+		}
+		try {
+			StormGridhttps.httpPort = getConfigurationValue(configuration, "server", "http_port", int.class);
+		} catch (Exception e) {
+			StormGridhttps.httpPort = DefaultConfiguration.STORM_GRIDHTTPS_HTTP_PORT;
+		}
+		try {
+			StormGridhttps.httpsPort = getConfigurationValue(configuration, "server", "https_port", int.class);
+		} catch (Exception e) {
+			StormGridhttps.httpsPort = DefaultConfiguration.STORM_GRIDHTTPS_HTTPS_PORT;
+		}
+		try {
+			StormGridhttps.webappsDir = getConfigurationValue(configuration, "server", "webapps_directory");
+		} catch (Exception e) {
+			StormGridhttps.webappsDir = DefaultConfiguration.WEBAPPS_DIRECTORY_ROOT;
+		}
+		java.net.InetAddress localMachine = java.net.InetAddress.getLocalHost();
+		StormGridhttps.hostname = localMachine.getHostName();
 		SSLOptions ssloptions = new SSLOptions();
 		ssloptions.setCertificateFile(getConfigurationValue(configuration, "server", "certificate_file"));
 		ssloptions.setKeyFile(getConfigurationValue(configuration, "server", "key_file"));
 		ssloptions.setTrustStoreDirectory(getConfigurationValue(configuration, "server", "trust_store_directory"));
-		java.net.InetAddress localMachine = java.net.InetAddress.getLocalHost();
-		log.debug("Local hostname = " + localMachine.getHostName());
-		options = new ServerInfo(localMachine.getHostName(), httpPort, httpsPort, ssloptions, useHttp);
-		log.debug("stormBEHostname = " + stormBEHostname);
-		log.debug("stormBEServicePort = " + stormBEServicePort);
-		log.debug("stormBEPort = " + stormBEPort);
-		log.debug("stormFEHostname = " + stormFEHostname);
-		log.debug("stormFEPort = " + stormFEPort);
-		log.debug("gridhttpsContextPath = " + gridhttpsContextPath);
-		log.debug("gridhttpsContextSpec = " + gridhttpsContextSpec);
-		log.debug("useHttp = " + useHttp);
-		log.debug("httpPort = " + httpPort);
-		log.debug("httpsPort = " + httpsPort);
-		log.debug("ssloptions.certificateFile = " + ssloptions.getCertificateFile());
-		log.debug("ssloptions.KeyFile = " + ssloptions.getKeyFile());
-		log.debug("ssloptions.TrustStoreDirectory = " + ssloptions.getTrustStoreDirectory());
+		StormGridhttps.options = new ServerInfo(StormGridhttps.hostname, StormGridhttps.httpPort, StormGridhttps.httpsPort, ssloptions,
+				StormGridhttps.useHttp);
+
 	}
 
 	private static void configureWebFile(File webFile, StorageArea SA) throws Exception {
@@ -203,16 +305,16 @@ public class Main {
 		((Element) initParams.item(1)).setTextContent(contextPath);
 		log.debug("setting protocol as '" + protocol + "'...");
 		((Element) initParams.item(2)).setTextContent(protocol);
-		log.debug("setting storm backend hostname as '" + stormBEHostname + "'...");
-		((Element) initParams.item(3)).setTextContent(stormBEHostname);
-		log.debug("setting storm backend port as '" + stormBEPort + "'...");
-		((Element) initParams.item(4)).setTextContent(String.valueOf(stormBEPort));
-		log.debug("setting storm backend service port as '" + stormBEServicePort + "'...");
-		((Element) initParams.item(5)).setTextContent(String.valueOf(stormBEServicePort));
-		log.debug("setting storm frontend hostname as '" + stormFEHostname + "'...");
-		((Element) initParams.item(6)).setTextContent(stormFEHostname);
-		log.debug("setting storm frontend port as '" + stormFEPort + "'...");
-		((Element) initParams.item(7)).setTextContent(String.valueOf(stormFEPort));
+		log.debug("setting storm backend hostname as '" + StormBackend.hostname + "'...");
+		((Element) initParams.item(3)).setTextContent(StormBackend.hostname);
+		log.debug("setting storm backend port as '" + StormBackend.port + "'...");
+		((Element) initParams.item(4)).setTextContent(String.valueOf(StormBackend.port));
+		log.debug("setting storm backend service port as '" + StormBackend.servicePort + "'...");
+		((Element) initParams.item(5)).setTextContent(String.valueOf(StormBackend.servicePort));
+		log.debug("setting storm frontend hostname as '" + StormFrontend.hostname + "'...");
+		((Element) initParams.item(6)).setTextContent(StormFrontend.hostname);
+		log.debug("setting storm frontend port as '" + StormFrontend.port + "'...");
+		((Element) initParams.item(7)).setTextContent(String.valueOf(StormFrontend.port));
 		doc.save();
 	}
 
