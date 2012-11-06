@@ -149,13 +149,17 @@ public class WebDAVServer {
 		this.contextHandlerCollection.removeHandler(context);
 		webapps.remove(webapp);
 		
-		FileUtils.deleteDirectory(new File(webapp.getFsPath()));
+		File dirToDelete = new File(webapp.getFsPath());
+		if (dirToDelete.exists())
+			FileUtils.deleteDirectory(dirToDelete);
 	}
 
 	public void undeployAll() throws Exception {
 		while (!webapps.isEmpty())
 			undeploy(webapps.get(0));
-		FileUtils.deleteDirectory(new File(this.webappsDirectory));
+		File dirToDelete = new File(this.webappsDirectory);
+		if (dirToDelete.exists())
+			FileUtils.deleteDirectory(dirToDelete);
 	}
 
 }

@@ -75,7 +75,7 @@ JAVA=$JAVA_HOME/bin/java
 
 
 if [ -z $STORM_USER ]; then
-   STORM_USER=storm
+   STORM_USER=gridhttps
 fi
 if ! su "$STORM_USER" -s /bin/sh -c "test -w '$STORM_LOGDIR'"; then
     chown -R $STORM_USER:$STORM_USER $STORM_LOGDIR
@@ -117,13 +117,13 @@ start () {
         run () { "$@" 1> /dev/null 2>&1 & : ; }
 
 	echo -n "Starting $NAME as user \"$STORM_USER\"..."
-	cd /usr/share/java/storm-gridhttps
+	cd /usr/share/java/storm-gridhttps-server
         export PATH=$JAVA_HOME/bin:$PATH
         run su "$STORM_USER" -m -s /bin/sh -c "java \
                 -Dstorm.log.dir='$STORM_LOGDIR' \
-                -jar /usr/share/java/storm-gridhttps/storm-gridhttps-server.jar \
-	        -w /usr/share/java/storm-gridhttps/webapp.war \
-	        -conf /etc/storm/gridhttps/conf/server.conf \
+                -jar /usr/share/java/storm-gridhttps-server/storm-gridhttps-server.jar \
+	        -w /usr/share/java/storm-gridhttps-server/webapp.war \
+	        -conf /etc/storm/gridhttps-server/server.conf \
 	        1>$STORM_LOGDIR/storm-gridhttps.stdout \
         	2>$STORM_LOGDIR/storm-gridhttps.stderr "
     ppid="$!"

@@ -29,7 +29,7 @@ public class Main {
 
 	private class DefaultConfiguration {
 		public final static String STORM_GRIDHTTPS_CONTEXT_PATH = "gridhttps_webapp";
-		public final static String STORM_GRIDHTTPS_CONTEXT_SPEC = "resourcemapping";
+		public final static String STORM_GRIDHTTPS_CONTEXT_SPEC = "resourceMapping";
 		public final static int STORM_BE_SERVICE_PORT = 9998;
 		public final static int STORM_BE_PORT = 8080;
 		public final static int STORM_FE_PORT = 8444;

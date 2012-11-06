@@ -10,6 +10,7 @@ import java.io.OutputStream;
 public class FileUtils {
 	
 	public static boolean deleteDirectory(File path) throws IOException {
+		if (!path.exists()) return false;
 		File[] files = path.listFiles();
 		for (int i = 0; i < files.length; i++) {
 			if (files[i].isDirectory()) {

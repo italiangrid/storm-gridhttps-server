@@ -6,6 +6,80 @@
 	<version>1.0</version>
 	<packaging>pom</packaging>
 
+	<repositories>
+		<repository>
+			<id>cnaf-snapshots</id>
+			<name>CNAF snapshots</name>
+			<url>http://radiohead.cnaf.infn.it:8081/nexus/content/repositories/cnaf-snapshots/</url>
+			<snapshots>
+				<enabled>true</enabled>
+			</snapshots>
+		</repository>
+		<repository>
+			<id>cnaf-repositories</id>
+			<name>CNAF repositories</name>
+			<url>http://radiohead.cnaf.infn.it:8081/nexus/content/repositories/public/</url>
+		</repository>
+	</repositories>
+
+	<properties>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+		<logbackVersion>1.0.6</logbackVersion>
+		<slf4jVersion>1.6.6</slf4jVersion>
+		<httpsutilsVersion>0.0.1-SNAPSHOT</httpsutilsVersion>
+		<httpcoreVersion>4.2.2</httpcoreVersion>
+		<httpclientVersion>4.2.1</httpclientVersion>
+		<javaxVersion>3.0.0.v201112011016</javaxVersion>
+	</properties>
+
+	<dependencyManagement>
+		<dependencies>
+			<!-- logging libraries: logback -->
+			<dependency>
+				<groupId>org.slf4j</groupId>
+				<artifactId>slf4j-api</artifactId>
+				<version>${slf4jVersion}</version>
+			</dependency>
+			<dependency>
+				<groupId>ch.qos.logback</groupId>
+				<artifactId>logback-classic</artifactId>
+				<version>${logbackVersion}</version>
+			</dependency>
+			<dependency>
+				<groupId>ch.qos.logback</groupId>
+				<artifactId>logback-core</artifactId>
+				<version>${logbackVersion}</version>
+			</dependency>
+
+			<!-- ssl server: https-utils library -->
+			<dependency>
+				<groupId>org.italiangrid</groupId>
+				<artifactId>https-utils</artifactId>
+				<version>${httpsutilsVersion}</version>
+			</dependency>
+
+			<dependency>
+				<groupId>org.apache.httpcomponents</groupId>
+				<artifactId>httpcore</artifactId>
+				<version>${httpcoreVersion}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.apache.httpcomponents</groupId>
+				<artifactId>httpclient</artifactId>
+				<version>${httpclientVersion}</version>
+			</dependency>
+
+			<dependency>
+				<groupId>org.eclipse.jetty.orbit</groupId>
+				<artifactId>javax.servlet</artifactId>
+				<version>${javaxVersion}</version>
+			</dependency>
+
+
+		</dependencies>
+	</dependencyManagement>
+
 	<modules>
 		<module>server</module>
 		<module>webapp</module>
