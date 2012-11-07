@@ -126,8 +126,8 @@ start () {
 	        -w /usr/share/java/storm-gridhttps-server/webapp.war \
             -ftw /usr/share/java/storm-gridhttps-server/ftwebapp.war \
 	        -conf /etc/storm/gridhttps-server/server.conf \
-	        1>$STORM_LOGDIR/storm-gridhttps.stdout \
-        	2>$STORM_LOGDIR/storm-gridhttps.stderr "
+	        1>$STORM_LOGDIR/storm-gridhttps-server.stdout \
+        	2>$STORM_LOGDIR/storm-gridhttps-server.stderr "
     ppid="$!"
     pid=`ps --ppid $ppid -o pid | grep -v PID | xargs ps --ppid 2> /dev/null | grep -v PID | awk '{print $1}'`
     if [[ "x" == "x"$pid || ! -d /proc/$pid ]]; then

@@ -4,7 +4,7 @@
 	xsi:schemaLocation="http://java.sun.com/xml/ns/j2ee http://java.sun.com/xml/ns/j2ee/web-app_2_4.xsd"
 	version="2.4">
 	
-	<filter id="methodFilter">
+	<filter id="ftMethodFilter">
 		<filter-name>ftMethodFilter</filter-name>
 		<filter-class>it.grid.storm.ftwebapp.ftMethodFilter</filter-class>
 		<init-param>

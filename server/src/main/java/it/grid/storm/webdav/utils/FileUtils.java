@@ -26,7 +26,7 @@ public class FileUtils {
 
 		if (src.isDirectory()) {
 			if (!dest.exists()) {
-				dest.mkdir();
+				dest.mkdirs();
 			}
 			String files[] = src.list();
 			for (String file : files) {

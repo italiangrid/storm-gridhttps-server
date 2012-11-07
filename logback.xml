@@ -1,11 +1,11 @@
 <configuration>
 
 	<appender name="PROCESS" class="ch.qos.logback.core.FileAppender">
-		<file>${storm.log.dir}/storm-gridhttps.log</file>
+		<file>${storm.log.dir}/storm-gridhttps-server.log</file>
 		<ImmediateFlush>true</ImmediateFlush>
 
 		<rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-			<FileNamePattern>${storm.log.dir}/storm-gridhttps-%d{yyyy-MM-dd}.log.gz</FileNamePattern>
+			<FileNamePattern>${storm.log.dir}/storm-gridhttps-server-%d{yyyy-MM-dd}.log.gz</FileNamePattern>
             <MaxHistory>60</MaxHistory>
         </rollingPolicy>
 
@@ -27,11 +27,11 @@
 		</layout>
 	</appender>
 	
-	<logger name="io.milton" level="INFO">
+	<logger name="io.milton" level="DEBUG">
 		<appender-ref ref="PROCESS" />
 	</logger>
 
-	<logger name="it.grid.storm" level="INFO">
+	<logger name="it.grid.storm" level="DEBUG">
 		<appender-ref ref="PROCESS" />
 	</logger>
 

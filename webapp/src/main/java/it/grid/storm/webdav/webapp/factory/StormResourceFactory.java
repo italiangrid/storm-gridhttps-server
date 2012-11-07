@@ -12,7 +12,6 @@ import it.grid.storm.xmlrpc.ApiException;
 import it.grid.storm.xmlrpc.BackendApi;
 
 import java.io.File;
-import java.net.MalformedURLException;
 import java.net.UnknownHostException;
 
 import org.slf4j.Logger;
