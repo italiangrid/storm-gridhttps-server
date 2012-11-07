@@ -12,8 +12,7 @@
  */
 package it.grid.storm.gridhttps.servlet;
 
-import it.grid.storm.gridhttps.Configuration;
-import it.grid.storm.gridhttps.log.LoggerManager;
+//import it.grid.storm.gridhttps.Configuration;
 import it.grid.storm.storagearea.StorageArea;
 import it.grid.storm.storagearea.StorageAreaManager;
 
@@ -25,7 +24,9 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import org.apache.log4j.Logger;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @author Michele Dibenedetto
@@ -33,12 +34,14 @@ import org.apache.log4j.Logger;
 public class MapperServlet extends HttpServlet
 {
 
-    private static Logger log = LoggerManager.getLogger(MapperServlet.class);
+    private static Logger log = LoggerFactory.getLogger(MapperServlet.class);
     /**
      * 
      */
     private static final long serialVersionUID = 293463225950571516L;
     private static final String PATH_PARAMETER_KEY = "path";
+    private static final String MAPPER_SERVLET_ENCODING_SCHEME = "UTF-8";
+    private static final String MAPPER_SERVLET_CONTEXT_PATH = "/fileTransfer";
 
 
     /* (non-Javadoc)
@@ -51,7 +54,7 @@ public class MapperServlet extends HttpServlet
         String pathDecoded;
         try
         {
-            pathDecoded = URLDecoder.decode(path, Configuration.MAPPER_SERVLET_ENCODING_SCHEME);
+            pathDecoded = URLDecoder.decode(path, MAPPER_SERVLET_ENCODING_SCHEME);
         }
         catch (UnsupportedEncodingException e)
         {
@@ -103,7 +106,7 @@ public class MapperServlet extends HttpServlet
     private String getStfnPath(String path, StorageArea SA)
     {
         log.debug("Building StfnPath for path " + path + " in StorageArea " + SA.getName());
-        String Stfnpath = SA.getStfnRoot() + path.substring(SA.getFSRoot().length(), path.length());
+        String Stfnpath = MAPPER_SERVLET_CONTEXT_PATH + SA.getStfnRoot() + path.substring(SA.getFSRoot().length(), path.length());
         log.debug("Stfnpath is \'" + Stfnpath + "\'");
         return Stfnpath;
     }

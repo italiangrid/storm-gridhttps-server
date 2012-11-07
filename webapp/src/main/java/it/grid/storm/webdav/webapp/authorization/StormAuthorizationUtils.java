@@ -31,6 +31,7 @@ import org.apache.http.client.utils.URLEncodedUtils;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.message.BasicNameValuePair;
 import org.italiangrid.utils.voms.VOMSSecurityContext;
+import org.italiangrid.voms.VOMSAttribute;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -125,18 +126,22 @@ public class StormAuthorizationUtils {
 	}
 
 	public static ArrayList<String> getUserFQANs(VOMSSecurityContext vomsSecurityContext) {
-		ArrayList<String> fqans = new ArrayList<String>();
+		ArrayList<String> fqansStr = new ArrayList<String>();
 		if (vomsSecurityContext.isEmpty())
-			return fqans;
-		String[] userFQANs = vomsSecurityContext.getFQANs();
-		for (String s : userFQANs)
-			fqans.add(s);
+			return fqansStr;
+		List<VOMSAttribute> vomsAttrs = vomsSecurityContext.getVOMSAttributes();
+		if (vomsAttrs == null)
+			return fqansStr;
+		for (VOMSAttribute voms : vomsAttrs) {
+			for (String s : voms.getFQANs())
+				fqansStr.add(s);
+		}
 		/******************************** TEST ***********************************/
-//		fqans.clear();
-//		fqans.add("/dteam/Role=NULL/Capability=NULL");
-//		fqans.add("/dteam/NGI_IT/Role=NULL/Capability=NULL");
+//		fqansStr.clear();
+//		fqansStr.add("/dteam/Role=NULL/Capability=NULL");
+//		fqansStr.add("/dteam/NGI_IT/Role=NULL/Capability=NULL");
 		/******************************** TEST ***********************************/
-		return fqans;
+		return fqansStr;
 	}
 
 	public static ArrayList<String> getUserFQANs(HttpServletRequest HTTPRequest) {

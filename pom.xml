@@ -27,7 +27,8 @@
 		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 		<logbackVersion>1.0.6</logbackVersion>
 		<slf4jVersion>1.6.6</slf4jVersion>
-		<httpsutilsVersion>0.0.1-SNAPSHOT</httpsutilsVersion>
+		<httpsutilsVersion>0.5-SNAPSHOT</httpsutilsVersion>
+		<canlVersion>1.1.0-rc1</canlVersion>
 		<httpcoreVersion>4.2.2</httpcoreVersion>
 		<httpclientVersion>4.2.1</httpclientVersion>
 		<javaxVersion>3.0.0.v201112011016</javaxVersion>
@@ -58,6 +59,11 @@
 				<artifactId>https-utils</artifactId>
 				<version>${httpsutilsVersion}</version>
 			</dependency>
+			<dependency>
+				<groupId>eu.eu-emi.security</groupId>
+				<artifactId>canl</artifactId>
+				<version>${canlVersion}</version>
+			</dependency>
 
 			<dependency>
 				<groupId>org.apache.httpcomponents</groupId>
@@ -80,9 +86,23 @@
 		</dependencies>
 	</dependencyManagement>
 
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<configuration>
+					<source>1.5</source>
+					<target>1.5</target>
+				</configuration>
+			</plugin>
+		</plugins>
+	</build>
+
 	<modules>
 		<module>server</module>
 		<module>webapp</module>
+		<module>ftwebapp</module>
 	</modules>
 
 </project>

@@ -41,7 +41,8 @@ public class Main {
 
 	private static Logger log; // = LoggerFactory.getLogger(Main.class);
 
-	private static String warTemplateFile;
+	private static String webDAVTemplate;
+	private static String fileTransferTemplate;
 
 	private static class StormBackend {
 		public static String hostname;
@@ -131,33 +132,57 @@ public class Main {
 			// lock.wait(3 * 1000);
 			// }
 			server = new WebDAVServer(StormGridhttps.options);
-			log.info("Setting webapps directory to '" + StormGridhttps.webappsDir + StormGridhttps.WEBAPPS_DIRECTORY_NAME + "'");
 			server.setWebappsDirectory(StormGridhttps.webappsDir + StormGridhttps.WEBAPPS_DIRECTORY_NAME);
-			log.info("Retrieving the Storage Area list from Storm Backend...");
 			StorageAreaManager.init(StormBackend.hostname, StormBackend.servicePort);
-			log.info("Deploying webapps...");
-			String tempDir = server.getWebappsDirectory() + "/.tmp_" + new Timestamp((new Date()).getTime());
-			log.info("Decompressing the template file '" + warTemplateFile + "' on '" + tempDir + "'...");
-			File templateDir = new File(tempDir);
-			templateDir.mkdir();
-			(new Zip()).unzip(warTemplateFile, tempDir);
+
+			String webdavTempDir = server.getWebappsDirectory() + "/.tmp_" + new Timestamp((new Date()).getTime()) + "/WebDAV";
+			log.info("Decompress '" + webDAVTemplate + "' on '" + webdavTempDir + "'...");
+			File webdavTemplateDirectory = new File(webdavTempDir); 
+			webdavTemplateDirectory.mkdir();
+			(new Zip()).unzip(webDAVTemplate, webdavTempDir);
+			
+			String fileTransferTempDir = server.getWebappsDirectory() + "/.tmp_" + new Timestamp((new Date()).getTime()) + "/FileTransfer";
+			log.info("Decompress '" + fileTransferTemplate + "' on '" + fileTransferTempDir + "'...");
+			File fileTransferTemplateDirectory = new File(fileTransferTempDir); 
+			fileTransferTemplateDirectory.mkdir();
+			(new Zip()).unzip(fileTransferTemplate, fileTransferTempDir);
+			
 			for (StorageArea SA : StorageAreaManager.getInstance().getStorageAreas()) {
 				if (SA.getProtocol() == StorageArea.NONE_PROTOCOL)
 					continue;
-				File webappDir = new File(server.getWebappsDirectory() + "/" + SA.getStfnRoot());
-				log.info("Copying the template directory on '" + webappDir.getPath() + "'...");
-				FileUtils.copyFolder(templateDir, webappDir);
+				
+				/* WebDAV-WebApp */
+				File webappDir = new File(server.getWebappsDirectory() + "/WebDAV/ " + SA.getStfnRoot());
+				log.info("Copy '" + webdavTemplateDirectory.getPath() + "' to '" + webappDir.getPath() + "'...");
+				FileUtils.copyFolder(webdavTemplateDirectory, webappDir);
 				File webFile = new File(webappDir.getAbsolutePath() + "/WEB-INF/web.xml");
-				log.info("Configuring the web.xml file '" + webFile.getPath() + "'...");
+				log.info("Configuring '" + webFile.getPath() + "'...");
 				configureWebFile(webFile, SA);
 				log.info("Deploying '" + SA.getName() + "' webapp...");
-				server.deploy(new WebApp(webappDir, SA));
+				server.deploy(new WebDAVWebApp(webappDir, SA));
+				
+				/* FileTransfer-WebApp */
+				webappDir = new File(server.getWebappsDirectory() + "/FileTransfer/ " + SA.getStfnRoot());
+				log.info("Copy '" + webdavTemplateDirectory.getPath() + "' to '" + webappDir.getPath() + "'...");
+				FileUtils.copyFolder(webdavTemplateDirectory, webappDir);
+				webFile = new File(webappDir.getAbsolutePath() + "/WEB-INF/web.xml");
+				log.info("Configuring '" + webFile.getPath() + "'...");
+				configureFTWebFile(webFile, SA);
+				File contextFile = new File(webappDir.getAbsolutePath() + "/WEB-INF/classes/applicationContext.xml");
+				log.info("Configuring '" + webFile.getPath() + "'...");
+				configureContextFile(contextFile, SA);
+				log.info("Deploying '" + SA.getName() + "' webapp...");
+				server.deploy(new FileTransferWebApp(webappDir, SA));
+				
 			}
+			/* Mapper Servlet */
 			server.deployGridHTTPs(StormGridhttps.contextPath, StormGridhttps.contextSpec);
+			
 			log.info("Starting WebDAV-server...");
 			server.start();
 			server.status();
-			FileUtils.deleteDirectory(templateDir);
+			FileUtils.deleteDirectory(webdavTemplateDirectory);
+			FileUtils.deleteDirectory(fileTransferTemplateDirectory);
 		} catch (Exception e) {
 			log.error(e.getMessage());
 			e.printStackTrace();
@@ -196,14 +221,16 @@ public class Main {
 
 	private static void parseCommandLine(String[] args) throws Exception {
 		MyCommandLineParser cli = new MyCommandLineParser(args);
-		cli.addOption("w", "the absolute file path of the WebDAV template webapp [mandatory]", true, true);
-		cli.addOption("dir", "the absolute file path of the WebDAV webapps deployed directory", true, false);
-		cli.addOption("conf", "the absolute file path of server's configuration file [mandatory]", true, true);
-		if (cli.hasOption("conf"))
-			configurationFile = cli.getString("conf");
+		cli.addOption("w", "the absolute file path of the WebDAV webapp template [mandatory]", true, true);
+		cli.addOption("ftw", "the absolute file path of the file transfer webapp template [mandatory]", true, true);
+		cli.addOption("conf", "the absolute file path of the server configuration file [mandatory]", true, true);
+		cli.addOption("dir", "the absolute file path of the deployed webapps directory", true, false);
+		webDAVTemplate = cli.getString("w");
+		fileTransferTemplate = cli.getString("ftw");
+		configurationFile = cli.getString("conf");
 		if (cli.hasOption("dir"))
 			StormGridhttps.webappsDir = cli.getString("dir");
-		warTemplateFile = cli.getString("w");
+		
 	}
 
 	private static String getConfigurationValue(Wini configuration, String sectionName, String fieldName) throws Exception {
@@ -317,5 +344,38 @@ public class Main {
 		((Element) initParams.item(7)).setTextContent(String.valueOf(StormFrontend.port));
 		doc.save();
 	}
+	
+	private static void configureContextFile(File contextFile, StorageArea SA) throws Exception {
+		// modify web.xml file
+		String rootDirectory = SA.getFSRoot();
+		String contextPath = SA.getStfnRoot().substring(1);
+		XML doc = new XML(contextFile);
+		String query = "/spring:beans/spring:bean[@id='milton.fs.resource.factory']/spring:property";
+		NodeList properties = doc.getNodes(query, new WebNamespaceContext(null));
+		log.debug("setting root directory as '" + rootDirectory + "'...");
+		((Element) properties.item(2)).setTextContent(rootDirectory);
+		log.debug("setting context path as '" + contextPath + "'...");
+		((Element) properties.item(3)).setTextContent(contextPath);
+		doc.save();
+	}
 
+	private static void configureFTWebFile(File webFile, StorageArea SA) throws Exception {
+		// modify web.xml file
+		String protocol = StorageArea.protocolToStr(SA.getProtocol());
+		XML doc = new XML(webFile);
+		String query = "/j2ee:web-app/j2ee:filter[@id='ftMethodFilter']/j2ee:init-param/j2ee:param-value";
+		NodeList initParams = doc.getNodes(query, new WebNamespaceContext(null));
+		String protocolStr = "";
+		if (protocol.equals(StorageArea.HTTP_PROTOCOL)) {
+			protocolStr = "HTTP";
+		} else if (protocol.equals(StorageArea.HTTPS_PROTOCOL)) {
+			protocolStr = "HTTPS";
+		} else if (protocol.equals(StorageArea.HTTP_AND_HTTPS_PROTOCOLS)) {
+			protocolStr = "HTTP,HTTPS";
+		}
+		log.debug("setting protocol as '" + protocolStr + "'...");
+		((Element) initParams.item(1)).setTextContent(protocolStr);
+		doc.save();
+	}
+	
 }

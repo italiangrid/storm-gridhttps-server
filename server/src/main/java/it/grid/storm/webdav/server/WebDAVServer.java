@@ -71,6 +71,7 @@ public class WebDAVServer {
 
 	public void setWebappsDirectory(String webappsDirectory) {
 		this.webappsDirectory = webappsDirectory;
+		log.debug("webapps drectory: " + webappsDirectory);
 	}
 
 	public void start() throws Exception {

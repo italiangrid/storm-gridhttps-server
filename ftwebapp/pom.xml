@@ -6,7 +6,7 @@
 		<artifactId>storm-gridhttps</artifactId>
 		<version>1.0</version>
 	</parent>
-	<artifactId>webapp</artifactId>
+	<artifactId>ftwebapp</artifactId>
 	<packaging>war</packaging>
 	<name>${project.artifactId}</name>
 
@@ -40,10 +40,6 @@
 			<artifactId>slf4j-api</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>org.italiangrid</groupId>
-			<artifactId>https-utils</artifactId>
-		</dependency>
-		<dependency>
 			<groupId>org.apache.httpcomponents</groupId>
 			<artifactId>httpclient</artifactId>
 		</dependency>
@@ -51,10 +47,7 @@
 			<groupId>org.apache.httpcomponents</groupId>
 			<artifactId>httpcore</artifactId>
 		</dependency>
-		<dependency>
-			<groupId>eu.eu-emi.security</groupId>
-			<artifactId>canl</artifactId>
-		</dependency>
+
 
 		<dependency>
 			<groupId>io.milton</groupId>
@@ -108,18 +101,6 @@
 		<dependency>
 			<groupId>org.eclipse.jetty.orbit</groupId>
 			<artifactId>javax.servlet</artifactId>
-		</dependency>
-
-		<dependency>
-			<groupId>emi</groupId>
-			<artifactId>trustmanager</artifactId>
-			<version>${trustmanagerVersion}</version>
-		</dependency>
-
-		<dependency>
-			<groupId>igi.storm.backend</groupId>
-			<artifactId>xmlrpc-api</artifactId>
-			<version>${apibackendVersion}</version>
 		</dependency>
 
 	</dependencies>

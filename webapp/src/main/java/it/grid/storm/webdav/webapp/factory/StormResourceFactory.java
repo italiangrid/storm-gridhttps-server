@@ -85,14 +85,6 @@ public final class StormResourceFactory implements ResourceFactory {
 			return resolveFile(host, requested);
 		}
 		return null;
-//		RemoteResource rr;
-//		try {
-//			rr =  new RemoteResource(host + "/" + url);
-//		} catch (MalformedURLException e) {
-//			log.error(e.getMessage());
-//			return null;
-//		}
-//		return rr;
 	}
 
 	public StormResource resolveFile(String host, File file) {

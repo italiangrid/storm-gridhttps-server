@@ -120,9 +120,11 @@ start () {
 	cd /usr/share/java/storm-gridhttps-server
         export PATH=$JAVA_HOME/bin:$PATH
         run su "$STORM_USER" -m -s /bin/sh -c "java \
+                ${STORM_DEBUG_OPTION} \
                 -Dstorm.log.dir='$STORM_LOGDIR' \
                 -jar /usr/share/java/storm-gridhttps-server/storm-gridhttps-server.jar \
 	        -w /usr/share/java/storm-gridhttps-server/webapp.war \
+            -ftw /usr/share/java/storm-gridhttps-server/ftwebapp.war \
 	        -conf /etc/storm/gridhttps-server/server.conf \
 	        1>$STORM_LOGDIR/storm-gridhttps.stdout \
         	2>$STORM_LOGDIR/storm-gridhttps.stderr "

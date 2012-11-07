@@ -7,7 +7,7 @@ import java.io.File;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class WebApp {
+public abstract class WebApp {
 
 	private static final Logger log = LoggerFactory.getLogger(WebApp.class);
 	
@@ -26,10 +26,6 @@ public class WebApp {
 		this.setProtocol(protocol);
 		this.setFsPath(baseDirectory.getPath());
 		
-	}
-
-	public WebApp(File baseDirectory, StorageArea SA) throws Exception {
-		this(baseDirectory, SA.getStfnRoot(), SA.getFSRoot(), SA.getProtocol());
 	}
 
 	public String getContextPath() {
