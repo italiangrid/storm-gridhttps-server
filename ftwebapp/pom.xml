@@ -13,8 +13,6 @@
 	<properties>
 		<miltonVersion>2.2.0</miltonVersion>
 		<springVersion>3.1.2.RELEASE</springVersion>
-		<!-- <httpComponentsVersion>4.2.1</httpComponentsVersion> -->
-		<!-- <javaxServletVersion>2.5</javaxServletVersion> -->
 		<trustmanagerVersion>3.0.5</trustmanagerVersion>
 		<apibackendVersion>0.0.14</apibackendVersion>
 		<commonsIOVersion>1.4</commonsIOVersion>
@@ -36,12 +34,13 @@
 		<!-- </dependency> -->
 
 		<dependency>
+			<groupId>org.italiangrid</groupId>
+			<artifactId>voms-api-java</artifactId>
+		</dependency>
+
+		<dependency>
 			<groupId>org.slf4j</groupId>
 			<artifactId>slf4j-api</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.italiangrid</groupId>
-			<artifactId>https-utils</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.httpcomponents</groupId>
@@ -50,10 +49,6 @@
 		<dependency>
 			<groupId>org.apache.httpcomponents</groupId>
 			<artifactId>httpcore</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>eu.eu-emi.security</groupId>
-			<artifactId>canl</artifactId>
 		</dependency>
 
 		<dependency>
@@ -104,12 +99,6 @@
 			<artifactId>commons-lang</artifactId>
 			<version>${commonsLangVersion}</version>
 		</dependency>
-
-		<dependency>
-			<groupId>org.eclipse.jetty.orbit</groupId>
-			<artifactId>javax.servlet</artifactId>
-		</dependency>
-
 	</dependencies>
 
 	<build>

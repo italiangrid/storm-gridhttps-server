@@ -74,13 +74,35 @@ public class StormAuthorizationUtils {
 	}
 
 	public static VOMSSecurityContext getVomsSecurityContext(HttpServletRequest HTTPRequest) {
+
 		VOMSSecurityContext.clearCurrentContext();
-		VOMSSecurityContext vomsSecurityContext = new VOMSSecurityContext();
-		VOMSSecurityContext.setCurrentContext(vomsSecurityContext);
+		VOMSSecurityContext sc = new VOMSSecurityContext();
+		VOMSSecurityContext.setCurrentContext(sc);
 		X509Certificate[] certChain = HTTPHelper.getX509Certificate();
 		if (certChain != null)
-			vomsSecurityContext.setClientCertChain(certChain);
-		return vomsSecurityContext;
+			sc.setClientCertChain(certChain);
+		
+		return sc;
+//		BigInteger sn = sc.getClientCert().getSerialNumber();
+//		String serialNumber = (sn == null) ? "NULL" : sn.toString();
+//		List<VOMSAttribute> vomsAttributes = sc.getVOMSAttributes();
+//		String vomsAttrsString = "No valid VOMS attributes found.";
+//		if (vomsAttributes.size() > 0)
+//			vomsAttrsString = String.format("VOMS attributes: %s .",StringUtils.join(vomsAttributes,","));
+//		String connectionMessage = String.format("Connection from '%s' by '%s' (issued by '%s') serial: %s. %s", 
+//				request.getRemoteAddr(),
+//				sc.getClientDN().getRFCDNv2(),
+//				sc.getIssuerDN().getRFCDNv2(),
+//				serialNumber,
+//				vomsAttrsString);
+//		
+//		VOMSSecurityContext.clearCurrentContext();
+//		VOMSSecurityContext vomsSecurityContext = new VOMSSecurityContext();
+//		VOMSSecurityContext.setCurrentContext(vomsSecurityContext);
+//		X509Certificate[] certChain = HTTPHelper.getX509Certificate();
+//		if (certChain != null)
+//			vomsSecurityContext.setClientCertChain(certChain);
+//		return vomsSecurityContext;
 	}
 
 	public static boolean protocolAllowed(String requestProtocol) throws Exception {

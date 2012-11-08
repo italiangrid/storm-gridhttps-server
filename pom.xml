@@ -32,6 +32,7 @@
 		<httpcoreVersion>4.2.2</httpcoreVersion>
 		<httpclientVersion>4.2.1</httpclientVersion>
 		<javaxVersion>3.0.0.v201112011016</javaxVersion>
+		<vomsApiVersion>3.0-SNAPSHOT</vomsApiVersion>
 	</properties>
 
 	<dependencyManagement>
@@ -56,8 +57,8 @@
 			<!-- ssl server: https-utils library -->
 			<dependency>
 				<groupId>org.italiangrid</groupId>
-				<artifactId>https-utils</artifactId>
-				<version>${httpsutilsVersion}</version>
+				<artifactId>voms-api-java</artifactId>
+				<version>${vomsApiVersion}</version>
 			</dependency>
 			<dependency>
 				<groupId>eu.eu-emi.security</groupId>
