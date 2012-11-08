@@ -40,6 +40,10 @@
 			<artifactId>slf4j-api</artifactId>
 		</dependency>
 		<dependency>
+			<groupId>org.italiangrid</groupId>
+			<artifactId>https-utils</artifactId>
+		</dependency>
+		<dependency>
 			<groupId>org.apache.httpcomponents</groupId>
 			<artifactId>httpclient</artifactId>
 		</dependency>
@@ -47,7 +51,10 @@
 			<groupId>org.apache.httpcomponents</groupId>
 			<artifactId>httpcore</artifactId>
 		</dependency>
-
+		<dependency>
+			<groupId>eu.eu-emi.security</groupId>
+			<artifactId>canl</artifactId>
+		</dependency>
 
 		<dependency>
 			<groupId>io.milton</groupId>

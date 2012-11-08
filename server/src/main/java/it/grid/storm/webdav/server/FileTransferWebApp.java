@@ -7,7 +7,7 @@ import java.io.File;
 public class FileTransferWebApp extends WebApp{
 
 	public FileTransferWebApp(File baseDirectory, StorageArea SA) throws Exception {
-		super(baseDirectory, "/fileTransfer" + SA.getStfnRoot(), SA.getFSRoot(), SA.getProtocol());
+		super(baseDirectory, "/filetransfer" + SA.getStfnRoot(), SA.getFSRoot(), SA.getProtocol());
 	}
 	
 }
