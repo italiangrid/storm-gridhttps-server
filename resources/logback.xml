@@ -39,14 +39,14 @@
 		<level value="ALL" />
 		<appender-ref ref="STDOUT" />
 	</logger>
-
+                     
 	<logger name="system.err" additivity="false">
 		<level value="ALL" />
 		<appender-ref ref="STDERR" />
 	</logger>
 
-	<root level="ERROR">
-	    <appender-ref ref="PROCESS" />
-	</root>
+<!-- 	<root level="ERROR"> -->
+<!-- 	    <appender-ref ref="PROCESS" /> -->
+<!-- 	</root> -->
 
 </configuration>

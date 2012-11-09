@@ -1,12 +1,12 @@
 package it.grid.storm.webdav.server;
 
-import java.io.File;
-import java.util.ArrayList;
-import java.util.List;
-
 import it.grid.storm.gridhttps.servlet.MapperServlet;
 import it.grid.storm.storagearea.StorageArea;
 import it.grid.storm.webdav.utils.FileUtils;
+
+import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.Handler;
@@ -18,6 +18,7 @@ import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
 import org.eclipse.jetty.webapp.WebAppContext;
 import org.italiangrid.utils.https.ServerFactory;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -41,7 +42,6 @@ public class WebDAVServer {
 	private void initServer() {
 		
 		// Server:
-		log.debug(name + " - creating the ssl server...");
 		server = ServerFactory.newServer(options.getHostname(), options.getHttpsPort(), options.getSslOptions());
 		log.debug(name + " - https port is " + options.getHttpsPort());
 		server.setStopAtShutdown(true);
@@ -93,8 +93,10 @@ public class WebDAVServer {
 		if (options.isHttpEnabled())
 			log.info(name + " - server supports HTTP connections on port " + options.getHttpPort());
 		String status = " - server has " + webapps.size() + " webapp(s) deployed ";
-		for (WebApp w : webapps)
-			status += "\n> '" + w.getContextPath() + "' (root = '" + w.getRootDirectory() + "')";
+		for (WebApp w : webapps) {
+			status += "\n\t";
+			status += "context-path='" + w.getContextPath() + "' ";
+		}			
 		log.info(name + status);
 	}
 

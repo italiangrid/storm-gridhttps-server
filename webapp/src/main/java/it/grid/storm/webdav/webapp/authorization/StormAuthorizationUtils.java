@@ -32,6 +32,7 @@ import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.message.BasicNameValuePair;
 import org.italiangrid.utils.voms.VOMSSecurityContext;
 import org.italiangrid.voms.VOMSAttribute;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -84,13 +85,14 @@ public class StormAuthorizationUtils {
 	}
 
 	public static VOMSSecurityContext getVomsSecurityContext(HttpServletRequest HTTPRequest) {
+		
 		VOMSSecurityContext.clearCurrentContext();
-		VOMSSecurityContext vomsSecurityContext = new VOMSSecurityContext();
-		VOMSSecurityContext.setCurrentContext(vomsSecurityContext);
+		VOMSSecurityContext sc = new VOMSSecurityContext();
+		VOMSSecurityContext.setCurrentContext(sc);
 		X509Certificate[] certChain = StormHTTPHelper.getX509Certificate();
 		if (certChain != null)
-			vomsSecurityContext.setClientCertChain(certChain);
-		return vomsSecurityContext;
+			sc.setClientCertChain(certChain);
+		return sc;
 	}
 
 	public static boolean protocolAllowed(String requestProtocol) throws Exception {
@@ -126,16 +128,16 @@ public class StormAuthorizationUtils {
 	}
 
 	public static ArrayList<String> getUserFQANs(VOMSSecurityContext vomsSecurityContext) {
+		
 		ArrayList<String> fqansStr = new ArrayList<String>();
 		if (vomsSecurityContext.isEmpty())
 			return fqansStr;
 		List<VOMSAttribute> vomsAttrs = vomsSecurityContext.getVOMSAttributes();
-		if (vomsAttrs == null)
-			return fqansStr;
-		for (VOMSAttribute voms : vomsAttrs) {
-			for (String s : voms.getFQANs())
-				fqansStr.add(s);
-		}
+		for (VOMSAttribute voms : vomsAttrs)
+			for (String s : voms.getFQANs()) {
+		    	fqansStr.add(s);
+		    	log.debug("fqan: " + s);
+		    }
 		/******************************** TEST ***********************************/
 //		fqansStr.clear();
 //		fqansStr.add("/dteam/Role=NULL/Capability=NULL");
@@ -154,6 +156,7 @@ public class StormAuthorizationUtils {
 
 	public static boolean isUserAuthorized(String operation, String path) throws Exception, IllegalArgumentException {
 		String userDN = StormAuthorizationUtils.getUserDN();
+		log.debug("DN = " + userDN);
 		ArrayList<String> userFQANs = StormAuthorizationUtils.getUserFQANs();
 		return isUserAuthorized(userDN, userFQANs, operation, path);
 	}
@@ -167,9 +170,7 @@ public class StormAuthorizationUtils {
 			log.error(errorMsg);
 			throw new IllegalArgumentException("Received null mandatory parameter(s)");
 		}
-		
 		URI uri = StormAuthorizationUtils.prepareURI(path, operation, userDN, userFQANs);
-
 		HttpGet httpget = new HttpGet(uri);
 		HttpClient httpclient = new DefaultHttpClient();
 		HttpResponse httpResponse;

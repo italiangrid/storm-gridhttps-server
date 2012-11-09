@@ -74,35 +74,13 @@ public class StormAuthorizationUtils {
 	}
 
 	public static VOMSSecurityContext getVomsSecurityContext(HttpServletRequest HTTPRequest) {
-
 		VOMSSecurityContext.clearCurrentContext();
 		VOMSSecurityContext sc = new VOMSSecurityContext();
 		VOMSSecurityContext.setCurrentContext(sc);
 		X509Certificate[] certChain = HTTPHelper.getX509Certificate();
 		if (certChain != null)
 			sc.setClientCertChain(certChain);
-		
 		return sc;
-//		BigInteger sn = sc.getClientCert().getSerialNumber();
-//		String serialNumber = (sn == null) ? "NULL" : sn.toString();
-//		List<VOMSAttribute> vomsAttributes = sc.getVOMSAttributes();
-//		String vomsAttrsString = "No valid VOMS attributes found.";
-//		if (vomsAttributes.size() > 0)
-//			vomsAttrsString = String.format("VOMS attributes: %s .",StringUtils.join(vomsAttributes,","));
-//		String connectionMessage = String.format("Connection from '%s' by '%s' (issued by '%s') serial: %s. %s", 
-//				request.getRemoteAddr(),
-//				sc.getClientDN().getRFCDNv2(),
-//				sc.getIssuerDN().getRFCDNv2(),
-//				serialNumber,
-//				vomsAttrsString);
-//		
-//		VOMSSecurityContext.clearCurrentContext();
-//		VOMSSecurityContext vomsSecurityContext = new VOMSSecurityContext();
-//		VOMSSecurityContext.setCurrentContext(vomsSecurityContext);
-//		X509Certificate[] certChain = HTTPHelper.getX509Certificate();
-//		if (certChain != null)
-//			vomsSecurityContext.setClientCertChain(certChain);
-//		return vomsSecurityContext;
 	}
 
 	public static boolean protocolAllowed(String requestProtocol) throws Exception {
@@ -142,12 +120,11 @@ public class StormAuthorizationUtils {
 		if (vomsSecurityContext.isEmpty())
 			return fqansStr;
 		List<VOMSAttribute> vomsAttrs = vomsSecurityContext.getVOMSAttributes();
-		if (vomsAttrs == null)
-			return fqansStr;
-		for (VOMSAttribute voms : vomsAttrs) {
-			for (String s : voms.getFQANs())
-				fqansStr.add(s);
-		}
+		for (VOMSAttribute voms : vomsAttrs)
+			for (String s : voms.getFQANs()) {
+		    	fqansStr.add(s);
+		    	log.debug("fqan: " + s);
+		    }
 		/******************************** TEST ***********************************/
 //		fqansStr.clear();
 //		fqansStr.add("/dteam/Role=NULL/Capability=NULL");

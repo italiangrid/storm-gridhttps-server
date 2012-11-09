@@ -24,7 +24,8 @@ public class PutMethodAuthorization extends AbstractMethodAuthorization {
 	
 	public boolean isOverwriteRequest() {
 		String overwrite = getOverwriteHeader();
-		return ((overwrite == null) || (overwrite.equals("T")));		
+		return ((overwrite != null) && (overwrite.equals("T")));
+//		return ((overwrite == null) || (overwrite.equals("T")));		
 	}
 	
 }

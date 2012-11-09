@@ -122,7 +122,7 @@ start () {
         run su "$STORM_USER" -m -s /bin/sh -c "java \
                 ${STORM_DEBUG_OPTION} \
                 -Dstorm.log.dir='$STORM_LOGDIR' \
-                -jar /usr/share/java/storm-gridhttps-server/storm-gridhttps-server.jar \
+                -jar /usr/share/java/storm-gridhttps-server/server.jar \
 	        -w /usr/share/java/storm-gridhttps-server/webapp.war \
             -ftw /usr/share/java/storm-gridhttps-server/ftwebapp.war \
 	        -conf /etc/storm/gridhttps-server/server.conf \

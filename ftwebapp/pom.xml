@@ -3,44 +3,25 @@
 	<modelVersion>4.0.0</modelVersion>
 	<parent>
 		<groupId>it.grid.storm</groupId>
-		<artifactId>storm-gridhttps</artifactId>
-		<version>1.0</version>
+		<artifactId>storm-gridhttps-server</artifactId>
+		<version>2.0.0</version>
 	</parent>
 	<artifactId>ftwebapp</artifactId>
 	<packaging>war</packaging>
 	<name>${project.artifactId}</name>
 
-	<properties>
-		<miltonVersion>2.2.0</miltonVersion>
-		<springVersion>3.1.2.RELEASE</springVersion>
-		<trustmanagerVersion>3.0.5</trustmanagerVersion>
-		<apibackendVersion>0.0.14</apibackendVersion>
-		<commonsIOVersion>1.4</commonsIOVersion>
-		<commonsLangVersion>2.3</commonsLangVersion>
-	</properties>
-
-	<repositories>
-		<repository>
-			<id>ettrema-repo</id>
-			<url>http://www.ettrema.com/maven2</url>
-		</repository>
-	</repositories>
-
 	<dependencies>
-
-		<!-- <dependency> -->
-		<!-- <groupId>ch.qos.logback</groupId> -->
-		<!-- <artifactId>logback-classic</artifactId> -->
-		<!-- </dependency> -->
-
-		<dependency>
-			<groupId>org.italiangrid</groupId>
-			<artifactId>voms-api-java</artifactId>
-		</dependency>
-
 		<dependency>
 			<groupId>org.slf4j</groupId>
 			<artifactId>slf4j-api</artifactId>
+		</dependency>
+		<!-- <dependency> -->
+		<!-- <groupId>org.italiangrid</groupId> -->
+		<!-- <artifactId>voms-api-java</artifactId> -->
+		<!-- </dependency> -->
+		<dependency>
+			<groupId>org.italiangrid</groupId>
+			<artifactId>https-utils</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.httpcomponents</groupId>
@@ -49,6 +30,10 @@
 		<dependency>
 			<groupId>org.apache.httpcomponents</groupId>
 			<artifactId>httpcore</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.eclipse.jetty.orbit</groupId>
+			<artifactId>javax.servlet</artifactId>
 		</dependency>
 
 		<dependency>
@@ -81,28 +66,40 @@
 			<version>${springVersion}</version>
 			<scope>runtime</scope>
 		</dependency>
-
-		<!-- <dependency> -->
-		<!-- <groupId>javax.servlet</groupId> -->
-		<!-- <artifactId>servlet-api</artifactId> -->
-		<!-- <version>${javaxServletVersion}</version> -->
-		<!-- </dependency> -->
-
 		<dependency>
 			<groupId>commons-io</groupId>
 			<artifactId>commons-io</artifactId>
 			<version>${commonsIOVersion}</version>
 		</dependency>
-
 		<dependency>
 			<groupId>commons-lang</groupId>
 			<artifactId>commons-lang</artifactId>
 			<version>${commonsLangVersion}</version>
 		</dependency>
+		<dependency>
+			<groupId>emi</groupId>
+			<artifactId>trustmanager</artifactId>
+			<version>${trustmanagerVersion}</version>
+		</dependency>
+		<dependency>
+			<groupId>igi.storm.backend</groupId>
+			<artifactId>xmlrpc-api</artifactId>
+			<version>${apibackendVersion}</version>
+		</dependency>
 	</dependencies>
 
 	<build>
 		<finalName>${project.artifactId}</finalName>
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<configuration>
+					<source>1.6</source>
+					<target>1.6</target>
+				</configuration>
+			</plugin>
+		</plugins>
 	</build>
 
 </project>

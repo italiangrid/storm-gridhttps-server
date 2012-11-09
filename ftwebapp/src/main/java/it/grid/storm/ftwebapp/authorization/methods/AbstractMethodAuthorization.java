@@ -22,7 +22,7 @@ public abstract class AbstractMethodAuthorization {
 
 	public AbstractMethodAuthorization(HttpServletRequest HTTPRequest) {
 		this.HTTPRequest = HTTPRequest;
-		this.contextPath = Configuration.storageAreaName;
+		this.contextPath = "filetransfer/" + Configuration.storageAreaName;
 		this.rootDir = Configuration.storageAreaRootDir;
 	}
 
