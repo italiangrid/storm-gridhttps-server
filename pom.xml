@@ -55,9 +55,10 @@
 		<httpcoreVersion>4.2.2</httpcoreVersion>
 		<httpclientVersion>4.2.1</httpclientVersion>
 <!-- 		<vomsApiVersion>3.0-SNAPSHOT</vomsApiVersion> -->
-		<apibackendVersion>0.0.14</apibackendVersion>
+		<apibackendVersion>0.0.15</apibackendVersion>
 		<httpsutilsVersion>0.5-SNAPSHOT</httpsutilsVersion>
 		<javaxServletVersion>3.0.0.v201112011016</javaxServletVersion>
+		<mavenCompilerVersion>2.5.1</mavenCompilerVersion>
 
 		<conf_installation_prefix>/etc/storm</conf_installation_prefix>
 		<module_name>gridhttps-server</module_name>

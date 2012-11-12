@@ -11,7 +11,6 @@ import java.net.HttpURLConnection;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URLEncoder;
-import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -30,14 +29,12 @@ import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.utils.URLEncodedUtils;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.message.BasicNameValuePair;
-import org.italiangrid.utils.voms.VOMSSecurityContext;
-import org.italiangrid.voms.VOMSAttribute;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class StormAuthorizationUtils {
-
+	
 	private static final Logger log = LoggerFactory.getLogger(StormAuthorizationUtils.class);
 
 	private static HashMap<String, AbstractMethodAuthorization> METHODS_MAP = new HashMap<String, AbstractMethodAuthorization>();
@@ -84,17 +81,6 @@ public class StormAuthorizationUtils {
 		return METHODS_MAP.get(HTTPRequest.getMethod().toUpperCase());
 	}
 
-	public static VOMSSecurityContext getVomsSecurityContext(HttpServletRequest HTTPRequest) {
-		
-		VOMSSecurityContext.clearCurrentContext();
-		VOMSSecurityContext sc = new VOMSSecurityContext();
-		VOMSSecurityContext.setCurrentContext(sc);
-		X509Certificate[] certChain = StormHTTPHelper.getX509Certificate();
-		if (certChain != null)
-			sc.setClientCertChain(certChain);
-		return sc;
-	}
-
 	public static boolean protocolAllowed(String requestProtocol) throws Exception {
 		String key = Configuration.storageAreaProtocol.toUpperCase();
 		if (PROTOCOL_MAP.containsKey(key)) {
@@ -109,56 +95,14 @@ public class StormAuthorizationUtils {
 	public static boolean methodAllowed(String method) {
 		boolean response = false;
 		if (METHOD_LIST.contains(method.toUpperCase())) {
-			log.debug("Method " + method.toUpperCase() + " is allowed");
 			response = true;
 		}
 		return response;
 	}
 
-	public static String getUserDN(VOMSSecurityContext vomsSecurityContext) {
-		return vomsSecurityContext.getClientDN() != null ? vomsSecurityContext.getClientDN().getX500() : "";
-	}
-
-	public static String getUserDN(HttpServletRequest HTTPRequest) {
-		return getUserDN(getVomsSecurityContext(HTTPRequest));
-	}
-
-	public static String getUserDN() {
-		return getUserDN(StormHTTPHelper.getRequest());
-	}
-
-	public static ArrayList<String> getUserFQANs(VOMSSecurityContext vomsSecurityContext) {
-		
-		ArrayList<String> fqansStr = new ArrayList<String>();
-		if (vomsSecurityContext.isEmpty())
-			return fqansStr;
-		List<VOMSAttribute> vomsAttrs = vomsSecurityContext.getVOMSAttributes();
-		for (VOMSAttribute voms : vomsAttrs)
-			for (String s : voms.getFQANs()) {
-		    	fqansStr.add(s);
-		    	log.debug("fqan: " + s);
-		    }
-		/******************************** TEST ***********************************/
-//		fqansStr.clear();
-//		fqansStr.add("/dteam/Role=NULL/Capability=NULL");
-//		fqansStr.add("/dteam/NGI_IT/Role=NULL/Capability=NULL");
-		/******************************** TEST ***********************************/
-		return fqansStr;
-	}
-
-	public static ArrayList<String> getUserFQANs(HttpServletRequest HTTPRequest) {
-		return getUserFQANs(getVomsSecurityContext(HTTPRequest));
-	}
-
-	public static ArrayList<String> getUserFQANs() {
-		return getUserFQANs(StormHTTPHelper.getRequest());
-	}
-
 	public static boolean isUserAuthorized(String operation, String path) throws Exception, IllegalArgumentException {
-		String userDN = StormAuthorizationUtils.getUserDN();
-		log.debug("DN = " + userDN);
-		ArrayList<String> userFQANs = StormAuthorizationUtils.getUserFQANs();
-		return isUserAuthorized(userDN, userFQANs, operation, path);
+		UserCredentials user = new UserCredentials(StormHTTPHelper.getRequest());
+		return isUserAuthorized(user.getUserDN(), user.getUserFQANS(), operation, path);
 	}
 
 	private static boolean isUserAuthorized(String userDN, ArrayList<String> userFQANs, String operation, String path) throws Exception,

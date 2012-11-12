@@ -59,4 +59,11 @@ public class HTTPHelper {
 		return false;
 	}
 	
+	public static boolean isHttp() {
+		return StormAuthorizationFilter.HTTPRequest.getScheme().toUpperCase().equals("HTTP");
+	}
+	
+	public static boolean isHttps() {
+		return StormAuthorizationFilter.HTTPRequest.getScheme().toUpperCase().equals("HTTPS");
+	}
 }
