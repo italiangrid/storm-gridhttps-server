@@ -34,6 +34,8 @@ public class Main {
 		public final static int STORM_GRIDHTTPS_HTTP_PORT = 8085;
 		public final static int STORM_GRIDHTTPS_HTTPS_PORT = 8443;
 		public final static boolean STORM_GRIDHTTPS_USE_HTTP = true;
+		public final static boolean STORM_GRIDHTTPS_WANT_CLIENT_AUTH = true;
+		public final static boolean STORM_GRIDHTTPS_NEED_CLIENT_AUTH = true;
 	}
 
 	private static Logger log; // = LoggerFactory.getLogger(Main.class);
@@ -370,6 +372,8 @@ public class Main {
 		ssloptions.setCertificateFile(getConfigurationValue(configuration, "server", "certificate_file"));
 		ssloptions.setKeyFile(getConfigurationValue(configuration, "server", "key_file"));
 		ssloptions.setTrustStoreDirectory(getConfigurationValue(configuration, "server", "trust_store_directory"));
+		ssloptions.setWantClientAuth(DefaultConfiguration.STORM_GRIDHTTPS_WANT_CLIENT_AUTH);
+		ssloptions.setWantClientAuth(DefaultConfiguration.STORM_GRIDHTTPS_NEED_CLIENT_AUTH);
 		StormGridhttps.options = new ServerInfo(StormGridhttps.hostname, StormGridhttps.httpPort, StormGridhttps.httpsPort, ssloptions,
 				StormGridhttps.useHttp);
 	}

@@ -14,8 +14,11 @@ import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.handler.ContextHandlerCollection;
 import org.eclipse.jetty.server.handler.HandlerCollection;
 import org.eclipse.jetty.server.nio.SelectChannelConnector;
+import org.eclipse.jetty.server.ssl.SslSelectChannelConnector;
+import org.eclipse.jetty.server.ssl.SslSocketConnector;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
+import org.eclipse.jetty.util.ssl.SslContextFactory;
 import org.eclipse.jetty.webapp.WebAppContext;
 import org.italiangrid.utils.https.ServerFactory;
 
@@ -43,6 +46,7 @@ public class WebDAVServer {
 		
 		// Server:
 		server = ServerFactory.newServer(options.getHostname(), options.getHttpsPort(), options.getSslOptions());
+						
 		log.debug(name + " - https port is " + options.getHttpsPort());
 		server.setStopAtShutdown(true);
 		
