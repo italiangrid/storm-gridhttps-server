@@ -41,7 +41,8 @@ public class MapperServlet extends HttpServlet
     private static final long serialVersionUID = 293463225950571516L;
     private static final String PATH_PARAMETER_KEY = "path";
     private static final String MAPPER_SERVLET_ENCODING_SCHEME = "UTF-8";
-    private static final String MAPPER_SERVLET_CONTEXT_PATH = "/fileTransfer";
+    
+    public static final String MAPPER_SERVLET_CONTEXT_PATH = "/fileTransfer";
 
 
     /* (non-Javadoc)
