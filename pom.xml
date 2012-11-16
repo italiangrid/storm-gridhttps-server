@@ -25,21 +25,6 @@
 			<email>michele.dibenedetto@cnaf.infn.it</email>
 		</developer>
 	</developers>
-	<repositories>
-		<repository>
-			<id>cnaf-snapshots</id>
-			<name>CNAF snapshots</name>
-			<url>http://radiohead.cnaf.infn.it:8081/nexus/content/repositories/cnaf-snapshots/</url>
-			<snapshots>
-				<enabled>true</enabled>
-			</snapshots>
-		</repository>
-		<repository>
-			<id>cnaf-repositories</id>
-			<name>CNAF repositories</name>
-			<url>http://radiohead.cnaf.infn.it:8081/nexus/content/repositories/public/</url>
-		</repository>
-	</repositories>
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -174,11 +159,6 @@
 				<artifactId>logback-core</artifactId>
 				<version>${logbackVersion}</version>
 			</dependency>
-<!-- 			<dependency> -->
-<!-- 				<groupId>org.italiangrid</groupId> -->
-<!-- 				<artifactId>voms-api-java</artifactId> -->
-<!-- 				<version>${vomsApiVersion}</version> -->
-<!-- 			</dependency> -->
 			<dependency>
 				<groupId>org.italiangrid</groupId>
 				<artifactId>https-utils</artifactId>
