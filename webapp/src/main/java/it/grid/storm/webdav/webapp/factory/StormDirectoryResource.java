@@ -7,7 +7,6 @@ import io.milton.http.XmlWriter;
 import io.milton.http.exceptions.BadRequestException;
 import io.milton.http.exceptions.ConflictException;
 import io.milton.http.exceptions.NotAuthorizedException;
-import io.milton.http.fs.FileContentService;
 import io.milton.resource.*;
 
 import java.io.File;
@@ -25,11 +24,8 @@ public class StormDirectoryResource extends StormResource implements MakeCollect
 
 	private static final Logger log = LoggerFactory.getLogger(StormDirectoryResource.class);
 
-	final FileContentService contentService;
-
-	public StormDirectoryResource(String host, StormResourceFactory factory, File dir, FileContentService contentService) {
+	public StormDirectoryResource(String host, StormResourceFactory factory, File dir) {
 		super(host, factory, dir);
-		this.contentService = contentService;
 		if (!dir.exists()) {
 			throw new IllegalArgumentException("Directory does not exist: " + dir.getAbsolutePath());
 		}
@@ -55,7 +51,7 @@ public class StormDirectoryResource extends StormResource implements MakeCollect
 		}
 		StormResourceHelper.doMkCol(this, name);
 		File fnew = new File(file, name);
-		return new StormDirectoryResource(host, factory, fnew, contentService);
+		return new StormDirectoryResource(host, factory, fnew);
 	}
 
 	public Resource child(String name) {

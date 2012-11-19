@@ -92,9 +92,9 @@ public final class StormResourceFactory implements ResourceFactory {
 			log.warn("file not found: " + file.getAbsolutePath());
 			return null;
 		} else if (file.isDirectory()) {
-			r = new StormDirectoryResource(host, this, file, contentService);
+			r = new StormDirectoryResource(host, this, file);
 		} else {
-			r = new StormFileResource(host, this, file, contentService);
+			r = new StormFileResource(host, this, file);
 		}
 		if (r != null) {
 			r.ssoPrefix = ssoPrefix;

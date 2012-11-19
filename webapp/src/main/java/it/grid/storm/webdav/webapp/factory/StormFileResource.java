@@ -9,7 +9,6 @@ import io.milton.http.exceptions.BadRequestException;
 import io.milton.http.exceptions.ConflictException;
 import io.milton.http.exceptions.NotAuthorizedException;
 import io.milton.http.exceptions.NotFoundException;
-import io.milton.http.fs.FileContentService;
 import io.milton.resource.*;
 import it.grid.storm.xmlrpc.outputdata.LsOutputData.SurlInfo;
 
@@ -25,8 +24,6 @@ public class StormFileResource extends StormResource implements CopyableResource
 
 	private static final Logger log = LoggerFactory.getLogger(StormFileResource.class);
 
-	final FileContentService contentService;
-
 	/**
 	 * 
 	 * @param host
@@ -34,9 +31,8 @@ public class StormFileResource extends StormResource implements CopyableResource
 	 * @param stormResourceFactory
 	 * @param file
 	 */
-	public StormFileResource(String host, StormResourceFactory fileSystemResourceFactory, File file, FileContentService contentService) {
+	public StormFileResource(String host, StormResourceFactory fileSystemResourceFactory, File file) {
 		super(host, fileSystemResourceFactory, file);
-		this.contentService = contentService;
 	}
 
 	public String getChecksumType() {

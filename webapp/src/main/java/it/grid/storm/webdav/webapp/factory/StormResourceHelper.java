@@ -86,7 +86,7 @@ public class StormResourceHelper {
 		}
 		InputStream in = null;
 		try {
-			in = source.contentService.getFileContent(source.file);
+			in = source.factory.getContentService().getFileContent(source.file);
 		} catch (FileNotFoundException e) {
 			log.error(e.getMessage());
 			throw new NotFoundException("Couldn't locate content");
@@ -136,7 +136,7 @@ public class StormResourceHelper {
 		}
 		// put
 		try {
-			sourceDir.contentService.setFileContent(destinationFile, in);
+			sourceDir.factory.getContentService().setFileContent(destinationFile, in);
 		} catch (FileNotFoundException e) {
 			log.error(e.getMessage());
 			abortRequest(sourceDir.factory.getBackendApi(), outputPtp.getToken(), user);
@@ -173,7 +173,7 @@ public class StormResourceHelper {
 		}
 		try {
 			// overwrite
-			source.contentService.setFileContent(source.file, in);
+			source.factory.getContentService().setFileContent(source.file, in);
 		} catch (IOException ex) {
 			log.error(ex.getMessage());
 			abortRequest(source.factory.getBackendApi(), outputPtp.getToken(), user);
