@@ -4,6 +4,7 @@
 %define default_user root
 
 %define maven_repository ${MavenRepositoryDir}
+%define maven_settings ${MavenSettings}
 %define maven_profile ${MavenProfile}
 %define conf_dir ${ConfDir}
 %define short_name ${ModuleName}
@@ -39,7 +40,7 @@ The StoRM GridHTTPS component providing plain http(s) access and WebDAV access t
 %setup -c
 
 %build
-mvn -s settings.xml -Dmaven.repo.local=%{maven_repository} -P %{maven_profile} install
+mvn %{maven_settings} -P %{maven_profile} install
 
 %install
 rm -rf $RPM_BUILD_ROOT
