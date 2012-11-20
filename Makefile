@@ -17,7 +17,7 @@ src_rpm: build_sources
 	rpmbuild -bs --define "_topdir ${PWD}/rpmbuild" target/spec/storm-gridhttps-server.spec
 
 build_sources: prepare clean
-	mvn ${mvn_settings} -Dmaven.repo.local=$(mavenrepo) -Drelease=$(release) -Dmaven.settings=$(mvn_settings) process-sources
+	mvn ${mvn_settings} -Dmaven.repo.local=$(mavenrepo) -Drelease=$(release) -Dmaven_settings=$(mvn_settings) process-sources
 
 bin_rpm: src_rpm
 	rpmbuild --rebuild --define "_topdir ${PWD}/rpmbuild" rpmbuild/SRPMS/storm-gridhttps-server-${version}-$(release).src.rpm
