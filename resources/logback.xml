@@ -27,11 +27,11 @@
 		</layout>
 	</appender>
 	
-	<logger name="io.milton" level="DEBUG">
+	<logger name="io.milton" level="WARN">
 		<appender-ref ref="PROCESS" />
 	</logger>
 
-	<logger name="it.grid.storm" level="DEBUG">
+	<logger name="it.grid.storm" level="INFO">
 		<appender-ref ref="PROCESS" />
 	</logger>
 
