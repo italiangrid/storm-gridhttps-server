@@ -259,6 +259,7 @@ fi
 %dir %{_javadir}/%{name}                                                
 %{_javadir}/%{name}/server.jar
 %{_javadir}/%{name}/webapp.war
+%{_javadir}/%{name}/ftwebapp.war
 
 %attr(770,%{default_user},%{default_user}) %dir %{work_dir} 
 %attr(774,%{default_user},%{default_user}) %dir %{log_dir} 
