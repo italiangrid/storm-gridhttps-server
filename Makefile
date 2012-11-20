@@ -15,7 +15,7 @@ src_rpm: build_sources
 	cp target/storm-gridhttps-server-${version}-src.tar.gz rpmbuild/SOURCES/storm-gridhttps-server-${version}.tar.gz
 	rpmbuild -bs --define "_topdir ${PWD}/rpmbuild" target/spec/storm-gridhttps-server.spec
 
-build_sources: prepare clean
+build_sources: clean prepare
 	mvn ${mvn_settings} -Drelease=$(release) -Dmaven_settings=$(mvn_settings) process-sources
 
 bin_rpm: src_rpm
