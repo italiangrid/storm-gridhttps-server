@@ -106,6 +106,7 @@
 								<PackageVersion>${project.version}</PackageVersion>
 								<PackageRelease>${release}</PackageRelease>
 								<JavaHome>${java.home}</JavaHome>
+								<MavenSettings>${maven_settings}</MavenSettings>
 								<MavenRepositoryDir>${settings.localRepository}</MavenRepositoryDir>
 								<MavenProfile>${project.activeProfiles[0].id}</MavenProfile>
 								<ConfDir>${conf_installation_prefix}</ConfDir>
@@ -188,10 +189,24 @@
 			<id>sl5</id>
 			<activation>
 				<activeByDefault>true</activeByDefault>
-			</activation>
+				<property>
+	       				<name>!maven_settings</name>
+				</property>
+    			</activation>
+    			<properties>
+       				<maven_settings>-s settings.xml</maven_settings>
+    			</properties>
 		</profile>
 		<profile>
 			<id>sl6</id>
+			<activation>
+				<property>
+	       				<name>!maven_settings</name>
+				</property>
+    			</activation>
+    			<properties>
+       				<maven_settings>-s settings.xml</maven_settings>
+    			</properties>
 		</profile>
 	</profiles>
 
