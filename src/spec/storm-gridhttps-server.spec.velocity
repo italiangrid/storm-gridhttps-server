@@ -40,7 +40,7 @@ The StoRM GridHTTPS component providing plain http(s) access and WebDAV access t
 %setup -c
 
 %build
-mvn %{maven_settings} -P %{maven_profile} install
+mvn %{maven_settings} -U -Dmaven.test.skip=true -P %{maven_profile} install
 
 %install
 rm -rf $RPM_BUILD_ROOT
