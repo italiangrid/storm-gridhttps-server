@@ -31,7 +31,7 @@
 				<include>assembly/**</include>
 				<include>pom.xml</include>
 				<include>LICENSE.txt</include>
-				<include>settings.xml</include>
+				<include>${maven.settings}</include>
 			</includes>
 		</fileSet>
 <!-- 		<fileSet> -->
