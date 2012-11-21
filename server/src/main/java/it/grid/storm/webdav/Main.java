@@ -38,7 +38,7 @@ public class Main {
 		public final static boolean STORM_GRIDHTTPS_NEED_CLIENT_AUTH = true;
 	}
 
-	private static Logger log; // = LoggerFactory.getLogger(Main.class);
+	private static Logger log;
 
 	private static class StormBackend {
 		public static String hostname;
