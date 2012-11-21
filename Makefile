@@ -1,5 +1,5 @@
 ifndef JAVA_HOME
-	$(error JAVA_HOME is undefined)
+  $(error JAVA_HOME is undefined)
 endif
 release:=1
 version:=$(shell mvn org.apache.maven.plugins:maven-help-plugin:2.1.1:evaluate -Dexpression="project.version" | grep -v '\[' | tr -d ' ')
