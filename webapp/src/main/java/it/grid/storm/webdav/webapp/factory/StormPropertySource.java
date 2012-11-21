@@ -5,8 +5,8 @@ import java.util.List;
 
 import javax.xml.namespace.QName;
 
-//import org.slf4j.Logger;
-//import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import io.milton.http.exceptions.BadRequestException;
 import io.milton.http.exceptions.NotAuthorizedException;
@@ -16,7 +16,7 @@ import io.milton.resource.Resource;
 
 class StormPropertySource implements PropertySource {
 
-//	private static final Logger log = LoggerFactory.getLogger(StormPropertySource.class);
+	private static final Logger log = LoggerFactory.getLogger(StormPropertySource.class);
 
 	private ArrayList<String> properties = new ArrayList<String>();
 	private String propertyNamespace = WebDavProtocol.DAV_URI;
@@ -31,20 +31,22 @@ class StormPropertySource implements PropertySource {
 
 	public String getProperty(QName name, Resource r) throws NotAuthorizedException {
 		if (checkPropery(name, r)) {
-			StormFileResource srmFile = (StormFileResource) r;
-			if (name.getLocalPart().equals("checksumType")) {
-				return srmFile.getChecksumType();
-			} else if (name.getLocalPart().equals("checksumValue")) {
-				return srmFile.getChecksumValue();
-			} else if (name.getLocalPart().equals("status")) {
-				return srmFile.getStatus();
+			if (r instanceof StormFileResource) {
+				StormFileResource srmFile = (StormFileResource) r;
+				if (name.getLocalPart().equals("checksumType")) {
+					return srmFile.getChecksumType();
+				} else if (name.getLocalPart().equals("checksumValue")) {
+					return srmFile.getChecksumValue();
+				} else if (name.getLocalPart().equals("status")) {
+					return srmFile.getStatus();
+				}
 			}
 		}
 		return "";
 	}
 
 	public void setProperty(QName name, Object value, Resource r) {
-		// setProperty for StormPropertyWriter not permit
+		log.warn("setting property " + name.getLocalPart() + " is not permit");
 	}
 
 	public PropertyMetaData getPropertyMetaData(QName name, Resource r) throws NotAuthorizedException, BadRequestException {
@@ -55,7 +57,7 @@ class StormPropertySource implements PropertySource {
 	}
 
 	public void clearProperty(QName name, Resource r) throws PropertySetException, NotAuthorizedException {
-		// throw new PropertySetException(Status.SC_BAD_REQUEST, "");
+		log.warn("clear property " + name.getLocalPart() + " is not permit");
 	}
 	
 	public List<QName> getAllPropertyNames(Resource r) throws NotAuthorizedException, BadRequestException {
@@ -69,7 +71,7 @@ class StormPropertySource implements PropertySource {
 	}
 
 	private boolean checkPropery(QName name, Resource r) {
-		if ((r instanceof StormFileResource) 
+		if ((r instanceof StormResource) 
 				&& (name.getNamespaceURI().contentEquals(this.propertyNamespace))
 				&& (properties.contains(name.getLocalPart())))
 			return true;
