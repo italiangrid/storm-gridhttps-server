@@ -34,8 +34,7 @@ public final class StormResourceFactory implements ResourceFactory {
 	
 	public StormResourceFactory() {
 		setRoot(new File(Configuration.storageAreaRootDir));
-		io.milton.http.SecurityManager securityManager = new NullSecurityManager();
-		setSecurityManager(securityManager);
+		setSecurityManager(new NullSecurityManager());
 		setContextPath(Configuration.storageAreaName);
         contentService = new SimpleFileContentService();
         try {
