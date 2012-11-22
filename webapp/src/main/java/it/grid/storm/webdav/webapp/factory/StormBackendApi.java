@@ -34,7 +34,7 @@ public class StormBackendApi {
 		}
 		return backend;
 	}
-	
+
 	public static RequestOutputData abortRequest(BackendApi backend, TRequestToken token, UserCredentials user) {
 		log.debug("aborting srm request - token " + token.getValue());
 		RequestOutputData output = null;
@@ -95,6 +95,11 @@ public class StormBackendApi {
 			log.error(e.getMessage());
 			throw new RuntimeException("Illegal Argument Exception!", e);
 		}
+		log.debug(outputPtG.getStatus().getStatusCode().getValue());
+		log.info(outputPtG.getStatus().getExplanation());
+		if (!outputPtG.getStatus().getStatusCode().getValue().equals("SRM_FILE_PINNED")) {
+			throw new RuntimeException("prepareToGet has failed on surl: " + surl);
+		}
 		return outputPtG;
 	}
 
@@ -120,6 +125,12 @@ public class StormBackendApi {
 			abortRequest(backend, token, user);
 			throw new RuntimeException("Illegal Argument Exception!", e);
 		}
+		log.debug(output.getStatus().getStatusCode().getValue());
+		log.info(output.getStatus().getExplanation());
+		if (!output.isSuccess()) {
+			abortRequest(backend, token, user);
+			throw new RuntimeException("releaseFiles has failed on surl: " + surl);
+		}
 		return output;
 	}
 
@@ -143,6 +154,11 @@ public class StormBackendApi {
 			log.error(e.getMessage());
 			throw new RuntimeException("Illegal Argument Exception!", e);
 		}
+		log.debug(outputPtp.getStatus().getStatusCode().getValue());
+		log.info(outputPtp.getStatus().getExplanation());
+		if (!outputPtp.getStatus().getStatusCode().getValue().equals("SRM_SPACE_AVAILABLE")) {
+			throw new RuntimeException("prepareToPut has failed on surl: " + newFileSurl);
+		}
 		return outputPtp;
 	}
 
@@ -165,6 +181,11 @@ public class StormBackendApi {
 		} catch (IllegalArgumentException e) {
 			log.error(e.getMessage());
 			throw new RuntimeException("Illegal Argument Exception!", e);
+		}
+		log.debug(outputPtp.getStatus().getStatusCode().getValue());
+		log.info(outputPtp.getStatus().getExplanation());
+		if (!outputPtp.getStatus().getStatusCode().getValue().equals("SRM_SPACE_AVAILABLE")) {
+			throw new RuntimeException("prepareToPutOverwrite has failed on surl: " + newFileSurl + ")");
 		}
 		return outputPtp;
 	}
@@ -191,19 +212,37 @@ public class StormBackendApi {
 			abortRequest(backend, token, user);
 			throw new RuntimeException("Illegal Argument Exception!", e);
 		}
+		log.debug(outputPd.getStatus().getStatusCode().getValue());
+		log.info(outputPd.getStatus().getExplanation());
+		if (!outputPd.isSuccess()) {
+			abortRequest(backend, token, user);
+			throw new RuntimeException("putDone has failed on surl: " + newFileSurl);
+		}
 		return outputPd;
 	}
 
-	public static RequestOutputData mkdir(BackendApi backend, String newDirSurl, UserCredentials user) throws ApiException,
-			IllegalArgumentException {
+	public static RequestOutputData mkdir(BackendApi backend, String newDirSurl, UserCredentials user) {
 		RequestOutputData output = null;
 		log.debug("mkdir surl: " + newDirSurl);
-		if (user.isAnonymous()) { // HTTP
-			output = backend.mkdir(newDirSurl);
-		} else if (user.getUserFQANS().isEmpty()) {
-			output = backend.mkdir(user.getUserDN(), newDirSurl);
-		} else {
-			output = backend.mkdir(user.getUserDN(), user.getUserFQANS(), newDirSurl);
+		try {
+			if (user.isAnonymous()) { // HTTP
+				output = backend.mkdir(newDirSurl);
+			} else if (user.getUserFQANS().isEmpty()) {
+				output = backend.mkdir(user.getUserDN(), newDirSurl);
+			} else {
+				output = backend.mkdir(user.getUserDN(), user.getUserFQANS(), newDirSurl);
+			}
+		} catch (ApiException e) {
+			log.error(e.getMessage());
+			throw new RuntimeException("Backend API Exception!", e);
+		} catch (IllegalArgumentException e) {
+			log.error(e.getMessage());
+			throw new RuntimeException("Illegal Argument Exception!", e);
+		}
+		log.debug(output.getStatus().getStatusCode().getValue());
+		log.info(output.getStatus().getExplanation());
+		if (!output.isSuccess()) {
+			throw new RuntimeException("mkdir has failed! (surl: " + newDirSurl + ")");
 		}
 		return output;
 	}
@@ -228,6 +267,11 @@ public class StormBackendApi {
 			log.error(e.getMessage());
 			throw new RuntimeException("Illegal Argument Exception!", e);
 		}
+		log.debug(output.getStatus().getStatusCode().getValue());
+		log.info(output.getStatus().getExplanation());
+		if (!output.isSuccess()) {
+			throw new RuntimeException("rm has failed! (surl: " + surl + ")");
+		}
 		return output;
 	}
 
@@ -248,6 +292,11 @@ public class StormBackendApi {
 		} catch (IllegalArgumentException e) {
 			log.error(e.getMessage());
 			throw new RuntimeException("Illegal Argument Exception!", e);
+		}
+		log.debug(output.getStatus().getStatusCode().getValue());
+		log.info(output.getStatus().getExplanation());
+		if (!output.isSuccess()) {
+			throw new RuntimeException("rmdir has failed! (surl: " + surl + ")");
 		}
 		return output;
 	}
@@ -270,6 +319,11 @@ public class StormBackendApi {
 			log.error(e.getMessage());
 			throw new RuntimeException("Illegal Argument Exception!", e);
 		}
+		log.debug(output.getStatus().getStatusCode().getValue());
+		log.info(output.getStatus().getExplanation());
+		if (!output.isSuccess()) {
+			throw new RuntimeException("rmdir-recoursively has failed! (surl: " + surl + ")");
+		}
 		return output;
 	}
 
@@ -290,6 +344,11 @@ public class StormBackendApi {
 		} catch (IllegalArgumentException e) {
 			log.error(e.getMessage());
 			throw new RuntimeException("Illegal Argument Exception!", e);
+		}
+		log.debug(output.getStatus().getStatusCode().getValue());
+		log.info(output.getStatus().getExplanation());
+		if (!output.isSuccess()) {
+			throw new RuntimeException("mv from surl " + fromSurl + " to surl " + toSurl + "has failed!");
 		}
 		return output;
 	}
@@ -313,6 +372,11 @@ public class StormBackendApi {
 		} catch (IllegalArgumentException e) {
 			log.error(e.getMessage());
 			throw new RuntimeException("Illegal Argument Exception!", e);
+		}
+		log.debug(output.getStatus().getStatusCode().getValue());
+		log.info(output.getStatus().getExplanation());
+		if (!output.isSuccess()) {
+			throw new RuntimeException("ls-detailed has failed! (surl: " + surl + ")");
 		}
 		return output;
 	}

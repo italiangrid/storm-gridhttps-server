@@ -56,19 +56,19 @@ public class StormAuthorizationFilter implements Filter {
 		HTTPRequest = (HttpServletRequest) request;
 		HTTPResponse = (HttpServletResponse) response;
 		
-		if (!isProtocolAllowed(HTTPRequest.getScheme().toUpperCase())) {
-			log.warn("Received a request with a not allowed protocol: " + HTTPRequest.getScheme().toUpperCase());
-			sendError(HttpServletResponse.SC_UNAUTHORIZED, "Protocol " + HTTPRequest.getScheme().toUpperCase() + " not allowed!");
-			return;
-		}
-		log.debug(HTTPRequest.getScheme().toUpperCase() + " protocol is allowed");
-				
 		if (!isMethodAllowed(HTTPRequest.getMethod())) {
 			log.warn("Received a request for a not allowed method : " + HTTPRequest.getMethod());
 			sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Method " + HTTPRequest.getMethod() + " not allowed!");
 			return;
 		}
 		log.debug(HTTPRequest.getMethod() + " method is allowed");
+		
+		if (!isProtocolAllowed(HTTPRequest.getScheme().toUpperCase())) {
+			log.warn("Received a request with a not allowed protocol: " + HTTPRequest.getScheme().toUpperCase());
+			sendError(HttpServletResponse.SC_UNAUTHORIZED, "Protocol " + HTTPRequest.getScheme().toUpperCase() + " not allowed!");
+			return;
+		}
+		log.debug(HTTPRequest.getScheme().toUpperCase() + " protocol is allowed");
 		
 		if (!isUserAuthorized(HTTPRequest)) {
 			log.warn("User is not authorized to access the requested resource");
