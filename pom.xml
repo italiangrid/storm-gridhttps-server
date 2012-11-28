@@ -39,7 +39,6 @@
 		<commonsLangVersion>2.3</commonsLangVersion>
 		<httpcoreVersion>4.2.2</httpcoreVersion>
 		<httpclientVersion>4.2.1</httpclientVersion>
-<!-- 		<vomsApiVersion>3.0-SNAPSHOT</vomsApiVersion> -->
 		<apibackendVersion>0.0.15-SNAPSHOT</apibackendVersion>
 		<httpsutilsVersion>0.5-SNAPSHOT</httpsutilsVersion>
 		<javaxServletVersion>3.0.0.v201112011016</javaxServletVersion>

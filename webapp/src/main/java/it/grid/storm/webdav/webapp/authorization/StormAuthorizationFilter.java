@@ -66,6 +66,7 @@ public class StormAuthorizationFilter implements Filter {
 		if (!isProtocolAllowed(HTTPRequest.getScheme().toUpperCase())) {
 			log.warn("Received a request with a not allowed protocol: " + HTTPRequest.getScheme().toUpperCase());
 			sendError(HttpServletResponse.SC_UNAUTHORIZED, "Protocol " + HTTPRequest.getScheme().toUpperCase() + " not allowed!");
+			// TODO set a proper http return code
 			return;
 		}
 		log.debug(HTTPRequest.getScheme().toUpperCase() + " protocol is allowed");
