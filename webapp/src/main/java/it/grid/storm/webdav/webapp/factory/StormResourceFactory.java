@@ -61,6 +61,7 @@ public final class StormResourceFactory implements ResourceFactory {
 	}
 	
 	public boolean isLocalResource(String host) throws UnknownHostException {
+		if (host == null || host.isEmpty()) return true;
 		String hostNoPort = host.indexOf(':') != -1 ? host.substring(0,host.indexOf(':')) : host;
 		java.net.InetAddress localMachine = java.net.InetAddress.getLocalHost();
 		log.debug("localhost: " + localMachine.getHostName());
