@@ -1,6 +1,7 @@
 package it.grid.storm.webdav;
 
 import it.grid.storm.webdav.server.*;
+import it.grid.storm.gridhttps.servlet.MapperServlet;
 import it.grid.storm.storagearea.StorageArea;
 import it.grid.storm.storagearea.StorageAreaManager;
 import it.grid.storm.webdav.utils.*;
@@ -253,7 +254,7 @@ public class Main {
 		log.info("Configuring '" + contextFile.getPath() + "'...");
 		// modify applicationContext.xml file
 		String rootDirectory = SA.getFSRoot();
-		String contextPath = "filetransfer/" + SA.getStfnRoot().substring(1);
+		String contextPath = MapperServlet.MAPPER_SERVLET_CONTEXT_PATH.substring(1) + SA.getStfnRoot();
 		XML doc = new XML(contextFile);
 		String query = "/spring:beans/spring:bean[@id='milton.fs.resource.factory']/spring:constructor-arg";
 		NodeList arguments = doc.getNodes(query, new AppNamespaceContext(null));
