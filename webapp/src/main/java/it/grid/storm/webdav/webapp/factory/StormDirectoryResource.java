@@ -8,6 +8,7 @@ import io.milton.http.exceptions.BadRequestException;
 import io.milton.http.exceptions.ConflictException;
 import io.milton.http.exceptions.NotAuthorizedException;
 import io.milton.resource.*;
+import it.grid.storm.xmlrpc.outputdata.LsOutputData.SurlInfo;
 
 import java.io.File;
 import java.io.IOException;
@@ -115,6 +116,7 @@ public class StormDirectoryResource extends StormResource implements MakeCollect
 		log.info("Called function for GET DIRECTORY");
 		String subpath = getFile().getCanonicalPath().substring(factory.getRoot().getCanonicalPath().length()).replace('\\', '/');
 		String uri = "/" + factory.getContextPath() + subpath;
+				
 		XmlWriter w = new XmlWriter(out);
 		w.open("html");
 		w.open("head");
@@ -122,15 +124,27 @@ public class StormDirectoryResource extends StormResource implements MakeCollect
 		w.open("body");
 		w.begin("h1").open().writeText(this.getName()).close();
 		w.open("table");
-		for (Resource r : getChildren()) {
+		for (SurlInfo entry : StormResourceHelper.doLsDetailed(this)) {
 			w.open("tr");
 			w.open("td");
-			String path = buildHref(uri, r.getName());
-			w.begin("a").writeAtt("href", path).open().writeText(r.getName()).close();
+			String name = entry.getStfn().split("/")[entry.getStfn().split("/").length-1];
+			String path = buildHref(uri, name);
+			w.begin("a").writeAtt("href", path).open().writeText(name).close();
 			w.close("td");
-			w.begin("td").open().writeText(r.getModifiedDate() + "").close();
+			w.begin("td").open().writeText(entry.getModificationTime() + "").close();
+			w.begin("td").open().writeText("checksum-type: " + entry.getCheckSumType() + "").close();
+			w.begin("td").open().writeText("checksum-value: " + entry.getCheckSumValue() + "").close();
 			w.close("tr");
-		}
+		}			
+//		for (Resource r : getChildren()) {
+//			w.open("tr");
+//			w.open("td");
+//			String path = buildHref(uri, r.getName());
+//			w.begin("a").writeAtt("href", path).open().writeText(r.getName()).close();
+//			w.close("td");
+//			w.begin("td").open().writeText(r.getModifiedDate() + "").close();
+//			w.close("tr");
+//		}
 		w.close("table");
 		w.close("body");
 		w.close("html");
