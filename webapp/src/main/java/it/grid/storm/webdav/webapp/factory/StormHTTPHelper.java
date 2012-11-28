@@ -31,6 +31,10 @@ public class StormHTTPHelper {
 	public static String getRequestMethod() {
 		return getRequest().getMethod().toUpperCase();
 	}
+	
+	public static String getRequestProtocol() {
+		return getRequest().getScheme().toUpperCase();
+	}
 
 	public static void sendError(int code, String description) {
 		try {

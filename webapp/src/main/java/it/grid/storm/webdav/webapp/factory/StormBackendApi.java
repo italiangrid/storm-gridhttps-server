@@ -79,14 +79,16 @@ public class StormBackendApi {
 
 	public static PtGOutputData prepareToGet(BackendApi backend, String surl, UserCredentials user) {
 		PtGOutputData outputPtG = null;
+		ArrayList<String> transferProtocols = new ArrayList<String>();
+		transferProtocols.add(StormHTTPHelper.getRequestProtocol());
 		log.debug("prepare to get surl: " + surl);
 		try {
 			if (user.isAnonymous()) { // HTTP
-				outputPtG = backend.prepareToGet(surl);
+				outputPtG = backend.prepareToGet(surl, transferProtocols);
 			} else if (user.getUserFQANS().isEmpty()) {
-				outputPtG = backend.prepareToGet(user.getUserDN(), surl);
+				outputPtG = backend.prepareToGet(user.getUserDN(), surl, transferProtocols);
 			} else {
-				outputPtG = backend.prepareToGet(user.getUserDN(), user.getUserFQANS(), surl);
+				outputPtG = backend.prepareToGet(user.getUserDN(), user.getUserFQANS(), surl, transferProtocols);
 			}
 		} catch (ApiException e) {
 			log.error(e.getMessage());
@@ -137,15 +139,17 @@ public class StormBackendApi {
 	public static FileTransferOutputData prepareToPut(BackendApi backend, String newFileSurl, UserCredentials user) {
 		ArrayList<String> newSurlList = new ArrayList<String>();
 		newSurlList.add(newFileSurl);
+		ArrayList<String> transferProtocols = new ArrayList<String>();
+		transferProtocols.add(StormHTTPHelper.getRequestProtocol());
 		FileTransferOutputData outputPtp = null;
 		log.debug("prepare to put surl: " + newFileSurl);
 		try {
 			if (user.isAnonymous()) { // HTTP
-				outputPtp = backend.prepareToPut(newFileSurl);
+				outputPtp = backend.prepareToPut(newFileSurl, transferProtocols);
 			} else if (user.getUserFQANS().isEmpty()) {
-				outputPtp = backend.prepareToPut(user.getUserDN(), newFileSurl);
+				outputPtp = backend.prepareToPut(user.getUserDN(), newFileSurl, transferProtocols);
 			} else {
-				outputPtp = backend.prepareToPut(user.getUserDN(), user.getUserFQANS(), newFileSurl);
+				outputPtp = backend.prepareToPut(user.getUserDN(), user.getUserFQANS(), newFileSurl, transferProtocols);
 			}
 		} catch (ApiException e) {
 			log.error(e.getMessage());
@@ -165,15 +169,17 @@ public class StormBackendApi {
 	public static FileTransferOutputData prepareToPutOverwrite(BackendApi backend, String newFileSurl, UserCredentials user) {
 		ArrayList<String> newSurlList = new ArrayList<String>();
 		newSurlList.add(newFileSurl);
+		ArrayList<String> transferProtocols = new ArrayList<String>();
+		transferProtocols.add(StormHTTPHelper.getRequestProtocol());
 		FileTransferOutputData outputPtp = null;
 		log.debug("prepare to put overwrite surl: " + newFileSurl);
 		try {
 			if (user.isAnonymous()) { // HTTP
-				outputPtp = backend.prepareToPutOverwrite(newFileSurl);
+				outputPtp = backend.prepareToPutOverwrite(newFileSurl, transferProtocols);
 			} else if (user.getUserFQANS().isEmpty()) {
-				outputPtp = backend.prepareToPutOverwrite(user.getUserDN(), newFileSurl);
+				outputPtp = backend.prepareToPutOverwrite(user.getUserDN(), newFileSurl, transferProtocols);
 			} else {
-				outputPtp = backend.prepareToPutOverwrite(user.getUserDN(), user.getUserFQANS(), newFileSurl);
+				outputPtp = backend.prepareToPutOverwrite(user.getUserDN(), user.getUserFQANS(), newFileSurl, transferProtocols);
 			}
 		} catch (ApiException e) {
 			log.error(e.getMessage());
