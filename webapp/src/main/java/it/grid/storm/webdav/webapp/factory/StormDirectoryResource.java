@@ -8,6 +8,7 @@ import io.milton.http.exceptions.BadRequestException;
 import io.milton.http.exceptions.ConflictException;
 import io.milton.http.exceptions.NotAuthorizedException;
 import io.milton.resource.*;
+import it.grid.storm.srm.types.Recursion;
 import it.grid.storm.xmlrpc.outputdata.LsOutputData.SurlInfo;
 
 import java.io.File;
@@ -124,7 +125,7 @@ public class StormDirectoryResource extends StormResource implements MakeCollect
 		w.open("body");
 		w.begin("h1").open().writeText(this.getName()).close();
 		w.open("table");
-		for (SurlInfo entry : StormResourceHelper.doLsDetailed(this)) {
+		for (SurlInfo entry : StormResourceHelper.doLsDetailed(this, Recursion.LIMITED)) {
 			w.open("tr");
 			w.open("td");
 			String name = entry.getStfn().split("/")[entry.getStfn().split("/").length-1];

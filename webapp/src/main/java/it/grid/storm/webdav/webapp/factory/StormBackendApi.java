@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import it.grid.storm.srm.types.RecursionLevel;
 import it.grid.storm.srm.types.TRequestToken;
 import it.grid.storm.webdav.webapp.Configuration;
 import it.grid.storm.webdav.webapp.authorization.UserCredentials;
@@ -359,18 +360,46 @@ public class StormBackendApi {
 		return output;
 	}
 
-	public static LsOutputData lsDetailed(BackendApi backend, String surl, UserCredentials user) {
+	public static LsOutputData lsDetailed(BackendApi backend, String surl, UserCredentials user, RecursionLevel recursion) {
 		ArrayList<String> surlList = new ArrayList<String>();
 		surlList.add(surl);
 		LsOutputData output = null;
 		log.debug("lsDetailed surl: " + surl);
 		try {
 			if (user.isAnonymous()) { // HTTP
-				output = backend.lsDetailed(surlList);
+				output = backend.lsDetailed(surlList, recursion);
 			} else if (user.getUserFQANS().isEmpty()) {
-				output = backend.lsDetailed(user.getUserDN(), surlList);
+				output = backend.lsDetailed(user.getUserDN(), surlList, recursion);
 			} else {
-				output = backend.lsDetailed(user.getUserDN(), user.getUserFQANS(), surlList);
+				output = backend.lsDetailed(user.getUserDN(), user.getUserFQANS(), surlList, recursion);
+			}
+		} catch (ApiException e) {
+			log.error(e.getMessage());
+			throw new RuntimeException("Backend API Exception!", e);
+		} catch (IllegalArgumentException e) {
+			log.error(e.getMessage());
+			throw new RuntimeException("Illegal Argument Exception!", e);
+		}
+		log.debug(output.getStatus().getStatusCode().getValue());
+		log.info(output.getStatus().getExplanation());
+		if (!output.isSuccess()) {
+			throw new RuntimeException("ls-detailed has failed! (surl: " + surl + ")");
+		}
+		return output;
+	}
+	
+	public static LsOutputData ls(BackendApi backend, String surl, UserCredentials user) {
+		ArrayList<String> surlList = new ArrayList<String>();
+		surlList.add(surl);
+		LsOutputData output = null;
+		log.debug("lsDetailed surl: " + surl);
+		try {
+			if (user.isAnonymous()) { // HTTP
+				output = backend.ls(surlList);
+			} else if (user.getUserFQANS().isEmpty()) {
+				output = backend.ls(user.getUserDN(), surlList);
+			} else {
+				output = backend.ls(user.getUserDN(), user.getUserFQANS(), surlList);
 			}
 		} catch (ApiException e) {
 			log.error(e.getMessage());

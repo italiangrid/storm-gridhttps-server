@@ -11,6 +11,8 @@ import io.milton.http.exceptions.ConflictException;
 import io.milton.http.exceptions.NotAuthorizedException;
 import io.milton.http.exceptions.NotFoundException;
 import io.milton.resource.Resource;
+import it.grid.storm.srm.types.Recursion;
+import it.grid.storm.srm.types.RecursionLevel;
 import it.grid.storm.srm.types.TRequestToken;
 import it.grid.storm.webdav.webapp.authorization.UserCredentials;
 import it.grid.storm.xmlrpc.BackendApi;
@@ -118,9 +120,9 @@ public class StormResourceHelper {
 		StormBackendApi.putDone(source.factory.getBackendApi(), source.getSurl(), outputPtp.getToken(), user);
 	}
 
-	public static ArrayList<SurlInfo> doLsDetailed(StormResource source) {
+	public static ArrayList<SurlInfo> doLsDetailed(StormResource source, Recursion recursion) {
 		UserCredentials user = new UserCredentials(StormHTTPHelper.getRequest());
-		LsOutputData output = StormBackendApi.lsDetailed(source.factory.getBackendApi(), source.getSurl(), user);
+		LsOutputData output = StormBackendApi.lsDetailed(source.factory.getBackendApi(), source.getSurl(), user, new RecursionLevel(recursion));
 		return (ArrayList<SurlInfo>) output.getInfos();
 	}
 
