@@ -9,12 +9,14 @@ import io.milton.http.exceptions.ConflictException;
 import io.milton.http.exceptions.NotAuthorizedException;
 import io.milton.resource.*;
 import it.grid.storm.srm.types.Recursion;
+import it.grid.storm.srm.types.SizeUnit;
 import it.grid.storm.xmlrpc.outputdata.LsOutputData.SurlInfo;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -117,7 +119,6 @@ public class StormDirectoryResource extends StormResource implements MakeCollect
 		log.info("Called function for GET DIRECTORY");
 		String subpath = getFile().getCanonicalPath().substring(factory.getRoot().getCanonicalPath().length()).replace('\\', '/');
 		String uri = "/" + factory.getContextPath() + subpath;
-				
 		XmlWriter w = new XmlWriter(out);
 		w.open("html");
 		w.open("head");
@@ -125,17 +126,47 @@ public class StormDirectoryResource extends StormResource implements MakeCollect
 		w.open("body");
 		w.begin("h1").open().writeText(this.getName()).close();
 		w.open("table");
+		w.open("tr");
+		w.open("td");
+		w.begin("b").open().writeText("name").close();
+		w.close("td");
+		w.open("td");
+		w.begin("b").open().writeText("size").close();
+		w.close("td");
+		w.open("td");
+		w.begin("b").open().writeText("modified").close();
+		w.close("td");
+		w.open("td");
+		w.begin("b").open().writeText("created").close();
+		w.close("td");
+		w.open("td");
+		w.begin("b").open().writeText("checksum-type").close();
+		w.close("td");
+		w.open("td");
+		w.begin("b").open().writeText("checksum-value").close();
+		w.close("td");
+		w.close("tr");
+		SimpleDateFormat dateFormat = new SimpleDateFormat("EEE, d MMM yyyy HH:mm:ss");		
 		for (SurlInfo entry : StormResourceHelper.doLsDetailed(this, Recursion.FULL).get(0).getSubpathInfo()) {
 			w.open("tr");
 			w.open("td");
+			//entry name-link
 			String name = entry.getStfn().split("/")[entry.getStfn().split("/").length-1];
-			String checksumType = entry.getCheckSumType() == null ? "" : entry.getCheckSumType().toString() ;
-			String checksumValue = entry.getCheckSumValue() == null ? "" : entry.getCheckSumValue().toString() ;
-			String checksum = checksumType.isEmpty() && checksumValue.isEmpty() ? "" : "[checksum-type: " + checksumType + " checksum-value: " + checksumType + "]";
 			String path = buildHref(uri, name);
 			w.begin("a").writeAtt("href", path).open().writeText(name).close();
 			w.close("td");
-			w.begin("td").open().writeText(entry.getModificationTime() + checksum).close();
+			//size
+			w.begin("td").open().writeText("" + entry.getSize().getSizeIn(SizeUnit.KILOBYTES) + " KB").close();
+			//modified date
+			w.begin("td").open().writeText(dateFormat.format(entry.getModificationTime())).close();
+			//creation date
+			w.begin("td").open().writeText(dateFormat.format(entry.getCreationTime())).close();
+			//checksum type
+			String checksumType = entry.getCheckSumType() == null ? "" : entry.getCheckSumType().toString();
+			w.begin("td").open().writeText(dateFormat.format(checksumType)).close();
+			//checksum value
+			String checksumValue = entry.getCheckSumValue() == null ? "" : entry.getCheckSumValue().toString() ;
+			w.begin("td").open().writeText(dateFormat.format(checksumValue)).close();
 			w.close("tr");
 		}			
 		w.close("table");
