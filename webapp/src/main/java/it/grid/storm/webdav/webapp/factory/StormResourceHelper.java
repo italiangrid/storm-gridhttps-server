@@ -125,6 +125,12 @@ public class StormResourceHelper {
 		LsOutputData output = StormBackendApi.lsDetailed(source.factory.getBackendApi(), source.getSurl(), user, new RecursionLevel(recursion));
 		return (ArrayList<SurlInfo>) output.getInfos();
 	}
+	
+	public static ArrayList<SurlInfo> doLs(StormResource source) {
+		UserCredentials user = new UserCredentials(StormHTTPHelper.getRequest());
+		LsOutputData output = StormBackendApi.ls(source.factory.getBackendApi(), source.getSurl(), user);
+		return (ArrayList<SurlInfo>) output.getInfos();
+	}
 
 	public static PingOutputData doPing(String stormBackendHostname, int stormBackendPort) {
 		UserCredentials user = new UserCredentials(StormHTTPHelper.getRequest());
