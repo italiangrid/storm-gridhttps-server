@@ -10,6 +10,7 @@ import io.milton.http.exceptions.NotAuthorizedException;
 import io.milton.resource.*;
 import it.grid.storm.srm.types.Recursion;
 import it.grid.storm.srm.types.SizeUnit;
+import it.grid.storm.srm.types.TFileType;
 import it.grid.storm.xmlrpc.outputdata.LsOutputData.SurlInfo;
 
 import java.io.File;
@@ -121,11 +122,10 @@ public class StormDirectoryResource extends StormResource implements MakeCollect
 		log.info("Called function for GET DIRECTORY");
 		String subpath = getFile().getCanonicalPath().substring(factory.getRoot().getCanonicalPath().length()).replace('\\', '/');
 		String uri = "/" + factory.getContextPath() + subpath;
-		
+
 		Collection<SurlInfo> entries = StormResourceHelper.doLsDetailed(this, Recursion.FULL).get(0).getSubpathInfo();
 		buildDirectoryPage(out, uri, entries);
-		
-		
+
 	}
 
 	private void buildDirectoryPage(OutputStream out, String dirPath, Collection<SurlInfo> entries) {
@@ -149,34 +149,41 @@ public class StormDirectoryResource extends StormResource implements MakeCollect
 		for (SurlInfo entry : StormResourceHelper.doLsDetailed(this, Recursion.FULL).get(0).getSubpathInfo()) {
 			w.open("tr");
 			w.open("td");
-			//entry name-link
-			String name = entry.getStfn().split("/")[entry.getStfn().split("/").length-1];
+			// entry name-link
+			String name = entry.getStfn().split("/")[entry.getStfn().split("/").length - 1];
 			String path = buildHref(dirPath, name);
+			if (entry.getType().equals(TFileType.DIRECTORY))
+				w.begin("img").writeAtt("alt", "").writeAtt("src", getFolderIco()).open().close();
 			w.begin("a").writeAtt("href", path).open().writeText(name).close();
 			w.close("td");
-			//size
+			// size
 			w.begin("td").open().writeText(decimalFormat.format(entry.getSize().getSizeIn(SizeUnit.KILOBYTES)) + " KB").close();
-			//modified date
+			// modified date
 			w.begin("td").open().writeText(dateFormat.format(entry.getModificationTime())).close();
-			//checksum type
+			// checksum type
 			String checksumType = entry.getCheckSumType() == null ? "" : entry.getCheckSumType().toString();
 			w.begin("td").open().writeText(checksumType).close();
-			//checksum value
-			String checksumValue = entry.getCheckSumValue() == null ? "" : entry.getCheckSumValue().toString() ;
+			// checksum value
+			String checksumValue = entry.getCheckSumValue() == null ? "" : entry.getCheckSumValue().toString();
 			w.begin("td").open().writeText(checksumValue).close();
 			w.close("tr");
-		}			
+		}
 		w.close("table");
 		w.close("body");
 		w.close("html");
 		w.flush();
 	}
-	
+
 	private String getTableStyle() {
 		String out = "table {width: 100%; font-family: Arial,\"Bitstream Vera Sans\",Helvetica,Verdana,sans-serif; color: #333;}";
 		out += "table td, table th {color: #555;}";
 		out += "table th {text-shadow: rgba(255, 255, 255, 0.796875) 0px 1px 0px; font-family: Georgia,\"Times New Roman\",\"Bitstream Charter\",Times,serif; font-weight: normal; padding: 7px 7px 8px; text-align: left; line-height: 1.3em; font-size: 14px;}";
 		out += "table td {font-size: 12px; padding: 4px 7px 2px; vertical-align: top; }";
+		return out;
+	}
+
+	private String getFolderIco() {
+		String out = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAAGXcA1uAAAABGdBTUEAALGOfPtRkwAAACBjSFJNAAB6JQAAgIMAAPn/AACA6AAAdTAAAOpgAAA6lwAAF2+XqZnUAAACFklEQVR4nGL4//8/AwwDBBBDSkpKKRDvB2GAAAJxfIH4PwgDBBADsjKAAALJsMKUAQQQA0wJCAMEEIhTiCQwHYjngrQABBBIIgtZJQwDBBDYQCCjAIgbkLAmQACh2IiMAQII2cKtQDwbiDtAEgABBJNYB3MaFEcABBDMDgzLAQIIJKiPRaIOIIBgOpBd1AASAwggmEQ4SBU0tCJwuRSEAQIIpLgam91Y8CaQBoAAggVGCJGa/gMEEEhDCi4fYsGXAAII5odiIjVIAwQQTs/hwgABRLIGgAACOUcY6vEqIC4DYlF8GgACCJdnpwLxTGiimAPEFjANAAFEbOj8h2kACCCYhjwgTkdLUeh4A0gDQADBNGgRaVMpQACBNBwB4jYiNagDBBBIQwYQ3yLWHwABBNIgQIrHAQIIZ07Bgv+A1AIEEEyDUgpaZkHDebBgBQggkpMGQACRrIFUDBBAIOfLAvEbAv49B8Ss5FgAEEAgC+qIjQUi8F8gtke2ACCAQBZUICn4lwIpeX2AWAeINaC0FpQNwmpArIKEQRGoAMVyQCyJbAFAACGXFheAmAmIV1LRR+4AAQSyIBeIfwExHxDHUNFwEA4ACCCQBaBcPAWaXjdQ0fAfQMwCEEAgQxOB2AaIOYD4DxUtWAFyNEAAwSMDKBBJ5eAJAZkLEEDIFmgD8TcqGAxKqmUwcwECiOY5GSCAaG4BQIABAFbNMXYg1UnRAAAAAElFTkSuQmCC";
 		return out;
 	}
 
@@ -194,7 +201,7 @@ public class StormDirectoryResource extends StormResource implements MakeCollect
 			return s += name;
 		}
 	}
-	
+
 	public Long getMaxAgeSeconds(Auth auth) {
 		return null;
 	}
