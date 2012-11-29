@@ -16,8 +16,10 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import org.slf4j.Logger;
@@ -119,41 +121,41 @@ public class StormDirectoryResource extends StormResource implements MakeCollect
 		log.info("Called function for GET DIRECTORY");
 		String subpath = getFile().getCanonicalPath().substring(factory.getRoot().getCanonicalPath().length()).replace('\\', '/');
 		String uri = "/" + factory.getContextPath() + subpath;
+		
+		Collection<SurlInfo> entries = StormResourceHelper.doLsDetailed(this, Recursion.FULL).get(0).getSubpathInfo();
+		buildDirectoryPage(out, uri, entries);
+		
+		
+	}
+
+	private void buildDirectoryPage(OutputStream out, String dirPath, Collection<SurlInfo> entries) {
 		XmlWriter w = new XmlWriter(out);
 		w.open("html");
 		w.open("head");
+		w.begin("style").writeAtt("type", "text/css").open().writeText(getTableStyle()).close();
 		w.close("head");
 		w.open("body");
 		w.begin("h1").open().writeText(this.getName()).close();
 		w.open("table");
 		w.open("tr");
-		w.open("td");
-		w.begin("b").open().writeText("name").close();
-		w.close("td");
-		w.open("td");
-		w.begin("b").open().writeText("size").close();
-		w.close("td");
-		w.open("td");
-		w.begin("b").open().writeText("modified").close();
-		w.close("td");
-		w.open("td");
-		w.begin("b").open().writeText("checksum-type").close();
-		w.close("td");
-		w.open("td");
-		w.begin("b").open().writeText("checksum-value").close();
-		w.close("td");
+		w.begin("td").begin("b").open().writeText("name").close().close().close().close();
+		w.begin("td").begin("b").open().writeText("size").close().close().close().close();
+		w.begin("td").begin("b").open().writeText("modified").close().close().close().close();
+		w.begin("td").begin("b").open().writeText("checksum-type").close().close().close().close();
+		w.begin("td").begin("b").open().writeText("checksum-value").close().close().close().close();
 		w.close("tr");
-		SimpleDateFormat dateFormat = new SimpleDateFormat("EEE, d MMM yyyy HH:mm:ss");		
+		SimpleDateFormat dateFormat = new SimpleDateFormat("EEE, d MMM yyyy HH:mm:ss");
+		DecimalFormat decimalFormat = new DecimalFormat("#.##");
 		for (SurlInfo entry : StormResourceHelper.doLsDetailed(this, Recursion.FULL).get(0).getSubpathInfo()) {
 			w.open("tr");
 			w.open("td");
 			//entry name-link
 			String name = entry.getStfn().split("/")[entry.getStfn().split("/").length-1];
-			String path = buildHref(uri, name);
+			String path = buildHref(dirPath, name);
 			w.begin("a").writeAtt("href", path).open().writeText(name).close();
 			w.close("td");
 			//size
-			w.begin("td").open().writeText("" + entry.getSize().getSizeIn(SizeUnit.KILOBYTES) + " KB").close();
+			w.begin("td").open().writeText(decimalFormat.format(entry.getSize().getSizeIn(SizeUnit.KILOBYTES)) + " KB").close();
 			//modified date
 			w.begin("td").open().writeText(dateFormat.format(entry.getModificationTime())).close();
 			//checksum type
@@ -169,17 +171,13 @@ public class StormDirectoryResource extends StormResource implements MakeCollect
 		w.close("html");
 		w.flush();
 	}
-
-	public Long getMaxAgeSeconds(Auth auth) {
-		return null;
-	}
-
-	public String getContentType(String accepts) {
-		return "text/html";
-	}
-
-	public Long getContentLength() {
-		return null;
+	
+	private String getTableStyle() {
+		String out = "table {width: 100%; font-family: Arial,\"Bitstream Vera Sans\",Helvetica,Verdana,sans-serif; color: #333;}";
+		out += "table td, table th {color: #555;}";
+		out += "table th {text-shadow: rgba(255, 255, 255, 0.796875) 0px 1px 0px; font-family: Georgia,\"Times New Roman\",\"Bitstream Charter\",Times,serif; font-weight: normal; padding: 7px 7px 8px; text-align: left; line-height: 1.3em; font-size: 14px;}";
+		out += "table td {font-size: 12px; padding: 4px 7px 2px; vertical-align: top; }";
+		return out;
 	}
 
 	private String buildHref(String uri, String name) {
@@ -195,6 +193,18 @@ public class StormDirectoryResource extends StormResource implements MakeCollect
 			String s = insertSsoPrefix(abUrl, ssoPrefix);
 			return s += name;
 		}
+	}
+	
+	public Long getMaxAgeSeconds(Auth auth) {
+		return null;
+	}
+
+	public String getContentType(String accepts) {
+		return "text/html";
+	}
+
+	public Long getContentLength() {
+		return null;
 	}
 
 	public static String insertSsoPrefix(String abUrl, String prefix) {
