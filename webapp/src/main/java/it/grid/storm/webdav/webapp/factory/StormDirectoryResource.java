@@ -137,9 +137,6 @@ public class StormDirectoryResource extends StormResource implements MakeCollect
 		w.begin("b").open().writeText("modified").close();
 		w.close("td");
 		w.open("td");
-		w.begin("b").open().writeText("created").close();
-		w.close("td");
-		w.open("td");
 		w.begin("b").open().writeText("checksum-type").close();
 		w.close("td");
 		w.open("td");
@@ -159,8 +156,6 @@ public class StormDirectoryResource extends StormResource implements MakeCollect
 			w.begin("td").open().writeText("" + entry.getSize().getSizeIn(SizeUnit.KILOBYTES) + " KB").close();
 			//modified date
 			w.begin("td").open().writeText(dateFormat.format(entry.getModificationTime())).close();
-			//creation date
-			w.begin("td").open().writeText(dateFormat.format(entry.getCreationTime())).close();
 			//checksum type
 			String checksumType = entry.getCheckSumType() == null ? "" : entry.getCheckSumType().toString();
 			w.begin("td").open().writeText(dateFormat.format(checksumType)).close();
