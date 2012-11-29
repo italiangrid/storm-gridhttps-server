@@ -138,11 +138,11 @@ public class StormDirectoryResource extends StormResource implements MakeCollect
 		w.begin("h1").open().writeText(this.getName()).close();
 		w.open("table");
 		w.open("tr");
-		w.begin("td").begin("b").open().writeText("name").close().close().close().close();
-		w.begin("td").begin("b").open().writeText("size").close().close().close().close();
-		w.begin("td").begin("b").open().writeText("modified").close().close().close().close();
-		w.begin("td").begin("b").open().writeText("checksum-type").close().close().close().close();
-		w.begin("td").begin("b").open().writeText("checksum-value").close().close().close().close();
+		w.begin("td").open().begin("b").open().writeText("name").close().close();
+		w.begin("td").open().begin("b").open().writeText("size").close().close();
+		w.begin("td").open().begin("b").open().writeText("modified").close().close();
+		w.begin("td").open().begin("b").open().writeText("checksum-type").close().close();
+		w.begin("td").open().begin("b").open().writeText("checksum-value").close().close();
 		w.close("tr");
 		SimpleDateFormat dateFormat = new SimpleDateFormat("EEE, d MMM yyyy HH:mm:ss");
 		DecimalFormat decimalFormat = new DecimalFormat("#.##");
