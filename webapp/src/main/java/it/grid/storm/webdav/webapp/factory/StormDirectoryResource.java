@@ -158,10 +158,10 @@ public class StormDirectoryResource extends StormResource implements MakeCollect
 			w.begin("td").open().writeText(dateFormat.format(entry.getModificationTime())).close();
 			//checksum type
 			String checksumType = entry.getCheckSumType() == null ? "" : entry.getCheckSumType().toString();
-			w.begin("td").open().writeText(dateFormat.format(checksumType)).close();
+			w.begin("td").open().writeText(checksumType).close();
 			//checksum value
 			String checksumValue = entry.getCheckSumValue() == null ? "" : entry.getCheckSumValue().toString() ;
-			w.begin("td").open().writeText(dateFormat.format(checksumValue)).close();
+			w.begin("td").open().writeText(checksumValue).close();
 			w.close("tr");
 		}			
 		w.close("table");
