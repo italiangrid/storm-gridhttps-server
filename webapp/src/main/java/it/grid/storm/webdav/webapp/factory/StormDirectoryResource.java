@@ -179,6 +179,7 @@ public class StormDirectoryResource extends StormResource implements MakeCollect
 		out += "table td, table th {color: #555;}";
 		out += "table th {text-shadow: rgba(255, 255, 255, 0.796875) 0px 1px 0px; font-family: Georgia,\"Times New Roman\",\"Bitstream Charter\",Times,serif; font-weight: normal; padding: 7px 7px 8px; text-align: left; line-height: 1.3em; font-size: 14px;}";
 		out += "table td {font-size: 12px; padding: 4px 7px 2px; vertical-align: top; }";
+		out += "img {margin-right: 5px; margin-top: 0; vertical-align: bottom; width: 12px; }";
 		return out;
 	}
 
