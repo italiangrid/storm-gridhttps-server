@@ -9,7 +9,6 @@ import io.milton.http.exceptions.ConflictException;
 import io.milton.http.exceptions.NotAuthorizedException;
 import io.milton.resource.*;
 import it.grid.storm.srm.types.Recursion;
-import it.grid.storm.srm.types.TFileType;
 import it.grid.storm.xmlrpc.outputdata.LsOutputData.SurlInfo;
 
 import java.io.File;
@@ -130,23 +129,15 @@ public class StormDirectoryResource extends StormResource implements MakeCollect
 			w.open("tr");
 			w.open("td");
 			String name = entry.getStfn().split("/")[entry.getStfn().split("/").length-1];
+			String checksumType = entry.getCheckSumType() == null ? "" : entry.getCheckSumType().toString() ;
+			String checksumValue = entry.getCheckSumValue() == null ? "" : entry.getCheckSumValue().toString() ;
+			String checksum = checksumType.isEmpty() && checksumValue.isEmpty() ? "" : "[checksum-type: " + checksumType + " checksum-value: " + checksumType + "]";
 			String path = buildHref(uri, name);
 			w.begin("a").writeAtt("href", path).open().writeText(name).close();
 			w.close("td");
-			w.begin("td").open().writeText(entry.getModificationTime() + "").close();
-			w.begin("td").open().writeText("checksum-type: " + entry.getCheckSumType() + "").close();
-			w.begin("td").open().writeText("checksum-value: " + entry.getCheckSumValue() + "").close();
+			w.begin("td").open().writeText(entry.getModificationTime() + checksum).close();
 			w.close("tr");
 		}			
-//		for (Resource r : getChildren()) {
-//			w.open("tr");
-//			w.open("td");
-//			String path = buildHref(uri, r.getName());
-//			w.begin("a").writeAtt("href", path).open().writeText(r.getName()).close();
-//			w.close("td");
-//			w.begin("td").open().writeText(r.getModifiedDate() + "").close();
-//			w.close("tr");
-//		}
 		w.close("table");
 		w.close("body");
 		w.close("html");
