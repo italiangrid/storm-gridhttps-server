@@ -3,7 +3,7 @@
 %define _docdir /usr/share/doc
 %define default_user root
 
-%define maven_repository ${MavenRepositoryDir}
+%define maven_repository ${MavenLocalRepository}
 %define maven_settings ${MavenSettings}
 %define maven_profile ${MavenProfile}
 %define conf_dir ${ConfDir}
