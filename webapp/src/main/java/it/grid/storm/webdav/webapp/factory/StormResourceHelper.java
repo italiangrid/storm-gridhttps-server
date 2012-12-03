@@ -4,6 +4,8 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 
 import io.milton.http.exceptions.BadRequestException;
@@ -15,6 +17,7 @@ import it.grid.storm.srm.types.Recursion;
 import it.grid.storm.srm.types.RecursionLevel;
 import it.grid.storm.srm.types.TRequestToken;
 import it.grid.storm.webdav.webapp.authorization.UserCredentials;
+import it.grid.storm.webdav.webapp.factory.exceptions.StormResourceException;
 import it.grid.storm.xmlrpc.BackendApi;
 import it.grid.storm.xmlrpc.outputdata.FileTransferOutputData;
 import it.grid.storm.xmlrpc.outputdata.LsOutputData;
@@ -40,9 +43,16 @@ public class StormResourceHelper {
 			ConflictException, BadRequestException {
 		log.info("Called doMoveTo()");
 		UserCredentials user = new UserCredentials(StormHTTPHelper.getRequest());
-		String fromSurl = source.getSurl();
-		String toSurl = newParent.getSurl() + "/" + newName;
-		StormBackendApi.mv(source.factory.getBackendApi(), fromSurl, toSurl, user);
+		URI fromSurl = source.getSurl();
+		URI u = newParent.getSurl();
+		URI toSurl = null;
+		try {
+			toSurl = new URI(u.getScheme(), null, u.getHost(), u.getPort(), u.getPath() + "/" + newName, null, null);
+		} catch (URISyntaxException e) {
+			log.error(e.getMessage());
+			new StormResourceException(e.getMessage());
+		}
+		StormBackendApi.mv(source.factory.getBackendApi(), fromSurl.toASCIIString(), toSurl.toASCIIString(), user);
 	}
 
 	public static void doDelete(StormResource source) throws NotAuthorizedException, ConflictException, BadRequestException {
@@ -51,20 +61,20 @@ public class StormResourceHelper {
 		if (source instanceof StormDirectoryResource) { // DIRECTORY
 			StormDirectoryResource sourceDir = (StormDirectoryResource) source;
 			if (sourceDir.hasChildren()) {
-				StormBackendApi.rmdirRecoursively(sourceDir.factory.getBackendApi(), sourceDir.getSurl(), user);
+				StormBackendApi.rmdirRecoursively(sourceDir.factory.getBackendApi(), sourceDir.getSurl().toASCIIString(), user);
 			} else {
-				StormBackendApi.rmdir(sourceDir.factory.getBackendApi(), sourceDir.getSurl(), user);
+				StormBackendApi.rmdir(sourceDir.factory.getBackendApi(), sourceDir.getSurl().toASCIIString(), user);
 			}
 		} else { // FILE
 			StormFileResource sourceFile = (StormFileResource) source;
-			StormBackendApi.rm(sourceFile.factory.getBackendApi(), sourceFile.getSurl(), user);
+			StormBackendApi.rm(sourceFile.factory.getBackendApi(), sourceFile.getSurl().toASCIIString(), user);
 		}
 	}
 
 	public static InputStream doGetFile(StormFileResource source) throws NotFoundException {
 		log.info("Called doGetFile()");
 		UserCredentials user = new UserCredentials(StormHTTPHelper.getRequest());
-		PtGOutputData outputPtG = StormBackendApi.prepareToGet(source.factory.getBackendApi(), source.getSurl(), user);
+		PtGOutputData outputPtG = StormBackendApi.prepareToGet(source.factory.getBackendApi(), source.getSurl().toASCIIString(), user);
 		InputStream in = null;
 		try {
 			in = source.factory.getContentService().getFileContent(source.file);
@@ -72,7 +82,7 @@ public class StormResourceHelper {
 			log.error(e.getMessage());
 			throw new NotFoundException("Couldn't locate content");
 		}
-		StormBackendApi.releaseFile(source.factory.getBackendApi(), source.getSurl(), outputPtG.getToken(), user);
+		StormBackendApi.releaseFile(source.factory.getBackendApi(), source.getSurl().toASCIIString(), outputPtG.getToken(), user);
 		return in;
 	}
 
@@ -108,7 +118,7 @@ public class StormResourceHelper {
 			NotAuthorizedException {
 		log.info("Called doPutOverewrite()");
 		UserCredentials user = new UserCredentials(StormHTTPHelper.getRequest());
-		FileTransferOutputData outputPtp = StormBackendApi.prepareToPutOverwrite(source.factory.getBackendApi(), source.getSurl(), user);
+		FileTransferOutputData outputPtp = StormBackendApi.prepareToPutOverwrite(source.factory.getBackendApi(), source.getSurl().toASCIIString(), user);
 		// overwrite
 		try {
 			source.factory.getContentService().setFileContent(source.file, in);
@@ -117,19 +127,19 @@ public class StormResourceHelper {
 			abortRequest(source.factory.getBackendApi(), outputPtp.getToken(), user);
 			throw new RuntimeException("Couldnt write to: " + source.file.getAbsolutePath(), ex);
 		}
-		StormBackendApi.putDone(source.factory.getBackendApi(), source.getSurl(), outputPtp.getToken(), user);
+		StormBackendApi.putDone(source.factory.getBackendApi(), source.getSurl().toASCIIString(), outputPtp.getToken(), user);
 	}
 
 	public static ArrayList<SurlInfo> doLsDetailed(StormResource source, Recursion recursion) {
 		UserCredentials user = new UserCredentials(StormHTTPHelper.getRequest());
-		LsOutputData output = StormBackendApi.lsDetailed(source.factory.getBackendApi(), source.getSurl(), user, new RecursionLevel(
+		LsOutputData output = StormBackendApi.lsDetailed(source.factory.getBackendApi(), source.getSurl().toASCIIString(), user, new RecursionLevel(
 				recursion));
 		return (ArrayList<SurlInfo>) output.getInfos();
 	}
 
 	public static ArrayList<SurlInfo> doLs(StormResource source) {
 		UserCredentials user = new UserCredentials(StormHTTPHelper.getRequest());
-		LsOutputData output = StormBackendApi.ls(source.factory.getBackendApi(), source.getSurl(), user);
+		LsOutputData output = StormBackendApi.ls(source.factory.getBackendApi(), source.getSurl().toASCIIString(), user);
 		return (ArrayList<SurlInfo>) output.getInfos();
 	}
 
@@ -168,12 +178,12 @@ public class StormResourceHelper {
 	public static void doCopyFile(StormFileResource source, StormDirectoryResource newParent, String newName) {
 		UserCredentials user = new UserCredentials(StormHTTPHelper.getRequest());
 		/* prepareToGet on source file to lock the resource */
-		PtGOutputData outputPtG = StormBackendApi.prepareToGet(source.factory.getBackendApi(), source.getSurl(), user);
+		PtGOutputData outputPtG = StormBackendApi.prepareToGet(source.factory.getBackendApi(), source.getSurl().toASCIIString(), user);
 		/* create destination */
 		StormResourceHelper.doPut(newParent, newName, source.getInputStream());
 		/* release source resource */
 		try {
-			StormBackendApi.releaseFile(source.factory.getBackendApi(), source.getSurl(), outputPtG.getToken(), user);
+			StormBackendApi.releaseFile(source.factory.getBackendApi(), source.getSurl().toASCIIString(), outputPtG.getToken(), user);
 		} catch (RuntimeException e) {
 			StormBackendApi.abortRequest(source.factory.getBackendApi(), outputPtG.getToken(), user);
 			throw e;

@@ -12,6 +12,8 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Date;
 
@@ -81,16 +83,24 @@ public abstract class StormResource implements Resource, MoveableResource, Copya
 		return this.getName().compareTo(o.getName());
 	}
 
-	public String getSurl() {
+	public URI getSurl() {
 		String rootDir = factory.getRoot().getPath();
 		String path = file.getPath().replaceFirst(rootDir, "/" + factory.getContextPath());
-		String surl = "srm://" + Configuration.stormFrontendHostname + ":" + Configuration.stormFrontendPort + path;
+		URI surl = null;
+		try {
+			surl = new URI("srm", null, Configuration.stormFrontendHostname, Configuration.stormFrontendPort, path, null, null);			
+		} catch (URISyntaxException e) {
+			log.error(e.getMessage());
+		}
+		log.debug("surl: " + surl.toASCIIString());
 		return surl;
+//		String surl = "srm://" + Configuration.stormFrontendHostname + ":" + Configuration.stormFrontendPort + path;
+//		return surl;
 	}
 	
 	public ArrayList<String> getSurlAsList() {
 		ArrayList<String> surls = new ArrayList<String>();
-		surls.add(getSurl());
+		surls.add(getSurl().toASCIIString());
 		return surls;
 	}
 
