@@ -3,7 +3,7 @@
 %define _docdir /usr/share/doc
 %define default_user root
 
-%define maven_repository ${MavenRepositoryDir}
+%define maven_repository ${MavenLocalRepository}
 %define maven_settings ${MavenSettings}
 %define maven_profile ${MavenProfile}
 %define conf_dir ${ConfDir}
@@ -40,7 +40,7 @@ The StoRM GridHTTPS component providing plain http(s) access and WebDAV access t
 %setup -c
 
 %build
-mvn %{maven_settings} -U -Dmaven.test.skip=true -P %{maven_profile} install
+mvn %{maven_settings} %{maven_repository} -U -Dmaven.test.skip=true -P %{maven_profile} install
 
 %install
 rm -rf $RPM_BUILD_ROOT
