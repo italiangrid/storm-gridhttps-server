@@ -8,9 +8,12 @@
 	</bean>
 
 	<bean id="webdav-fs-webapp.extra.property" class="it.grid.storm.webdav.webapp.factory.StormPropertySource" />
+	
+	<bean id="webdav-mainfilter" class="it.grid.storm.webdav.webapp.StormStandardFilter" />
 
 	<bean id="milton.http.manager" class="io.milton.config.HttpManagerBuilder">
 		<property name="mainResourceFactory" ref="milton.fs.resource.factory" />
+		<property name="defaultStandardFilter" ref="webdav-mainfilter" />
 		<property name="enableBasicAuth" value="false" />
 		<property name="enableFormAuth" value="false" />
 		<property name="enableCookieAuth" value="false" />

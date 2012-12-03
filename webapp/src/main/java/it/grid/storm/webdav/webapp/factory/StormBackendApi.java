@@ -9,6 +9,8 @@ import it.grid.storm.srm.types.RecursionLevel;
 import it.grid.storm.srm.types.TRequestToken;
 import it.grid.storm.webdav.webapp.Configuration;
 import it.grid.storm.webdav.webapp.authorization.UserCredentials;
+import it.grid.storm.webdav.webapp.factory.exceptions.RuntimeApiException;
+import it.grid.storm.webdav.webapp.factory.exceptions.StormResourceException;
 import it.grid.storm.xmlrpc.ApiException;
 import it.grid.storm.xmlrpc.BackendApi;
 import it.grid.storm.xmlrpc.outputdata.FileTransferOutputData;
@@ -28,10 +30,7 @@ public class StormBackendApi {
 			backend = new BackendApi(Configuration.stormBackendHostname, new Long(Configuration.stormBackendPort));
 		} catch (ApiException e) {
 			log.error(e.getMessage());
-			throw new RuntimeException("Backend API Exception!", e);
-		} catch (IllegalArgumentException e) {
-			log.error(e.getMessage());
-			throw new RuntimeException("Illegal Argument Exception!", e);
+			throw new RuntimeApiException(e.getMessage(), e);
 		}
 		return backend;
 	}
@@ -47,12 +46,9 @@ public class StormBackendApi {
 			} else {
 				output = backend.abortRequest(user.getUserDN(), user.getUserFQANS(), token);
 			}
-		} catch (IllegalArgumentException e) {
-			log.error(e.getMessage());
-			throw new RuntimeException("IllegalArgumentException!", e);
 		} catch (ApiException e) {
 			log.error(e.getMessage());
-			throw new RuntimeException("Backend API Exception!", e);
+			throw new RuntimeApiException(e.getMessage(), e);
 		}
 		return output;
 	}
@@ -70,11 +66,8 @@ public class StormBackendApi {
 			}
 		} catch (ApiException e) {
 			log.error(e.getMessage());
-			throw new RuntimeException("Backend API Exception!", e);
-		} catch (IllegalArgumentException e) {
-			log.error(e.getMessage());
-			throw new RuntimeException("Illegal Argument Exception!", e);
-		}
+			throw new RuntimeApiException(e.getMessage(), e);
+		} 
 		return output;
 	}
 
@@ -93,15 +86,12 @@ public class StormBackendApi {
 			}
 		} catch (ApiException e) {
 			log.error(e.getMessage());
-			throw new RuntimeException("Backend API Exception!", e);
-		} catch (IllegalArgumentException e) {
-			log.error(e.getMessage());
-			throw new RuntimeException("Illegal Argument Exception!", e);
+			throw new RuntimeApiException(e.getMessage(), e);
 		}
 		log.debug(outputPtG.getStatus().getStatusCode().getValue());
 		log.info(outputPtG.getStatus().getExplanation());
 		if (!outputPtG.getStatus().getStatusCode().getValue().equals("SRM_FILE_PINNED")) {
-			throw new RuntimeException("prepareToGet has failed on surl: " + surl);
+			throw new StormResourceException("prepare-to-get status is " + outputPtG.getStatus().getStatusCode().getValue());
 		}
 		return outputPtG;
 	}
@@ -122,17 +112,17 @@ public class StormBackendApi {
 		} catch (ApiException e) {
 			log.error(e.getMessage());
 			abortRequest(backend, token, user);
-			throw new RuntimeException("Backend API Exception!", e);
-		} catch (IllegalArgumentException e) {
+			throw new RuntimeApiException(e.getMessage(), e);
+		} catch (RuntimeException e) {
 			log.error(e.getMessage());
 			abortRequest(backend, token, user);
-			throw new RuntimeException("Illegal Argument Exception!", e);
+			throw e;
 		}
 		log.debug(output.getStatus().getStatusCode().getValue());
 		log.info(output.getStatus().getExplanation());
 		if (!output.isSuccess()) {
 			abortRequest(backend, token, user);
-			throw new RuntimeException("releaseFiles has failed on surl: " + surl);
+			throw new StormResourceException("release-files status is " + output.getStatus().getStatusCode().getValue());
 		}
 		return output;
 	}
@@ -154,15 +144,12 @@ public class StormBackendApi {
 			}
 		} catch (ApiException e) {
 			log.error(e.getMessage());
-			throw new RuntimeException("Backend API Exception!", e);
-		} catch (IllegalArgumentException e) {
-			log.error(e.getMessage());
-			throw new RuntimeException("Illegal Argument Exception!", e);
+			throw new RuntimeApiException(e.getMessage(), e);
 		}
 		log.debug(outputPtp.getStatus().getStatusCode().getValue());
 		log.info(outputPtp.getStatus().getExplanation());
 		if (!outputPtp.getStatus().getStatusCode().getValue().equals("SRM_SPACE_AVAILABLE")) {
-			throw new RuntimeException("prepareToPut has failed on surl: " + newFileSurl);
+			throw new StormResourceException("prepare-to-put status is " + outputPtp.getStatus().getStatusCode().getValue());
 		}
 		return outputPtp;
 	}
@@ -184,15 +171,12 @@ public class StormBackendApi {
 			}
 		} catch (ApiException e) {
 			log.error(e.getMessage());
-			throw new RuntimeException("Backend API Exception!", e);
-		} catch (IllegalArgumentException e) {
-			log.error(e.getMessage());
-			throw new RuntimeException("Illegal Argument Exception!", e);
+			throw new RuntimeApiException(e.getMessage(), e);
 		}
 		log.debug(outputPtp.getStatus().getStatusCode().getValue());
 		log.info(outputPtp.getStatus().getExplanation());
 		if (!outputPtp.getStatus().getStatusCode().getValue().equals("SRM_SPACE_AVAILABLE")) {
-			throw new RuntimeException("prepareToPutOverwrite has failed on surl: " + newFileSurl + ")");
+			throw new StormResourceException("prepare-to-put-overwrite status is " + outputPtp.getStatus().getStatusCode().getValue());
 		}
 		return outputPtp;
 	}
@@ -213,17 +197,17 @@ public class StormBackendApi {
 		} catch (ApiException e) {
 			log.error(e.getMessage());
 			abortRequest(backend, token, user);
-			throw new RuntimeException("Backend API Exception!", e);
-		} catch (IllegalArgumentException e) {
+			throw new RuntimeApiException(e.getMessage(), e);
+		} catch (RuntimeException e) {
 			log.error(e.getMessage());
 			abortRequest(backend, token, user);
-			throw new RuntimeException("Illegal Argument Exception!", e);
+			throw e;
 		}
 		log.debug(outputPd.getStatus().getStatusCode().getValue());
 		log.info(outputPd.getStatus().getExplanation());
 		if (!outputPd.isSuccess()) {
 			abortRequest(backend, token, user);
-			throw new RuntimeException("putDone has failed on surl: " + newFileSurl);
+			throw new StormResourceException("put-done status is " + outputPd.getStatus().getStatusCode().getValue());
 		}
 		return outputPd;
 	}
@@ -241,15 +225,12 @@ public class StormBackendApi {
 			}
 		} catch (ApiException e) {
 			log.error(e.getMessage());
-			throw new RuntimeException("Backend API Exception!", e);
-		} catch (IllegalArgumentException e) {
-			log.error(e.getMessage());
-			throw new RuntimeException("Illegal Argument Exception!", e);
+			throw new RuntimeApiException(e.getMessage(), e);
 		}
 		log.debug(output.getStatus().getStatusCode().getValue());
 		log.info(output.getStatus().getExplanation());
 		if (!output.isSuccess()) {
-			throw new RuntimeException("mkdir has failed! (surl: " + newDirSurl + ")");
+			throw new StormResourceException("mkdir status is " + output.getStatus().getStatusCode().getValue());
 		}
 		return output;
 	}
@@ -269,15 +250,12 @@ public class StormBackendApi {
 			}
 		} catch (ApiException e) {
 			log.error(e.getMessage());
-			throw new RuntimeException("Backend API Exception!", e);
-		} catch (IllegalArgumentException e) {
-			log.error(e.getMessage());
-			throw new RuntimeException("Illegal Argument Exception!", e);
+			throw new RuntimeApiException(e.getMessage(), e);
 		}
 		log.debug(output.getStatus().getStatusCode().getValue());
 		log.info(output.getStatus().getExplanation());
 		if (!output.isSuccess()) {
-			throw new RuntimeException("rm has failed! (surl: " + surl + ")");
+			throw new StormResourceException("rm status is " + output.getStatus().getStatusCode().getValue());
 		}
 		return output;
 	}
@@ -295,15 +273,12 @@ public class StormBackendApi {
 			}
 		} catch (ApiException e) {
 			log.error(e.getMessage());
-			throw new RuntimeException("Backend API Exception!", e);
-		} catch (IllegalArgumentException e) {
-			log.error(e.getMessage());
-			throw new RuntimeException("Illegal Argument Exception!", e);
+			throw new RuntimeApiException(e.getMessage(), e);
 		}
 		log.debug(output.getStatus().getStatusCode().getValue());
 		log.info(output.getStatus().getExplanation());
 		if (!output.isSuccess()) {
-			throw new RuntimeException("rmdir has failed! (surl: " + surl + ")");
+			throw new StormResourceException("rm-dir status is " + output.getStatus().getStatusCode().getValue());
 		}
 		return output;
 	}
@@ -321,15 +296,12 @@ public class StormBackendApi {
 			}
 		} catch (ApiException e) {
 			log.error(e.getMessage());
-			throw new RuntimeException("Backend API Exception!", e);
-		} catch (IllegalArgumentException e) {
-			log.error(e.getMessage());
-			throw new RuntimeException("Illegal Argument Exception!", e);
+			throw new RuntimeApiException(e.getMessage(), e);
 		}
 		log.debug(output.getStatus().getStatusCode().getValue());
 		log.info(output.getStatus().getExplanation());
 		if (!output.isSuccess()) {
-			throw new RuntimeException("rmdir-recoursively has failed! (surl: " + surl + ")");
+			throw new StormResourceException("rm-dir-recoursively status is " + output.getStatus().getStatusCode().getValue());
 		}
 		return output;
 	}
@@ -347,15 +319,12 @@ public class StormBackendApi {
 			}
 		} catch (ApiException e) {
 			log.error(e.getMessage());
-			throw new RuntimeException("Backend API Exception!", e);
-		} catch (IllegalArgumentException e) {
-			log.error(e.getMessage());
-			throw new RuntimeException("Illegal Argument Exception!", e);
+			throw new RuntimeApiException(e.getMessage(), e);
 		}
 		log.debug(output.getStatus().getStatusCode().getValue());
 		log.info(output.getStatus().getExplanation());
 		if (!output.isSuccess()) {
-			throw new RuntimeException("mv from surl " + fromSurl + " to surl " + toSurl + "has failed!");
+			throw new StormResourceException("mv status is " + output.getStatus().getStatusCode().getValue());
 		}
 		return output;
 	}
@@ -375,15 +344,12 @@ public class StormBackendApi {
 			}
 		} catch (ApiException e) {
 			log.error(e.getMessage());
-			throw new RuntimeException("Backend API Exception!", e);
-		} catch (IllegalArgumentException e) {
-			log.error(e.getMessage());
-			throw new RuntimeException("Illegal Argument Exception!", e);
+			throw new RuntimeApiException(e.getMessage(), e);
 		}
 		log.debug(output.getStatus().getStatusCode().getValue());
 		log.info(output.getStatus().getExplanation());
 		if (!output.isSuccess()) {
-			throw new RuntimeException("ls-detailed has failed! (surl: " + surl + ")");
+			throw new StormResourceException("ls-detailed status is " + output.getStatus().getStatusCode().getValue());
 		}
 		return output;
 	}
@@ -403,15 +369,12 @@ public class StormBackendApi {
 			}
 		} catch (ApiException e) {
 			log.error(e.getMessage());
-			throw new RuntimeException("Backend API Exception!", e);
-		} catch (IllegalArgumentException e) {
-			log.error(e.getMessage());
-			throw new RuntimeException("Illegal Argument Exception!", e);
+			throw new RuntimeApiException("Backend API Exception!", e);
 		}
 		log.debug(output.getStatus().getStatusCode().getValue());
 		log.info(output.getStatus().getExplanation());
 		if (!output.isSuccess()) {
-			throw new RuntimeException("ls-detailed has failed! (surl: " + surl + ")");
+			throw new StormResourceException("ls status is " + output.getStatus().getStatusCode().getValue());
 		}
 		return output;
 	}

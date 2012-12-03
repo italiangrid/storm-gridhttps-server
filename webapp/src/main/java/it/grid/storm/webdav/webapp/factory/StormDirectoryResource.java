@@ -125,7 +125,6 @@ public class StormDirectoryResource extends StormResource implements MakeCollect
 
 		Collection<SurlInfo> entries = StormResourceHelper.doLsDetailed(this, Recursion.FULL).get(0).getSubpathInfo();
 		buildDirectoryPage(out, uri, entries);
-
 	}
 
 	private void buildDirectoryPage(OutputStream out, String dirPath, Collection<SurlInfo> entries) {

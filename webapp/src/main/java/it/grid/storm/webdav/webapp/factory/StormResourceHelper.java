@@ -109,7 +109,7 @@ public class StormResourceHelper {
 		log.info("Called doPutOverewrite()");
 		UserCredentials user = new UserCredentials(StormHTTPHelper.getRequest());
 		FileTransferOutputData outputPtp = StormBackendApi.prepareToPutOverwrite(source.factory.getBackendApi(), source.getSurl(), user);
-		//overwrite
+		// overwrite
 		try {
 			source.factory.getContentService().setFileContent(source.file, in);
 		} catch (IOException ex) {
@@ -122,10 +122,11 @@ public class StormResourceHelper {
 
 	public static ArrayList<SurlInfo> doLsDetailed(StormResource source, Recursion recursion) {
 		UserCredentials user = new UserCredentials(StormHTTPHelper.getRequest());
-		LsOutputData output = StormBackendApi.lsDetailed(source.factory.getBackendApi(), source.getSurl(), user, new RecursionLevel(recursion));
+		LsOutputData output = StormBackendApi.lsDetailed(source.factory.getBackendApi(), source.getSurl(), user, new RecursionLevel(
+				recursion));
 		return (ArrayList<SurlInfo>) output.getInfos();
 	}
-	
+
 	public static ArrayList<SurlInfo> doLs(StormResource source) {
 		UserCredentials user = new UserCredentials(StormHTTPHelper.getRequest());
 		LsOutputData output = StormBackendApi.ls(source.factory.getBackendApi(), source.getSurl(), user);
@@ -164,15 +165,19 @@ public class StormResourceHelper {
 		}
 	}
 
-	public static void doCopyFile(StormFileResource source, StormDirectoryResource newParent, String newName)
-			throws NotAuthorizedException, ConflictException, BadRequestException {
+	public static void doCopyFile(StormFileResource source, StormDirectoryResource newParent, String newName) {
 		UserCredentials user = new UserCredentials(StormHTTPHelper.getRequest());
 		/* prepareToGet on source file to lock the resource */
 		PtGOutputData outputPtG = StormBackendApi.prepareToGet(source.factory.getBackendApi(), source.getSurl(), user);
 		/* create destination */
 		StormResourceHelper.doPut(newParent, newName, source.getInputStream());
 		/* release source resource */
-		StormBackendApi.releaseFile(source.factory.getBackendApi(), source.getSurl(), outputPtG.getToken(), user);
+		try {
+			StormBackendApi.releaseFile(source.factory.getBackendApi(), source.getSurl(), outputPtG.getToken(), user);
+		} catch (RuntimeException e) {
+			StormBackendApi.abortRequest(source.factory.getBackendApi(), outputPtG.getToken(), user);
+			throw e;
+		}
 	}
 
 }
