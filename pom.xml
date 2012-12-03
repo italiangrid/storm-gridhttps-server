@@ -5,6 +5,7 @@
 	<artifactId>storm-gridhttps-server</artifactId>
 	<version>2.0.0</version>
 	<packaging>pom</packaging>
+	
 	<developers>
 		<developer>
 			<name>Enrico Vianello</name>
@@ -50,6 +51,7 @@
 		<jar_installation_prefix>/usr/share/java</jar_installation_prefix>
 		<work_installation_directory>/var/lib/storm</work_installation_directory>
 		<doc_installation_prefix>/usr/share/doc</doc_installation_prefix>
+		<local_repository_dir>/tmp/m2-repository</local_repository_dir>
 	</properties>
 
 	<modules>
@@ -106,7 +108,7 @@
 								<PackageRelease>${release}</PackageRelease>
 								<JavaHome>${java.home}</JavaHome>
 								<MavenSettings>${maven_settings}</MavenSettings>
-								<MavenRepositoryDir>${settings.localRepository}</MavenRepositoryDir>
+								<MavenLocalRepository>-Dmaven.repo.local=${local_repository_dir}</MavenLocalRepository>
 								<MavenProfile>${project.activeProfiles[0].id}</MavenProfile>
 								<ConfDir>${conf_installation_prefix}</ConfDir>
 								<LogDir>${log_installation_directory}</LogDir>
