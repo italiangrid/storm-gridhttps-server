@@ -89,8 +89,16 @@ public class StormResourceHelper {
 	public static void doMkCol(StormDirectoryResource sourceDir, String name) {
 		log.info("Called doMkCol()");
 		UserCredentials user = new UserCredentials(StormHTTPHelper.getRequest());
-		String newDirSurl = sourceDir.getSurl() + "/" + name;
-		StormBackendApi.mkdir(sourceDir.factory.getBackendApi(), newDirSurl, user);
+		URI u = sourceDir.getSurl();
+		URI newSurl = null;
+		try {
+			newSurl = new URI(u.getScheme(), null, u.getHost(), u.getPort(), u.getPath() + "/" + name, null, null);
+		} catch (URISyntaxException e) {
+			log.error(e.getMessage());
+			new StormResourceException(e.getMessage());
+		}
+//		String newDirSurl = sourceDir.getSurl() + "/" + name;
+		StormBackendApi.mkdir(sourceDir.factory.getBackendApi(), newSurl.toASCIIString(), user);
 	}
 
 	public static void doPut(StormDirectoryResource sourceDir, String name, InputStream in) {

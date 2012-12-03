@@ -53,10 +53,10 @@ public class StormStandardFilter implements Filter {
 			log.warn("NotAuthorizedException", ex);
 			manager.getResponseHandler().respondUnauthorised(ex.getResource(), response, request);
 		} catch (RuntimeApiException ex) {
-			log.warn(ex.getMessage(), ex);
+			log.error(ex.getMessage());
 			manager.getResponseHandler().respondServerError(request, response, ex.getMessage());
 		} catch (StormResourceException ex) {
-			log.warn(ex.getMessage(), ex);
+			log.error(ex.getMessage());
 			manager.getResponseHandler().respondServerError(request, response, ex.getMessage());
 		} catch (Throwable e) {
 			// Looks like in some cases we can be left with a connection in an
