@@ -17,6 +17,7 @@ import it.grid.storm.srm.types.Recursion;
 import it.grid.storm.srm.types.RecursionLevel;
 import it.grid.storm.srm.types.TRequestToken;
 import it.grid.storm.webdav.webapp.authorization.UserCredentials;
+import it.grid.storm.webdav.webapp.factory.exceptions.RuntimeApiException;
 import it.grid.storm.webdav.webapp.factory.exceptions.StormResourceException;
 import it.grid.storm.xmlrpc.BackendApi;
 import it.grid.storm.xmlrpc.outputdata.FileTransferOutputData;
@@ -34,7 +35,7 @@ public class StormResourceHelper {
 
 	/* STORM METHOD */
 
-	private static void abortRequest(BackendApi backend, TRequestToken token, UserCredentials user) {
+	private static void abortRequest(BackendApi backend, TRequestToken token, UserCredentials user) throws RuntimeApiException {
 		log.info("Aborting srm request...");
 		StormBackendApi.abortRequest(backend, token, user);
 	}
@@ -71,7 +72,7 @@ public class StormResourceHelper {
 		}
 	}
 
-	public static InputStream doGetFile(StormFileResource source) throws NotFoundException {
+	public static InputStream doGetFile(StormFileResource source) throws NotFoundException, RuntimeApiException, StormResourceException {
 		log.info("Called doGetFile()");
 		UserCredentials user = new UserCredentials(StormHTTPHelper.getRequest());
 		PtGOutputData outputPtG = StormBackendApi.prepareToGet(source.factory.getBackendApi(), source.getSurl().toASCIIString(), user);
@@ -86,7 +87,7 @@ public class StormResourceHelper {
 		return in;
 	}
 
-	public static void doMkCol(StormDirectoryResource sourceDir, String name) {
+	public static void doMkCol(StormDirectoryResource sourceDir, String name) throws RuntimeApiException, StormResourceException {
 		log.info("Called doMkCol()");
 		UserCredentials user = new UserCredentials(StormHTTPHelper.getRequest());
 		URI u = sourceDir.getSurl();
@@ -101,7 +102,7 @@ public class StormResourceHelper {
 		StormBackendApi.mkdir(sourceDir.factory.getBackendApi(), newSurl.toASCIIString(), user);
 	}
 
-	public static void doPut(StormDirectoryResource sourceDir, String name, InputStream in) {
+	public static void doPut(StormDirectoryResource sourceDir, String name, InputStream in) throws RuntimeApiException, StormResourceException {
 		log.info("Called doPut()");
 		UserCredentials user = new UserCredentials(StormHTTPHelper.getRequest());
 		File destinationFile = new File(sourceDir.file, name);
@@ -138,20 +139,20 @@ public class StormResourceHelper {
 		StormBackendApi.putDone(source.factory.getBackendApi(), source.getSurl().toASCIIString(), outputPtp.getToken(), user);
 	}
 
-	public static ArrayList<SurlInfo> doLsDetailed(StormResource source, Recursion recursion) {
+	public static ArrayList<SurlInfo> doLsDetailed(StormResource source, Recursion recursion) throws RuntimeApiException, StormResourceException {
 		UserCredentials user = new UserCredentials(StormHTTPHelper.getRequest());
 		LsOutputData output = StormBackendApi.lsDetailed(source.factory.getBackendApi(), source.getSurl().toASCIIString(), user, new RecursionLevel(
 				recursion));
 		return (ArrayList<SurlInfo>) output.getInfos();
 	}
 
-	public static ArrayList<SurlInfo> doLs(StormResource source) {
+	public static ArrayList<SurlInfo> doLs(StormResource source) throws RuntimeApiException, StormResourceException {
 		UserCredentials user = new UserCredentials(StormHTTPHelper.getRequest());
 		LsOutputData output = StormBackendApi.ls(source.factory.getBackendApi(), source.getSurl().toASCIIString(), user);
 		return (ArrayList<SurlInfo>) output.getInfos();
 	}
 
-	public static PingOutputData doPing(String stormBackendHostname, int stormBackendPort) {
+	public static PingOutputData doPing(String stormBackendHostname, int stormBackendPort) throws RuntimeApiException {
 		UserCredentials user = new UserCredentials(StormHTTPHelper.getRequest());
 		BackendApi backend = StormBackendApi.getBackend(stormBackendHostname, stormBackendPort);
 		return StormBackendApi.ping(backend, user);
@@ -183,7 +184,7 @@ public class StormResourceHelper {
 		}
 	}
 
-	public static void doCopyFile(StormFileResource source, StormDirectoryResource newParent, String newName) {
+	public static void doCopyFile(StormFileResource source, StormDirectoryResource newParent, String newName) throws RuntimeApiException, StormResourceException {
 		UserCredentials user = new UserCredentials(StormHTTPHelper.getRequest());
 		/* prepareToGet on source file to lock the resource */
 		PtGOutputData outputPtG = StormBackendApi.prepareToGet(source.factory.getBackendApi(), source.getSurl().toASCIIString(), user);

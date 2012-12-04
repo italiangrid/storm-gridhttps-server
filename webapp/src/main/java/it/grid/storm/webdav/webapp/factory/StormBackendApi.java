@@ -24,7 +24,7 @@ public class StormBackendApi {
 
 	private static final Logger log = LoggerFactory.getLogger(StormBackendApi.class);
 
-	public static BackendApi getBackend(String hostname, int port) {
+	public static BackendApi getBackend(String hostname, int port) throws RuntimeApiException {
 		BackendApi backend = null;
 		try {
 			backend = new BackendApi(Configuration.stormBackendHostname, new Long(Configuration.stormBackendPort));
@@ -35,7 +35,7 @@ public class StormBackendApi {
 		return backend;
 	}
 
-	public static RequestOutputData abortRequest(BackendApi backend, TRequestToken token, UserCredentials user) {
+	public static RequestOutputData abortRequest(BackendApi backend, TRequestToken token, UserCredentials user) throws RuntimeApiException {
 		log.debug("aborting srm request - token " + token.getValue());
 		RequestOutputData output = null;
 		try {
@@ -53,7 +53,7 @@ public class StormBackendApi {
 		return output;
 	}
 
-	public static PingOutputData ping(BackendApi backend, UserCredentials user) {
+	public static PingOutputData ping(BackendApi backend, UserCredentials user) throws RuntimeApiException {
 		log.debug("ping backend");
 		PingOutputData output = null;
 		try {
@@ -71,7 +71,7 @@ public class StormBackendApi {
 		return output;
 	}
 
-	public static PtGOutputData prepareToGet(BackendApi backend, String surl, UserCredentials user) {
+	public static PtGOutputData prepareToGet(BackendApi backend, String surl, UserCredentials user) throws RuntimeApiException, StormResourceException {
 		PtGOutputData outputPtG = null;
 		ArrayList<String> transferProtocols = new ArrayList<String>();
 		transferProtocols.add(StormHTTPHelper.getRequestProtocol());
@@ -96,7 +96,7 @@ public class StormBackendApi {
 		return outputPtG;
 	}
 
-	public static SurlArrayRequestOutputData releaseFile(BackendApi backend, String surl, TRequestToken token, UserCredentials user) {
+	public static SurlArrayRequestOutputData releaseFile(BackendApi backend, String surl, TRequestToken token, UserCredentials user) throws RuntimeApiException, StormResourceException {
 		ArrayList<String> surlList = new ArrayList<String>();
 		surlList.add(surl);
 		SurlArrayRequestOutputData output = null;
@@ -127,7 +127,7 @@ public class StormBackendApi {
 		return output;
 	}
 
-	public static FileTransferOutputData prepareToPut(BackendApi backend, String newFileSurl, UserCredentials user) {
+	public static FileTransferOutputData prepareToPut(BackendApi backend, String newFileSurl, UserCredentials user) throws RuntimeApiException, StormResourceException {
 		ArrayList<String> newSurlList = new ArrayList<String>();
 		newSurlList.add(newFileSurl);
 		ArrayList<String> transferProtocols = new ArrayList<String>();
@@ -154,7 +154,7 @@ public class StormBackendApi {
 		return outputPtp;
 	}
 
-	public static FileTransferOutputData prepareToPutOverwrite(BackendApi backend, String newFileSurl, UserCredentials user) {
+	public static FileTransferOutputData prepareToPutOverwrite(BackendApi backend, String newFileSurl, UserCredentials user) throws RuntimeApiException, StormResourceException {
 		ArrayList<String> newSurlList = new ArrayList<String>();
 		newSurlList.add(newFileSurl);
 		ArrayList<String> transferProtocols = new ArrayList<String>();
@@ -181,7 +181,7 @@ public class StormBackendApi {
 		return outputPtp;
 	}
 
-	public static SurlArrayRequestOutputData putDone(BackendApi backend, String newFileSurl, TRequestToken token, UserCredentials user) {
+	public static SurlArrayRequestOutputData putDone(BackendApi backend, String newFileSurl, TRequestToken token, UserCredentials user) throws RuntimeApiException, StormResourceException {
 		ArrayList<String> newSurlList = new ArrayList<String>();
 		newSurlList.add(newFileSurl);
 		SurlArrayRequestOutputData outputPd = null;
@@ -212,7 +212,7 @@ public class StormBackendApi {
 		return outputPd;
 	}
 
-	public static RequestOutputData mkdir(BackendApi backend, String newDirSurl, UserCredentials user) {
+	public static RequestOutputData mkdir(BackendApi backend, String newDirSurl, UserCredentials user) throws RuntimeApiException, StormResourceException {
 		RequestOutputData output = null;
 		log.debug("mkdir surl: " + newDirSurl);
 		try {
@@ -235,7 +235,7 @@ public class StormBackendApi {
 		return output;
 	}
 
-	public static RequestOutputData rm(BackendApi backend, String surl, UserCredentials user) {
+	public static RequestOutputData rm(BackendApi backend, String surl, UserCredentials user) throws RuntimeApiException, StormResourceException {
 		ArrayList<String> surlList = new ArrayList<String>();
 		surlList.add(surl);
 		RequestOutputData output = null;
@@ -260,7 +260,7 @@ public class StormBackendApi {
 		return output;
 	}
 
-	public static RequestOutputData rmdir(BackendApi backend, String surl, UserCredentials user) {
+	public static RequestOutputData rmdir(BackendApi backend, String surl, UserCredentials user) throws RuntimeApiException, StormResourceException {
 		RequestOutputData output = null;
 		log.debug("rmdir surl : " + surl);
 		try {
@@ -283,7 +283,7 @@ public class StormBackendApi {
 		return output;
 	}
 
-	public static RequestOutputData rmdirRecoursively(BackendApi backend, String surl, UserCredentials user) {
+	public static RequestOutputData rmdirRecoursively(BackendApi backend, String surl, UserCredentials user) throws RuntimeApiException, StormResourceException {
 		RequestOutputData output = null;
 		log.debug("rmdir-recourively surl : " + surl);
 		try {
@@ -306,7 +306,7 @@ public class StormBackendApi {
 		return output;
 	}
 
-	public static RequestOutputData mv(BackendApi backend, String fromSurl, String toSurl, UserCredentials user) {
+	public static RequestOutputData mv(BackendApi backend, String fromSurl, String toSurl, UserCredentials user) throws RuntimeApiException, StormResourceException {
 		RequestOutputData output = null;
 		log.debug("move surl: " + fromSurl + " to surl: " + toSurl);
 		try {
@@ -329,7 +329,7 @@ public class StormBackendApi {
 		return output;
 	}
 
-	public static LsOutputData lsDetailed(BackendApi backend, String surl, UserCredentials user, RecursionLevel recursion) {
+	public static LsOutputData lsDetailed(BackendApi backend, String surl, UserCredentials user, RecursionLevel recursion) throws RuntimeApiException, StormResourceException {
 		ArrayList<String> surlList = new ArrayList<String>();
 		surlList.add(surl);
 		LsOutputData output = null;
@@ -354,7 +354,7 @@ public class StormBackendApi {
 		return output;
 	}
 	
-	public static LsOutputData ls(BackendApi backend, String surl, UserCredentials user) {
+	public static LsOutputData ls(BackendApi backend, String surl, UserCredentials user) throws RuntimeApiException, StormResourceException {
 		ArrayList<String> surlList = new ArrayList<String>();
 		surlList.add(surl);
 		LsOutputData output = null;

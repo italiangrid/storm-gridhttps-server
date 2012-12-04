@@ -4,9 +4,7 @@ import io.milton.http.*;
 import io.milton.http.Request.Method;
 import io.milton.http.http11.auth.DigestResponse;
 import io.milton.resource.*;
-import it.grid.storm.srm.types.Recursion;
 import it.grid.storm.webdav.webapp.Configuration;
-import it.grid.storm.xmlrpc.outputdata.LsOutputData.SurlInfo;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -94,19 +92,12 @@ public abstract class StormResource implements Resource, MoveableResource, Copya
 		}
 		log.debug("surl: " + surl.toASCIIString());
 		return surl;
-//		String surl = "srm://" + Configuration.stormFrontendHostname + ":" + Configuration.stormFrontendPort + path;
-//		return surl;
 	}
 	
 	public ArrayList<String> getSurlAsList() {
 		ArrayList<String> surls = new ArrayList<String>();
 		surls.add(getSurl().toASCIIString());
 		return surls;
-	}
-
-	protected SurlInfo doLsDetailed() {	
-		ArrayList<SurlInfo> infos = StormResourceHelper.doLsDetailed(this, Recursion.NONE);
-		return infos != null ? infos.get(0) : null;
 	}
 	
 	public InputStream getInputStream() {

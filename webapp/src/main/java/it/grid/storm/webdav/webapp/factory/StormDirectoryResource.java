@@ -11,6 +11,8 @@ import io.milton.resource.*;
 import it.grid.storm.srm.types.Recursion;
 import it.grid.storm.srm.types.SizeUnit;
 import it.grid.storm.srm.types.TFileType;
+import it.grid.storm.webdav.webapp.factory.exceptions.RuntimeApiException;
+import it.grid.storm.webdav.webapp.factory.exceptions.StormResourceException;
 import it.grid.storm.xmlrpc.outputdata.LsOutputData.SurlInfo;
 
 import java.io.File;
@@ -116,9 +118,11 @@ public class StormDirectoryResource extends StormResource implements MakeCollect
 	 * @param contentType
 	 * @throws IOException
 	 * @throws NotAuthorizedException
+	 * @throws StormResourceException 
+	 * @throws RuntimeApiException 
 	 */
 	public void sendContent(OutputStream out, Range range, Map<String, String> params, String contentType) throws IOException,
-			NotAuthorizedException {
+			NotAuthorizedException, RuntimeApiException, StormResourceException {
 		log.info("Called function for GET DIRECTORY");
 		String subpath = getFile().getCanonicalPath().substring(factory.getRoot().getCanonicalPath().length()).replace('\\', '/');
 		String uri = "/" + factory.getContextPath() + subpath;
@@ -127,7 +131,7 @@ public class StormDirectoryResource extends StormResource implements MakeCollect
 		buildDirectoryPage(out, uri, entries);
 	}
 
-	private void buildDirectoryPage(OutputStream out, String dirPath, Collection<SurlInfo> entries) {
+	private void buildDirectoryPage(OutputStream out, String dirPath, Collection<SurlInfo> entries) throws RuntimeApiException, StormResourceException {
 		XmlWriter w = new XmlWriter(out);
 		w.open("html");
 		w.open("head");

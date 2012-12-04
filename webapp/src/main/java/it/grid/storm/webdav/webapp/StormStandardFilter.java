@@ -1,11 +1,15 @@
 package it.grid.storm.webdav.webapp;
 
+import java.io.OutputStream;
+import java.io.PrintWriter;
+
 import io.milton.http.Filter;
 import io.milton.http.FilterChain;
 import io.milton.http.Handler;
 import io.milton.http.HttpManager;
 import io.milton.http.Request;
 import io.milton.http.Response;
+import io.milton.http.Response.Status;
 import io.milton.http.exceptions.BadRequestException;
 
 import org.slf4j.Logger;
@@ -43,6 +47,13 @@ public class StormStandardFilter implements Filter {
 					log.debug("No response entity to send to client");
 				}
 			}
+		} catch (RuntimeApiException ex) {
+			log.error(ex.getMessage());
+			manager.getResponseHandler().respondServerError(request, response, ex.getMessage());
+		} catch (StormResourceException ex) {
+			log.error(ex.getMessage());
+			String serverError = "<html><body><h1>Service Unavailable</h1><p>"+ex.getMessage()+"</p></body></html>";
+			sendResponse(response, Status.SC_SERVICE_UNAVAILABLE, serverError);
 		} catch (BadRequestException ex) {
 			log.warn("BadRequestException: " + ex.getReason(), ex);
 			manager.getResponseHandler().respondBadRequest(ex.getResource(), response, request);
@@ -52,12 +63,6 @@ public class StormStandardFilter implements Filter {
 		} catch (NotAuthorizedException ex) {
 			log.warn("NotAuthorizedException", ex);
 			manager.getResponseHandler().respondUnauthorised(ex.getResource(), response, request);
-		} catch (RuntimeApiException ex) {
-			log.error(ex.getMessage());
-			manager.getResponseHandler().respondServerError(request, response, ex.getMessage());
-		} catch (StormResourceException ex) {
-			log.error(ex.getMessage());
-			manager.getResponseHandler().respondServerError(request, response, ex.getMessage());
 		} catch (Throwable e) {
 			// Looks like in some cases we can be left with a connection in an
 			// indeterminate state
@@ -70,5 +75,16 @@ public class StormStandardFilter implements Filter {
 		} finally {
 			// manager.closeResponse(response);
 		}
+	}
+
+	private void sendResponse(Response response, Status status, final String htmlPage) {
+		response.setStatus(status);
+		response.setEntity(new Response.Entity() {
+            public void write(Response response, OutputStream outputStream) throws Exception {
+                PrintWriter pw = new PrintWriter(outputStream, true);
+                pw.print(htmlPage);
+                pw.flush();
+            }
+        });
 	}
 }

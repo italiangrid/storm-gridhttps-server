@@ -13,6 +13,7 @@ import io.milton.http.exceptions.NotAuthorizedException;
 import io.milton.http.webdav.WebDavProtocol;
 import io.milton.property.PropertySource;
 import io.milton.resource.Resource;
+import it.grid.storm.xmlrpc.outputdata.LsOutputData.SurlInfo;
 
 class StormPropertySource implements PropertySource {
 
@@ -33,12 +34,15 @@ class StormPropertySource implements PropertySource {
 		if (checkPropery(name, r)) {
 			if (r instanceof StormFileResource) {
 				StormFileResource srmFile = (StormFileResource) r;
-				if (name.getLocalPart().equals("checksumType")) {
-					return srmFile.getChecksumType();
-				} else if (name.getLocalPart().equals("checksumValue")) {
-					return srmFile.getChecksumValue();
-				} else if (name.getLocalPart().equals("status")) {
-					return srmFile.getStatus();
+				SurlInfo info = srmFile.getExtraProperties();
+				if (info != null) {
+					String property = name.getLocalPart();
+					if (property.equals("checksumType"))
+						return info.getCheckSumType() == null ? "" : info.getCheckSumType().getValue();
+					if (property.equals("checksumValue"))
+						return info.getCheckSumValue() == null ? "" : info.getCheckSumValue().getValue();
+					if (property.equals("status"))
+						return info.getStatus() == null ? "" : info.getStatus().getExplanation();
 				}
 			}
 		}
@@ -59,7 +63,7 @@ class StormPropertySource implements PropertySource {
 	public void clearProperty(QName name, Resource r) throws PropertySetException, NotAuthorizedException {
 		log.warn("clear property " + name.getLocalPart() + " is not permit");
 	}
-	
+
 	public List<QName> getAllPropertyNames(Resource r) throws NotAuthorizedException, BadRequestException {
 		List<QName> list = new ArrayList<QName>();
 		if (r instanceof StormResource) {
@@ -71,8 +75,7 @@ class StormPropertySource implements PropertySource {
 	}
 
 	private boolean checkPropery(QName name, Resource r) {
-		if ((r instanceof StormResource) 
-				&& (name.getNamespaceURI().contentEquals(this.propertyNamespace))
+		if ((r instanceof StormResource) && (name.getNamespaceURI().contentEquals(this.propertyNamespace))
 				&& (properties.contains(name.getLocalPart())))
 			return true;
 		return false;

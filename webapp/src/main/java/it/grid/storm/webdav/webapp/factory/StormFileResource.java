@@ -10,9 +10,13 @@ import io.milton.http.exceptions.ConflictException;
 import io.milton.http.exceptions.NotAuthorizedException;
 import io.milton.http.exceptions.NotFoundException;
 import io.milton.resource.*;
+import it.grid.storm.srm.types.Recursion;
+import it.grid.storm.webdav.webapp.factory.exceptions.RuntimeApiException;
+import it.grid.storm.webdav.webapp.factory.exceptions.StormResourceException;
 import it.grid.storm.xmlrpc.outputdata.LsOutputData.SurlInfo;
 
 import java.io.*;
+import java.util.ArrayList;
 import java.util.Map;
 
 import org.apache.commons.io.IOUtils;
@@ -35,19 +39,16 @@ public class StormFileResource extends StormResource implements CopyableResource
 		super(host, fileSystemResourceFactory, file);
 	}
 
-	public String getChecksumType() {
-		SurlInfo info = doLsDetailed();
-		return info.getCheckSumType() == null ? "" : info.getCheckSumType().getValue();
-	}
-
-	public String getChecksumValue() {
-		SurlInfo info = doLsDetailed();
-		return info.getCheckSumValue() == null ? "" : info.getCheckSumValue().getValue();
-	}
-
-	public String getStatus() {
-		SurlInfo info = doLsDetailed();
-		return info.getStatus() == null ? "" : info.getStatus().getExplanation();
+	public SurlInfo getExtraProperties() {
+		ArrayList<SurlInfo> info = null;
+		try {
+			info = StormResourceHelper.doLsDetailed(this, Recursion.NONE);
+		} catch (RuntimeApiException e) {
+			log.error(e.getMessage());
+		} catch (StormResourceException e) {
+			log.error(e.getMessage());
+		}
+		return info != null ? info.get(0) : null;
 	}
 
 	public Long getContentLength() {
