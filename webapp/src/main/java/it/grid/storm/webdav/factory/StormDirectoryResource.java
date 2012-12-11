@@ -127,7 +127,7 @@ public class StormDirectoryResource extends StormResource implements MakeCollect
 		log.info("Called function for GET DIRECTORY");
 		
 		String stfnRoot = "/" + StormHTTPHelper.getRequest().getRequestURI().replaceFirst("/", "").split("/")[0];
-		String fsPath = StorageAreaManager.getInstance().getStfnToFsRoot().get(stfnRoot);
+		String fsPath = StorageAreaManager.getInstance().getFsRootFromStfn().get(stfnRoot);
 		String subpath = getFile().getCanonicalPath().substring(fsPath.length()).replace('\\', '/');
 		String uri = stfnRoot + subpath;
 		Collection<SurlInfo> entries = StormResourceHelper.doLsDetailed(this, Recursion.FULL).get(0).getSubpathInfo();

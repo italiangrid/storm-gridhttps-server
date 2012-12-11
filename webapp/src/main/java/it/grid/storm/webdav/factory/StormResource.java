@@ -4,6 +4,7 @@ import io.milton.http.*;
 import io.milton.http.Request.Method;
 import io.milton.http.http11.auth.DigestResponse;
 import io.milton.resource.*;
+import it.grid.storm.storagearea.StorageArea;
 import it.grid.storm.storagearea.StorageAreaManager;
 import it.grid.storm.Configuration;
 
@@ -83,8 +84,9 @@ public abstract class StormResource implements Resource, MoveableResource, Copya
 	}
 
 	public URI getSurl() {
-		String stfnRoot = "/" + getFile().getPath().replaceFirst("/", "").split("/")[0];
-		String fsRoot = StorageAreaManager.getInstance().getStfnToFsRoot().get(stfnRoot);
+		StorageArea currentSA = StorageAreaManager.getMatchingSA(getFile().getPath());
+		String stfnRoot = currentSA.getStfnRoot();
+		String fsRoot = currentSA.getFSRoot();
 		String path = file.getPath().replaceFirst(fsRoot, stfnRoot);
 		log.debug("path: " + path);
 		URI surl = null;

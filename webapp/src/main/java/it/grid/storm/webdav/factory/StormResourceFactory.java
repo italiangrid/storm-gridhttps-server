@@ -79,7 +79,7 @@ public final class StormResourceFactory implements ResourceFactory {
 		if (isLocalResource(host)) {
 			String stfnRoot = "/" + url.replaceFirst("/", "").split("/")[0];
 			log.debug("searching for stfnRoot: " + stfnRoot);
-			String fsRoot = StorageAreaManager.getInstance().getStfnToFsRoot().get(stfnRoot);
+			String fsRoot = StorageAreaManager.getInstance().getFsRootFromStfn().get(stfnRoot);
 			if (fsRoot != null) {
 				url = url.replaceFirst(stfnRoot, fsRoot);
 				log.debug("stripped context: " + url);				

@@ -43,7 +43,8 @@ public class StorageAreaManager {
 	private static final Logger log = LoggerFactory.getLogger(StorageAreaManager.class);
 	private List<StorageArea> storageAreas;
 	private static StorageAreaManager SAManager = null;
-	private HashMap<String,String> stfnToFsRoot;
+	private HashMap<String,String> fsRootFromStfn;
+	private HashMap<String,String> stfnRootFromFs;
 	
 	public static StorageAreaManager getInstance() {
 		return SAManager;
@@ -59,17 +60,24 @@ public class StorageAreaManager {
 	
 	private StorageAreaManager(String stormBEHostname, int stormBEPort) throws Exception {	
 		storageAreas = retrieveStorageAreasFromStormBackend(stormBEHostname, stormBEPort);
-		stfnToFsRoot = new HashMap<String, String>();
+		fsRootFromStfn = new HashMap<String, String>();
 		for (StorageArea sa : storageAreas)
-			stfnToFsRoot.put(sa.getStfnRoot(), sa.getFSRoot());
+			fsRootFromStfn.put(sa.getStfnRoot(), sa.getFSRoot());
+		stfnRootFromFs = new HashMap<String, String>();
+		for (StorageArea sa : storageAreas)
+			stfnRootFromFs.put(sa.getFSRoot(), sa.getStfnRoot());
 	}
 
 	public List<StorageArea> getStorageAreas() {
 		return storageAreas;
 	}
 	
-	public HashMap<String, String> getStfnToFsRoot() {
-		return stfnToFsRoot;
+	public HashMap<String, String> getStfnRootFromFs() {
+		return stfnRootFromFs;
+	}
+	
+	public HashMap<String, String> getFsRootFromStfn() {
+		return fsRootFromStfn;
 	}
 	
 	private List<StorageArea> retrieveStorageAreasFromStormBackend(String hostname, int port) throws Exception {
