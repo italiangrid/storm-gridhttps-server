@@ -83,7 +83,7 @@ public abstract class StormResource implements Resource, MoveableResource, Copya
 	}
 
 	public URI getSurl() {
-		String stfnRoot = "/" + StormHTTPHelper.getRequest().getRequestURI().replaceFirst("/", "").split("/")[0];
+		String stfnRoot = "/" + getFile().getPath().replaceFirst("/", "").split("/")[0];
 		String fsRoot = StorageAreaManager.getInstance().getStfnToFsRoot().get(stfnRoot);
 		String path = file.getPath().replaceFirst(fsRoot, stfnRoot);
 		log.debug("path: " + path);

@@ -193,10 +193,10 @@ public class StormResourceHelper {
 		UserCredentials user = new UserCredentials(StormHTTPHelper.getRequest());
 		/* prepareToGet on source file to lock the resource */
 		PtGOutputData outputPtG = StormBackendApi.prepareToGet(source.factory.getBackendApi(), source.getSurl().toASCIIString(), user);
-		/* create destination */
-		StormResourceHelper.doPut(newParent, newName, source.getInputStream());
-		/* release source resource */
 		try {
+			/* create destination */
+			StormResourceHelper.doPut(newParent, newName, source.getInputStream());
+			/* release source resource */
 			StormBackendApi.releaseFile(source.factory.getBackendApi(), source.getSurl().toASCIIString(), outputPtG.getToken(), user);
 		} catch (RuntimeException e) {
 			StormBackendApi.abortRequest(source.factory.getBackendApi(), outputPtG.getToken(), user);
