@@ -31,93 +31,77 @@ import org.slf4j.LoggerFactory;
 /**
  * @author Michele Dibenedetto
  */
-public class MapperServlet extends HttpServlet
-{
+public class MapperServlet extends HttpServlet {
 
-    private static Logger log = LoggerFactory.getLogger(MapperServlet.class);
-    /**
+	private static Logger log = LoggerFactory.getLogger(MapperServlet.class);
+	/**
      * 
      */
-    private static final long serialVersionUID = 293463225950571516L;
-    private static final String PATH_PARAMETER_KEY = "path";
-    private static final String MAPPER_SERVLET_ENCODING_SCHEME = "UTF-8";
-    
-    public static final String MAPPER_SERVLET_CONTEXT_PATH = "/fileTransfer";
+	private static final long serialVersionUID = 293463225950571516L;
+	private static final String PATH_PARAMETER_KEY = "path";
+	private static final String MAPPER_SERVLET_ENCODING_SCHEME = "UTF-8";
+	public static final String MAPPER_SERVLET_CONTEXT_PATH = "/fileTransfer";
 
+	public void doGet(HttpServletRequest req, HttpServletResponse res) throws ServletException, IOException {
+		log.info("Serving a get request");
+		String pathDecoded = getDecodedPath(req);
+		log.debug("Decoded filePath = " + pathDecoded + " . Retrieving matching StorageArea");
+		StorageArea SA = getMatchingSA(pathDecoded);
+		if (SA == null) {
+			log.error("No matching StorageArea found for path \'" + pathDecoded + "\' Unable to build http(s) relative path");
+			throw new ServletException("No matching StorageArea found for the provided path");
+		}
+		String relativeUrl = getStfnPath(pathDecoded, SA);
+		log.debug("Writing in the response the relative URL : " + relativeUrl);
+		sendResponse(res, relativeUrl);
+	}
 
-    /* (non-Javadoc)
-     * @see javax.servlet.http.HttpServlet#doGet(javax.servlet.http.HttpServletRequest, javax.servlet.http.HttpServletResponse)
-     */
-    public void doGet(HttpServletRequest req, HttpServletResponse res) throws ServletException, IOException
-    {
-        log.info("Serving a get request");
-        String path = req.getParameter(PATH_PARAMETER_KEY);
-        String pathDecoded;
-        try
-        {
-            pathDecoded = URLDecoder.decode(path, MAPPER_SERVLET_ENCODING_SCHEME);
-        }
-        catch (UnsupportedEncodingException e)
-        {
-            log.error("Unable to decode " + PATH_PARAMETER_KEY + " parameter. UnsupportedEncodingException : " + e.getMessage());
-            throw new ServletException("Unable to decode " + PATH_PARAMETER_KEY + " parameter", e);
-        }
-        log.debug("Decoded filePath = " + pathDecoded + " . Retrieving matching StorageArea");
-        StorageArea SA = null;
-        try
-        {
-            SA = StorageAreaManager.getMatchingSA(pathDecoded);
-        }catch(IllegalArgumentException e)
-        {
-            log.error("Unable to get matching SA for path " + pathDecoded + ". IllegalArgumentException : " + e.getMessage());
-            throw new ServletException("Unable to get matching SA for path " + pathDecoded , e);
-        }
-        catch(IllegalStateException e)
-        {
-            log.error("Unable to get matching SA for path " + pathDecoded + ". IllegalStateException : " + e.getMessage());
-            throw new ServletException("Unable to get matching SA for path " + pathDecoded , e);
-        }
-        if(SA == null)
-        {
-            log.error("No matching StorageArea found for path \'" + pathDecoded + "\' Unable to build http(s) relative path");
-            throw new ServletException("No matching StorageArea found for the provided path");
-        }
-        res.setContentType("text/html");
-        PrintWriter out;
-        try
-        {
-            out = res.getWriter();
-        }catch (IOException e)
-        {
-            log.error("Unable to obtain the PrintWriter for the response. IOException: " + e.getMessage());
-            throw e;
-        }
-        String relativeUrl = getStfnPath(pathDecoded, SA);
-        log.debug("Writing in the response the relative URL : " + relativeUrl);
-        out.print(relativeUrl);
-    }
+	private String getDecodedPath(HttpServletRequest request) throws ServletException {
+		String path = request.getParameter(PATH_PARAMETER_KEY);
+		String pathDecoded;
+		try {
+			pathDecoded = URLDecoder.decode(path, MAPPER_SERVLET_ENCODING_SCHEME);
+		} catch (UnsupportedEncodingException e) {
+			log.error("Unable to decode " + PATH_PARAMETER_KEY + " parameter. UnsupportedEncodingException : " + e.getMessage());
+			throw new ServletException("Unable to decode " + PATH_PARAMETER_KEY + " parameter", e);
+		}
+		return pathDecoded;
+	}
+	
+	private StorageArea getMatchingSA(String pathDecoded) throws ServletException {
+		StorageArea SA = null;
+		try {
+			SA = StorageAreaManager.getMatchingSA(pathDecoded);
+		} catch (IllegalArgumentException e) {
+			log.error("Unable to get matching SA for path " + pathDecoded + ". IllegalArgumentException : " + e.getMessage());
+			throw new ServletException("Unable to get matching SA for path " + pathDecoded, e);
+		} catch (IllegalStateException e) {
+			log.error("Unable to get matching SA for path " + pathDecoded + ". IllegalStateException : " + e.getMessage());
+			throw new ServletException("Unable to get matching SA for path " + pathDecoded, e);
+		}
+		return SA;
+	}
+	
+	private String getStfnPath(String path, StorageArea SA) {
+		log.debug("Building StfnPath for path " + path + " in StorageArea " + SA.getName());
+		String Stfnpath = MAPPER_SERVLET_CONTEXT_PATH + SA.getStfnRoot() + path.substring(SA.getFSRoot().length(), path.length());
+		log.debug("Stfnpath is \'" + Stfnpath + "\'");
+		return Stfnpath;
+	}
 
-    /**
-     * Removes from the given path the FSRoot and appends on its head the StfnRoot
-     *  
-     * @param path
-     * @param SA
-     * @return 
-     */
-    private String getStfnPath(String path, StorageArea SA)
-    {
-        log.debug("Building StfnPath for path " + path + " in StorageArea " + SA.getName());
-        String Stfnpath = MAPPER_SERVLET_CONTEXT_PATH + SA.getStfnRoot() + path.substring(SA.getFSRoot().length(), path.length());
-        log.debug("Stfnpath is \'" + Stfnpath + "\'");
-        return Stfnpath;
-    }
-
-
-    /* (non-Javadoc)
-     * @see javax.servlet.GenericServlet#getServletInfo()
-     */
-    public String getServletInfo()
-    {
-        return "A servlet providing a mapping between a fisical file path and it\'s relative URL";
-    }
+	private void sendResponse(HttpServletResponse response, String message) throws IOException {
+		response.setContentType("text/html");
+		PrintWriter out;
+		try {
+			out = response.getWriter();
+		} catch (IOException e) {
+			log.error("Unable to obtain the PrintWriter for the response. IOException: " + e.getMessage());
+			throw e;
+		}
+		out.print(message);
+	}
+	
+	public String getServletInfo() {
+		return "A servlet providing a mapping between a fisical file path and it\'s relative URL";
+	}
 }

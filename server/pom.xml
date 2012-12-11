@@ -36,6 +36,11 @@
 		</dependency>
 
 		<dependency>
+			<groupId>it.grid.storm</groupId>
+			<artifactId>storagearea</artifactId>
+		</dependency>
+
+		<dependency>
 			<groupId>org.eclipse.jetty</groupId>
 			<artifactId>jetty-server</artifactId>
 			<version>${jettyServerVersion}</version>

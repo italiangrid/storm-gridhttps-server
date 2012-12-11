@@ -1,67 +1,53 @@
 package it.grid.storm.webdav.server;
 
-import it.grid.storm.storagearea.StorageArea;
-
 import java.io.File;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.eclipse.jetty.webapp.WebAppContext;
 
-public abstract class WebApp {
+public class WebApp {
 
-	private static final Logger log = LoggerFactory.getLogger(WebApp.class);
+	private File resourceBase;
+	private File descriptorFile;
+	private String name;
 	
-	private String rootDirectory;
-	private String contextPath;
-	private String fsPath;
-	private int protocol = StorageArea.NONE_PROTOCOL;
-
-	public WebApp(File baseDirectory, String contextPath, String rootDirectory, int protocol) throws Exception {
-				
-		if ((baseDirectory == null) || (!baseDirectory.exists()))
-			throw new Exception("Directory '" + baseDirectory.getPath() + "' does not exist! ");
-		
-		this.setRootDirectory(rootDirectory);
-		this.setContextPath(contextPath);
-		this.setProtocol(protocol);
-		this.setFsPath(baseDirectory.getPath());
-		
-	}
-
-	public String getContextPath() {
-		return contextPath;
-	}
-
-	public String getFsPath() {
-		return fsPath;
-	}
-
-	public String getRootDirectory() {
-		return rootDirectory;
+	public WebApp(String name, File resourceBase) {
+		this.setName(name);
+		this.setResourceBase(resourceBase);
+		this.setDescriptorFile(new File(resourceBase, "/WEB-INF/web.xml"));
 	}
 	
-	public int getProtocol() {
-		return protocol;
+	public WebAppContext getContext()  {
+		WebAppContext context = new WebAppContext();
+		context.setDescriptor(getDescriptorFile().toString());
+		context.setResourceBase(getResourceBase().getAbsolutePath());
+//		context.setContextPath("");
+		context.setParentLoaderPriority(true);
+		return context;
 	}
 	
-	private void setRootDirectory(String rootDirectory) {
-		this.rootDirectory = rootDirectory;
-		log.debug("rootDirectory = '" + rootDirectory +"'");
+	public File getDescriptorFile() {
+		return descriptorFile;
 	}
 
-	private void setContextPath(String contextPath) {
-		this.contextPath = contextPath;
-		log.debug("contextPath = '" + contextPath +"'");
+	private void setDescriptorFile(File descriptorFile) {
+		this.descriptorFile = descriptorFile;
 	}
 
-	private void setFsPath(String fsPath) {
-		this.fsPath = fsPath;
-		log.debug("fsPath = '" + fsPath +"'");
+	public String getName() {
+		return name;
+	}
+	
+	private void setName(String name) {
+		this.name = name;
+	}
+	
+
+	public File getResourceBase() {
+		return resourceBase;
 	}
 
-	private void setProtocol(int protocol) {
-		this.protocol = protocol;
-		log.debug("protocol = '" + StorageArea.protocolToStr(protocol) +"'");
+	private void setResourceBase(File resourceBase) {
+		this.resourceBase = resourceBase;
 	}
 	
 }

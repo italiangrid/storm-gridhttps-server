@@ -250,7 +250,7 @@ fi
 %dir %{conf_dir}/
 %dir %{conf_dir}/%{short_name}/
 %config %{conf_dir}/%{short_name}/logback.xml
-%attr(640,root,root) %config %{conf_dir}/%{short_name}/server.conf
+%attr(640,root,root) %config %{conf_dir}/%{short_name}/server.ini
 %attr(755,%{default_user},%{default_user}) %{_sysconfdir}/init.d/%{name}
 
 %dir %{_docdir}/%{name}-%{version}
@@ -259,7 +259,7 @@ fi
 %dir %{_javadir}/%{name}                                                
 %{_javadir}/%{name}/server.jar
 %{_javadir}/%{name}/webapp.war
-%{_javadir}/%{name}/ftwebapp.war
+%{_javadir}/%{name}/storagearea.jar
 
 %attr(770,%{default_user},%{default_user}) %dir %{work_dir} 
 %attr(774,%{default_user},%{default_user}) %dir %{log_dir} 

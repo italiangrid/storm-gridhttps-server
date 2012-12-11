@@ -1,13 +1,22 @@
 package it.grid.storm.webdav.server;
 
-import it.grid.storm.storagearea.StorageArea;
-
 import java.io.File;
 
-public class WebDAVWebApp extends WebApp{
+import org.eclipse.jetty.webapp.WebAppContext;
 
-	public WebDAVWebApp(File baseDirectory, StorageArea SA) throws Exception {
-		super(baseDirectory, SA.getStfnRoot(), SA.getFSRoot(), SA.getProtocol());
-	}
+public class WebDAVWebApp extends WebApp {
 	
+	public WebDAVWebApp(File baseDir) throws Exception {
+		super("WebDAV-webapp", baseDir);
+	}
+
+	public WebAppContext getContext()  {
+		WebAppContext context = new WebAppContext();
+		context.setDescriptor(getDescriptorFile().toString());
+		context.setResourceBase(getResourceBase().getAbsolutePath());
+//		context.setContextPath("");
+		context.setParentLoaderPriority(true);
+		return context;
+	}
+
 }

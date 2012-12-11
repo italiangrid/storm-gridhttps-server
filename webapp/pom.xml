@@ -15,10 +15,6 @@
 			<groupId>org.slf4j</groupId>
 			<artifactId>slf4j-api</artifactId>
 		</dependency>
-		<!-- <dependency> -->
-		<!-- <groupId>org.italiangrid</groupId> -->
-		<!-- <artifactId>voms-api-java</artifactId> -->
-		<!-- </dependency> -->
 		<dependency>
 			<groupId>org.italiangrid</groupId>
 			<artifactId>https-utils</artifactId>
@@ -36,6 +32,11 @@
 			<artifactId>javax.servlet</artifactId>
 		</dependency>
 
+		<dependency>
+			<groupId>it.grid.storm</groupId>
+			<artifactId>storagearea</artifactId>
+		</dependency>
+	
 		<dependency>
 			<groupId>io.milton</groupId>
 			<artifactId>milton-server-ce</artifactId>
@@ -86,6 +87,11 @@
 			<artifactId>xmlrpc-api</artifactId>
 			<version>${apibackendVersion}</version>
 		</dependency>
+		<dependency>
+			<groupId>org.springframework</groupId>
+			<artifactId>spring-context</artifactId>
+			<version>${springcontextVersion}</version>
+		</dependency>
 
 	</dependencies>
 
@@ -102,7 +108,15 @@
 				</configuration>
 			</plugin>
 		</plugins>
-
+		<!-- <plugins> -->
+		<!-- <plugin> -->
+		<!-- <groupId>org.apache.maven.plugins</groupId> -->
+		<!-- <artifactId>maven-war-plugin</artifactId> -->
+		<!-- <version>2.3</version> -->
+		<!-- <configuration> -->
+		<!-- <failOnMissingWebXml>false</failOnMissingWebXml> -->
+		<!-- </configuration> -->
+		<!-- </plugin> -->
+		<!-- </plugins> -->
 	</build>
-
 </project>

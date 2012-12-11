@@ -14,7 +14,7 @@ public class Zip {
 		
 	private static final int BUFFER = 2048;
 	
-	private void copy(InputStream in, OutputStream out) throws IOException {
+	private static void copy(InputStream in, OutputStream out) throws IOException {
 		byte[] buffer = new byte[BUFFER];
 		while (true) {
 			int readCount = in.read(buffer);
@@ -26,7 +26,7 @@ public class Zip {
 	}
 
 	@SuppressWarnings("unused")
-	private void copy(File file, OutputStream out) throws IOException {
+	private static void copy(File file, OutputStream out) throws IOException {
 		InputStream in = new FileInputStream(file);
 		try {
 			copy(in, out);
@@ -35,7 +35,7 @@ public class Zip {
 		}
 	}
 
-	private void copy(InputStream in, File file) throws IOException {
+	private static void copy(InputStream in, File file) throws IOException {
 		OutputStream out = new FileOutputStream(file);
 		try {
 			copy(in, out);
@@ -44,7 +44,7 @@ public class Zip {
 		}
 	}
 
-	public void unzip(String zipfile, String outputDirectory) throws IOException {
+	public static void unzip(String zipfile, String outputDirectory) throws IOException {
 		
 		ZipFile zfile = new ZipFile(zipfile);
 		Enumeration<? extends ZipEntry> entries = zfile.entries();

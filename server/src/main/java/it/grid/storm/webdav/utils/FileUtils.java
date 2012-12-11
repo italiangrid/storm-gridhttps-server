@@ -22,6 +22,22 @@ public class FileUtils {
 		return (path.delete());
 	}
 
+	public static void copyFile(InputStream in, OutputStream out) throws IOException {
+		byte[] buffer = new byte[1024];
+		int length;
+		while ((length = in.read(buffer)) > 0) {
+			out.write(buffer, 0, length);
+		}
+		in.close();
+		out.close();
+	}
+	
+	public static void copyFile(File src, File dest) throws IOException {
+		InputStream in = new FileInputStream(src);
+		OutputStream out = new FileOutputStream(dest);
+		copyFile(in, out);
+	}
+	
 	public static void copyFolder(File src, File dest) throws IOException {
 
 		if (src.isDirectory()) {
@@ -35,15 +51,7 @@ public class FileUtils {
 				copyFolder(srcFile, destFile);
 			}
 		} else {
-			InputStream in = new FileInputStream(src);
-			OutputStream out = new FileOutputStream(dest);
-			byte[] buffer = new byte[1024];
-			int length;
-			while ((length = in.read(buffer)) > 0) {
-				out.write(buffer, 0, length);
-			}
-			in.close();
-			out.close();
+			copyFile(src, dest);
 		}
 	}
 

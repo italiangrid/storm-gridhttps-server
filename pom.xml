@@ -44,6 +44,7 @@
 		<httpsutilsVersion>0.5-SNAPSHOT</httpsutilsVersion>
 		<javaxServletVersion>3.0.0.v201112011016</javaxServletVersion>
 		<mavenCompilerVersion>2.5.1</mavenCompilerVersion>
+		<springcontextVersion>2.0.5</springcontextVersion>
 
 		<conf_installation_prefix>/etc/storm</conf_installation_prefix>
 		<module_name>gridhttps-server</module_name>
@@ -57,7 +58,7 @@
 	<modules>
 		<module>server</module>
 		<module>webapp</module>
-		<module>ftwebapp</module>
+		<module>storagearea</module>
 		<module>assembler</module>
 	</modules>
 
@@ -125,6 +126,13 @@
 		<dependencies>
 			<dependency>
 				<groupId>${project.groupId}</groupId>
+				<artifactId>storagearea</artifactId>
+				<version>${project.version}</version>
+				<type>jar</type>
+				<scope>compile</scope>
+			</dependency>
+			<dependency>
+				<groupId>${project.groupId}</groupId>
 				<artifactId>server</artifactId>
 				<version>${project.version}</version>
 				<type>jar</type>
@@ -137,14 +145,6 @@
 				<type>war</type>
 				<scope>compile</scope>
 			</dependency>
-			<dependency>
-				<groupId>${project.groupId}</groupId>
-				<artifactId>ftwebapp</artifactId>
-				<version>${project.version}</version>
-				<type>war</type>
-				<scope>compile</scope>
-			</dependency>
-
 			<!-- logging libraries: logback -->
 			<dependency>
 				<groupId>org.slf4j</groupId>

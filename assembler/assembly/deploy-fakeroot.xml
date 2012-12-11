@@ -12,7 +12,7 @@
 			<outputDirectory>${conf_installation_prefix}/${module_name}</outputDirectory>
 			<includes>
 				<include>logback.xml</include>
-				<include>server.conf</include>
+				<include>server.ini</include>
 			</includes>
 		</fileSet>
 <!-- 		<fileSet> -->
@@ -58,7 +58,7 @@
 <!-- 					<include>commons-codec:commons-codec:*</include> -->
 					<include>${project.groupId}:storm-gridhttps-server:*</include>
 					<include>${project.groupId}:webapp:*</include>
-					<include>${project.groupId}:ftwebapp:*</include>
+<!--					<include>${project.groupId}:ftwebapp:*</include> -->
 				</includes>
 			</binaries>
 		</moduleSet>
