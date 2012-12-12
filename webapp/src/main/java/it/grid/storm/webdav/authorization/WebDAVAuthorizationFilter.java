@@ -113,15 +113,15 @@ public class WebDAVAuthorizationFilter extends AuthorizationFilter {
 		}
 		destStorageArea = null;
 		if (hasDestination(httpHelper.getRequestMethod())) {
-			log.debug("searching storagearea by uri: " + httpHelper.getDestinationHeader());
+			log.debug("searching storagearea by uri: " + httpHelper.getDestinationURI().getPath());
 			try {
-				destStorageArea = StorageAreaManager.getMatchingSAbyURI(httpHelper.getDestinationHeader());
+				destStorageArea = StorageAreaManager.getMatchingSAbyURI(httpHelper.getDestinationURI().getPath());
 			} catch (Exception e) {
 				log.error(e.getMessage());
 				throw new ServletException(e);
 			}
 			if (destStorageArea == null) {
-				log.error("No matching StorageArea found for uri " + httpHelper.getDestinationHeader() + " Unable to build http(s) relative path");
+				log.error("No matching StorageArea found for uri " + httpHelper.getDestinationURI().getPath() + " Unable to build http(s) relative path");
 				throw new ServletException("No matching StorageArea found for the provided path");
 			}
 		}

@@ -75,15 +75,8 @@ public class HttpHelper {
 	}
 
 	public String getDestinationProtocol() {
-		URI destination = null;
-		try {
-			destination = new URI(getDestinationHeader());
-		} catch (URISyntaxException e) {
-			log.error("Unable to parse destination header: " + getDestinationHeader());
-			log.error(e.getMessage());
-			return null;
-		}
-		return destination.getScheme() == null ? destination.getScheme().toUpperCase() : getRequestProtocol();
+		URI destination = getDestinationURI();
+		return destination.getScheme() != null ? destination.getScheme().toUpperCase() : getRequestProtocol();
 	}
 
 	public String getOverwriteHeader() {
