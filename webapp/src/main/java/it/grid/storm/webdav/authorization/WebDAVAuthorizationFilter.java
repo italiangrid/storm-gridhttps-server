@@ -79,7 +79,7 @@ public class WebDAVAuthorizationFilter extends AuthorizationFilter {
 	public boolean isUserAuthorized() throws ServletException {
 		String method = httpHelper.getRequestMethod();
 		String reqProtocol = httpHelper.getRequestProtocol();
-		String destProtocol = httpHelper.getDestinationProtocol();
+		
 		if (!isMethodAllowed(method)) {
 			log.warn("Received a request for a not allowed method : " + method);
 			throw new ServletException("Method " + method + " not allowed!");
@@ -88,9 +88,12 @@ public class WebDAVAuthorizationFilter extends AuthorizationFilter {
 			log.warn("Received a request-uri with a not allowed protocol: " + reqProtocol);
 			throw new ServletException("Protocol " + reqProtocol + " not allowed!");
 		}
-		if (hasDestination(method) && !isDestinationProtocolAllowed(destProtocol)) {
-			log.warn("Received a destination-uri with a not allowed protocol: " + destProtocol);
-			throw new ServletException("Protocol " + destProtocol + " not allowed!");
+		if (hasDestination(method)) {
+			String destProtocol = httpHelper.getDestinationProtocol();
+			if (!isDestinationProtocolAllowed(destProtocol)) {
+				log.warn("Received a destination-uri with a not allowed protocol: " + destProtocol);
+				throw new ServletException("Protocol " + destProtocol + " not allowed!");
+			}
 		}
 		return getAuthorizationHandler().isUserAuthorized();
 	}
