@@ -25,7 +25,7 @@ public class MoveMethodAuthorization extends AbstractMethodAuthorization {
 		StorageArea reqStorageArea, destStorageArea;
 		try {
 			reqStorageArea = StorageAreaManager.getMatchingSAbyURI(getHttpHelper().getRequestStringURI());
-			destStorageArea = StorageAreaManager.getMatchingSAbyURI(getHttpHelper().getDestinationHeader());
+			destStorageArea = StorageAreaManager.getMatchingSAbyURI(getHttpHelper().getDestinationURI().getPath());
 		} catch (IllegalArgumentException e) {
 			e.printStackTrace();
 			return false;
