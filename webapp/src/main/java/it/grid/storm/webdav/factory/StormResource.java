@@ -23,9 +23,9 @@ import org.slf4j.LoggerFactory;
 public abstract class StormResource implements Resource, MoveableResource, CopyableResource, DeletableResource, DigestResource {
 
 	private static final Logger log = LoggerFactory.getLogger(StormResource.class);
-	File file;
-	final StormResourceFactory factory;
-	final String host;
+	private File file;
+	private final StormResourceFactory factory;
+	private final String host;
 	String ssoPrefix;
 
 	public StormResource(String host, StormResourceFactory factory, File file) {
@@ -34,10 +34,18 @@ public abstract class StormResource implements Resource, MoveableResource, Copya
 		this.factory = factory;
 	}
 
+	public String getHost() {
+		return host;
+	}
+	
 	public File getFile() {
 		return file;
 	}
 
+	protected void setFile(File newFile) {
+		this.file = newFile;
+	}
+	
 	public String getUniqueId() {
 		String s = file.lastModified() + "_" + file.length() + "_" + file.getAbsolutePath();
 		return s.hashCode() + "";
@@ -114,6 +122,10 @@ public abstract class StormResource implements Resource, MoveableResource, Copya
 			return null;
 		}
 		return in;
+	}
+	
+	public StormResourceFactory getFactory() {
+		return factory;
 	}
 
 }

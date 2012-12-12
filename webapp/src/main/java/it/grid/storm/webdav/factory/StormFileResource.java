@@ -52,11 +52,11 @@ public class StormFileResource extends StormResource implements CopyableResource
 	}
 
 	public Long getContentLength() {
-		return file.length();
+		return getFile().length();
 	}
 
 	public String getContentType(String preferredList) {
-		String mime = ContentTypeUtils.findContentTypes(this.file);
+		String mime = ContentTypeUtils.findContentTypes(getFile());
 		String s = ContentTypeUtils.findAcceptableContentType(mime, preferredList);
 		if (log.isTraceEnabled()) {
 			log.trace("getContentType: preferred: {} mime: {} selected: {}", new Object[] { preferredList, mime, s });
@@ -72,14 +72,14 @@ public class StormFileResource extends StormResource implements CopyableResource
 		log.info("Called function for GET FILE");
 		InputStream in = StormResourceHelper.doGetFile(this);
 		if (in == null) {
-			log.error("Unable to get resource content '" + this.file.toString() + "'");
+			log.error("Unable to get resource content '" + getFile().toString() + "'");
 			return;
 		}
 		if (range != null) {
-			log.debug("sendContent: ranged content: " + file.getAbsolutePath());
+			log.debug("sendContent: ranged content: " + getFile().getAbsolutePath());
 			RangeUtils.writeRange(in, range, out);
 		} else {
-			log.debug("sendContent: send whole file " + file.getAbsolutePath());
+			log.debug("sendContent: send whole file " + getFile().getAbsolutePath());
 			IOUtils.copy(in, out);
 		}
 		out.flush();
@@ -90,7 +90,7 @@ public class StormFileResource extends StormResource implements CopyableResource
 	 * @{@inheritDoc
 	 */
 	public Long getMaxAgeSeconds(Auth auth) {
-		return factory.maxAgeSeconds(this);
+		return getFactory().maxAgeSeconds(this);
 	}
 
 	public String getName() {
@@ -114,10 +114,8 @@ public class StormFileResource extends StormResource implements CopyableResource
 	public void moveTo(CollectionResource newParent, String newName) throws NotAuthorizedException, ConflictException, BadRequestException {
 		log.info("Called function for MOVE FILE");
 		if (newParent instanceof StormDirectoryResource) {
-			StormDirectoryResource newFsParent = (StormDirectoryResource) newParent;
-			File destinationFile = new File(newFsParent.getFile(), newName);
-			StormResourceHelper.doMoveTo(this, newFsParent, newName);
-			file = destinationFile;
+			StormResourceHelper.doMoveTo(this, (StormDirectoryResource) newParent, newName);
+			setFile(new File(((StormDirectoryResource) newParent).getFile(), newName));
 		} else
 			log.error("Directory Resource class " + newParent.getClass().getName() + " not supported!");
 	}

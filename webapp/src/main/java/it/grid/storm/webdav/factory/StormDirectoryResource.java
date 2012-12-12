@@ -60,21 +60,21 @@ public class StormDirectoryResource extends StormResource implements MakeCollect
 			return null;
 		}
 		StormResourceHelper.doMkCol(this, name);
-		File fnew = new File(file, name);
-		return new StormDirectoryResource(host, factory, fnew);
+		File fnew = new File(getFile(), name);
+		return new StormDirectoryResource(getHost(), getFactory(), fnew);
 	}
 
 	public Resource child(String name) {
-		File fchild = new File(this.file, name);
-		return factory.resolveFile(this.host, fchild);
+		File fchild = new File(getFile(), name);
+		return getFactory().resolveFile(getHost(), fchild);
 	}
 
 	public List<? extends Resource> getChildren() {
 		ArrayList<StormResource> list = new ArrayList<StormResource>();
-		File[] files = this.file.listFiles();
+		File[] files = getFile().listFiles();
 		if (files != null) {
 			for (File fchild : files) {
-				StormResource res = factory.resolveFile(this.host, fchild);
+				StormResource res = getFactory().resolveFile(getHost(), fchild);
 				if (res != null) {
 					list.add(res);
 				} else {
@@ -92,8 +92,8 @@ public class StormDirectoryResource extends StormResource implements MakeCollect
 	 * @return
 	 */
 	public String checkRedirect(Request request) {
-		if (factory.getDefaultPage() != null) {
-			return request.getAbsoluteUrl() + "/" + factory.getDefaultPage();
+		if (getFactory().getDefaultPage() != null) {
+			return request.getAbsoluteUrl() + "/" + getFactory().getDefaultPage();
 		} else {
 			return null;
 		}
@@ -103,8 +103,8 @@ public class StormDirectoryResource extends StormResource implements MakeCollect
 			ConflictException, BadRequestException {
 		log.info("Called function for PUT FILE");
 		StormResourceHelper.doPut(this, name, in);
-		File destinationFile = new File(this.file, name);
-		return factory.resolveFile(this.host, destinationFile);
+		File destinationFile = new File(getFile(), name);
+		return getFactory().resolveFile(getHost(), destinationFile);
 	}
 
 	/**
@@ -119,13 +119,13 @@ public class StormDirectoryResource extends StormResource implements MakeCollect
 	 * @param contentType
 	 * @throws IOException
 	 * @throws NotAuthorizedException
-	 * @throws StormResourceException 
-	 * @throws RuntimeApiException 
+	 * @throws StormResourceException
+	 * @throws RuntimeApiException
 	 */
 	public void sendContent(OutputStream out, Range range, Map<String, String> params, String contentType) throws IOException,
 			NotAuthorizedException, RuntimeApiException, StormResourceException {
 		log.info("Called function for GET DIRECTORY");
-		
+
 		String stfnRoot = "/" + StormHTTPHelper.getRequest().getRequestURI().replaceFirst("/", "").split("/")[0];
 		String fsPath = StorageAreaManager.getInstance().getFsRootFromStfn().get(stfnRoot);
 		String subpath = getFile().getCanonicalPath().substring(fsPath.length()).replace('\\', '/');
@@ -134,7 +134,8 @@ public class StormDirectoryResource extends StormResource implements MakeCollect
 		buildDirectoryPage(out, uri, entries);
 	}
 
-	private void buildDirectoryPage(OutputStream out, String dirPath, Collection<SurlInfo> entries) throws RuntimeApiException, StormResourceException {
+	private void buildDirectoryPage(OutputStream out, String dirPath, Collection<SurlInfo> entries) throws RuntimeApiException,
+			StormResourceException {
 		XmlWriter w = new XmlWriter(out);
 		w.open("html");
 		w.open("head");
@@ -230,7 +231,7 @@ public class StormDirectoryResource extends StormResource implements MakeCollect
 	}
 
 	public boolean hasChildren() {
-		return (file.list().length > 0);
+		return (getFile().list().length > 0);
 	}
 
 	public void delete() throws NotAuthorizedException, ConflictException, BadRequestException {
@@ -241,9 +242,8 @@ public class StormDirectoryResource extends StormResource implements MakeCollect
 	public void moveTo(CollectionResource newParent, String newName) throws NotAuthorizedException, ConflictException, BadRequestException {
 		log.info("Called function for MOVE DIRECTORY");
 		if (newParent instanceof StormDirectoryResource) {
-			StormDirectoryResource newFsParent = (StormDirectoryResource) newParent;
-			StormResourceHelper.doMoveTo(this, newFsParent, newName);
-			file = newFsParent.file;
+			StormResourceHelper.doMoveTo(this, (StormDirectoryResource) newParent, newName);
+			setFile(((StormDirectoryResource) newParent).getFile());
 		} else
 			log.error("Directory Resource class " + newParent.getClass().getName() + " not supported!");
 	}
@@ -251,8 +251,7 @@ public class StormDirectoryResource extends StormResource implements MakeCollect
 	public void copyTo(CollectionResource newParent, String newName) throws NotAuthorizedException, ConflictException, BadRequestException {
 		log.info("Called function for COPY DIRECTORY");
 		if (newParent instanceof StormDirectoryResource) {
-			StormDirectoryResource newFsParent = (StormDirectoryResource) newParent;
-			StormResourceHelper.doCopyDirectory(this, newFsParent, newName);
+			StormResourceHelper.doCopyDirectory(this, (StormDirectoryResource) newParent, newName);
 		} else
 			log.error("Directory Resource class " + newParent.getClass().getName() + " not supported!");
 	}
