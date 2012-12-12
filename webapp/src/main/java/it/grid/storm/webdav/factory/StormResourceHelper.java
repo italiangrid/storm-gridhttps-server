@@ -95,7 +95,8 @@ public class StormResourceHelper {
 	public static InputStream doGetFile(StormFileResource source, UserCredentials user) throws NotFoundException, RuntimeApiException,
 			StormResourceException {
 		log.info("Called doGetFile()");
-		PtGOutputData outputPtG = StormBackendApi.prepareToGet(source.getFactory().getBackendApi(), source.getSurl().toASCIIString(), user);
+		PtGOutputData outputPtG = StormBackendApi.prepareToGet(source.getFactory().getBackendApi(), source.getSurl().toASCIIString(), user,
+				source.getStorageArea().getProtocolAsList());
 		InputStream in = null;
 		try {
 			in = source.getFactory().getContentService().getFileContent(source.getFile());
@@ -137,7 +138,8 @@ public class StormResourceHelper {
 		log.info("Called doPut()");
 		File destinationFile = new File(sourceDir.getFile(), name);
 		String newFileSurl = sourceDir.getSurl() + "/" + name;
-		FileTransferOutputData outputPtp = StormBackendApi.prepareToPut(sourceDir.getFactory().getBackendApi(), newFileSurl, user);
+		FileTransferOutputData outputPtp = StormBackendApi.prepareToPut(sourceDir.getFactory().getBackendApi(), newFileSurl, user,
+				sourceDir.getStorageArea().getProtocolAsList());
 		// put
 		try {
 			sourceDir.getFactory().getContentService().setFileContent(destinationFile, in);
@@ -163,7 +165,7 @@ public class StormResourceHelper {
 			ConflictException, NotAuthorizedException {
 		log.info("Called doPutOverewrite()");
 		FileTransferOutputData outputPtp = StormBackendApi.prepareToPutOverwrite(source.getFactory().getBackendApi(), source.getSurl()
-				.toASCIIString(), user);
+				.toASCIIString(), user, source.getStorageArea().getProtocolAsList());
 		// overwrite
 		try {
 			source.getFactory().getContentService().setFileContent(source.getFile(), in);
@@ -252,7 +254,8 @@ public class StormResourceHelper {
 			throws RuntimeApiException, StormResourceException {
 		log.info("Called doCopyFile()");
 		/* prepareToGet on source file to lock the resource */
-		PtGOutputData outputPtG = StormBackendApi.prepareToGet(source.getFactory().getBackendApi(), source.getSurl().toASCIIString(), user);
+		PtGOutputData outputPtG = StormBackendApi.prepareToGet(source.getFactory().getBackendApi(), source.getSurl().toASCIIString(), user,
+				source.getStorageArea().getProtocolAsList());
 		try {
 			/* create destination */
 			StormResourceHelper.doPut(newParent, newName, source.getInputStream(), user);

@@ -13,6 +13,7 @@
 package it.grid.storm.storagearea;
 
 import java.io.File;
+import java.util.ArrayList;
 
 /**
  * @author Michele Dibenedetto
@@ -135,7 +136,29 @@ public class StorageArea {
 		}
 	}
 
-	/* (non-Javadoc)
+	/**
+	 * @return the ArrayList of String equivalent of the protocol
+	 */
+	public ArrayList<String> getProtocolAsList() {
+		ArrayList<String> out = new ArrayList<String>();
+		switch (protocol) {
+		case 1:
+			out.add("HTTP");
+			break;
+		case 2:
+			out.add("HTTPS");
+			break;
+		case 3:
+			out.add("HTTP");
+			out.add("HTTPS");
+			break;
+		}
+		return out;
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
 	 * @see java.lang.Object#toString()
 	 */
 	@Override

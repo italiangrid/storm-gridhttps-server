@@ -72,10 +72,8 @@ public class StormBackendApi {
 		return output;
 	}
 
-	public static PtGOutputData prepareToGet(BackendApi backend, String surl, UserCredentials user) throws RuntimeApiException, StormResourceException {
+	public static PtGOutputData prepareToGet(BackendApi backend, String surl, UserCredentials user, ArrayList<String> transferProtocols) throws RuntimeApiException, StormResourceException {
 		PtGOutputData outputPtG = null;
-		ArrayList<String> transferProtocols = new ArrayList<String>();
-		transferProtocols.add(StormHTTPHelper.getRequestProtocol());
 		log.debug("prepare to get surl: " + surl);
 		try {
 			if (user.isAnonymous()) { // HTTP
@@ -128,11 +126,9 @@ public class StormBackendApi {
 		return output;
 	}
 
-	public static FileTransferOutputData prepareToPut(BackendApi backend, String newFileSurl, UserCredentials user) throws RuntimeApiException, StormResourceException {
+	public static FileTransferOutputData prepareToPut(BackendApi backend, String newFileSurl, UserCredentials user, ArrayList<String> transferProtocols) throws RuntimeApiException, StormResourceException {
 		ArrayList<String> newSurlList = new ArrayList<String>();
 		newSurlList.add(newFileSurl);
-		ArrayList<String> transferProtocols = new ArrayList<String>();
-		transferProtocols.add(StormHTTPHelper.getRequestProtocol());
 		FileTransferOutputData outputPtp = null;
 		log.debug("prepare to put surl: " + newFileSurl);
 		try {
@@ -155,11 +151,9 @@ public class StormBackendApi {
 		return outputPtp;
 	}
 
-	public static FileTransferOutputData prepareToPutOverwrite(BackendApi backend, String newFileSurl, UserCredentials user) throws RuntimeApiException, StormResourceException {
+	public static FileTransferOutputData prepareToPutOverwrite(BackendApi backend, String newFileSurl, UserCredentials user, ArrayList<String> transferProtocols) throws RuntimeApiException, StormResourceException {
 		ArrayList<String> newSurlList = new ArrayList<String>();
 		newSurlList.add(newFileSurl);
-		ArrayList<String> transferProtocols = new ArrayList<String>();
-		transferProtocols.add(StormHTTPHelper.getRequestProtocol());
 		FileTransferOutputData outputPtp = null;
 		log.debug("prepare to put overwrite surl: " + newFileSurl);
 		try {

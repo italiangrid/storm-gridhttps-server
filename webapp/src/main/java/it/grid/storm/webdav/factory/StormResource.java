@@ -42,6 +42,10 @@ public abstract class StormResource implements Resource, MoveableResource, Copya
 		return file;
 	}
 
+	public StormResourceFactory getFactory() {
+		return factory;
+	}
+	
 	protected void setFile(File newFile) {
 		this.file = newFile;
 	}
@@ -124,8 +128,8 @@ public abstract class StormResource implements Resource, MoveableResource, Copya
 		return in;
 	}
 	
-	public StormResourceFactory getFactory() {
-		return factory;
+	public StorageArea getStorageArea() {
+		return StorageAreaManager.getMatchingSA(getFile().getPath());
 	}
 
 }
