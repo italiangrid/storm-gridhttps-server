@@ -166,7 +166,7 @@ public class StormAuthorizationFilter implements Filter {
 			w.open("td");
 			String name = sa.getStfnRoot().substring(1);
 			// entry name-link
-			String path = buildHref(sa.getStfnRoot(), name);
+			String path = buildHref(sa.getStfnRoot(), "");
 			w.begin("img").writeAtt("alt", "").writeAtt("src", getFolderIco()).open().close();
 			w.begin("a").writeAtt("href", path).open().writeText(name).close();
 			w.close("td");
