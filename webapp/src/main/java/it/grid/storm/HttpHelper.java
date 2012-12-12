@@ -83,7 +83,7 @@ public class HttpHelper {
 			log.error(e.getMessage());
 			return null;
 		}
-		return destination.getScheme().toUpperCase();
+		return destination.getScheme() == null ? destination.getScheme().toUpperCase() : getRequestProtocol();
 	}
 
 	public String getOverwriteHeader() {
