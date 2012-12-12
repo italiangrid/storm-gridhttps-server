@@ -52,7 +52,7 @@ test -d assembler/target/%{name}-fakeroot.dir && cp -vR assembler/target/%{name}
 %post
 #during an install, the value of the argument passed in is 1
 #during an upgrade, the value of the argument passed in is 2
-#if [ "$1" = "1" ] ; then
+##if [ "$1" = "1" ] ; then
 if [ "$1" = "2" ] ; then
   echo 'Removing StoRM GridHTTPS server 1.X stuff'
   rpm -q tomcat5 &> /dev/null
@@ -183,7 +183,7 @@ fi
 %preun
 #during an upgrade, the value of the argument passed in is 1
 #during an uninstall, the value of the argument passed in is 0
-#if [ "$1" = "0" ] ; then
+##if [ "$1" = "0" ] ; then
 #elif [ "$1" = "1" ] ; then
 #fi
 
