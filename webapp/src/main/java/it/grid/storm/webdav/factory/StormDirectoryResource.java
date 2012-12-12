@@ -144,7 +144,7 @@ public class StormDirectoryResource extends StormResource implements MakeCollect
 		w.begin("style").writeAtt("type", "text/css").open().writeText(getTableStyle()).close();
 		w.close("head");
 		w.open("body");
-		w.begin("h1").open().writeText(this.getName()).close();
+		w.begin("h1").open().writeText("StoRM Gridhttps-server WebDAV - " + this.getName()).close();
 		w.open("table");
 		w.open("tr");
 		w.begin("td").open().begin("b").open().writeText("name").close().close();

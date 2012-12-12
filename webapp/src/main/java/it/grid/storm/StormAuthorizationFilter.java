@@ -3,6 +3,8 @@ package it.grid.storm;
 import io.milton.http.XmlWriter;
 import it.grid.storm.Configuration;
 import it.grid.storm.authorization.AuthorizationFilter;
+import it.grid.storm.authorization.Constants;
+import it.grid.storm.authorization.StormAuthorizationUtils;
 import it.grid.storm.authorization.UserCredentials;
 import it.grid.storm.filetransfer.authorization.FileTransferAuthorizationFilter;
 import it.grid.storm.storagearea.StorageArea;
@@ -156,12 +158,19 @@ public class StormAuthorizationFilter implements Filter {
 		w.begin("style").writeAtt("type", "text/css").open().writeText(getTableStyle()).close();
 		w.close("head");
 		w.open("body");
-		w.begin("h1").open().writeText("/").close();
+		w.begin("h1").open().writeText("StoRM Gridhttps-server WebDAV - /").close();
 		w.open("table");
 		w.open("tr");
 		w.begin("td").open().begin("b").open().writeText("storage-area name").close().close();
 		w.close("tr");
+		UserCredentials user = new UserCredentials(httpHelper);
 		for (StorageArea sa : StorageAreaManager.getInstance().getStorageAreas()) {
+			if (!sa.getProtocolAsList().contains(httpHelper.getRequestMethod())) {
+				continue;
+			}
+			if (!isUserAuthorized(user, sa)) {
+				continue;
+			}
 			w.open("tr");
 			w.open("td");
 			String name = sa.getStfnRoot().substring(1);
@@ -176,6 +185,18 @@ public class StormAuthorizationFilter implements Filter {
 		w.close("body");
 		w.close("html");
 		w.flush();
+	}
+
+	private boolean isUserAuthorized(UserCredentials user, StorageArea sa) {
+		boolean response = false;
+		try {
+			response = StormAuthorizationUtils.isUserAuthorized(user, Constants.PREPARE_TO_GET_OPERATION, sa.getStfnRoot());
+		} catch (IllegalArgumentException e) {
+			e.printStackTrace();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return response;
 	}
 
 	private String getTableStyle() {
