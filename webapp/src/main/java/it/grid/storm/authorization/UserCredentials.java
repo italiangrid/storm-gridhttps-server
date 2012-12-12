@@ -16,10 +16,11 @@ public class UserCredentials {
 	
 	private String userDN;
 	private ArrayList<String> userFQANS;
-	private boolean isHttp;
-
+	private HttpHelper httpHelper;
+	
 	public UserCredentials(HttpHelper httpHelper) {
 		initAsAnonymous();
+		this.httpHelper = httpHelper;
 		if (httpHelper.isHttp())
 			return;
 		/* It's an HTTPS request: */
@@ -56,7 +57,7 @@ public class UserCredentials {
 	}
 
 	public boolean isAnonymous() {
-		return (isHttp && userDN.equals("") && userFQANS.isEmpty());
+		return (httpHelper.isHttp() && userDN.equals("") && userFQANS.isEmpty());
 	}
 	
 }
