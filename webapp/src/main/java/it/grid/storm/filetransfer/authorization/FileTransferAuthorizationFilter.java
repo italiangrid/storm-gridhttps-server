@@ -6,6 +6,7 @@ import it.grid.storm.filetransfer.authorization.methods.GetMethodAuthorization;
 import it.grid.storm.filetransfer.authorization.methods.PutMethodAuthorization;
 import it.grid.storm.storagearea.StorageAreaManager;
 import it.grid.storm.storagearea.StorageArea;
+import it.grid.storm.HttpHelper;
 
 
 import java.util.Arrays;
@@ -25,15 +26,13 @@ public class FileTransferAuthorizationFilter extends AuthorizationFilter {
 	private String[] allowedMethods = {"GET", "PUT"};	
 	private HashMap<String, AbstractMethodAuthorization> METHODS_MAP;
 	private StorageArea storageArea;
-	private HttpServletRequest HTTPRequest;
-	private HttpServletResponse HTTPResponse;
+	private HttpHelper httpHelper;
 	private String contextPath;
 	
-	public FileTransferAuthorizationFilter(HttpServletRequest HTTPRequest, HttpServletResponse HTTPResponse, String contextPath) throws ServletException {
-		super(HTTPRequest.getRequestURI());
+	public FileTransferAuthorizationFilter(HttpHelper httHelper, String contextPath) throws ServletException {
+		super();
 		this.setContextPath(contextPath);
-		this.setHTTPRequest(HTTPRequest);
-		this.setHTTPResponse(HTTPResponse);
+		this.setHttpHelper(httpHelper);
 		initStorageArea();
 		doInitMethodMap();
 	}
@@ -46,19 +45,20 @@ public class FileTransferAuthorizationFilter extends AuthorizationFilter {
 		return Arrays.asList(storageArea.getProtocolAsStrArray()).contains(protocol);
 	}
 
-	@Override
 	public String stripContext() {
-		return getRequestedURI().replaceFirst(getContextPath(), getRequestedURI());
+		return httpHelper.getRequestStringURI().replaceFirst(getContextPath(), httpHelper.getRequestStringURI());
 	}
 
 	public boolean isUserAuthorized() throws ServletException {
-		if (!this.isMethodAllowed(HTTPRequest.getMethod())) {
-			log.warn("Received a request for a not allowed method : " + HTTPRequest.getMethod());
-			throw new ServletException("Method " + HTTPRequest.getMethod() + " not allowed!");
+		String method = httpHelper.getRequestMethod();
+		if (!this.isMethodAllowed(method)) {
+			log.warn("Received a request for a not allowed method : " + method);
+			throw new ServletException("Method " + method + " not allowed!");
 		}
-		if (!isProtocolAllowed(HTTPRequest.getScheme().toUpperCase())) {
-			log.warn("Received a request with a not allowed protocol: " + HTTPRequest.getScheme().toUpperCase());
-			throw new ServletException("Protocol " + HTTPRequest.getScheme().toUpperCase() + " not allowed!");
+		String protocol = httpHelper.getRequestProtocol();
+		if (!isProtocolAllowed(protocol)) {
+			log.warn("Received a request with a not allowed protocol: " + protocol);
+			throw new ServletException("Protocol " + protocol + " not allowed!");
 		}
 		return getAuthorizationHandler().isUserAuthorized();
 	}
@@ -81,20 +81,20 @@ public class FileTransferAuthorizationFilter extends AuthorizationFilter {
 		return storageArea;
 	}
 	
-	public HttpServletRequest getHTTPRequest() {
-		return HTTPRequest;
+	public HttpHelper getHttpHelper() {
+		return httpHelper;
 	}
 
-	private void setHTTPRequest(HttpServletRequest HTTPRequest) {
-		this.HTTPRequest = HTTPRequest;
+	private void setHttpHelper(HttpHelper httpHelper) {
+		this.httpHelper = httpHelper;
 	}
 
 	public HttpServletResponse getHTTPResponse() {
-		return HTTPResponse;
+		return getHttpHelper().getResponse();
 	}
-
-	private void setHTTPResponse(HttpServletResponse HTTPResponse) {
-		this.HTTPResponse = HTTPResponse;
+	
+	public HttpServletRequest getHTTPRequest() {
+		return getHttpHelper().getRequest();
 	}
 
 	public String getContextPath() {
@@ -108,12 +108,12 @@ public class FileTransferAuthorizationFilter extends AuthorizationFilter {
 	private void doInitMethodMap() {
 		METHODS_MAP = new HashMap<String, AbstractMethodAuthorization>();
 		METHODS_MAP.clear();
-		METHODS_MAP.put("GET", new GetMethodAuthorization(HTTPRequest));
-		METHODS_MAP.put("PUT", new PutMethodAuthorization(HTTPRequest));
+		METHODS_MAP.put("GET", new GetMethodAuthorization(httpHelper));
+		METHODS_MAP.put("PUT", new PutMethodAuthorization(httpHelper));
 	}
 		
 	public AbstractMethodAuthorization getAuthorizationHandler() {
-		return METHODS_MAP.get(HTTPRequest.getMethod().toUpperCase());
+		return METHODS_MAP.get(httpHelper.getRequestMethod());
 	}
 	
 }

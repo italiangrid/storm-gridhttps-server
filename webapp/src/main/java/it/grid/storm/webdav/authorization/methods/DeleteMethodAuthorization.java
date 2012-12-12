@@ -1,22 +1,39 @@
 package it.grid.storm.webdav.authorization.methods;
 
+import java.io.UnsupportedEncodingException;
+
+import it.grid.storm.HttpHelper;
 import it.grid.storm.authorization.Constants;
 import it.grid.storm.authorization.methods.AbstractMethodAuthorization;
+import it.grid.storm.storagearea.StorageArea;
+import it.grid.storm.storagearea.StorageAreaManager;
 
 import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
 
 public class DeleteMethodAuthorization extends AbstractMethodAuthorization {
 	
-	public DeleteMethodAuthorization(HttpServletRequest HTTPRequest) {
-		super(HTTPRequest);
+	public DeleteMethodAuthorization(HttpHelper httpHelper) {
+		super(httpHelper);
 	}
 
 	@Override
 	public boolean isUserAuthorized() throws ServletException {
+		StorageArea reqStorageArea;
+		try {
+			reqStorageArea = StorageAreaManager.getMatchingSAbyURI(getHttpHelper().getRequestStringURI());
+		} catch (IllegalArgumentException e) {
+			e.printStackTrace();
+			return false;
+		} catch (IllegalStateException e) {
+			e.printStackTrace();
+			return false;
+		} catch (UnsupportedEncodingException e) {
+			e.printStackTrace();
+			return false;
+		}
+		String reqPath = reqStorageArea.getRealPath(getHttpHelper().getRequestURI().getPath());
 		String operation = Constants.RM_OPERATION;
-		String path = getResourcePath();
-		return askAuth(operation, path);
+		return askAuth(operation, reqPath);
 	}
 	
 }

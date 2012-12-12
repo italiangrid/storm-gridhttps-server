@@ -165,4 +165,20 @@ public class StorageArea {
 	public String toString() {
 		return "StorageArea [name=" + name + ", root=" + FSRoot + ", stfnRoot=" + stfnRoot + ", protocol=" + getStrProtocol() + "]";
 	}
+
+	/**
+	 * @return if the protocol is accepted as transfer protocol
+	 */
+	public boolean isProtocol(String protocol) {
+		return getProtocolAsList().contains(protocol);
+	}
+	
+	/**
+	 * @param path "virtual" path to a storage area resource
+	 * @return the phisical path to the resource
+	 */
+	public String getRealPath(String path) {
+		return path.replaceFirst(getStfnRoot(), getFSRoot()).replace("//", "/");
+	}
+
 }

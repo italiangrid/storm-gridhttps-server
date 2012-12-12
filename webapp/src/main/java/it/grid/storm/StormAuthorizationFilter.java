@@ -4,6 +4,7 @@ import it.grid.storm.Configuration;
 import it.grid.storm.authorization.AuthorizationFilter;
 import it.grid.storm.filetransfer.authorization.FileTransferAuthorizationFilter;
 import it.grid.storm.storagearea.StorageAreaManager;
+import it.grid.storm.HttpHelper;
 import it.grid.storm.webdav.authorization.WebDAVAuthorizationFilter;
 
 import java.io.IOException;
@@ -24,8 +25,7 @@ public class StormAuthorizationFilter implements Filter {
 
 	private static final Logger log = LoggerFactory.getLogger(StormAuthorizationFilter.class);
 
-	public static HttpServletRequest HTTPRequest;
-	public static HttpServletResponse HTTPResponse;
+	private HttpHelper httpHelper;
 
 	public void destroy() {
 	}
@@ -53,19 +53,18 @@ public class StormAuthorizationFilter implements Filter {
 
 	public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
 
-		HTTPRequest = (HttpServletRequest) request;
-		HTTPResponse = (HttpServletResponse) response;
+		httpHelper = new HttpHelper((HttpServletRequest) request, (HttpServletResponse) response);
 
-		log.debug("Requested-URI: " + HTTPRequest.getRequestURI());
+		log.debug("Requested-URI: " + httpHelper.getRequest().getRequestURI());
 
 		AuthorizationFilter filter;
 		try {
-			if (isFileTransferRequest(HTTPRequest.getRequestURI())) {
+			if (isFileTransferRequest(httpHelper.getRequest().getRequestURI())) {
 				log.info("Received a file-transfer request");
-				filter = new FileTransferAuthorizationFilter(HTTPRequest, HTTPResponse, "/fileTransfer");
+				filter = new FileTransferAuthorizationFilter(httpHelper, "/fileTransfer");
 			} else {
 				log.info("Received a webdav request");
-				filter = new WebDAVAuthorizationFilter(HTTPRequest, HTTPResponse);
+				filter = new WebDAVAuthorizationFilter(httpHelper);
 			}
 		} catch (ServletException e) {
 			log.error(e.getMessage());
@@ -95,7 +94,7 @@ public class StormAuthorizationFilter implements Filter {
 
 	private void sendError(int errorCode, String errorMessage) {
 		try {
-			HTTPResponse.sendError(errorCode, errorMessage);
+			httpHelper.getResponse().sendError(errorCode, errorMessage);
 		} catch (IOException e) {
 			log.error(e.getMessage());
 			e.printStackTrace();

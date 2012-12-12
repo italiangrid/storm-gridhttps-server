@@ -1,11 +1,9 @@
 package it.grid.storm.authorization;
 
-import it.grid.storm.StormAuthorizationFilter;
+import it.grid.storm.HttpHelper;
 
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
-
-import javax.servlet.http.HttpServletRequest;
 
 import org.italiangrid.utils.voms.VOMSSecurityContext;
 import org.italiangrid.voms.VOMSAttribute;
@@ -20,15 +18,15 @@ public class UserCredentials {
 	private ArrayList<String> userFQANS;
 	private boolean isHttp;
 
-	public UserCredentials(HttpServletRequest HTTPRequest) {
+	public UserCredentials(HttpHelper httpHelper) {
 		initAsAnonymous();
-		isHttp = StormAuthorizationFilter.HTTPRequest.getScheme().toUpperCase().equals("HTTP");
-		if (isHttp) return;
+		if (httpHelper.isHttp())
+			return;
 		/* It's an HTTPS request: */
 		VOMSSecurityContext.clearCurrentContext();
 		VOMSSecurityContext currentContext = new VOMSSecurityContext();
 		VOMSSecurityContext.setCurrentContext(currentContext);
-		X509Certificate[] certChain = getX509Certificate(HTTPRequest);
+		X509Certificate[] certChain = httpHelper.getX509Certificate();
 		if (certChain == null) {
 			log.warn("Failed to init VOMS Security Context! User initialized with empty DN and FQANs");
 			return;
@@ -47,17 +45,6 @@ public class UserCredentials {
 	private void initAsAnonymous() {
 		userDN = "";
 		userFQANS = new ArrayList<String>();
-	}
-	
-	private X509Certificate[] getX509Certificate(HttpServletRequest HTTPRequest) {
-		X509Certificate[] certChain;
-		try {
-			certChain = (X509Certificate[]) HTTPRequest.getAttribute("javax.servlet.request.X509Certificate");
-		} catch (Exception e) {
-			log.error("Error fetching certificate from http request: " + e.getMessage());
-			return null;
-		}
-		return certChain;
 	}
 
 	public String getUserDN() {

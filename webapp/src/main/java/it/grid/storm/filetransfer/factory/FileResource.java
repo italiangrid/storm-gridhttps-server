@@ -11,6 +11,8 @@ import io.milton.http.exceptions.NotAuthorizedException;
 import io.milton.http.exceptions.NotFoundException;
 import io.milton.http.fs.FileContentService;
 import io.milton.resource.*;
+import io.milton.servlet.MiltonServlet;
+import it.grid.storm.HttpHelper;
 import it.grid.storm.storagearea.StorageArea;
 
 import java.io.*;
@@ -78,7 +80,8 @@ public class FileResource extends FileSystemResource implements GetableResource,
 
 	public void replaceContent(InputStream in, Long length) throws BadRequestException, ConflictException, NotAuthorizedException {
 		log.info("Called function for PUT-OVERWRITE");
-		if (!HTTPHelper.isOverwriteRequest()) {
+		HttpHelper httpHelper = new HttpHelper(MiltonServlet.request(), MiltonServlet.response());
+		if (!httpHelper.isOverwriteRequest()) {
 			throw new NotAuthorizedException("Resource exists but this is not an overwrite request!", this);
 		}
 		FileSystemResourceHelper.doPutOverwrite(this, in);

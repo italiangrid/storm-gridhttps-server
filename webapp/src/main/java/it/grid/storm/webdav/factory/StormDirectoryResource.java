@@ -8,10 +8,12 @@ import io.milton.http.exceptions.BadRequestException;
 import io.milton.http.exceptions.ConflictException;
 import io.milton.http.exceptions.NotAuthorizedException;
 import io.milton.resource.*;
+import io.milton.servlet.MiltonServlet;
 import it.grid.storm.srm.types.Recursion;
 import it.grid.storm.srm.types.SizeUnit;
 import it.grid.storm.srm.types.TFileType;
 import it.grid.storm.storagearea.StorageAreaManager;
+import it.grid.storm.HttpHelper;
 import it.grid.storm.webdav.factory.exceptions.RuntimeApiException;
 import it.grid.storm.webdav.factory.exceptions.StormResourceException;
 import it.grid.storm.xmlrpc.outputdata.LsOutputData.SurlInfo;
@@ -46,8 +48,8 @@ public class StormDirectoryResource extends StormResource implements MakeCollect
 
 	public CollectionResource createCollection(String name) throws NotAuthorizedException, ConflictException, BadRequestException {
 		log.info("Called function for MKCOL DIRECTORY");
-
-		String methodName = StormHTTPHelper.getRequestMethod();
+		HttpHelper httpHelper = new HttpHelper(MiltonServlet.request(), MiltonServlet.response());
+		String methodName = httpHelper.getRequestMethod();
 		if (methodName.equals("PUT")) {
 			/*
 			 * it is a PUT with a path that contains a directory that does not
@@ -56,7 +58,7 @@ public class StormDirectoryResource extends StormResource implements MakeCollect
 			 * be a problem!!!
 			 */
 			log.warn("Auto-creation of directory for " + methodName + " requests is disabled!");
-			StormHTTPHelper.sendError(409, "Conflict");
+			httpHelper.sendError(409, "Conflict");
 			return null;
 		}
 		StormResourceHelper.doMkCol(this, name);
@@ -125,8 +127,8 @@ public class StormDirectoryResource extends StormResource implements MakeCollect
 	public void sendContent(OutputStream out, Range range, Map<String, String> params, String contentType) throws IOException,
 			NotAuthorizedException, RuntimeApiException, StormResourceException {
 		log.info("Called function for GET DIRECTORY");
-
-		String stfnRoot = "/" + StormHTTPHelper.getRequest().getRequestURI().replaceFirst("/", "").split("/")[0];
+		HttpHelper httpHelper = new HttpHelper(MiltonServlet.request(), MiltonServlet.response());
+		String stfnRoot = "/" + httpHelper.getRequestStringURI().replaceFirst("/", "").split("/")[0];
 		String fsPath = StorageAreaManager.getInstance().getFsRootFromStfn().get(stfnRoot);
 		String subpath = getFile().getCanonicalPath().substring(fsPath.length()).replace('\\', '/');
 		String uri = stfnRoot + subpath;

@@ -1,31 +1,38 @@
 package it.grid.storm.filetransfer.authorization.methods;
 
+import java.io.UnsupportedEncodingException;
+
+import it.grid.storm.HttpHelper;
 import it.grid.storm.authorization.Constants;
 import it.grid.storm.authorization.methods.AbstractMethodAuthorization;
+import it.grid.storm.storagearea.StorageArea;
+import it.grid.storm.storagearea.StorageAreaManager;
 
 import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
 
 public class PutMethodAuthorization extends AbstractMethodAuthorization {
 
-	public PutMethodAuthorization(HttpServletRequest HTTPRequest) {
-		super(HTTPRequest);
+	public PutMethodAuthorization(HttpHelper httpHelper) {
+		super(httpHelper);
 	}
 
 	@Override
 	public boolean isUserAuthorized() throws ServletException {
-		String operation = isOverwriteRequest() ? Constants.PREPARE_TO_PUT_OVERWRITE_OPERATION : Constants.PREPARE_TO_PUT_OPERATION;
-		String path = getResourcePath();
-		return askAuth(operation, path);
+		StorageArea reqStorageArea;
+		try {
+			reqStorageArea = StorageAreaManager.getMatchingSAbyURI(getHttpHelper().getRequestStringURI());
+		} catch (IllegalArgumentException e) {
+			e.printStackTrace();
+			return false;
+		} catch (IllegalStateException e) {
+			e.printStackTrace();
+			return false;
+		} catch (UnsupportedEncodingException e) {
+			e.printStackTrace();
+			return false;
+		}
+		String reqPath = reqStorageArea.getRealPath(getHttpHelper().getRequestURI().getPath());
+		String operation = getHttpHelper().isOverwriteRequest() ? Constants.PREPARE_TO_PUT_OVERWRITE_OPERATION : Constants.PREPARE_TO_PUT_OPERATION;
+		return askAuth(operation, reqPath);
 	}
-
-	public String getOverwriteHeader() {
-		return this.HTTPRequest.getHeader("Overwrite");
-	}
-	
-	public boolean isOverwriteRequest() {
-		String overwrite = getOverwriteHeader();
-		return ((overwrite == null) || (overwrite.equals("T")));		
-	}
-	
 }

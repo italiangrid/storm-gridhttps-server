@@ -1,7 +1,6 @@
 package it.grid.storm.authorization;
 
 import it.grid.storm.Configuration;
-import it.grid.storm.StormAuthorizationFilter;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -34,23 +33,16 @@ public class StormAuthorizationUtils {
 
 	/* Public methods */
 
-	public static boolean isUserAuthorized(String operation, String path) throws Exception, IllegalArgumentException {
-		UserCredentials user = new UserCredentials(StormAuthorizationFilter.HTTPRequest);
-		return isUserAuthorized(user.getUserDN(), user.getUserFQANS(), operation, path);
-	}
-	
-	/* Private methods */
-
-	private static boolean isUserAuthorized(String userDN, ArrayList<String> userFQANs, String operation, String path) throws Exception,
+	public static boolean isUserAuthorized(UserCredentials user, String operation, String path) throws Exception,
 			IllegalArgumentException {
-		if (path == null || operation == null || userFQANs == null || userDN == null) {
+		if (path == null || operation == null || user.getUserFQANS() == null || user.getUserDN() == null) {
 			String errorMsg = "Received null mandatory parameter(s) at isUserAuthorized: ";
 			errorMsg += "path=" + path + " operation=" + operation;
-			errorMsg += " userDN=" + userDN + " FQANs=" + StringUtils.join(userFQANs, ",");
+			errorMsg += " userDN=" + user.getUserDN() + " FQANs=" + StringUtils.join(user.getUserFQANS(), ",");
 			log.error(errorMsg);
 			throw new IllegalArgumentException("Received null mandatory parameter(s)");
 		}
-		URI uri = StormAuthorizationUtils.prepareURI(path, operation, userDN, userFQANs);
+		URI uri = StormAuthorizationUtils.prepareURI(path, operation, user.getUserDN(), user.getUserFQANS());
 		HttpGet httpget = new HttpGet(uri);
 		HttpClient httpclient = new DefaultHttpClient();
 		HttpResponse httpResponse;
@@ -110,6 +102,8 @@ public class StormAuthorizationUtils {
 		return response.booleanValue();
 	}
 
+	/* Private methods */
+	
 	private static URI prepareURI(String resourcePath, String operation, String userDN, ArrayList<String> fqans) throws Exception,
 			IllegalArgumentException {
 		if (resourcePath == null || operation == null || fqans == null) {
