@@ -97,7 +97,7 @@ public class WebDAVAuthorizationFilter extends AuthorizationFilter {
 		}
 		return getAuthorizationHandler().isUserAuthorized();
 	}
-	
+
 	private void initStorageAreas() throws ServletException {
 		reqStorageArea = null;
 		log.debug("searching storagearea by uri: " + httpHelper.getRequestStringURI());
