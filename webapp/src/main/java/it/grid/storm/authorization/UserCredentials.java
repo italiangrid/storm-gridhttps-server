@@ -14,14 +14,16 @@ public class UserCredentials {
 	
 	private static final Logger log = LoggerFactory.getLogger(UserCredentials.class);
 	
+	private final String EMPTY_USERDN = "";
+	
 	private String userDN;
 	private ArrayList<String> userFQANS;
 	private HttpHelper httpHelper;
 	
 	public UserCredentials(HttpHelper httpHelper) {
-		initAsAnonymous();
 		this.httpHelper = httpHelper;
-		if (httpHelper.isHttp())
+		initAsAnonymous();
+		if (this.httpHelper.isHttp())
 			return;
 		/* It's an HTTPS request: */
 		VOMSSecurityContext.clearCurrentContext();
@@ -33,7 +35,7 @@ public class UserCredentials {
 			return;
 		}
 		currentContext.setClientCertChain(certChain);
-		userDN = currentContext.getClientDN() != null ? currentContext.getClientDN().getX500() : "";
+		userDN = currentContext.getClientDN() != null ? currentContext.getClientDN().getX500() : getEmptyUserDN();
 		log.debug("DN = " + userDN);
 		userFQANS.clear();
 		for (VOMSAttribute voms : currentContext.getVOMSAttributes())
@@ -42,22 +44,57 @@ public class UserCredentials {
 				log.debug("fqan = " + s);
 			}
 	}
-
-	private void initAsAnonymous() {
-		userDN = "";
-		userFQANS = new ArrayList<String>();
-	}
-
+	
+	/* public methods */
+	
 	public String getUserDN() {
-		return userDN;
+		return isForcedAnonymous() ? getEmptyUserDN() : userDN;
 	}
 
 	public ArrayList<String> getUserFQANS() {
-		return userFQANS;
+		return isForcedAnonymous() ? getEmptyUserFQANS() : userFQANS;
 	}
 
 	public boolean isAnonymous() {
-		return (httpHelper.isHttp() && userDN.equals("") && userFQANS.isEmpty());
+		return isForcedAnonymous() || (httpHelper.isHttp() && isUserDNEmpty() && isUserFQANSEmpty());
 	}
 	
+	public void forceAnonymous(String userDN, ArrayList<String> userFQANS) {
+		/* it's a kind of security check... */
+		if (userDN.equals(getUserDN()) && userFQANS.equals(getUserFQANS())) {
+			setForcedAnonymous();
+		}
+	}
+
+	/* private methods */
+	
+	private void initAsAnonymous() {
+		userDN = getEmptyUserDN();
+		userFQANS = getEmptyUserFQANS();
+	}
+	
+	private void setForcedAnonymous() {
+		httpHelper.getRequest().getSession().setAttribute("forced", true);
+	}
+	
+	private boolean isForcedAnonymous() {
+		return (Boolean) httpHelper.getRequest().getSession().getAttribute("forced");
+	}
+	
+
+	private String getEmptyUserDN() {
+		return EMPTY_USERDN;
+	}
+	
+	private ArrayList<String> getEmptyUserFQANS() {
+		return new ArrayList<String>();
+	}
+	
+	private boolean isUserDNEmpty() {
+		return userDN.isEmpty();
+	}
+	
+	private boolean isUserFQANSEmpty() {
+		return userFQANS.isEmpty();
+	}
 }

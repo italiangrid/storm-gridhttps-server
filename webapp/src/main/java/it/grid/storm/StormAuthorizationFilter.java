@@ -63,7 +63,10 @@ public class StormAuthorizationFilter implements Filter {
 	public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
 
 		httpHelper = new HttpHelper((HttpServletRequest) request, (HttpServletResponse) response);
-
+		/* clear session */
+		httpHelper.getRequest().getSession(true);
+		httpHelper.getRequest().getSession().setAttribute("forced", false);
+		
 		log.debug("Requested-URI: " + httpHelper.getRequest().getRequestURI());
 
 		/* HERE THE CODE FOR OPTIONS ON ROOT DIR */

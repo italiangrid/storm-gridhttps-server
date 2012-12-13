@@ -43,6 +43,18 @@ public class StormAuthorizationUtils {
 			throw new IllegalArgumentException("Received null mandatory parameter(s)");
 		}
 		URI uri = StormAuthorizationUtils.prepareURI(path, operation, user.getUserDN(), user.getUserFQANS());
+		boolean response = getAuthResponse(uri);
+		if (!response && !user.isAnonymous()) {
+			user.forceAnonymous(user.getUserDN(), user.getUserFQANS());
+			uri = StormAuthorizationUtils.prepareURI(path, operation, user.getUserDN(), user.getUserFQANS());
+			response = getAuthResponse(uri);
+		}
+		return response;
+	}
+
+	/* Private methods */
+	
+	private static boolean getAuthResponse(URI uri) throws Exception {
 		HttpGet httpget = new HttpGet(uri);
 		HttpClient httpclient = new DefaultHttpClient();
 		HttpResponse httpResponse;
@@ -102,8 +114,6 @@ public class StormAuthorizationUtils {
 		return response.booleanValue();
 	}
 
-	/* Private methods */
-	
 	private static URI prepareURI(String resourcePath, String operation, String userDN, ArrayList<String> fqans) throws Exception,
 			IllegalArgumentException {
 		if (resourcePath == null || operation == null || fqans == null) {
