@@ -3,6 +3,7 @@ ifndef JAVA_HOME
 endif
 release:=1
 version:=$(shell mvn org.apache.maven.plugins:maven-help-plugin:2.1.1:evaluate -Dexpression="project.version" | grep -v '\[' | tr -d ' ')
+osdist := $(shell `cat /etc/redhat-release | awk 'BEGIN {FS="release "} {print $2}'| awk 'BEGIN {FS="."} {print $1}'`)
 
 # mvn settings mirror conf url
 mirror_conf_url=https://raw.github.com/italiangrid/build-settings/master/maven/cnaf-mirror-settings.xml
@@ -22,7 +23,7 @@ build_sources: prepare
 	mvn ${mvn_settings} -Drelease=$(release) -Dmaven_settings="$(mvn_settings)" process-sources
 
 bin_rpm: src_rpm
-	rpmbuild --rebuild --define "_topdir ${PWD}/rpmbuild" rpmbuild/SRPMS/storm-gridhttps-server-${version}-$(release).src.rpm
+	rpmbuild --rebuild --define "_topdir ${PWD}/rpmbuild" --define "dist $(osdist)" rpmbuild/SRPMS/storm-gridhttps-server-${version}-$(release).src.rpm
 
 clean:
 	rm -rf rpmbuild

@@ -14,7 +14,7 @@
 Summary: The StoRM GridHTTPS component
 Name: ${PackageName}
 Version: ${PackageVersion}
-Release: ${PackageRelease}   
+Release: ${PackageRelease}%{?dist}
 License: Apache License 2.0
 Vendor: EMI
 URL: http://storm.forge.cnaf.infn.it
