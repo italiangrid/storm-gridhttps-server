@@ -12,7 +12,7 @@
 			<outputDirectory>${conf_installation_prefix}/${module_name}</outputDirectory>
 			<includes>
 				<include>logback.xml</include>
-				<include>server.ini</include>
+				<include>server.ini.template</include>
 			</includes>
 		</fileSet>
 <!-- 		<fileSet> -->

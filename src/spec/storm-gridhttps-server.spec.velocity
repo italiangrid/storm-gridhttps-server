@@ -183,16 +183,23 @@ fi
 %preun
 #during an upgrade, the value of the argument passed in is 1
 #during an uninstall, the value of the argument passed in is 0
-##if [ "$1" = "0" ] ; then
+if [ "$1" = "0" ] ; then
+   if [ -f %{conf_dir}/%{short_name}/server.ini ]; then
+      rm -f %{conf_dir}/%{short_name}/server.ini    
+   fi
+   ls %{conf_dir}/%{short_name}/server.ini.bkp_* &> /dev/null
+   if [ $? -eq 0 ]; then
+      rm -f %{conf_dir}/%{short_name}/server.ini.bkp_*
+   fi 
 #elif [ "$1" = "1" ] ; then
-#fi
+fi                                                           
 
 %files
 %defattr(-,%{default_user},%{default_user})
 %dir %{conf_dir}/
 %dir %{conf_dir}/%{short_name}/
 %config %{conf_dir}/%{short_name}/logback.xml
-%attr(640,root,root) %config %{conf_dir}/%{short_name}/server.ini
+%attr(640,root,root) %config %{conf_dir}/%{short_name}/server.ini.template
 %attr(755,%{default_user},%{default_user}) %{_sysconfdir}/init.d/%{name}
 
 %dir %{_docdir}/%{name}-%{version}
