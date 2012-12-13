@@ -120,7 +120,7 @@ public class StormAuthorizationFilter implements Filter {
 	}
 
 	private void sendFavicon() throws IOException {
-		httpHelper.getResponse().setContentType("text/html");
+		httpHelper.getResponse().setContentType("image/x-icon");
 		PrintWriter out;
 		try {
 			out = httpHelper.getResponse().getWriter();
