@@ -153,8 +153,9 @@ public class StormAuthorizationFilter implements Filter {
 	}
 
 	private void sendRootPage() throws IOException {
-		// TODO Auto-generated method stub
 		OutputStream out = httpHelper.getResponse().getOutputStream();
+//		Content-Type: text/html; charset=iso-8859-1
+		httpHelper.getResponse().addHeader("Content-Type", "text/html");
 		XmlWriter w = new XmlWriter(out);
 		w.writeText("<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Transitional//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd\">");
 		w.begin("html").writeAtt("lang", "en").writeAtt("xmlns", "http://www.w3.org/1999/xhtml").open();
