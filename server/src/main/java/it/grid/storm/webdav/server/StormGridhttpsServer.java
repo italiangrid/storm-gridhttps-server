@@ -1,5 +1,6 @@
 package it.grid.storm.webdav.server;
 
+import it.grid.storm.gridhttps.servlet.FaviconServlet;
 import it.grid.storm.gridhttps.servlet.MapperServlet;
 import it.grid.storm.webdav.DefaultConfiguration;
 import it.grid.storm.webdav.server.data.StormBackend;
@@ -32,7 +33,6 @@ public class StormGridhttpsServer {
 
 	private static final int MAX_IDLE_TIME = 30000;
 
-	
 	private static final Logger log = LoggerFactory.getLogger(StormGridhttpsServer.class);
 	private StormGridhttps gridhttpsInfo;
 	private StormBackend backendInfo;
@@ -47,7 +47,7 @@ public class StormGridhttpsServer {
 		this.frontendInfo = frontendInfo;
 		initServer();
 	}
-	
+
 	private WebApp getWebapp() {
 		return webapp;
 	}
@@ -55,11 +55,11 @@ public class StormGridhttpsServer {
 	private void setWebapp(WebApp webapp) {
 		this.webapp = webapp;
 	}
-	
+
 	private ContextHandlerCollection getContextHandlerCollection() {
 		return contextHandlerCollection;
 	}
-	
+
 	private void createServer(String hostname, int httpsPort, SSLOptions sslOptions) {
 		server = ServerFactory.newServer(hostname, httpsPort, sslOptions);
 		server.setStopAtShutdown(true);
@@ -69,16 +69,16 @@ public class StormGridhttpsServer {
 		hc.setHandlers(new Handler[] { contextHandlerCollection });
 		server.setHandler(hc);
 	}
-	
+
 	private Connector getHttpConnector(int port, int maxIdleTime) {
 		Connector connector = new SelectChannelConnector();
 		connector.setPort(port);
 		connector.setMaxIdleTime(maxIdleTime);
 		return connector;
 	}
-	
+
 	private void initServer() throws Exception {
-		log.debug("server initialization - started");		
+		log.debug("server initialization - started");
 		createServer(gridhttpsInfo.getHostname(), gridhttpsInfo.getHttpsPort(), gridhttpsInfo.getSsloptions());
 		log.debug("jetty server with ssl-connector created");
 		if (gridhttpsInfo.isEnabledHttp()) {
@@ -100,9 +100,10 @@ public class StormGridhttpsServer {
 		log.debug(getWebapp().getName() + " has been deployed");
 		// deploy mapper servlet
 		ServletContextHandler context = new ServletContextHandler(ServletContextHandler.SESSIONS);
-        context.setContextPath(File.separator + gridhttpsInfo.getMapperServlet().getContextPath());
-        context.addServlet(new ServletHolder(new MapperServlet()), File.separator + gridhttpsInfo.getMapperServlet().getContextSpec());
-        getContextHandlerCollection().addHandler(context);
+		context.setContextPath(File.separator + gridhttpsInfo.getMapperServlet().getContextPath());
+		context.addServlet(new ServletHolder(new MapperServlet()), File.separator + gridhttpsInfo.getMapperServlet().getContextSpec());
+		context.addServlet(new ServletHolder(new FaviconServlet()), "/");
+		getContextHandlerCollection().addHandler(context);
 		log.debug("mapper-servlet deployed!");
 		log.debug("server initialization - finished");
 	}
@@ -128,7 +129,7 @@ public class StormGridhttpsServer {
 	}
 
 	public boolean isWebappDeployed() {
-		return getWebapp()!=null;
+		return getWebapp() != null;
 	}
 
 	private void undeployWebapp() throws Exception {
@@ -143,7 +144,7 @@ public class StormGridhttpsServer {
 	public void undeployAll() throws Exception {
 		undeployWebapp();
 	}
-	
+
 	private void configureWebFile(File webFile) throws Exception {
 		// modify web.xml file
 		XML doc = new XML(webFile);
