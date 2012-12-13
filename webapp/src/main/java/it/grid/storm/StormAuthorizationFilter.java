@@ -190,7 +190,7 @@ public class StormAuthorizationFilter implements Filter {
 	private boolean isUserAuthorized(UserCredentials user, StorageArea sa) {
 		boolean response = false;
 		try {
-			response = StormAuthorizationUtils.isUserAuthorized(user, Constants.PREPARE_TO_GET_OPERATION, sa.getStfnRoot());
+			response = StormAuthorizationUtils.isUserAuthorized(user, Constants.PREPARE_TO_GET_OPERATION, sa.getFSRoot());
 		} catch (IllegalArgumentException e) {
 			e.printStackTrace();
 		} catch (Exception e) {
