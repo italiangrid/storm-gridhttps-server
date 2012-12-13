@@ -34,7 +34,7 @@
 		<filter-class>it.grid.storm.webdav.WebdavSpringMiltonFilter</filter-class>
 		<init-param>
 			<param-name>milton.exclude.paths</param-name>
-			<param-value>/index.jsp,/fileTransfer</param-value>
+			<param-value>/index.jsp,/gridhttps_webapp</param-value>
 		</init-param>
 		<init-param>
 			<param-name>context.filename</param-name>
@@ -67,7 +67,7 @@
 
 	<filter-mapping>
 		<filter-name>fileTransferSpringMiltonFilter</filter-name>
-		<url-pattern>/fileTransfer/*</url-pattern>
+		<url-pattern>/gridhttps_webapp/*</url-pattern>
 	</filter-mapping>
 
 </web-app>
