@@ -102,7 +102,7 @@ public class StormGridhttpsServer {
 		ServletContextHandler context = new ServletContextHandler(ServletContextHandler.SESSIONS);
 		context.setContextPath(File.separator + gridhttpsInfo.getMapperServlet().getContextPath());
 		context.addServlet(new ServletHolder(new MapperServlet()), File.separator + gridhttpsInfo.getMapperServlet().getContextSpec());
-		context.addServlet(new ServletHolder(new FaviconServlet()), "/");
+		context.addServlet(new ServletHolder(new FaviconServlet()), "");
 		getContextHandlerCollection().addHandler(context);
 		log.debug("mapper-servlet deployed!");
 		log.debug("server initialization - finished");
