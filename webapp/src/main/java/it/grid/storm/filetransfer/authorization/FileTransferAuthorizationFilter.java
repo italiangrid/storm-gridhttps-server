@@ -29,7 +29,7 @@ public class FileTransferAuthorizationFilter extends AuthorizationFilter {
 	private HttpHelper httpHelper;
 	private String contextPath;
 	
-	public FileTransferAuthorizationFilter(HttpHelper httHelper, String contextPath) throws ServletException {
+	public FileTransferAuthorizationFilter(HttpHelper httpHelper, String contextPath) throws ServletException {
 		super();
 		this.setContextPath(contextPath);
 		this.setHttpHelper(httpHelper);
@@ -46,7 +46,7 @@ public class FileTransferAuthorizationFilter extends AuthorizationFilter {
 	}
 
 	public String stripContext() {
-		return httpHelper.getRequestStringURI().replaceFirst(getContextPath(), httpHelper.getRequestStringURI());
+		return httpHelper.getRequestStringURI().replaceFirst(getContextPath(), "");
 	}
 
 	public boolean isUserAuthorized() throws ServletException {

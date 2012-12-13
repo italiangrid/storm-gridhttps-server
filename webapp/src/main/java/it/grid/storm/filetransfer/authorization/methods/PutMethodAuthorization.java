@@ -2,6 +2,7 @@ package it.grid.storm.filetransfer.authorization.methods;
 
 import java.io.UnsupportedEncodingException;
 
+import it.grid.storm.Configuration;
 import it.grid.storm.HttpHelper;
 import it.grid.storm.authorization.Constants;
 import it.grid.storm.authorization.methods.AbstractMethodAuthorization;
@@ -16,11 +17,16 @@ public class PutMethodAuthorization extends AbstractMethodAuthorization {
 		super(httpHelper);
 	}
 
+	private String stripContext(String url) {
+		return url.replaceFirst(Configuration.FILETRANSFER_CONTEXTPATH, "");
+	}
+	
 	@Override
 	public boolean isUserAuthorized() throws ServletException {
 		StorageArea reqStorageArea;
+		String path = stripContext(getHttpHelper().getRequestStringURI());
 		try {
-			reqStorageArea = StorageAreaManager.getMatchingSAbyURI(getHttpHelper().getRequestStringURI());
+			reqStorageArea = StorageAreaManager.getMatchingSAbyURI(path);
 		} catch (IllegalArgumentException e) {
 			e.printStackTrace();
 			return false;
@@ -31,7 +37,7 @@ public class PutMethodAuthorization extends AbstractMethodAuthorization {
 			e.printStackTrace();
 			return false;
 		}
-		String reqPath = reqStorageArea.getRealPath(getHttpHelper().getRequestURI().getPath());
+		String reqPath = reqStorageArea.getRealPath(path);
 		String operation = getHttpHelper().isOverwriteRequest() ? Constants.PREPARE_TO_PUT_OVERWRITE_OPERATION : Constants.PREPARE_TO_PUT_OPERATION;
 		return askAuth(operation, reqPath);
 	}

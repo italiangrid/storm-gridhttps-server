@@ -8,4 +8,6 @@ public class Configuration {
 	public static String stormFrontendHostname;
 	public static int stormFrontendPort; 
 	
+	public final static String FILETRANSFER_CONTEXTPATH = "/fileTransfer";
+	
 }

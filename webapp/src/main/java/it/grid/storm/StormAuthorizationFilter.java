@@ -85,7 +85,7 @@ public class StormAuthorizationFilter implements Filter {
 		try {
 			if (isFileTransferRequest(httpHelper.getRequest().getRequestURI())) {
 				log.info("Received a file-transfer request");
-				filter = new FileTransferAuthorizationFilter(httpHelper, "/fileTransfer");
+				filter = new FileTransferAuthorizationFilter(httpHelper, Configuration.FILETRANSFER_CONTEXTPATH);
 			} else {
 				log.info("Received a webdav request");
 				filter = new WebDAVAuthorizationFilter(httpHelper);
