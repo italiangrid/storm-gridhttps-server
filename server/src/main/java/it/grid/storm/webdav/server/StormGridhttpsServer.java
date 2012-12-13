@@ -1,6 +1,5 @@
 package it.grid.storm.webdav.server;
 
-import it.grid.storm.gridhttps.servlet.FaviconServlet;
 import it.grid.storm.gridhttps.servlet.MapperServlet;
 import it.grid.storm.webdav.DefaultConfiguration;
 import it.grid.storm.webdav.server.data.StormBackend;
@@ -102,7 +101,6 @@ public class StormGridhttpsServer {
 		ServletContextHandler context = new ServletContextHandler(ServletContextHandler.SESSIONS);
 		context.setContextPath(File.separator + gridhttpsInfo.getMapperServlet().getContextPath());
 		context.addServlet(new ServletHolder(new MapperServlet()), File.separator + gridhttpsInfo.getMapperServlet().getContextSpec());
-		context.addServlet(new ServletHolder(new FaviconServlet()), "");
 		getContextHandlerCollection().addHandler(context);
 		log.debug("mapper-servlet deployed!");
 		log.debug("server initialization - finished");
