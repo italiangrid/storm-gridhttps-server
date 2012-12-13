@@ -128,6 +128,8 @@ start () {
 	        1>$STORM_LOGDIR/storm-gridhttps-server.stdout \
         	2>$STORM_LOGDIR/storm-gridhttps-server.stderr "
     ppid="$!"
+    #need a sleep, if too fast we are unable to get the ped
+    sleep 1 
     pid=`ps --ppid $ppid -o pid | grep -v PID | xargs ps --ppid 2> /dev/null | grep -v PID | awk '{print $1}'`
     if [[ "x" == "x"$pid || ! -d /proc/$pid ]]; then
         log_failure_msg "The storm-gridhttps process unexpectedly died"
