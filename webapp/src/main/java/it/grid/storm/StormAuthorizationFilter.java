@@ -156,7 +156,8 @@ public class StormAuthorizationFilter implements Filter {
 		// TODO Auto-generated method stub
 		OutputStream out = httpHelper.getResponse().getOutputStream();
 		XmlWriter w = new XmlWriter(out);
-		w.open("html");
+		w.writeText("<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Transitional//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd\">");
+		w.begin("html").writeAtt("lang", "en").writeAtt("xmlns", "http://www.w3.org/1999/xhtml").open();
 		w.open("head");
 		w.begin("style").writeAtt("type", "text/css").open().writeText(getTableStyle()).close();
 		w.close("head");
