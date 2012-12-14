@@ -34,7 +34,7 @@
 		<filter-class>it.grid.storm.webdav.WebdavSpringMiltonFilter</filter-class>
 		<init-param>
 			<param-name>milton.exclude.paths</param-name>
-			<param-value>/index.jsp,/fileTransfer,/favicon.ico</param-value>
+			<param-value>/index.jsp,/fileTransfer</param-value>
 		</init-param>
 		<init-param>
 			<param-name>context.filename</param-name>
@@ -47,7 +47,7 @@
 		<filter-class>it.grid.storm.filetransfer.FileTransferSpringMiltonFilter</filter-class>
 		<init-param>
 			<param-name>milton.exclude.paths</param-name>
-			<param-value>/index.jsp,/favicon.ico</param-value>
+			<param-value>/index.jsp</param-value>
 		</init-param>
 		<init-param>
 			<param-name>context.filename</param-name>
