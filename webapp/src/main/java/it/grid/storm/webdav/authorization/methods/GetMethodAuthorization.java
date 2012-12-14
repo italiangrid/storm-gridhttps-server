@@ -18,9 +18,10 @@ public class GetMethodAuthorization extends AbstractMethodAuthorization {
 
 	@Override
 	public boolean isUserAuthorized() throws ServletException {
+		String path = getHttpHelper().getRequestURI().getPath();
 		StorageArea reqStorageArea;
 		try {
-			reqStorageArea = StorageAreaManager.getMatchingSAbyURI(getHttpHelper().getRequestStringURI());
+			reqStorageArea = StorageAreaManager.getMatchingSAbyURI(path);
 		} catch (IllegalArgumentException e) {
 			e.printStackTrace();
 			return false;
@@ -31,9 +32,9 @@ public class GetMethodAuthorization extends AbstractMethodAuthorization {
 			e.printStackTrace();
 			return false;
 		}
-		String reqPath = reqStorageArea.getRealPath(getHttpHelper().getRequestURI().getPath());
+		String realPath = reqStorageArea.getRealPath(path);
 		String operation = Constants.PREPARE_TO_GET_OPERATION;
-		return askAuth(operation, reqPath);
+		return askAuth(operation, realPath);
 	}
 
 }
