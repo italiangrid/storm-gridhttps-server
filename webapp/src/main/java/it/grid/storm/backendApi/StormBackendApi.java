@@ -1,8 +1,7 @@
-package it.grid.storm.webdav.factory;
+package it.grid.storm.backendApi;
 
 import it.grid.storm.srm.types.RecursionLevel;
 import it.grid.storm.srm.types.TRequestToken;
-import it.grid.storm.webdav.factory.StormBackendApi;
 import it.grid.storm.authorization.UserCredentials;
 import it.grid.storm.webdav.factory.exceptions.RuntimeApiException;
 import it.grid.storm.webdav.factory.exceptions.StormResourceException;

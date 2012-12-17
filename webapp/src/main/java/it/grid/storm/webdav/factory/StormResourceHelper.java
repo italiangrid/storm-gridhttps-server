@@ -20,7 +20,7 @@ import it.grid.storm.srm.types.RecursionLevel;
 import it.grid.storm.srm.types.TRequestToken;
 import it.grid.storm.authorization.UserCredentials;
 import it.grid.storm.webdav.factory.exceptions.StormResourceException;
-import it.grid.storm.webdav.factory.StormBackendApi;
+import it.grid.storm.backendApi.StormBackendApi;
 import it.grid.storm.webdav.factory.StormDirectoryResource;
 import it.grid.storm.webdav.factory.StormFileResource;
 import it.grid.storm.webdav.factory.StormResource;
