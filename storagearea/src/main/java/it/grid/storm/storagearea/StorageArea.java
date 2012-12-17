@@ -40,7 +40,8 @@ public class StorageArea {
 		this.FSRoot = normalizePath(FSRoot);
 		this.stfnRoot = normalizePath(stfnRoot);
 		this.protocols = new ArrayList<String>();
-		this.protocols.addAll(protocols);
+		for (String protocol : protocols)
+			this.protocols.add(protocol.toUpperCase());
 	}
 
 	/**
