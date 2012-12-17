@@ -7,8 +7,11 @@ import io.milton.http.fs.SimpleFileContentService;
 import io.milton.http.SecurityManager;
 import io.milton.http.fs.NullSecurityManager;
 import io.milton.resource.Resource;
+import it.grid.storm.Configuration;
+import it.grid.storm.backendApi.StormBackendApi;
 import it.grid.storm.storagearea.StorageArea;
 import it.grid.storm.storagearea.StorageAreaManager;
+import it.grid.storm.webdav.factory.exceptions.RuntimeApiException;
 import it.grid.storm.xmlrpc.BackendApi;
 
 import java.io.File;
@@ -31,12 +34,13 @@ public final class FileSystemResourceFactory implements ResourceFactory {
 	private String ssoPrefix;
 	BackendApi backend;
 
-	public FileSystemResourceFactory() {
+	public FileSystemResourceFactory() throws RuntimeApiException {
 		log.info("FileSystem Resource factory init");
 		setRoot(new File("/"));
 		setSecurityManager(new NullSecurityManager());
 		setContextPath("fileTransfer");
         contentService = new SimpleFileContentService();
+        backend = StormBackendApi.getBackend(Configuration.stormBackendHostname, Configuration.stormBackendPort);
 	}
 	
 	public BackendApi getBackend() {
