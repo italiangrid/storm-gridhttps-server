@@ -133,7 +133,7 @@ public class StormAuthorizationFilter implements Filter {
 	}
 
 	private boolean isFileTransferRequest(String requestedURI) {
-		return requestedURI.startsWith("/fileTransfer");
+		return requestedURI.startsWith(Configuration.FILETRANSFER_CONTEXTPATH);
 	}
 
 	private void sendError(int errorCode, String errorMessage) {
