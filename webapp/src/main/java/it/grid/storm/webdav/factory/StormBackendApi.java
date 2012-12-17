@@ -1,6 +1,5 @@
 package it.grid.storm.webdav.factory;
 
-import it.grid.storm.Configuration;
 import it.grid.storm.srm.types.RecursionLevel;
 import it.grid.storm.srm.types.TRequestToken;
 import it.grid.storm.webdav.factory.StormBackendApi;
@@ -28,7 +27,7 @@ public class StormBackendApi {
 	public static BackendApi getBackend(String hostname, int port) throws RuntimeApiException {
 		BackendApi backend = null;
 		try {
-			backend = new BackendApi(Configuration.stormBackendHostname, new Long(Configuration.stormBackendPort));
+			backend = new BackendApi(hostname, new Long(port));
 		} catch (ApiException e) {
 			log.error(e.getMessage());
 			throw new RuntimeApiException(e.getMessage(), e);
@@ -373,4 +372,56 @@ public class StormBackendApi {
 		}
 		return output;
 	}
+	
+	public static RequestOutputData prepareToPutStatus(BackendApi backend, String newFileSurl, UserCredentials user, ArrayList<String> transferProtocols) throws RuntimeApiException, StormResourceException {
+		ArrayList<String> newSurlList = new ArrayList<String>();
+		newSurlList.add(newFileSurl);
+		RequestOutputData outputPtp = null;
+		log.debug("prepare to put status surl: " + newFileSurl);
+		try {
+			if (user.isAnonymous()) { // HTTP
+				outputPtp = backend.prepareToPutStatus(newFileSurl);
+			} else if (user.getUserFQANS().isEmpty()) {
+				outputPtp = backend.prepareToPutStatus(user.getUserDN(), newFileSurl);
+			} else {
+				outputPtp = backend.prepareToPutStatus(user.getUserDN(), user.getUserFQANS(), newFileSurl);
+			}
+		} catch (ApiException e) {
+			log.error(e.getMessage());
+			throw new RuntimeApiException(e.getMessage(), e);
+		}
+		log.debug(outputPtp.getStatus().getStatusCode().getValue());
+		log.info(outputPtp.getStatus().getExplanation());
+		if (!outputPtp.getStatus().getStatusCode().getValue().equals("SRM_SPACE_AVAILABLE")) {
+			throw new StormResourceException("prepare-to-put-status status is " + outputPtp.getStatus().getStatusCode().getValue());
+		}
+		return outputPtp;
+	}
+	
+	public static RequestOutputData prepareToGetStatus(BackendApi backend, String newFileSurl, UserCredentials user, ArrayList<String> transferProtocols) throws RuntimeApiException, StormResourceException {
+		ArrayList<String> newSurlList = new ArrayList<String>();
+		newSurlList.add(newFileSurl);
+		RequestOutputData outputPtp = null;
+		log.debug("prepare to get status surl: " + newFileSurl);
+		try {
+			if (user.isAnonymous()) { // HTTP
+				outputPtp = backend.prepareToGetStatus(newFileSurl);
+			} else if (user.getUserFQANS().isEmpty()) {
+				outputPtp = backend.prepareToGetStatus(user.getUserDN(), newFileSurl);
+			} else {
+				outputPtp = backend.prepareToGetStatus(user.getUserDN(), user.getUserFQANS(), newFileSurl);
+			}
+		} catch (ApiException e) {
+			log.error(e.getMessage());
+			throw new RuntimeApiException(e.getMessage(), e);
+		}
+		log.debug(outputPtp.getStatus().getStatusCode().getValue());
+		log.info(outputPtp.getStatus().getExplanation());
+		if (!outputPtp.getStatus().getStatusCode().getValue().equals("SRM_FILE_PINNED")) {
+			throw new StormResourceException("prepare-to-get-status status is " + outputPtp.getStatus().getStatusCode().getValue());
+		}
+		return outputPtp;
+	}
+	
+	
 }
