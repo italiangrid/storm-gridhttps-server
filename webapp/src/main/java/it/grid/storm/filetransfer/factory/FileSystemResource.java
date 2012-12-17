@@ -4,6 +4,7 @@ import io.milton.http.*;
 import io.milton.http.Request.Method;
 import io.milton.http.http11.auth.DigestResponse;
 import io.milton.resource.*;
+import it.grid.storm.data.Surl;
 import it.grid.storm.storagearea.StorageArea;
 
 import java.io.File;
@@ -23,16 +24,30 @@ public abstract class FileSystemResource implements Resource, DigestResource {
 	final String host;
 	String ssoPrefix;
 	StorageArea storageArea;
+	Surl surl;
 
 	public FileSystemResource(String host, FileSystemResourceFactory factory, File file, StorageArea storageArea) {
 		this.host = host;
 		this.file = file;
 		this.factory = factory;
 		this.storageArea = storageArea;
+		this.surl = new Surl(this.file, this.storageArea);
 	}
 	
 	public File getFile() {
 		return file;
+	}
+	
+	public Surl getSurl() {
+		return surl;
+	}
+	
+	public String getHost() {
+		return host;
+	}
+	
+	public FileSystemResourceFactory getFactory() {
+		return factory;
 	}
 
 	public String getUniqueId() {

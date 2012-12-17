@@ -9,7 +9,12 @@ import io.milton.http.exceptions.ConflictException;
 import io.milton.http.exceptions.NotAuthorizedException;
 import io.milton.http.fs.FileContentService;
 import io.milton.resource.*;
+import io.milton.servlet.MiltonServlet;
+import it.grid.storm.HttpHelper;
+import it.grid.storm.authorization.UserCredentials;
+import it.grid.storm.backendApi.StormBackendApi;
 import it.grid.storm.storagearea.StorageArea;
+import it.grid.storm.xmlrpc.outputdata.RequestOutputData;
 
 import java.io.File;
 import java.io.IOException;
@@ -76,9 +81,20 @@ public class DirectoryResource extends FileSystemResource implements PutableReso
 	public Resource createNew(String name, InputStream in, Long length, String contentType) throws IOException, NotAuthorizedException,
 			ConflictException, BadRequestException {
 		log.info("Called function for PUT FILE");
-		FileSystemResourceHelper.doPut(this, name, in);
 		File destinationFile = new File(this.file, name);
-		return factory.resolveFile(this.host, destinationFile, storageArea);
+		FileResource newFile = new FileResource(getHost(), getFactory(), destinationFile, contentService, getStorageArea());
+		
+		log.debug("Check for a prepare-to-put");
+		HttpHelper httpHelper = new HttpHelper(MiltonServlet.request(), MiltonServlet.response());
+		UserCredentials user = new UserCredentials(httpHelper);
+		RequestOutputData outputPtP = StormBackendApi.prepareToPutStatus(getFactory().getBackend(), getSurl().asString(), user);
+		if (!outputPtP.getStatus().getStatusCode().getValue().equals("SRM_SPACE_AVAILABLE")) {
+			log.warn("You have to do a prepare to put on surl '" + getSurl().asString() + "' before!");
+			throw new NotAuthorizedException(this);
+		}
+		
+		FileSystemResourceHelper.doPut(this, name, in);
+		return newFile;
 	}
 
 	/**

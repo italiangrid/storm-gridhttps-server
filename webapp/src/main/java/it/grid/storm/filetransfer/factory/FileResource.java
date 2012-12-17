@@ -13,7 +13,10 @@ import io.milton.http.fs.FileContentService;
 import io.milton.resource.*;
 import io.milton.servlet.MiltonServlet;
 import it.grid.storm.HttpHelper;
+import it.grid.storm.authorization.UserCredentials;
+import it.grid.storm.backendApi.StormBackendApi;
 import it.grid.storm.storagearea.StorageArea;
+import it.grid.storm.xmlrpc.outputdata.RequestOutputData;
 
 import java.io.*;
 import java.util.Map;
@@ -53,6 +56,16 @@ public class FileResource extends FileSystemResource implements GetableResource,
 	public void sendContent(OutputStream out, Range range, Map<String, String> params, String contentType) throws IOException,
 			NotAuthorizedException, BadRequestException, NotFoundException {
 		log.info("Called function for GET FILE");
+		
+		log.debug("Check for a prepare-to-get");
+		HttpHelper httpHelper = new HttpHelper(MiltonServlet.request(), MiltonServlet.response());
+		UserCredentials user = new UserCredentials(httpHelper);
+		RequestOutputData outputPtG = StormBackendApi.prepareToGetStatus(getFactory().getBackend(), getSurl().asString(), user);
+		if (!outputPtG.getStatus().getStatusCode().getValue().equals("SRM_FILE_PINNED")) {
+			log.warn("You have to do a prepare to get on surl '" + getSurl().asString() + "' before!");
+			throw new NotAuthorizedException(this);
+		}
+		
 		InputStream in = FileSystemResourceHelper.doGetFile(this);
 		if (in == null) {
 			log.error("Unable to get resource content '" + this.file.toString() + "'");

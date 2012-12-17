@@ -9,6 +9,7 @@ import io.milton.http.fs.NullSecurityManager;
 import io.milton.resource.Resource;
 import it.grid.storm.storagearea.StorageArea;
 import it.grid.storm.storagearea.StorageAreaManager;
+import it.grid.storm.xmlrpc.BackendApi;
 
 import java.io.File;
 import java.net.UnknownHostException;
@@ -28,6 +29,7 @@ public final class FileSystemResourceFactory implements ResourceFactory {
 	String defaultPage;
 	boolean digestAllowed = true;
 	private String ssoPrefix;
+	BackendApi backend;
 
 	public FileSystemResourceFactory() {
 		log.info("FileSystem Resource factory init");
@@ -35,6 +37,10 @@ public final class FileSystemResourceFactory implements ResourceFactory {
 		setSecurityManager(new NullSecurityManager());
 		setContextPath("fileTransfer");
         contentService = new SimpleFileContentService();
+	}
+	
+	public BackendApi getBackend() {
+		return backend;
 	}
 	
 	public File getRoot() {
