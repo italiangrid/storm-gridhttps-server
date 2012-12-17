@@ -32,6 +32,7 @@ import it.grid.storm.xmlrpc.outputdata.LsOutputData;
 import it.grid.storm.xmlrpc.outputdata.PingOutputData;
 import it.grid.storm.xmlrpc.outputdata.PtGOutputData;
 import it.grid.storm.xmlrpc.outputdata.LsOutputData.SurlInfo;
+import it.grid.storm.xmlrpc.outputdata.RequestOutputData;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -288,4 +289,28 @@ public class StormResourceHelper {
 		}
 	}
 
+	public static RequestOutputData doPrepareToGetStatus(StormFileResource source) throws NotFoundException, RuntimeApiException, StormResourceException {
+		HttpHelper httpHelper = new HttpHelper(MiltonServlet.request(), MiltonServlet.response());
+		UserCredentials user = new UserCredentials(httpHelper);
+		return doPrepareToGetStatus(source, user);
+	}
+
+	public static RequestOutputData doPrepareToGetStatus(StormFileResource source, UserCredentials user) throws NotFoundException, RuntimeApiException,
+			StormResourceException {
+		log.info("Called doPrepareToGetStatus()");
+		return StormBackendApi.prepareToGetStatus(source.getFactory().getBackendApi(), source.getSurl().toASCIIString(), user);
+	}
+	
+	public static RequestOutputData doPrepareToPutStatus(StormFileResource source) throws NotFoundException, RuntimeApiException, StormResourceException {
+		HttpHelper httpHelper = new HttpHelper(MiltonServlet.request(), MiltonServlet.response());
+		UserCredentials user = new UserCredentials(httpHelper);
+		return doPrepareToPutStatus(source, user);
+	}
+
+	public static RequestOutputData doPrepareToPutStatus(StormFileResource source, UserCredentials user) throws NotFoundException, RuntimeApiException,
+			StormResourceException {
+		log.info("Called doPrepareToPutStatus()");
+		return StormBackendApi.prepareToPutStatus(source.getFactory().getBackendApi(), source.getSurl().toASCIIString(), user);
+	}
+	
 }

@@ -374,7 +374,7 @@ public class StormBackendApi {
 		return output;
 	}
 	
-	public static RequestOutputData prepareToPutStatus(BackendApi backend, String newFileSurl, UserCredentials user, ArrayList<String> transferProtocols) throws RuntimeApiException, StormResourceException {
+	public static RequestOutputData prepareToPutStatus(BackendApi backend, String newFileSurl, UserCredentials user) throws RuntimeApiException, StormResourceException {
 		ArrayList<String> newSurlList = new ArrayList<String>();
 		newSurlList.add(newFileSurl);
 		RequestOutputData outputPtp = null;
@@ -399,7 +399,7 @@ public class StormBackendApi {
 		return outputPtp;
 	}
 	
-	public static RequestOutputData prepareToGetStatus(BackendApi backend, String newFileSurl, UserCredentials user, ArrayList<String> transferProtocols) throws RuntimeApiException, StormResourceException {
+	public static RequestOutputData prepareToGetStatus(BackendApi backend, String newFileSurl, UserCredentials user) throws RuntimeApiException, StormResourceException {
 		ArrayList<String> newSurlList = new ArrayList<String>();
 		newSurlList.add(newFileSurl);
 		RequestOutputData outputPtp = null;
