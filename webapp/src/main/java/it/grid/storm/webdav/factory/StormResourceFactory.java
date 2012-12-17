@@ -8,6 +8,7 @@ import io.milton.http.SecurityManager;
 import io.milton.http.fs.NullSecurityManager;
 import io.milton.resource.Resource;
 import it.grid.storm.Configuration;
+import it.grid.storm.storagearea.StorageArea;
 import it.grid.storm.storagearea.StorageAreaManager;
 import it.grid.storm.xmlrpc.ApiException;
 import it.grid.storm.xmlrpc.BackendApi;
@@ -79,26 +80,26 @@ public final class StormResourceFactory implements ResourceFactory {
 		if (isLocalResource(host)) {
 			String stfnRoot = "/" + url.replaceFirst("/", "").split("/")[0];
 			log.debug("searching for stfnRoot: " + stfnRoot);
-			String fsRoot = StorageAreaManager.getInstance().getFsRootFromStfn().get(stfnRoot);
-			if (fsRoot != null) {
-				url = url.replaceFirst(stfnRoot, fsRoot);
-				log.debug("stripped context: " + url);				
-				File requested = resolvePath(root, url);
-				return resolveFile(host, requested);
+			StorageArea sa = StorageAreaManager.getInstance().getStorageAreaFromStfnRoot(stfnRoot);
+			if (sa != null) {
+				String realPath = sa.getRealPath(url);
+				log.debug("real path: " + realPath);				
+				File requested = resolvePath(root, realPath);
+				return resolveFile(host, requested, sa);
 			}
 		}
 		return null;
 	}
 
-	public StormResource resolveFile(String host, File file) {
+	public StormResource resolveFile(String host, File file, StorageArea storageArea) {
 		StormResource r;
 		if (!file.exists()) {
 			log.warn("file not found: " + file.getAbsolutePath());
 			return null;
 		} else if (file.isDirectory()) {
-			r = new StormDirectoryResource(host, this, file);
+			r = new StormDirectoryResource(host, this, file, storageArea);
 		} else {
-			r = new StormFileResource(host, this, file);
+			r = new StormFileResource(host, this, file, storageArea);
 		}
 		if (r != null) {
 			r.ssoPrefix = ssoPrefix;

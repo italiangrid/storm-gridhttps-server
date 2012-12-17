@@ -80,6 +80,19 @@ public class StorageAreaManager {
 		return fsRootFromStfn;
 	}
 	
+	public StorageArea getStorageAreaFromStfnRoot(String stfnRoot) {
+		for (StorageArea sa : getStorageAreas()) {
+			if (sa.getStfnRoot().equals(stfnRoot))
+				return sa;
+		}
+		return null;
+	}
+	
+	public StorageArea getStorageAreaFromFsRoot(String fsRoot) {
+		String stfnRoot = getStfnRootFromFs().get(fsRoot);
+		return getStorageAreaFromStfnRoot(stfnRoot);
+	}
+	
 	private List<StorageArea> retrieveStorageAreasFromStormBackend(String hostname, int port) throws Exception {
 		String stormBackendIP = InetAddress.getByName(hostname).getHostAddress();
 		StormBackendInfo stormBackendParameters = new StormBackendInfo(hostname, stormBackendIP, port);

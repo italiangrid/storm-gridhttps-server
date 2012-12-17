@@ -12,6 +12,7 @@ import io.milton.servlet.MiltonServlet;
 import it.grid.storm.srm.types.Recursion;
 import it.grid.storm.srm.types.SizeUnit;
 import it.grid.storm.srm.types.TFileType;
+import it.grid.storm.storagearea.StorageArea;
 import it.grid.storm.storagearea.StorageAreaManager;
 import it.grid.storm.HttpHelper;
 import it.grid.storm.webdav.factory.exceptions.RuntimeApiException;
@@ -36,14 +37,8 @@ public class StormDirectoryResource extends StormResource implements MakeCollect
 
 	private static final Logger log = LoggerFactory.getLogger(StormDirectoryResource.class);
 
-	public StormDirectoryResource(String host, StormResourceFactory factory, File dir) {
-		super(host, factory, dir);
-		if (!dir.exists()) {
-			throw new IllegalArgumentException("Directory does not exist: " + dir.getAbsolutePath());
-		}
-		if (!dir.isDirectory()) {
-			throw new IllegalArgumentException("Is not a directory: " + dir.getAbsolutePath());
-		}
+	public StormDirectoryResource(String host, StormResourceFactory factory, File dir, StorageArea storageArea) {
+		super(host, factory, dir, storageArea);
 	}
 
 	public CollectionResource createCollection(String name) throws NotAuthorizedException, ConflictException, BadRequestException {
@@ -63,12 +58,12 @@ public class StormDirectoryResource extends StormResource implements MakeCollect
 		}
 		StormResourceHelper.doMkCol(this, name);
 		File fnew = new File(getFile(), name);
-		return new StormDirectoryResource(getHost(), getFactory(), fnew);
+		return new StormDirectoryResource(getHost(), getFactory(), fnew, getStorageArea());
 	}
 
 	public Resource child(String name) {
 		File fchild = new File(getFile(), name);
-		return getFactory().resolveFile(getHost(), fchild);
+		return getFactory().resolveFile(getHost(), fchild, getStorageArea());
 	}
 
 	public List<? extends Resource> getChildren() {
@@ -76,7 +71,7 @@ public class StormDirectoryResource extends StormResource implements MakeCollect
 		File[] files = getFile().listFiles();
 		if (files != null) {
 			for (File fchild : files) {
-				StormResource res = getFactory().resolveFile(getHost(), fchild);
+				StormResource res = getFactory().resolveFile(getHost(), fchild, getStorageArea());
 				if (res != null) {
 					list.add(res);
 				} else {
@@ -106,7 +101,7 @@ public class StormDirectoryResource extends StormResource implements MakeCollect
 		log.info("Called function for PUT FILE");
 		StormResourceHelper.doPut(this, name, in);
 		File destinationFile = new File(getFile(), name);
-		return getFactory().resolveFile(getHost(), destinationFile);
+		return getFactory().resolveFile(getHost(), destinationFile, getStorageArea());
 	}
 
 	/**

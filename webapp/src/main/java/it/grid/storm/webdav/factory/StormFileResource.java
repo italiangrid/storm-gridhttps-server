@@ -13,6 +13,7 @@ import io.milton.resource.*;
 import io.milton.servlet.MiltonServlet;
 import it.grid.storm.HttpHelper;
 import it.grid.storm.srm.types.Recursion;
+import it.grid.storm.storagearea.StorageArea;
 import it.grid.storm.webdav.factory.exceptions.RuntimeApiException;
 import it.grid.storm.webdav.factory.exceptions.StormResourceException;
 import it.grid.storm.xmlrpc.outputdata.LsOutputData.SurlInfo;
@@ -30,15 +31,8 @@ public class StormFileResource extends StormResource implements CopyableResource
 
 	private static final Logger log = LoggerFactory.getLogger(StormFileResource.class);
 
-	/**
-	 * 
-	 * @param host
-	 *            - the requested host. E.g. www.mycompany.com
-	 * @param stormResourceFactory
-	 * @param file
-	 */
-	public StormFileResource(String host, StormResourceFactory fileSystemResourceFactory, File file) {
-		super(host, fileSystemResourceFactory, file);
+	public StormFileResource(String host, StormResourceFactory fileSystemResourceFactory, File file, StorageArea storageArea) {
+		super(host, fileSystemResourceFactory, file, storageArea);
 	}
 
 	public SurlInfo getExtraProperties() {

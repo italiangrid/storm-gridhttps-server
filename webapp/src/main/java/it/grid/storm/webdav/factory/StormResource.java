@@ -4,16 +4,14 @@ import io.milton.http.*;
 import io.milton.http.Request.Method;
 import io.milton.http.http11.auth.DigestResponse;
 import io.milton.resource.*;
+import it.grid.storm.data.Surl;
 import it.grid.storm.storagearea.StorageArea;
 import it.grid.storm.storagearea.StorageAreaManager;
-import it.grid.storm.Configuration;
 
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Date;
 
@@ -26,12 +24,16 @@ public abstract class StormResource implements Resource, MoveableResource, Copya
 	private File file;
 	private final StormResourceFactory factory;
 	private final String host;
+	private Surl surl;
+	private StorageArea storageArea;
 	String ssoPrefix;
 
-	public StormResource(String host, StormResourceFactory factory, File file) {
+	public StormResource(String host, StormResourceFactory factory, File file, StorageArea storageArea) {
 		this.host = host;
 		this.file = file;
 		this.factory = factory;
+		this.storageArea = storageArea;
+		this.surl = new Surl(this.file, this.storageArea);
 	}
 
 	public String getHost() {
@@ -95,25 +97,13 @@ public abstract class StormResource implements Resource, MoveableResource, Copya
 		return this.getName().compareTo(o.getName());
 	}
 
-	public URI getSurl() {
-		StorageArea currentSA = StorageAreaManager.getMatchingSA(getFile().getPath());
-		String stfnRoot = currentSA.getStfnRoot();
-		String fsRoot = currentSA.getFSRoot();
-		String path = file.getPath().replaceFirst(fsRoot, stfnRoot);
-		log.debug("path: " + path);
-		URI surl = null;
-		try {
-			surl = new URI("srm", null, Configuration.stormFrontendHostname, Configuration.stormFrontendPort, path, null, null);			
-		} catch (URISyntaxException e) {
-			log.error(e.getMessage());
-		}
-		log.debug("surl: " + surl.toASCIIString());
+	public Surl getSurl() {
 		return surl;
 	}
 	
 	public ArrayList<String> getSurlAsList() {
 		ArrayList<String> surls = new ArrayList<String>();
-		surls.add(getSurl().toASCIIString());
+		surls.add(getSurl().asString());
 		return surls;
 	}
 	
