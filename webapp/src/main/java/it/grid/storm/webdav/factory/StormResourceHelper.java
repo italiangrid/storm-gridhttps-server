@@ -101,7 +101,7 @@ public class StormResourceHelper {
 			StormResourceException {
 		log.info("Called doGetFile()");
 		PtGOutputData outputPtG = StormBackendApi.prepareToGet(source.getFactory().getBackendApi(), source.getSurl().toASCIIString(), user,
-				source.getStorageArea().getProtocolAsList());
+				source.getStorageArea().getProtocols());
 		InputStream in = null;
 		try {
 			in = source.getFactory().getContentService().getFileContent(source.getFile());
@@ -146,7 +146,7 @@ public class StormResourceHelper {
 		File destinationFile = new File(sourceDir.getFile(), name);
 		String newFileSurl = sourceDir.getSurl() + "/" + name;
 		FileTransferOutputData outputPtp = StormBackendApi.prepareToPut(sourceDir.getFactory().getBackendApi(), newFileSurl, user,
-				sourceDir.getStorageArea().getProtocolAsList());
+				sourceDir.getStorageArea().getProtocols());
 		// put
 		try {
 			sourceDir.getFactory().getContentService().setFileContent(destinationFile, in);
@@ -173,7 +173,7 @@ public class StormResourceHelper {
 			ConflictException, NotAuthorizedException {
 		log.info("Called doPutOverewrite()");
 		FileTransferOutputData outputPtp = StormBackendApi.prepareToPutOverwrite(source.getFactory().getBackendApi(), source.getSurl()
-				.toASCIIString(), user, source.getStorageArea().getProtocolAsList());
+				.toASCIIString(), user, source.getStorageArea().getProtocols());
 		// overwrite
 		try {
 			source.getFactory().getContentService().setFileContent(source.getFile(), in);
@@ -270,7 +270,7 @@ public class StormResourceHelper {
 		log.info("Called doCopyFile()");
 		/* prepareToGet on source file to lock the resource */
 		PtGOutputData outputPtG = StormBackendApi.prepareToGet(source.getFactory().getBackendApi(), source.getSurl().toASCIIString(), user,
-				source.getStorageArea().getProtocolAsList());
+				source.getStorageArea().getProtocols());
 		try {
 			/* create destination */
 			StormResourceHelper.doPut(newParent, newName, source.getInputStream(), user);

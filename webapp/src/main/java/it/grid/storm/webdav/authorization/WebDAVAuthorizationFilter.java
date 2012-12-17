@@ -57,7 +57,7 @@ public class WebDAVAuthorizationFilter extends AuthorizationFilter {
 	}
 	
 	private boolean isRequestProtocolAllowed(String protocol) {
-		return getRequestStorageArea().getProtocolAsList().contains(protocol);
+		return getRequestStorageArea().getProtocols().contains(protocol);
 	}
 	
 	private StorageArea getRequestStorageArea() {
@@ -65,7 +65,7 @@ public class WebDAVAuthorizationFilter extends AuthorizationFilter {
 	}
 
 	private boolean isDestinationProtocolAllowed(String protocol) {
-		return getDestinationStorageArea().getProtocolAsList().contains(protocol);
+		return getDestinationStorageArea().getProtocols().contains(protocol);
 	}
 	
 	private StorageArea getDestinationStorageArea() {

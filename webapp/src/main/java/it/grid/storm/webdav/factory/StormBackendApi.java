@@ -16,6 +16,7 @@ import it.grid.storm.xmlrpc.outputdata.RequestOutputData;
 import it.grid.storm.xmlrpc.outputdata.SurlArrayRequestOutputData;
 
 import java.util.ArrayList;
+import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -71,7 +72,7 @@ public class StormBackendApi {
 		return output;
 	}
 
-	public static PtGOutputData prepareToGet(BackendApi backend, String surl, UserCredentials user, ArrayList<String> transferProtocols) throws RuntimeApiException, StormResourceException {
+	public static PtGOutputData prepareToGet(BackendApi backend, String surl, UserCredentials user, List<String> transferProtocols) throws RuntimeApiException, StormResourceException {
 		PtGOutputData outputPtG = null;
 		log.debug("prepare to get surl: " + surl);
 		try {
@@ -125,7 +126,7 @@ public class StormBackendApi {
 		return output;
 	}
 
-	public static FileTransferOutputData prepareToPut(BackendApi backend, String newFileSurl, UserCredentials user, ArrayList<String> transferProtocols) throws RuntimeApiException, StormResourceException {
+	public static FileTransferOutputData prepareToPut(BackendApi backend, String newFileSurl, UserCredentials user, List<String> transferProtocols) throws RuntimeApiException, StormResourceException {
 		ArrayList<String> newSurlList = new ArrayList<String>();
 		newSurlList.add(newFileSurl);
 		FileTransferOutputData outputPtp = null;
@@ -150,7 +151,7 @@ public class StormBackendApi {
 		return outputPtp;
 	}
 
-	public static FileTransferOutputData prepareToPutOverwrite(BackendApi backend, String newFileSurl, UserCredentials user, ArrayList<String> transferProtocols) throws RuntimeApiException, StormResourceException {
+	public static FileTransferOutputData prepareToPutOverwrite(BackendApi backend, String newFileSurl, UserCredentials user, List<String> transferProtocols) throws RuntimeApiException, StormResourceException {
 		ArrayList<String> newSurlList = new ArrayList<String>();
 		newSurlList.add(newFileSurl);
 		FileTransferOutputData outputPtp = null;

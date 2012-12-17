@@ -247,17 +247,8 @@ public class StorageAreaManager {
 					+ stfnRootList + " protocolList=" + protocolList);
 			throw new IllegalArgumentException("");
 		}
-		int protocol = StorageArea.NONE_PROTOCOL;
-		if (protocolList.size() > 0) {
-			if ((protocolList.contains("http")) && (protocolList.contains("https")))
-				protocol = StorageArea.HTTP_AND_HTTPS_PROTOCOLS;
-			else if (protocolList.contains("http"))
-				protocol = StorageArea.HTTP_PROTOCOL;
-			else if (protocolList.contains("https"))
-				protocol = StorageArea.HTTPS_PROTOCOL;
-		}
 		for (String stfnRoot : stfnRootList) {
-			StorageArea storageArea = new StorageArea(name, root, stfnRoot, protocol);
+			StorageArea storageArea = new StorageArea(name, root, stfnRoot, protocolList);
 			log.debug("Decoded storage area: [" + storageArea.toString() + "]");
 			producedList.add(storageArea);
 		}

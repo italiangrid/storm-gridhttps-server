@@ -13,23 +13,19 @@
 package it.grid.storm.storagearea;
 
 import java.io.File;
-import java.util.ArrayList;
+import java.util.List;
 
 /**
  * @author Michele Dibenedetto
+ * @author Enrico Vianello
  */
 public class StorageArea {
 
 	private String name;
 	private String FSRoot;
 	private String stfnRoot;
-	private int protocol;
-
-	public final static int NONE_PROTOCOL = 0;
-	public final static int HTTP_PROTOCOL = 1;
-	public final static int HTTPS_PROTOCOL = 2;
-	public final static int HTTP_AND_HTTPS_PROTOCOLS = 3;
-
+	private List<String> protocols;
+	
 	/**
 	 * @param name
 	 *            the name of the storage area
@@ -38,11 +34,11 @@ public class StorageArea {
 	 * @param stfnRoot
 	 *            the storage file name root of the storage area
 	 */
-	public StorageArea(String name, String FSRoot, String stfnRoot, int protocol) {
+	public StorageArea(String name, String FSRoot, String stfnRoot, List<String> protocols) {
 		this.name = name;
 		this.FSRoot = normalizePath(FSRoot);
 		this.stfnRoot = normalizePath(stfnRoot);
-		this.protocol = protocol;
+		this.protocols.addAll(protocols);
 	}
 
 	/**
@@ -53,10 +49,10 @@ public class StorageArea {
 	}
 
 	/**
-	 * @return the http protocol to use to access resources via webdav server
+	 * @return the file-transfer protocols to use to access resources
 	 */
-	public final int getProtocol() {
-		return protocol;
+	public final List<String> getProtocols() {
+		return protocols;
 	}
 
 	/**
@@ -98,61 +94,13 @@ public class StorageArea {
 	}
 
 	/**
-	 * @return the String equivalent of the protocol
-	 */
-	public String getStrProtocol() {
-		switch (protocol) {
-		case 0:
-			return "NONE_PROTOCOL";
-		case 1:
-			return "HTTP_PROTOCOL";
-		case 2:
-			return "HTTPS_PROTOCOL";
-		case 3:
-			return "HTTP_AND_HTTPS_PROTOCOLS";
-		default:
-			return "UNDEFINED";
-		}
-	}
-
-	/**
 	 * @return the String Array equivalent of the protocol
 	 */
 	public String[] getProtocolAsStrArray() {
-		switch (protocol) {
-		case 1:
-			String[] out1 = { "HTTP" };
-			return out1;
-		case 2:
-			String[] out2 = { "HTTPS" };
-			return out2;
-		case 3:
-			String[] out3 = { "HTTP", "HTTPS" };
-			return out3;
-		case 0:
-		default:
-			String[] out0 = {};
-			return out0;
-		}
-	}
-
-	/**
-	 * @return the ArrayList of String equivalent of the protocol
-	 */
-	public ArrayList<String> getProtocolAsList() {
-		ArrayList<String> out = new ArrayList<String>();
-		switch (protocol) {
-		case 1:
-			out.add("HTTP");
-			break;
-		case 2:
-			out.add("HTTPS");
-			break;
-		case 3:
-			out.add("HTTP");
-			out.add("HTTPS");
-			break;
-		}
+		String[] out = new String[this.protocols.size()];
+		int i = 0;
+		for (String protocol : this.protocols)
+			out[i++] = protocol;
 		return out;
 	}
 
@@ -163,14 +111,14 @@ public class StorageArea {
 	 */
 	@Override
 	public String toString() {
-		return "StorageArea [name=" + name + ", root=" + FSRoot + ", stfnRoot=" + stfnRoot + ", protocol=" + getStrProtocol() + "]";
+		return "StorageArea [name=" + name + ", root=" + FSRoot + ", stfnRoot=" + stfnRoot + ", protocol=" + getProtocols() + "]";
 	}
 
 	/**
 	 * @return if the protocol is accepted as transfer protocol
 	 */
 	public boolean isProtocol(String protocol) {
-		return getProtocolAsList().contains(protocol);
+		return getProtocols().contains(protocol);
 	}
 	
 	/**

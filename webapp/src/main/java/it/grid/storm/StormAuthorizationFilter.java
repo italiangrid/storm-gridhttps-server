@@ -180,7 +180,7 @@ public class StormAuthorizationFilter implements Filter {
 		w.close("tr");
 		UserCredentials user = new UserCredentials(httpHelper);
 		for (StorageArea sa : StorageAreaManager.getInstance().getStorageAreas()) {
-			if (!sa.getProtocolAsList().contains(httpHelper.getRequestProtocol())) {
+			if (!sa.getProtocols().contains(httpHelper.getRequestProtocol())) {
 				continue;
 			}
 			if (!isUserAuthorized(user, sa)) {
