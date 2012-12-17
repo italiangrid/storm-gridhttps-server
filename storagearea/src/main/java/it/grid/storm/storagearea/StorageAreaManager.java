@@ -43,22 +43,22 @@ public class StorageAreaManager {
 	private static final Logger log = LoggerFactory.getLogger(StorageAreaManager.class);
 	private List<StorageArea> storageAreas;
 	private static StorageAreaManager SAManager = null;
-	private HashMap<String,String> fsRootFromStfn;
-	private HashMap<String,String> stfnRootFromFs;
-	
+	private HashMap<String, String> fsRootFromStfn;
+	private HashMap<String, String> stfnRootFromFs;
+
 	public static StorageAreaManager getInstance() {
 		return SAManager;
 	}
-	
+
 	public static void init(String stormBEHostname, int stormBEPort) throws Exception {
 		SAManager = new StorageAreaManager(stormBEHostname, stormBEPort);
 	}
-	
+
 	public static boolean isInitialized() {
 		return getInstance() != null;
 	}
-	
-	private StorageAreaManager(String stormBEHostname, int stormBEPort) throws Exception {	
+
+	private StorageAreaManager(String stormBEHostname, int stormBEPort) throws Exception {
 		storageAreas = retrieveStorageAreasFromStormBackend(stormBEHostname, stormBEPort);
 		fsRootFromStfn = new HashMap<String, String>();
 		for (StorageArea sa : storageAreas)
@@ -71,15 +71,15 @@ public class StorageAreaManager {
 	public List<StorageArea> getStorageAreas() {
 		return storageAreas;
 	}
-	
+
 	public HashMap<String, String> getStfnRootFromFs() {
 		return stfnRootFromFs;
 	}
-	
+
 	public HashMap<String, String> getFsRootFromStfn() {
 		return fsRootFromStfn;
 	}
-	
+
 	public StorageArea getStorageAreaFromStfnRoot(String stfnRoot) {
 		for (StorageArea sa : getStorageAreas()) {
 			if (sa.getStfnRoot().equals(stfnRoot))
@@ -87,12 +87,12 @@ public class StorageAreaManager {
 		}
 		return null;
 	}
-	
+
 	public StorageArea getStorageAreaFromFsRoot(String fsRoot) {
 		String stfnRoot = getStfnRootFromFs().get(fsRoot);
 		return getStorageAreaFromStfnRoot(stfnRoot);
 	}
-	
+
 	private List<StorageArea> retrieveStorageAreasFromStormBackend(String hostname, int port) throws Exception {
 		String stormBackendIP = InetAddress.getByName(hostname).getHostAddress();
 		StormBackendInfo stormBackendParameters = new StormBackendInfo(hostname, stormBackendIP, port);
@@ -307,7 +307,7 @@ public class StorageAreaManager {
 		}
 		return mappedSA;
 	}
-	
+
 	/**
 	 * Searches for a storage area in the available list that has an FSRoot that
 	 * is the longest match with the provided file path
@@ -317,10 +317,11 @@ public class StorageAreaManager {
 	 * @return the best match StorageArea, null if none matches
 	 * @throws IllegalArgumentException
 	 *             if localFilePath is null
-	 * @throws ServletException 
-	 * @throws UnsupportedEncodingException 
+	 * @throws ServletException
+	 * @throws UnsupportedEncodingException
 	 */
-	public static StorageArea getMatchingSAbyURI(String path) throws IllegalArgumentException, IllegalStateException, UnsupportedEncodingException {
+	public static StorageArea getMatchingSAbyURI(String path) throws IllegalArgumentException, IllegalStateException,
+			UnsupportedEncodingException {
 		if (path == null) {
 			log.error("Unable to match StorageArea, the provided localFilePath is null");
 			throw new IllegalArgumentException("Provided localFilePath is null!");
@@ -341,8 +342,8 @@ public class StorageAreaManager {
 		log.debug("Looking for a StorageArea that matches " + pathDecoded);
 		int matchedSAFSRootLength = 0;
 		for (StorageArea currentSA : StorageAreaManager.getInstance().getStorageAreas()) {
-			if (pathDecoded.startsWith(currentSA.getStfnRoot())
-					&& (matchedSA == null || currentSA.getStfnRoot().length() > matchedSA.getStfnRoot().length())) {
+			if ((pathDecoded.startsWith(currentSA.getStfnRoot()) && (matchedSA == null || currentSA.getStfnRoot().length() > matchedSA
+					.getStfnRoot().length()))) {
 				if (currentSA.getStfnRoot().length() > matchedSAFSRootLength) {
 					matchedSA = currentSA;
 					matchedSAFSRootLength = currentSA.getStfnRoot().length();
@@ -356,5 +357,5 @@ public class StorageAreaManager {
 		}
 		return matchedSA;
 	}
-	
+
 }
