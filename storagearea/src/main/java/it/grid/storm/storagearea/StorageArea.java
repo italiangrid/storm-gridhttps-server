@@ -13,6 +13,7 @@
 package it.grid.storm.storagearea;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -38,6 +39,7 @@ public class StorageArea {
 		this.name = name;
 		this.FSRoot = normalizePath(FSRoot);
 		this.stfnRoot = normalizePath(stfnRoot);
+		this.protocols = new ArrayList<String>();
 		this.protocols.addAll(protocols);
 	}
 
