@@ -119,7 +119,7 @@ public abstract class StormResource implements Resource, MoveableResource, Copya
 	}
 	
 	public StorageArea getStorageArea() {
-		return StorageAreaManager.getMatchingSA(getFile().getPath());
+		return StorageAreaManager.getMatchingSA(getFile());
 	}
 
 }

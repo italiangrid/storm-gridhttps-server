@@ -14,18 +14,15 @@ package it.grid.storm.storagearea;
 
 import it.grid.storm.remotecall.ConfigDiscoveryServiceConstants;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.net.URLDecoder;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
-
-import javax.servlet.ServletException;
 
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
@@ -40,17 +37,17 @@ import org.slf4j.LoggerFactory;
 public class StorageAreaManager {
 
 	private static final Logger log = LoggerFactory.getLogger(StorageAreaManager.class);
-	
+
 	private final String beHostname;
 	private final int bePort;
-	
+
 	private List<StorageArea> storageAreas;
 	private static StorageAreaManager SAManager = null;
 	private HashMap<String, String> fsRootFromStfn;
 	private HashMap<String, String> stfnRootFromFs;
 
 	/* PUBLIC STATIC METHODS */
-	
+
 	public static void init(String stormBEHostname, int stormBEPort) throws Exception {
 		SAManager = new StorageAreaManager(stormBEHostname, stormBEPort);
 	}
@@ -59,16 +56,16 @@ public class StorageAreaManager {
 		return getInstance() != null;
 	}
 
-	/* PUBLIC METHODS */ 
-	
+	/* PUBLIC METHODS */
+
 	public static StorageAreaManager getInstance() {
 		return SAManager;
 	}
-	
+
 	public String getBeHostname() {
 		return beHostname;
 	}
-	
+
 	public int getBePort() {
 		return bePort;
 	}
@@ -84,7 +81,7 @@ public class StorageAreaManager {
 	public HashMap<String, String> getFsRootFromStfn() {
 		return fsRootFromStfn;
 	}
-	
+
 	public StorageArea getStorageAreaFromStfnRoot(String stfnRoot) {
 		for (StorageArea sa : getStorageAreas()) {
 			if (sa.getStfnRoot().equals(stfnRoot))
@@ -97,9 +94,9 @@ public class StorageAreaManager {
 		String stfnRoot = getStfnRootFromFs().get(fsRoot);
 		return getStorageAreaFromStfnRoot(stfnRoot);
 	}
-	
+
 	/* PRIVATE METHODS */
-	
+
 	private StorageAreaManager(String stormBEHostname, int stormBEPort) throws Exception {
 		this.beHostname = stormBEHostname;
 		this.bePort = stormBEPort;
@@ -198,7 +195,7 @@ public class StorageAreaManager {
 		}
 		return httpResponse;
 	}
-	
+
 	/**
 	 * @param storageAreaListString
 	 * @return never null, a list that contains the decoded storage areas. None
@@ -281,93 +278,68 @@ public class StorageAreaManager {
 		return producedList;
 	}
 
-	/**
-	 * Searches for a storage area in the available list that has an FSRoot that
-	 * is the longest match with the provided file path
-	 * 
-	 * @param localFilePath
-	 *            must not be null
-	 * @return the best match StorageArea, null if none matches
-	 * @throws IllegalArgumentException
-	 *             if localFilePath is null
-	 */
-	public static StorageArea getMatchingSA(String localFilePath) throws IllegalArgumentException, IllegalStateException {
-		if (localFilePath == null) {
-			log.error("Unable to match StorageArea, the provided localFilePath is null");
-			throw new IllegalArgumentException("Provided localFilePath is null!");
+	public static StorageArea getMatchingSA(File localFile) throws IllegalArgumentException, IllegalStateException {
+		if (localFile == null) {
+			log.error("Unable to match StorageArea, the provided localFile is null");
+			throw new IllegalArgumentException("Provided localFile is null!");
 		}
 		if (!isInitialized()) {
 			log.error("Unable to match StorageArea, class not initialized. " + "Call init() first");
 			throw new IllegalStateException("Unable to match any StorageArea, class not initialized.");
 		}
-		log.debug("Looking for a StorageArea that matches " + localFilePath);
-		StorageArea mappedSA = null;
-		int matchedSAFSRootLength = 0;
+		String path = localFile.getPath();
+		log.debug("Looking for a StorageArea that matches " + path);
+		StorageArea mapped = null;
 		for (StorageArea storageArea : StorageAreaManager.getInstance().getStorageAreas()) {
-			if (localFilePath.startsWith(storageArea.getFSRoot())
-					&& (mappedSA == null || storageArea.getFSRoot().length() > mappedSA.getFSRoot().length())) {
-				if (storageArea.getStfnRoot().length() > matchedSAFSRootLength) {
-					mappedSA = storageArea;
-					matchedSAFSRootLength = storageArea.getStfnRoot().length();
-				}
+			if (path.startsWith(storageArea.getFSRoot())) {
+					if (mapped == null || storageArea.getFSRoot().length() > mapped.getFSRoot().length()) {
+						mapped = storageArea;
+					}
 			}
 		}
-		if (mappedSA == null) {
+		if (mapped == null) {
 			log.debug("No match found");
 		} else {
-			log.debug("Matched StorageArea " + mappedSA.toString());
+			log.debug("Matched StorageArea " + mapped.toString());
 		}
-		return mappedSA;
+		return mapped;
 	}
 
-	/**
-	 * Searches for a storage area in the available list that has an FSRoot that
-	 * is the longest match with the provided file path
-	 * 
-	 * @param path
-	 *            must not be null
-	 * @return the best match StorageArea, null if none matches
-	 * @throws IllegalArgumentException
-	 *             if localFilePath is null
-	 * @throws ServletException
-	 * @throws UnsupportedEncodingException
-	 */
-	public static StorageArea getMatchingSAbyURI(String path) throws IllegalArgumentException, IllegalStateException,
-			UnsupportedEncodingException {
-		if (path == null) {
-			log.error("Unable to match StorageArea, the provided localFilePath is null");
-			throw new IllegalArgumentException("Provided localFilePath is null!");
+	public static StorageArea getMatchingSA(URI uri) throws IllegalArgumentException, IllegalStateException {
+		if (uri == null) {
+			log.error("Unable to match StorageArea, the provided uri is null");
+			throw new IllegalArgumentException("Provided uri is null!");
+		}
+		return getMatchingSA(uri.getPath());
+	}
+	
+	public static StorageArea getMatchingSA(String uriPath) throws IllegalArgumentException, IllegalStateException {
+		if (uriPath == null) {
+			log.error("Unable to match StorageArea, the provided uriPath is null");
+			throw new IllegalArgumentException("Provided uriPath is null!");
 		}
 		if (!isInitialized()) {
 			log.error("Unable to match StorageArea, class not initialized. " + "Call init() first");
 			throw new IllegalStateException("Unable to match any StorageArea, class not initialized.");
 		}
-		String pathDecoded;
-		try {
-			pathDecoded = URLDecoder.decode(path, "UTF-8");
-		} catch (UnsupportedEncodingException e) {
-			log.error("Unable to decode path parameter. UnsupportedEncodingException : " + e.getMessage());
-			throw e;
-		}
-		log.debug("Decoded filePath = " + pathDecoded + " . Retrieving matching StorageArea");
-		StorageArea matchedSA = null;
-		log.debug("Looking for a StorageArea that matches " + pathDecoded);
-		int matchedSAFSRootLength = 0;
-		for (StorageArea currentSA : StorageAreaManager.getInstance().getStorageAreas()) {
-			if ((pathDecoded.startsWith(currentSA.getStfnRoot()) && (matchedSA == null || currentSA.getStfnRoot().length() > matchedSA
-					.getStfnRoot().length()))) {
-				if (currentSA.getStfnRoot().length() > matchedSAFSRootLength) {
-					matchedSA = currentSA;
-					matchedSAFSRootLength = currentSA.getStfnRoot().length();
+		log.debug("URI path = " + uriPath);
+		StorageArea matched = null;
+		log.debug("Looking for a StorageArea that matches " + uriPath);
+		for (StorageArea storageArea : StorageAreaManager.getInstance().getStorageAreas()) {
+			if (uriPath.startsWith(storageArea.getStfnRoot())) {
+				if (matched == null || storageArea.getStfnRoot().length() > matched.getStfnRoot().length()) {
+					matched = storageArea;				
 				}
 			}
 		}
-		if (matchedSA == null) {
+		if (matched == null) {
 			log.debug("No match found");
 		} else {
-			log.debug("Matched StorageArea " + matchedSA.toString());
+			log.debug("Matched StorageArea " + matched.toString());
 		}
-		return matchedSA;
+		return matched;
 	}
+	
+	
 
 }

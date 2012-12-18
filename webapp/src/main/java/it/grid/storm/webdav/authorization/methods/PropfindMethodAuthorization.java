@@ -1,7 +1,5 @@
 package it.grid.storm.webdav.authorization.methods;
 
-import java.io.UnsupportedEncodingException;
-
 import it.grid.storm.HttpHelper;
 import it.grid.storm.authorization.Constants;
 import it.grid.storm.authorization.methods.AbstractMethodAuthorization;
@@ -20,14 +18,11 @@ public class PropfindMethodAuthorization extends AbstractMethodAuthorization {
 	public boolean isUserAuthorized() throws ServletException {
 		StorageArea reqStorageArea;
 		try {
-			reqStorageArea = StorageAreaManager.getMatchingSAbyURI(getHttpHelper().getRequestStringURI());
+			reqStorageArea = StorageAreaManager.getMatchingSA(getHttpHelper().getRequestURI());
 		} catch (IllegalArgumentException e) {
 			e.printStackTrace();
 			return false;
 		} catch (IllegalStateException e) {
-			e.printStackTrace();
-			return false;
-		} catch (UnsupportedEncodingException e) {
 			e.printStackTrace();
 			return false;
 		}

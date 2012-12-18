@@ -1,7 +1,5 @@
 package it.grid.storm.filetransfer.authorization.methods;
 
-import java.io.UnsupportedEncodingException;
-
 import it.grid.storm.Configuration;
 import it.grid.storm.HttpHelper;
 import it.grid.storm.authorization.Constants;
@@ -26,14 +24,11 @@ public class PutMethodAuthorization extends AbstractMethodAuthorization {
 		StorageArea reqStorageArea;
 		String path = stripContext(getHttpHelper().getRequestStringURI());
 		try {
-			reqStorageArea = StorageAreaManager.getMatchingSAbyURI(path);
+			reqStorageArea = StorageAreaManager.getMatchingSA(getHttpHelper().getRequestURI());
 		} catch (IllegalArgumentException e) {
 			e.printStackTrace();
 			return false;
 		} catch (IllegalStateException e) {
-			e.printStackTrace();
-			return false;
-		} catch (UnsupportedEncodingException e) {
 			e.printStackTrace();
 			return false;
 		}

@@ -66,7 +66,7 @@ public class FileTransferAuthorizationFilter extends AuthorizationFilter {
 	private void initStorageArea() throws ServletException {
 		storageArea = null;
 		try {
-			storageArea = StorageAreaManager.getMatchingSAbyURI(this.stripContext());
+			storageArea = StorageAreaManager.getMatchingSA(this.stripContext());
 		} catch (Exception e) {
 			log.error(e.getMessage());
 			throw new ServletException(e);

@@ -102,7 +102,7 @@ public class WebDAVAuthorizationFilter extends AuthorizationFilter {
 		reqStorageArea = null;
 		log.debug("searching storagearea by uri: " + httpHelper.getRequestStringURI());
 		try {
-			reqStorageArea = StorageAreaManager.getMatchingSAbyURI(httpHelper.getRequestStringURI());
+			reqStorageArea = StorageAreaManager.getMatchingSA(httpHelper.getRequestURI());
 		} catch (Exception e) {
 			log.error(e.getMessage());
 			throw new ServletException(e);
@@ -113,9 +113,9 @@ public class WebDAVAuthorizationFilter extends AuthorizationFilter {
 		}
 		destStorageArea = null;
 		if (hasDestination(httpHelper.getRequestMethod())) {
-			log.debug("searching storagearea by uri: " + httpHelper.getDestinationURI().getPath());
+			log.debug("searching storagearea by uri: " + httpHelper.getDestinationURI());
 			try {
-				destStorageArea = StorageAreaManager.getMatchingSAbyURI(httpHelper.getDestinationURI().getPath());
+				destStorageArea = StorageAreaManager.getMatchingSA(httpHelper.getDestinationURI());
 			} catch (Exception e) {
 				log.error(e.getMessage());
 				throw new ServletException(e);

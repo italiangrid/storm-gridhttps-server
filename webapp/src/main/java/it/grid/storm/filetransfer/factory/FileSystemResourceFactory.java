@@ -83,7 +83,7 @@ public final class FileSystemResourceFactory implements ResourceFactory {
 			url = url.replaceFirst('/' + contextPath, "");
 			StorageArea currentSA = null;
 			try {
-				currentSA = StorageAreaManager.getMatchingSAbyURI(url);
+				currentSA = StorageAreaManager.getMatchingSA(url);
 			} catch (Exception e) {
 				log.error(e.getMessage());
 				e.printStackTrace();
