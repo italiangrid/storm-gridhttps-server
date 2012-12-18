@@ -18,7 +18,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
-import java.net.InetAddress;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URLDecoder;
@@ -41,15 +40,17 @@ import org.slf4j.LoggerFactory;
 public class StorageAreaManager {
 
 	private static final Logger log = LoggerFactory.getLogger(StorageAreaManager.class);
+	
+	private final String beHostname;
+	private final int bePort;
+	
 	private List<StorageArea> storageAreas;
 	private static StorageAreaManager SAManager = null;
 	private HashMap<String, String> fsRootFromStfn;
 	private HashMap<String, String> stfnRootFromFs;
 
-	public static StorageAreaManager getInstance() {
-		return SAManager;
-	}
-
+	/* PUBLIC STATIC METHODS */
+	
 	public static void init(String stormBEHostname, int stormBEPort) throws Exception {
 		SAManager = new StorageAreaManager(stormBEHostname, stormBEPort);
 	}
@@ -58,14 +59,18 @@ public class StorageAreaManager {
 		return getInstance() != null;
 	}
 
-	private StorageAreaManager(String stormBEHostname, int stormBEPort) throws Exception {
-		storageAreas = retrieveStorageAreasFromStormBackend(stormBEHostname, stormBEPort);
-		fsRootFromStfn = new HashMap<String, String>();
-		for (StorageArea sa : storageAreas)
-			fsRootFromStfn.put(sa.getStfnRoot(), sa.getFSRoot());
-		stfnRootFromFs = new HashMap<String, String>();
-		for (StorageArea sa : storageAreas)
-			stfnRootFromFs.put(sa.getFSRoot(), sa.getStfnRoot());
+	/* PUBLIC METHODS */ 
+	
+	public static StorageAreaManager getInstance() {
+		return SAManager;
+	}
+	
+	public String getBeHostname() {
+		return beHostname;
+	}
+	
+	public int getBePort() {
+		return bePort;
 	}
 
 	public List<StorageArea> getStorageAreas() {
@@ -79,7 +84,7 @@ public class StorageAreaManager {
 	public HashMap<String, String> getFsRootFromStfn() {
 		return fsRootFromStfn;
 	}
-
+	
 	public StorageArea getStorageAreaFromStfnRoot(String stfnRoot) {
 		for (StorageArea sa : getStorageAreas()) {
 			if (sa.getStfnRoot().equals(stfnRoot))
@@ -92,40 +97,31 @@ public class StorageAreaManager {
 		String stfnRoot = getStfnRootFromFs().get(fsRoot);
 		return getStorageAreaFromStfnRoot(stfnRoot);
 	}
-
-	private List<StorageArea> retrieveStorageAreasFromStormBackend(String hostname, int port) throws Exception {
-		String stormBackendIP = InetAddress.getByName(hostname).getHostAddress();
-		StormBackendInfo stormBackendParameters = new StormBackendInfo(hostname, stormBackendIP, port);
-		log.info("Initializing the StorageArea list");
-		return populateStorageAreaConfiguration(stormBackendParameters);
+	
+	/* PRIVATE METHODS */
+	
+	private StorageAreaManager(String stormBEHostname, int stormBEPort) throws Exception {
+		this.beHostname = stormBEHostname;
+		this.bePort = stormBEPort;
+		this.storageAreas = retrieveStorageAreasFromStormBackend(stormBEHostname, stormBEPort);
+		fsRootFromStfn = new HashMap<String, String>();
+		for (StorageArea sa : storageAreas)
+			fsRootFromStfn.put(sa.getStfnRoot(), sa.getFSRoot());
+		stfnRootFromFs = new HashMap<String, String>();
+		for (StorageArea sa : storageAreas)
+			stfnRootFromFs.put(sa.getFSRoot(), sa.getStfnRoot());
 	}
 
-	private LinkedList<StorageArea> populateStorageAreaConfiguration(StormBackendInfo stormBackendParameters) throws Exception {
-		URI uri = buildConfigDiscoveryServiceUri(stormBackendParameters);
-		log.info("Calling Configuration Discovery service at uri: " + uri);
-		HttpGet httpget = new HttpGet(uri);
-		HttpClient httpclient = new DefaultHttpClient();
-		HttpResponse httpResponse;
-		try {
-			httpResponse = httpclient.execute(httpget);
-		} catch (ClientProtocolException e) {
-			log.error("Error executing http call. ClientProtocolException " + e.getLocalizedMessage());
-			throw new Exception("Error contacting Configuration Discovery service.");
-		} catch (IOException e) {
-			log.error("Error executing http call. IOException " + e.getLocalizedMessage());
-			throw new Exception("Error contacting Configuration Discovery service.");
-		}
-		StatusLine status = httpResponse.getStatusLine();
-		if (status == null) {
-			// never return null
-			log.error("Unexpected error! response.getStatusLine() returned null!");
-			throw new Exception("Unexpected error! response.getStatusLine() returned null! Please contact storm support");
-		}
-		int httpCode = status.getStatusCode();
-		log.debug("Http call return code is: " + httpCode);
-		String httpMessage = status.getReasonPhrase();
-		log.debug("Http call return reason phrase is: " + httpMessage);
-		HttpEntity entity = httpResponse.getEntity();
+	private List<StorageArea> retrieveStorageAreasFromStormBackend(String beHostname, int bePort) throws Exception {
+		log.info("Initializing StorageAreaManager from {'" + beHostname + "', " + bePort + "}");
+		URI uri = buildConfigDiscoveryServiceUri(beHostname, bePort);
+		HttpResponse httpResponse = callConfigDiscoveryService(uri);
+		String output = getResponseBodyAsString(httpResponse.getEntity());
+		LinkedList<StorageArea> storageAreaList = decodeStorageAreaList(output);
+		return storageAreaList;
+	}
+
+	private String getResponseBodyAsString(HttpEntity entity) throws Exception {
 		String output = "";
 		if (entity != null) {
 			InputStream responseIS;
@@ -153,33 +149,16 @@ public class StorageAreaManager {
 			throw new Exception("Unable to get a valid configuration discovery response from the server.");
 		}
 		log.debug("Response is : \'" + output + "\'");
-		if (httpCode != HttpURLConnection.HTTP_OK) {
-			log.warn("Unable to get a valid response from server. Received a non HTTP 200 response from the server : \'" + httpCode + "\' "
-					+ httpMessage);
-			throw new Exception("Unable to get a valid response from server. " + httpMessage);
-		}
-		log.debug("Decoding the receive response");
-
-		LinkedList<StorageArea> storageAreaList = decodeStorageAreaList(output);
-		return storageAreaList;
+		return output;
 	}
 
-	/**
-	 * Builds the URI of the configuration discovery service
-	 * 
-	 * @param stormBackendParameters
-	 * 
-	 * @return
-	 * @throws ServletException
-	 */
-	private URI buildConfigDiscoveryServiceUri(StormBackendInfo stormBackendParameters) throws Exception {
+	private URI buildConfigDiscoveryServiceUri(String beHostname, int bePort) throws Exception {
 		log.debug("Building configurationd discovery rest service URI");
 		String path = "/" + ConfigDiscoveryServiceConstants.RESOURCE + "/" + ConfigDiscoveryServiceConstants.VERSION + "/"
 				+ ConfigDiscoveryServiceConstants.LIST_ALL_KEY;
 		URI uri;
 		try {
-			uri = new URI("http", null, stormBackendParameters.getStormBackendHostname(), stormBackendParameters.getStormBackendRestPort(),
-					path, null, null);
+			uri = new URI("http", null, beHostname, bePort, path, null, null);
 		} catch (URISyntaxException e) {
 			log.error("Unable to create Configuration Discovery URI. URISyntaxException " + e.getLocalizedMessage());
 			throw new Exception("Unable to create Configuration Discovery URI");
@@ -188,12 +167,45 @@ public class StorageAreaManager {
 		return uri;
 	}
 
+	private HttpResponse callConfigDiscoveryService(URI uri) throws Exception {
+		log.info("Calling Configuration Discovery service at uri: " + uri);
+		HttpGet httpget = new HttpGet(uri);
+		HttpClient httpclient = new DefaultHttpClient();
+		HttpResponse httpResponse = null;
+		try {
+			httpResponse = httpclient.execute(httpget);
+		} catch (ClientProtocolException e) {
+			log.error("Error executing http call. ClientProtocolException " + e.getLocalizedMessage());
+			throw new Exception("Error contacting Configuration Discovery service.");
+		} catch (IOException e) {
+			log.error("Error executing http call. IOException " + e.getLocalizedMessage());
+			throw new Exception("Error contacting Configuration Discovery service.");
+		}
+		StatusLine status = httpResponse.getStatusLine();
+		if (status == null) {
+			// never return null
+			log.error("Unexpected error! response.getStatusLine() returned null!");
+			throw new Exception("Unexpected error! response.getStatusLine() returned null! Please contact storm support");
+		}
+		int httpCode = status.getStatusCode();
+		String httpMessage = status.getReasonPhrase();
+		log.debug("Http call return code is: " + httpCode);
+		log.debug("Http call return reason phrase is: " + httpMessage);
+		if (httpCode != HttpURLConnection.HTTP_OK) {
+			log.warn("Unable to get a valid response from server. Received a non HTTP 200 response from the server : \'" + httpCode + "\' "
+					+ httpMessage);
+			throw new Exception("Unable to get a valid response from server. " + httpMessage);
+		}
+		return httpResponse;
+	}
+	
 	/**
 	 * @param storageAreaListString
 	 * @return never null, a list that contains the decoded storage areas. None
 	 *         of the elements can be null
 	 */
 	private LinkedList<StorageArea> decodeStorageAreaList(String storageAreaListString) {
+		log.debug("Decoding the receive response");
 		if (storageAreaListString == null) {
 			log.error("Decoding failed, received a null storage area list string!");
 			throw new IllegalArgumentException("Received a null storage area list string");
