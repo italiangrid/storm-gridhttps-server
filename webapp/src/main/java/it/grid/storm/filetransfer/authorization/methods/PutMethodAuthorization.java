@@ -38,7 +38,7 @@ public class PutMethodAuthorization extends AbstractMethodAuthorization {
 			return false;
 		}
 		String reqPath = reqStorageArea.getRealPath(path);
-		String operation = getHttpHelper().isOverwriteRequest() ? Constants.PREPARE_TO_PUT_OVERWRITE_OPERATION : Constants.PREPARE_TO_PUT_OPERATION;
-		return askAuth(operation, reqPath);
+//		String operation = getHttpHelper().isOverwriteRequest() ? Constants.PREPARE_TO_PUT_OVERWRITE_OPERATION : Constants.PREPARE_TO_PUT_OPERATION;
+		return askAuth(Constants.WRITE_OPERATION, reqPath);
 	}
 }
