@@ -36,9 +36,9 @@ public final class StormResourceFactory implements ResourceFactory {
 	private BackendApi backendApi;
 	
 	public StormResourceFactory() throws UnknownHostException {
-		setRoot(new File("/"));
+		setRoot(new File(Configuration.GPFS_ROOT_DIRECTORY));
 		setSecurityManager(new NullSecurityManager());
-		setContextPath("");
+		setContextPath(Configuration.WEBDAV_CONTEXT_PATH);
         contentService = new SimpleFileContentService();
         try {
 			this.backendApi = new BackendApi(Configuration.stormBackendHostname, new Long(Configuration.stormBackendPort));
@@ -74,18 +74,16 @@ public final class StormResourceFactory implements ResourceFactory {
 		return host.equals(localhostname);
 	}
 
-	public Resource getResource(String host, String url) {
-		host = stripPortFromHost(host);
-		log.debug("getResource: host: " + host + " - url:" + url);
-		if (isLocalResource(host)) {
-			String stfnRoot = "/" + url.replaceFirst("/", "").split("/")[0];
-			log.debug("searching for stfnRoot: " + stfnRoot);
-			StorageArea sa = StorageAreaManager.getInstance().getStorageAreaFromStfnRoot(stfnRoot);
-			if (sa != null) {
-				String realPath = sa.getRealPath(url);
-				log.debug("real path: " + realPath);				
-				File requested = resolvePath(root, realPath);
-				return resolveFile(host, requested, sa);
+	public Resource getResource(String host, String uriPath) {
+		String hostNoPort = stripPortFromHost(host);
+		log.debug("getResource: host: " + hostNoPort + " - url:" + uriPath);
+		if (isLocalResource(hostNoPort)) {
+			StorageArea currentSA = StorageAreaManager.getMatchingSA(uriPath);
+			if (currentSA != null) {
+				String fsPath = currentSA.getRealPath(uriPath);
+				log.debug("real path: " + fsPath);				
+				File requested = resolvePath(root, fsPath);
+				return resolveFile(host, requested, currentSA);
 			}
 		}
 		return null;

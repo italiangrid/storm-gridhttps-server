@@ -82,18 +82,18 @@ public class StorageAreaManager {
 		return fsRootFromStfn;
 	}
 
-	public StorageArea getStorageAreaFromStfnRoot(String stfnRoot) {
-		for (StorageArea sa : getStorageAreas()) {
-			if (sa.getStfnRoot().equals(stfnRoot))
-				return sa;
-		}
-		return null;
-	}
-
-	public StorageArea getStorageAreaFromFsRoot(String fsRoot) {
-		String stfnRoot = getStfnRootFromFs().get(fsRoot);
-		return getStorageAreaFromStfnRoot(stfnRoot);
-	}
+//	public StorageArea getStorageAreaFromStfnRoot(String stfnRoot) {
+//		for (StorageArea sa : getStorageAreas()) {
+//			if (sa.getStfnRoot().equals(stfnRoot))
+//				return sa;
+//		}
+//		return null;
+//	}
+//
+//	public StorageArea getStorageAreaFromFsRoot(String fsRoot) {
+//		String stfnRoot = getStfnRootFromFs().get(fsRoot);
+//		return getStorageAreaFromStfnRoot(stfnRoot);
+//	}
 
 	/* PRIVATE METHODS */
 

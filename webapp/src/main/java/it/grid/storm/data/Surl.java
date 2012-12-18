@@ -27,9 +27,8 @@ public class Surl {
 	}
 	
 	public Surl(String feHostname, int fePort, File resource) {
-		String stfnRoot = resource.getPath().substring(1).split("/")[0];
-		StorageArea storageArea = StorageAreaManager.getInstance().getStorageAreaFromStfnRoot(stfnRoot);
-		buildURI(feHostname, fePort, resource.getPath().replaceFirst(storageArea.getFSRoot(), storageArea.getStfnRoot()));
+		StorageArea storageArea = StorageAreaManager.getMatchingSA(resource);
+		buildURI(feHostname, fePort, storageArea.getRealPath(resource.getPath()));
 	}
 	
 	public Surl(File resource) {
