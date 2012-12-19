@@ -35,7 +35,10 @@ public class StormAuthorizationFilter implements Filter {
 
 	private static final Logger log = LoggerFactory.getLogger(StormAuthorizationFilter.class);
 
+	private final String HTML_CONSTANT = "<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Transitional//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd\">";
+	
 	private HttpHelper httpHelper;
+	private UserCredentials user;
 
 	public void destroy() {
 	}
@@ -64,6 +67,7 @@ public class StormAuthorizationFilter implements Filter {
 	public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
 
 		setHttpHelper(new HttpHelper((HttpServletRequest) request, (HttpServletResponse) response));
+		setUser(new UserCredentials(getHttpHelper()));
 		initSession();
 		String requestedPath = getHttpHelper().getRequestURI().getPath();
 		log.debug("Requested-URI: " + requestedPath);
@@ -104,15 +108,12 @@ public class StormAuthorizationFilter implements Filter {
 	}
 
 	private void processRootRequest() throws IOException {
-		String method = httpHelper.getRequestMethod();
+		String method = getHttpHelper().getRequestMethod();
 		if (method.equals("OPTIONS")) {
 			doPing();
 			sendDavHeader();
-			return;
-		}
-		if (method.equals("GET")) {
+		} else if (method.equals("GET")) {
 			sendRootPage();
-			return;
 		}
 	}
 	
@@ -150,7 +151,7 @@ public class StormAuthorizationFilter implements Filter {
 
 	private void sendError(int errorCode, String errorMessage) {
 		try {
-			httpHelper.getResponse().sendError(errorCode, errorMessage);
+			getHttpHelper().getResponse().sendError(errorCode, errorMessage);
 		} catch (IOException e) {
 			log.error(e.getMessage());
 			e.printStackTrace();
@@ -170,8 +171,7 @@ public class StormAuthorizationFilter implements Filter {
 		// doPing
 		log.info("ping " + Configuration.stormBackendHostname + ":" + Configuration.stormBackendPort);
 		try {
-			UserCredentials user = new UserCredentials(httpHelper);
-			PingOutputData output = StormResourceHelper.doPing(Configuration.stormBackendHostname, Configuration.stormBackendPort, user);
+			PingOutputData output = StormResourceHelper.doPing(Configuration.stormBackendHostname, Configuration.stormBackendPort, getUser());
 			log.info(output.getBeOs());
 			log.info(output.getBeVersion());
 			log.info(output.getVersionInfo());
@@ -181,12 +181,11 @@ public class StormAuthorizationFilter implements Filter {
 	}
 
 	private void sendRootPage() throws IOException {
-		OutputStream out = httpHelper.getResponse().getOutputStream();
-		// Content-Type: text/html; charset=iso-8859-1
-		httpHelper.getResponse().addHeader("Content-Type", "text/html");
-		httpHelper.getResponse().addHeader("DAV", "1");
+		OutputStream out = getHttpHelper().getResponse().getOutputStream();
+		getHttpHelper().getResponse().addHeader("Content-Type", "text/html");
+		getHttpHelper().getResponse().addHeader("DAV", "1");
 		XmlWriter w = new XmlWriter(out);
-		w.writeText("<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Transitional//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd\">");
+		w.writeText(HTML_CONSTANT);
 		w.begin("html").writeAtt("lang", "en").writeAtt("xmlns", "http://www.w3.org/1999/xhtml").open();
 		w.open("head");
 		w.begin("style").writeAtt("type", "text/css").open().writeText(getTableStyle()).close();
@@ -197,19 +196,13 @@ public class StormAuthorizationFilter implements Filter {
 		w.open("tr");
 		w.begin("td").open().begin("b").open().writeText("storage-area name").close().close();
 		w.close("tr");
-		UserCredentials user = new UserCredentials(httpHelper);
 		for (StorageArea sa : StorageAreaManager.getInstance().getStorageAreas()) {
-			if (!sa.getProtocols().contains(httpHelper.getRequestProtocol())) {
+			if (!hasStorageAreaAccess(sa))
 				continue;
-			}
-			if (!isUserAuthorized(user, sa)) {
-				continue;
-			}
+			String name = sa.getStfnRoot().substring(1);
+			String path = buildHref(sa.getStfnRoot(), "");
 			w.open("tr");
 			w.open("td");
-			String name = sa.getStfnRoot().substring(1);
-			// entry name-link
-			String path = buildHref(sa.getStfnRoot(), "");
 			w.begin("img").writeAtt("alt", "").writeAtt("src", getFolderIco()).open().close();
 			w.begin("a").writeAtt("href", path).open().writeText(name).close();
 			w.close("td");
@@ -221,10 +214,14 @@ public class StormAuthorizationFilter implements Filter {
 		w.flush();
 	}
 
-	private boolean isUserAuthorized(UserCredentials user, StorageArea sa) {
+	private boolean hasStorageAreaAccess(StorageArea sa) {
+		return (sa.getProtocols().contains(getHttpHelper().getRequestProtocol()) && isUserAuthorized(sa));
+	}
+	
+	private boolean isUserAuthorized(StorageArea sa) {
 		boolean response = false;
 		try {
-			response = StormAuthorizationUtils.isUserAuthorized(user, Constants.PREPARE_TO_GET_OPERATION, sa.getFSRoot());
+			response = StormAuthorizationUtils.isUserAuthorized(getUser(), Constants.PREPARE_TO_GET_OPERATION, sa.getFSRoot());
 		} catch (IllegalArgumentException e) {
 			e.printStackTrace();
 		} catch (Exception e) {
@@ -261,5 +258,13 @@ public class StormAuthorizationFilter implements Filter {
 
 	private void setHttpHelper(HttpHelper httpHelper) {
 		this.httpHelper = httpHelper;
+	}
+
+	public UserCredentials getUser() {
+		return user;
+	}
+
+	private void setUser(UserCredentials user) {
+		this.user = user;
 	}
 }
