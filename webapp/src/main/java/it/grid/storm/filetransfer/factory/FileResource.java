@@ -16,7 +16,7 @@ import it.grid.storm.HttpHelper;
 import it.grid.storm.authorization.UserCredentials;
 import it.grid.storm.backendApi.StormBackendApi;
 import it.grid.storm.storagearea.StorageArea;
-import it.grid.storm.xmlrpc.outputdata.RequestOutputData;
+import it.grid.storm.xmlrpc.outputdata.SurlArrayRequestOutputData;
 
 import java.io.*;
 import java.util.Map;
@@ -60,9 +60,9 @@ public class FileResource extends FileSystemResource implements GetableResource,
 		log.debug("Check for a prepare-to-get");
 		HttpHelper httpHelper = new HttpHelper(MiltonServlet.request(), MiltonServlet.response());
 		UserCredentials user = new UserCredentials(httpHelper);
-		RequestOutputData outputPtG = StormBackendApi.prepareToGetStatus(getFactory().getBackend(), getSurl().asString(), user);
-		if (!outputPtG.getStatus().getStatusCode().getValue().equals("SRM_FILE_PINNED")) {
-			log.warn("You have to do a prepare to get on surl '" + getSurl().asString() + "' before!");
+		SurlArrayRequestOutputData outputSPtG = StormBackendApi.prepareToGetStatus(getFactory().getBackend(), getSurl().asString(), user);
+		if (!outputSPtG.getStatus(getSurl().asString()).getStatusCode().getValue().equals("SRM_FILE_PINNED")) {
+			log.warn("You must do a prepare-to-get on surl '" + getSurl().asString() + "' before!");
 			throw new NotAuthorizedException(this);
 		}
 		
@@ -93,10 +93,16 @@ public class FileResource extends FileSystemResource implements GetableResource,
 
 	public void replaceContent(InputStream in, Long length) throws BadRequestException, ConflictException, NotAuthorizedException {
 		log.info("Called function for PUT-OVERWRITE");
+		
+		log.debug("Check for a prepare-to-put");
 		HttpHelper httpHelper = new HttpHelper(MiltonServlet.request(), MiltonServlet.response());
-		if (!httpHelper.isOverwriteRequest()) {
-			throw new NotAuthorizedException("Resource exists but this is not an overwrite request!", this);
+		UserCredentials user = new UserCredentials(httpHelper);
+		SurlArrayRequestOutputData outputSPtP = StormBackendApi.prepareToPutStatus(getFactory().getBackend(), getSurl().asString(), user);
+		if (!outputSPtP.getStatus(getSurl().asString()).getStatusCode().getValue().equals("SRM_SPACE_AVAILABLE")) {
+			log.warn("You have to do a prepare to put on surl '" + getSurl().asString() + "' before!");
+			throw new NotAuthorizedException(this);
 		}
+		
 		FileSystemResourceHelper.doPutOverwrite(this, in);
 	}
 

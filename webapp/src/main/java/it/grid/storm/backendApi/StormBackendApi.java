@@ -373,54 +373,54 @@ public class StormBackendApi {
 		return output;
 	}
 	
-	public static RequestOutputData prepareToPutStatus(BackendApi backend, String newFileSurl, UserCredentials user) throws RuntimeApiException, StormResourceException {
+	public static SurlArrayRequestOutputData prepareToPutStatus(BackendApi backend, String newFileSurl, UserCredentials user) throws RuntimeApiException, StormResourceException {
 		ArrayList<String> newSurlList = new ArrayList<String>();
 		newSurlList.add(newFileSurl);
-		RequestOutputData outputPtp = null;
+		SurlArrayRequestOutputData outputSPtp = null;
 		log.debug("prepare to put status surl: " + newFileSurl);
 		try {
 			if (user.isAnonymous()) { // HTTP
-				outputPtp = backend.prepareToPutStatus(newFileSurl);
+				outputSPtp = backend.prepareToPutStatus(newFileSurl);
 			} else if (user.getUserFQANS().isEmpty()) {
-				outputPtp = backend.prepareToPutStatus(user.getUserDN(), newFileSurl);
+				outputSPtp = backend.prepareToPutStatus(user.getUserDN(), newFileSurl);
 			} else {
-				outputPtp = backend.prepareToPutStatus(user.getUserDN(), user.getUserFQANS(), newFileSurl);
+				outputSPtp = backend.prepareToPutStatus(user.getUserDN(), user.getUserFQANS(), newFileSurl);
 			}
 		} catch (ApiException e) {
 			log.error(e.getMessage());
 			throw new RuntimeApiException(e.getMessage(), e);
 		}
-		log.debug(outputPtp.getStatus().getStatusCode().getValue());
-		log.info(outputPtp.getStatus().getExplanation());
-		if (!outputPtp.getStatus().getStatusCode().getValue().equals("SRM_SPACE_AVAILABLE")) {
-			throw new StormResourceException("prepare-to-put-status status is " + outputPtp.getStatus().getStatusCode().getValue());
+		log.debug(outputSPtp.getStatus().getStatusCode().getValue());
+		log.info(outputSPtp.getStatus().getExplanation());
+		if (!outputSPtp.getStatus().getStatusCode().getValue().equals("SRM_SUCCESS")) {
+			throw new StormResourceException("prepare-to-put-status status is " + outputSPtp.getStatus().getStatusCode().getValue());
 		}
-		return outputPtp;
+		return outputSPtp;
 	}
 	
-	public static RequestOutputData prepareToGetStatus(BackendApi backend, String newFileSurl, UserCredentials user) throws RuntimeApiException, StormResourceException {
+	public static SurlArrayRequestOutputData prepareToGetStatus(BackendApi backend, String newFileSurl, UserCredentials user) throws RuntimeApiException, StormResourceException {
 		ArrayList<String> newSurlList = new ArrayList<String>();
 		newSurlList.add(newFileSurl);
-		RequestOutputData outputPtp = null;
+		SurlArrayRequestOutputData outputSPtg = null;
 		log.debug("prepare to get status surl: " + newFileSurl);
 		try {
 			if (user.isAnonymous()) { // HTTP
-				outputPtp = backend.prepareToGetStatus(newFileSurl);
+				outputSPtg = backend.prepareToGetStatus(newFileSurl);
 			} else if (user.getUserFQANS().isEmpty()) {
-				outputPtp = backend.prepareToGetStatus(user.getUserDN(), newFileSurl);
+				outputSPtg = backend.prepareToGetStatus(user.getUserDN(), newFileSurl);
 			} else {
-				outputPtp = backend.prepareToGetStatus(user.getUserDN(), user.getUserFQANS(), newFileSurl);
+				outputSPtg = backend.prepareToGetStatus(user.getUserDN(), user.getUserFQANS(), newFileSurl);
 			}
 		} catch (ApiException e) {
 			log.error(e.getMessage());
 			throw new RuntimeApiException(e.getMessage(), e);
 		}
-		log.debug(outputPtp.getStatus().getStatusCode().getValue());
-		log.info(outputPtp.getStatus().getExplanation());
-		if (!outputPtp.getStatus().getStatusCode().getValue().equals("SRM_FILE_PINNED")) {
-			throw new StormResourceException("prepare-to-get-status status is " + outputPtp.getStatus().getStatusCode().getValue());
+		log.debug(outputSPtg.getStatus().getStatusCode().getValue());
+		log.info(outputSPtg.getStatus().getExplanation());
+		if (!outputSPtg.getStatus().getStatusCode().getValue().equals("SRM_SUCCESS")) {
+			throw new StormResourceException("prepare-to-get-status status is " + outputSPtg.getStatus().getStatusCode().getValue());
 		}
-		return outputPtp;
+		return outputSPtg;
 	}
 	
 	
