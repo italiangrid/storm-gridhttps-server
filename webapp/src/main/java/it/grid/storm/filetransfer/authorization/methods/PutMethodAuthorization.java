@@ -45,7 +45,7 @@ public class PutMethodAuthorization extends AbstractMethodAuthorization {
 		}
 		if (reqStorageArea != null) {
 			String reqPath = reqStorageArea.getRealPath(path);
-			File resource = new File(path);
+			File resource = new File(reqPath);
 			if (resource.exists()) {
 				if (resource.isFile()) {
 					AuthorizationStatus status = doPrepareToPutStatus(resource);
