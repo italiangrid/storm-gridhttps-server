@@ -5,8 +5,11 @@
 
 	<bean id="milton.fs.resource.ftfactory" class="it.grid.storm.filetransfer.factory.FileSystemResourceFactory" />
 		
+	<bean id="filetransfer-mainfilter" class="it.grid.storm.filetransfer.FileTransferStandardFilter" />	
+		
 	<bean id="milton.http.ftmanager" class="io.milton.config.HttpManagerBuilder">
 		<property name="mainResourceFactory" ref="milton.fs.resource.ftfactory" />
+		<property name="defaultStandardFilter" ref="filetransfer-mainfilter" />
 		<property name="enableBasicAuth" value="false" />
 		<property name="enableFormAuth" value="false" />
 		<property name="enableCookieAuth" value="false" />

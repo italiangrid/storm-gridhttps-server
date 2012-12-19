@@ -2,7 +2,7 @@ package it.grid.storm.webdav.authorization.methods;
 
 import it.grid.storm.Configuration;
 import it.grid.storm.HttpHelper;
-import it.grid.storm.authorization.UnauthorizedException;
+import it.grid.storm.authorization.AuthorizationStatus;
 import it.grid.storm.authorization.UserCredentials;
 import it.grid.storm.authorization.methods.AbstractMethodAuthorization;
 import it.grid.storm.webdav.factory.StormResourceHelper;
@@ -21,7 +21,7 @@ public class OptionsMethodAuthorization extends AbstractMethodAuthorization {
 	}
 
 	@Override
-	public boolean isUserAuthorized() throws UnauthorizedException {
+	public AuthorizationStatus isUserAuthorized() {
 		/* ping storm-backend if method = OPTIONS */
 		log.info("ping " + Configuration.stormBackendHostname + ":" + Configuration.stormBackendPort);
 		try {
@@ -33,6 +33,6 @@ public class OptionsMethodAuthorization extends AbstractMethodAuthorization {
 		} catch (RuntimeApiException e) {
 			log.error(e.getMessage());
 		}
-		return true;
+		return new AuthorizationStatus(true, "");
 	}
 }

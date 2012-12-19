@@ -3,9 +3,9 @@ package it.grid.storm;
 import io.milton.http.XmlWriter;
 import it.grid.storm.Configuration;
 import it.grid.storm.authorization.AuthorizationFilter;
+import it.grid.storm.authorization.AuthorizationStatus;
 import it.grid.storm.authorization.Constants;
 import it.grid.storm.authorization.StormAuthorizationUtils;
-import it.grid.storm.authorization.UnauthorizedException;
 import it.grid.storm.authorization.UserCredentials;
 import it.grid.storm.filetransfer.authorization.FileTransferAuthorizationFilter;
 import it.grid.storm.storagearea.StorageArea;
@@ -81,20 +81,14 @@ public class StormAuthorizationFilter implements Filter {
 		} else {
 			AuthorizationFilter filter = getAuthorizationHandler(requestedPath);
 			if (filter != null) {
-				boolean isAuthorized = false;
-				String unauthMsg = "You are not authorized to access the requested resource";
-				try {
-					isAuthorized = filter.isUserAuthorized();
-				} catch (UnauthorizedException e) {
-					isAuthorized = false;
-					unauthMsg = e.getMessage();
-				}
-				if (isAuthorized) {
+				AuthorizationStatus status = filter.isUserAuthorized();
+				if (status.isAuthorized()) {
 					log.info("User is authorized to access the requested resource");
 					chain.doFilter(request, response);
 				} else {
 					log.warn("User is not authorized to access the requested resource");
-					sendError(HttpServletResponse.SC_UNAUTHORIZED, unauthMsg);
+					log.warn("Reason: " + status.getReason());
+					sendError(HttpServletResponse.SC_UNAUTHORIZED, status.getReason());
 				}
 			} else {
 				sendError(HttpServletResponse.SC_BAD_REQUEST, "Unable to identify the right handler to evaluate the requested path " + requestedPath);

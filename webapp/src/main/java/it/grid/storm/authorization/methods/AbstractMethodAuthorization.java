@@ -1,8 +1,8 @@
 package it.grid.storm.authorization.methods;
 
 import it.grid.storm.HttpHelper;
+import it.grid.storm.authorization.AuthorizationStatus;
 import it.grid.storm.authorization.StormAuthorizationUtils;
-import it.grid.storm.authorization.UnauthorizedException;
 import it.grid.storm.authorization.UserCredentials;
 
 import org.slf4j.Logger;
@@ -12,10 +12,12 @@ public abstract class AbstractMethodAuthorization {
 
 	private static final Logger log = LoggerFactory.getLogger(AbstractMethodAuthorization.class);
 
-	protected HttpHelper httpHelper;
+	private HttpHelper httpHelper;
+	private UserCredentials user;
 
 	public AbstractMethodAuthorization(HttpHelper httpHelper) {
-		this.httpHelper = httpHelper;
+		this.setHttpHelper(httpHelper);
+		this.setUser(new UserCredentials(getHttpHelper()));
 	}
 
 	protected boolean askAuth(String operation, String path) {
@@ -32,10 +34,22 @@ public abstract class AbstractMethodAuthorization {
 		return response;
 	}
 
-	public abstract boolean isUserAuthorized() throws UnauthorizedException;
+	public abstract AuthorizationStatus isUserAuthorized();
 
-	protected HttpHelper getHttpHelper() {
+	public HttpHelper getHttpHelper() {
 		return httpHelper;
+	}
+
+	public UserCredentials getUser() {
+		return user;
+	}
+
+	private void setUser(UserCredentials user) {
+		this.user = user;
+	}
+	
+	private void setHttpHelper(HttpHelper httpHelper) {
+		this.httpHelper = httpHelper;
 	}
 
 }

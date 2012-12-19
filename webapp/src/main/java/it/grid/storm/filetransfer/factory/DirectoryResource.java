@@ -3,18 +3,12 @@ package it.grid.storm.filetransfer.factory;
 import io.milton.http.Auth;
 import io.milton.http.Range;
 import io.milton.http.Request;
-import io.milton.http.XmlWriter;
 import io.milton.http.exceptions.BadRequestException;
 import io.milton.http.exceptions.ConflictException;
 import io.milton.http.exceptions.NotAuthorizedException;
 import io.milton.http.fs.FileContentService;
 import io.milton.resource.*;
-import io.milton.servlet.MiltonServlet;
-import it.grid.storm.HttpHelper;
-import it.grid.storm.authorization.UserCredentials;
-import it.grid.storm.backendApi.StormBackendApi;
 import it.grid.storm.storagearea.StorageArea;
-import it.grid.storm.xmlrpc.outputdata.RequestOutputData;
 
 import java.io.File;
 import java.io.IOException;
@@ -84,14 +78,14 @@ public class DirectoryResource extends FileSystemResource implements PutableReso
 		File destinationFile = new File(this.file, name);
 		FileResource newFile = new FileResource(getHost(), getFactory(), destinationFile, contentService, getStorageArea());
 		
-		log.debug("Check for a prepare-to-put");
-		HttpHelper httpHelper = new HttpHelper(MiltonServlet.request(), MiltonServlet.response());
-		UserCredentials user = new UserCredentials(httpHelper);
-		RequestOutputData outputPtP = StormBackendApi.prepareToPutStatus(getFactory().getBackend(), getSurl().asString(), user);
-		if (!outputPtP.getStatus().getStatusCode().getValue().equals("SRM_SPACE_AVAILABLE")) {
-			log.warn("You have to do a prepare to put on surl '" + getSurl().asString() + "' before!");
-			throw new NotAuthorizedException(this);
-		}
+//		log.debug("Check for a prepare-to-put");
+//		HttpHelper httpHelper = new HttpHelper(MiltonServlet.request(), MiltonServlet.response());
+//		UserCredentials user = new UserCredentials(httpHelper);
+//		RequestOutputData outputPtP = StormBackendApi.prepareToPutStatus(getFactory().getBackend(), getSurl().asString(), user);
+//		if (!outputPtP.isSuccess()) { //.getStatus().getStatusCode().getValue().equals("SRM_SPACE_AVAILABLE")) {
+//			log.warn("You have to do a prepare to put on surl '" + getSurl().asString() + "' before!");
+//			throw new NotAuthorizedException(this);
+//		}
 		
 		FileSystemResourceHelper.doPut(this, name, in);
 		return newFile;
@@ -113,28 +107,29 @@ public class DirectoryResource extends FileSystemResource implements PutableReso
 	public void sendContent(OutputStream out, Range range, Map<String, String> params, String contentType) throws IOException,
 			NotAuthorizedException {
 		log.info("Called function for GET DIRECTORY");
-		String subpath = getFile().getCanonicalPath().substring(factory.getRoot().getCanonicalPath().length()).replace('\\', '/');
-		String uri = "/" + factory.getContextPath() + subpath;
-		XmlWriter w = new XmlWriter(out);
-		w.open("html");
-		w.open("head");
-		w.close("head");
-		w.open("body");
-		w.begin("h1").open().writeText(this.getName()).close();
-		w.open("table");
-		for (Resource r : getChildren()) {
-			w.open("tr");
-			w.open("td");
-			String path = buildHref(uri, r.getName());
-			w.begin("a").writeAtt("href", path).open().writeText(r.getName()).close();
-			w.close("td");
-			w.begin("td").open().writeText(r.getModifiedDate() + "").close();
-			w.close("tr");
-		}
-		w.close("table");
-		w.close("body");
-		w.close("html");
-		w.flush();
+		log.warn("access to directory content is not allowed and supported");
+//		String subpath = getFile().getCanonicalPath().substring(factory.getRoot().getCanonicalPath().length()).replace('\\', '/');
+//		String uri = "/" + factory.getContextPath() + subpath;
+//		XmlWriter w = new XmlWriter(out);
+//		w.open("html");
+//		w.open("head");
+//		w.close("head");
+//		w.open("body");
+//		w.begin("h1").open().writeText(this.getName()).close();
+//		w.open("table");
+//		for (Resource r : getChildren()) {
+//			w.open("tr");
+//			w.open("td");
+//			String path = buildHref(uri, r.getName());
+//			w.begin("a").writeAtt("href", path).open().writeText(r.getName()).close();
+//			w.close("td");
+//			w.begin("td").open().writeText(r.getModifiedDate() + "").close();
+//			w.close("tr");
+//		}
+//		w.close("table");
+//		w.close("body");
+//		w.close("html");
+//		w.flush();
 	}
 
 	public Long getMaxAgeSeconds(Auth auth) {
@@ -149,28 +144,28 @@ public class DirectoryResource extends FileSystemResource implements PutableReso
 		return null;
 	}
 
-	private String buildHref(String uri, String name) {
-		String abUrl = uri;
-		if (!abUrl.endsWith("/")) {
-			abUrl += "/";
-		}
-		if (ssoPrefix == null) {
-			return abUrl + name;
-		} else {
-			// This is to match up with the prefix set on
-			// SimpleSSOSessionProvider in MyCompanyDavServlet
-			String s = insertSsoPrefix(abUrl, ssoPrefix);
-			return s += name;
-		}
-	}
+//	private String buildHref(String uri, String name) {
+//		String abUrl = uri;
+//		if (!abUrl.endsWith("/")) {
+//			abUrl += "/";
+//		}
+//		if (ssoPrefix == null) {
+//			return abUrl + name;
+//		} else {
+//			// This is to match up with the prefix set on
+//			// SimpleSSOSessionProvider in MyCompanyDavServlet
+//			String s = insertSsoPrefix(abUrl, ssoPrefix);
+//			return s += name;
+//		}
+//	}
 
-	public static String insertSsoPrefix(String abUrl, String prefix) {
-		// need to insert the ssoPrefix immediately after the host and port
-		int pos = abUrl.indexOf("/", 8);
-		String s = abUrl.substring(0, pos) + "/" + prefix;
-		s += abUrl.substring(pos);
-		return s;
-	}
+//	public static String insertSsoPrefix(String abUrl, String prefix) {
+//		// need to insert the ssoPrefix immediately after the host and port
+//		int pos = abUrl.indexOf("/", 8);
+//		String s = abUrl.substring(0, pos) + "/" + prefix;
+//		s += abUrl.substring(pos);
+//		return s;
+//	}
 
 	public boolean hasChildren() {
 		return (file.list().length > 0);

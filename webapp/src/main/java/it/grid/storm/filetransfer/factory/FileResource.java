@@ -11,12 +11,7 @@ import io.milton.http.exceptions.NotAuthorizedException;
 import io.milton.http.exceptions.NotFoundException;
 import io.milton.http.fs.FileContentService;
 import io.milton.resource.*;
-import io.milton.servlet.MiltonServlet;
-import it.grid.storm.HttpHelper;
-import it.grid.storm.authorization.UserCredentials;
-import it.grid.storm.backendApi.StormBackendApi;
 import it.grid.storm.storagearea.StorageArea;
-import it.grid.storm.xmlrpc.outputdata.SurlArrayRequestOutputData;
 
 import java.io.*;
 import java.util.Map;
@@ -57,14 +52,14 @@ public class FileResource extends FileSystemResource implements GetableResource,
 			NotAuthorizedException, BadRequestException, NotFoundException {
 		log.info("Called function for GET FILE");
 		
-		log.debug("Check for a prepare-to-get");
-		HttpHelper httpHelper = new HttpHelper(MiltonServlet.request(), MiltonServlet.response());
-		UserCredentials user = new UserCredentials(httpHelper);
-		SurlArrayRequestOutputData outputSPtG = StormBackendApi.prepareToGetStatus(getFactory().getBackend(), getSurl().asString(), user);
-		if (!outputSPtG.getStatus(getSurl().asString()).getStatusCode().getValue().equals("SRM_FILE_PINNED")) {
-			log.warn("You must do a prepare-to-get on surl '" + getSurl().asString() + "' before!");
-			throw new NotAuthorizedException(this);
-		}
+//		log.debug("Check for a prepare-to-get");
+//		HttpHelper httpHelper = new HttpHelper(MiltonServlet.request(), MiltonServlet.response());
+//		UserCredentials user = new UserCredentials(httpHelper);
+//		SurlArrayRequestOutputData outputSPtG = StormBackendApi.prepareToGetStatus(getFactory().getBackend(), getSurl().asString(), user);
+//		if (!outputSPtG.isSuccess()) { //getStatus(getSurl().asString()).getStatusCode().getValue().equals("SRM_FILE_PINNED")) {
+//			log.warn("You must do a prepare-to-get on surl '" + getSurl().asString() + "' before!");
+//			throw new NotAuthorizedException(this);
+//		}
 		
 		InputStream in = FileSystemResourceHelper.doGetFile(this);
 		if (in == null) {
@@ -94,14 +89,14 @@ public class FileResource extends FileSystemResource implements GetableResource,
 	public void replaceContent(InputStream in, Long length) throws BadRequestException, ConflictException, NotAuthorizedException {
 		log.info("Called function for PUT-OVERWRITE");
 		
-		log.debug("Check for a prepare-to-put");
-		HttpHelper httpHelper = new HttpHelper(MiltonServlet.request(), MiltonServlet.response());
-		UserCredentials user = new UserCredentials(httpHelper);
-		SurlArrayRequestOutputData outputSPtP = StormBackendApi.prepareToPutStatus(getFactory().getBackend(), getSurl().asString(), user);
-		if (!outputSPtP.getStatus(getSurl().asString()).getStatusCode().getValue().equals("SRM_SPACE_AVAILABLE")) {
-			log.warn("You have to do a prepare to put on surl '" + getSurl().asString() + "' before!");
-			throw new NotAuthorizedException(this);
-		}
+//		log.debug("Check for a prepare-to-put");
+//		HttpHelper httpHelper = new HttpHelper(MiltonServlet.request(), MiltonServlet.response());
+//		UserCredentials user = new UserCredentials(httpHelper);
+//		SurlArrayRequestOutputData outputSPtP = StormBackendApi.prepareToPutStatus(getFactory().getBackend(), getSurl().asString(), user);
+//		if (!outputSPtP.isSuccess()) { //.getStatus(getSurl().asString()).getStatusCode().getValue().equals("SRM_SPACE_AVAILABLE")) {
+//			log.warn("You have to do a prepare to put on surl '" + getSurl().asString() + "' before!");
+//			throw new NotAuthorizedException(this);
+//		}
 		
 		FileSystemResourceHelper.doPutOverwrite(this, in);
 	}

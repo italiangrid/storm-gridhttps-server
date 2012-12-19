@@ -1,32 +1,40 @@
 package it.grid.storm.webdav.authorization.methods;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import it.grid.storm.HttpHelper;
+import it.grid.storm.authorization.AuthorizationStatus;
 import it.grid.storm.authorization.Constants;
-import it.grid.storm.authorization.UnauthorizedException;
 import it.grid.storm.authorization.methods.AbstractMethodAuthorization;
 import it.grid.storm.storagearea.StorageArea;
 import it.grid.storm.storagearea.StorageAreaManager;
 
 public class MkcolMethodAuthorization extends AbstractMethodAuthorization {
 	
+	private static final Logger log = LoggerFactory.getLogger(MkcolMethodAuthorization.class);
+
 	public MkcolMethodAuthorization(HttpHelper httpHelper) {
 		super(httpHelper);
 	}
 
-	@Override
-	public boolean isUserAuthorized() throws UnauthorizedException {
+	public AuthorizationStatus isUserAuthorized() {
 		StorageArea reqStorageArea;
 		try {
 			reqStorageArea = StorageAreaManager.getMatchingSA(getHttpHelper().getRequestURI());
 		} catch (IllegalArgumentException e) {
-			e.printStackTrace();
-			return false;
+			log.error(e.getMessage());
+			return new AuthorizationStatus(false, e.getMessage());
 		} catch (IllegalStateException e) {
-			e.printStackTrace();
-			return false;
+			log.error(e.getMessage());
+			return new AuthorizationStatus(false, e.getMessage());
 		}
 		String reqPath = reqStorageArea.getRealPath(getHttpHelper().getRequestURI().getPath());
-		String operation = Constants.MKDIR_OPERATION;
-		return askAuth(operation, reqPath);
+		if (askAuth(Constants.MKDIR_OPERATION, reqPath)) {
+			return new AuthorizationStatus(true, "");
+		} else {
+			return new AuthorizationStatus(false, "You are not authorized to access the required resource");
+		}
 	}
+
 }
