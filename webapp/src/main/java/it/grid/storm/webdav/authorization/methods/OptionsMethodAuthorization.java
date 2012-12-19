@@ -2,13 +2,12 @@ package it.grid.storm.webdav.authorization.methods;
 
 import it.grid.storm.Configuration;
 import it.grid.storm.HttpHelper;
+import it.grid.storm.authorization.UnauthorizedException;
 import it.grid.storm.authorization.UserCredentials;
 import it.grid.storm.authorization.methods.AbstractMethodAuthorization;
 import it.grid.storm.webdav.factory.StormResourceHelper;
 import it.grid.storm.webdav.factory.exceptions.RuntimeApiException;
 import it.grid.storm.xmlrpc.outputdata.PingOutputData;
-
-import javax.servlet.ServletException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -22,7 +21,7 @@ public class OptionsMethodAuthorization extends AbstractMethodAuthorization {
 	}
 
 	@Override
-	public boolean isUserAuthorized() throws ServletException {
+	public boolean isUserAuthorized() throws UnauthorizedException {
 		/* ping storm-backend if method = OPTIONS */
 		log.info("ping " + Configuration.stormBackendHostname + ":" + Configuration.stormBackendPort);
 		try {

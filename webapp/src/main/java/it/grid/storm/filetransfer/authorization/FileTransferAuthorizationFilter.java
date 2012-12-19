@@ -1,13 +1,13 @@
 package it.grid.storm.filetransfer.authorization;
 
 import it.grid.storm.authorization.AuthorizationFilter;
+import it.grid.storm.authorization.UnauthorizedException;
 import it.grid.storm.authorization.methods.AbstractMethodAuthorization;
 import it.grid.storm.filetransfer.authorization.methods.GetMethodAuthorization;
 import it.grid.storm.filetransfer.authorization.methods.PutMethodAuthorization;
 import it.grid.storm.storagearea.StorageAreaManager;
 import it.grid.storm.storagearea.StorageArea;
 import it.grid.storm.HttpHelper;
-
 
 import java.util.Arrays;
 import java.util.HashMap;
@@ -49,16 +49,16 @@ public class FileTransferAuthorizationFilter extends AuthorizationFilter {
 		return httpHelper.getRequestStringURI().replaceFirst(getContextPath(), "");
 	}
 
-	public boolean isUserAuthorized() throws ServletException {
+	public boolean isUserAuthorized() throws UnauthorizedException {
 		String method = httpHelper.getRequestMethod();
 		if (!this.isMethodAllowed(method)) {
 			log.warn("Received a request for a not allowed method : " + method);
-			throw new ServletException("Method " + method + " not allowed!");
+			throw new UnauthorizedException("Method " + method + " not allowed!");
 		}
 		String protocol = httpHelper.getRequestProtocol();
 		if (!isProtocolAllowed(protocol)) {
 			log.warn("Received a request with a not allowed protocol: " + protocol);
-			throw new ServletException("Protocol " + protocol + " not allowed!");
+			throw new UnauthorizedException("Protocol " + protocol + " not allowed!");
 		}
 		return getAuthorizationHandler().isUserAuthorized();
 	}

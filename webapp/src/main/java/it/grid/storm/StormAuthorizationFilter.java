@@ -5,6 +5,7 @@ import it.grid.storm.Configuration;
 import it.grid.storm.authorization.AuthorizationFilter;
 import it.grid.storm.authorization.Constants;
 import it.grid.storm.authorization.StormAuthorizationUtils;
+import it.grid.storm.authorization.UnauthorizedException;
 import it.grid.storm.authorization.UserCredentials;
 import it.grid.storm.filetransfer.authorization.FileTransferAuthorizationFilter;
 import it.grid.storm.storagearea.StorageArea;
@@ -62,55 +63,47 @@ public class StormAuthorizationFilter implements Filter {
 
 	public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
 
-		httpHelper = new HttpHelper((HttpServletRequest) request, (HttpServletResponse) response);
-		/* clear session */
-		httpHelper.getRequest().getSession(true);
-		httpHelper.getRequest().getSession().setAttribute("forced", false);
-
-		String requestedPath = httpHelper.getRequestURI().getPath();
+		setHttpHelper(new HttpHelper((HttpServletRequest) request, (HttpServletResponse) response));
+		initSession();
+		String requestedPath = getHttpHelper().getRequestURI().getPath();
 		log.debug("Requested-URI: " + requestedPath);
-
-		/* ROOT PAGE */
+		
 		if (isRootPath(requestedPath)) {
-			satisfyRootRequest();
-			return;
-		}
-		/* FAVICON */
-		if (requestedPath.equals("/favicon.ico"))
-			return;
-
-		AuthorizationFilter filter;
-		try {
-			if (isFileTransferRequest(httpHelper.getRequest().getRequestURI())) {
-				log.info("Received a file-transfer request");
-				filter = new FileTransferAuthorizationFilter(httpHelper, Configuration.FILETRANSFER_CONTEXTPATH);
+			log.debug("Requested-URI is root");
+			processRootRequest();
+		} else if (isFavicon(requestedPath)) {
+			log.debug("Requested-URI is favicon");
+			// implement getFavicon()
+		} else {
+			AuthorizationFilter filter = getAuthorizationHandler(requestedPath);
+			if (filter != null) {
+				boolean isAuthorized = false;
+				String unauthMsg = "You are not authorized to access the requested resource";
+				try {
+					isAuthorized = filter.isUserAuthorized();
+				} catch (UnauthorizedException e) {
+					isAuthorized = false;
+					unauthMsg = e.getMessage();
+				}
+				if (isAuthorized) {
+					log.info("User is authorized to access the requested resource");
+					chain.doFilter(request, response);
+				} else {
+					log.warn("User is not authorized to access the requested resource");
+					sendError(HttpServletResponse.SC_UNAUTHORIZED, unauthMsg);
+				}
 			} else {
-				log.info("Received a webdav request");
-				filter = new WebDAVAuthorizationFilter(httpHelper);
+				sendError(HttpServletResponse.SC_BAD_REQUEST, "Unable to identify the right handler to evaluate the requested path " + requestedPath);
 			}
-		} catch (ServletException e) {
-			log.error(e.getMessage());
-			sendError(HttpServletResponse.SC_BAD_REQUEST, e.getMessage());
-			return;
 		}
-
-		boolean isAuthorized = false;
-		try {
-			isAuthorized = filter.isUserAuthorized();
-		} catch (ServletException e) {
-			log.error(e.getMessage());
-			sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
-		}
-		if (!isAuthorized) {
-			log.warn("User is not authorized to access the requested resource");
-			sendError(HttpServletResponse.SC_UNAUTHORIZED, "You are not authorized to access the requested resource");
-			return;
-		}
-		log.info("User is authorized to access the requested resource");
-		chain.doFilter(request, response);
 	}
 
-	private void satisfyRootRequest() throws IOException {
+	private void initSession() {
+		getHttpHelper().getRequest().getSession(true);
+		getHttpHelper().getRequest().getSession().setAttribute("forced", false);
+	}
+
+	private void processRootRequest() throws IOException {
 		String method = httpHelper.getRequestMethod();
 		if (method.equals("OPTIONS")) {
 			doPing();
@@ -122,16 +115,35 @@ public class StormAuthorizationFilter implements Filter {
 			return;
 		}
 	}
+	
+	private AuthorizationFilter getAuthorizationHandler(String path) {
+		try {
+			if (isFileTransferRequest(path)) {
+				log.info("Received a file-transfer request");
+				return new FileTransferAuthorizationFilter(httpHelper, Configuration.FILETRANSFER_CONTEXTPATH);
+			} else {
+				log.info("Received a webdav request");
+				return new WebDAVAuthorizationFilter(httpHelper);
+			}
+		} catch (ServletException e) {
+			log.error(e.getMessage());
+		}
+		return null;
+	}
 
 	private void sendDavHeader() throws IOException {
 		httpHelper.getResponse().addHeader("DAV", "1");
 		httpHelper.getResponse().flushBuffer();
 	}
 
-	private boolean isRootPath(String requestStringURI) {
-		return (requestStringURI.isEmpty() || requestStringURI.equals("/"));
+	private boolean isRootPath(String requestedPath) {
+		return (requestedPath.isEmpty() || requestedPath.equals("/"));
 	}
 
+	private boolean isFavicon(String requestedPath) {
+		return requestedPath.equals("/favicon.ico");
+	}
+	
 	private boolean isFileTransferRequest(String requestedURI) {
 		return requestedURI.startsWith(Configuration.FILETRANSFER_CONTEXTPATH);
 	}
@@ -241,5 +253,13 @@ public class StormAuthorizationFilter implements Filter {
 			abUrl += "/";
 		}
 		return abUrl + name;
+	}
+	
+	public HttpHelper getHttpHelper() {
+		return httpHelper;
+	}
+
+	private void setHttpHelper(HttpHelper httpHelper) {
+		this.httpHelper = httpHelper;
 	}
 }

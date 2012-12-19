@@ -1,6 +1,7 @@
 package it.grid.storm.webdav.authorization;
 
 import it.grid.storm.authorization.AuthorizationFilter;
+import it.grid.storm.authorization.UnauthorizedException;
 import it.grid.storm.authorization.methods.AbstractMethodAuthorization;
 import it.grid.storm.storagearea.StorageArea;
 import it.grid.storm.storagearea.StorageAreaManager;
@@ -76,23 +77,23 @@ public class WebDAVAuthorizationFilter extends AuthorizationFilter {
 		return destinationMethods.contains(method);
 	}
 
-	public boolean isUserAuthorized() throws ServletException {
+	public boolean isUserAuthorized() throws UnauthorizedException {
 		String method = httpHelper.getRequestMethod();
 		String reqProtocol = httpHelper.getRequestProtocol();
 		
 		if (!isMethodAllowed(method)) {
 			log.warn("Received a request for a not allowed method : " + method);
-			throw new ServletException("Method " + method + " not allowed!");
+			throw new UnauthorizedException("Method " + method + " not allowed!");
 		}
 		if (!isRequestProtocolAllowed(reqProtocol)) {
 			log.warn("Received a request-uri with a not allowed protocol: " + reqProtocol);
-			throw new ServletException("Protocol " + reqProtocol + " not allowed!");
+			throw new UnauthorizedException("Protocol " + reqProtocol + " not allowed!");
 		}
 		if (hasDestination(method)) {
 			String destProtocol = httpHelper.getDestinationProtocol();
 			if (!isDestinationProtocolAllowed(destProtocol)) {
 				log.warn("Received a destination-uri with a not allowed protocol: " + destProtocol);
-				throw new ServletException("Protocol " + destProtocol + " not allowed!");
+				throw new UnauthorizedException("Protocol " + destProtocol + " not allowed!");
 			}
 		}
 		return getAuthorizationHandler().isUserAuthorized();

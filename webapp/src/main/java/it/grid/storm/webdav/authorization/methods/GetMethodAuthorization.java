@@ -2,11 +2,10 @@ package it.grid.storm.webdav.authorization.methods;
 
 import it.grid.storm.HttpHelper;
 import it.grid.storm.authorization.Constants;
+import it.grid.storm.authorization.UnauthorizedException;
 import it.grid.storm.authorization.methods.AbstractMethodAuthorization;
 import it.grid.storm.storagearea.StorageArea;
 import it.grid.storm.storagearea.StorageAreaManager;
-
-import javax.servlet.ServletException;
 
 public class GetMethodAuthorization extends AbstractMethodAuthorization {
 
@@ -15,7 +14,7 @@ public class GetMethodAuthorization extends AbstractMethodAuthorization {
 	}
 
 	@Override
-	public boolean isUserAuthorized() throws ServletException {
+	public boolean isUserAuthorized() throws UnauthorizedException {
 		String path = getHttpHelper().getRequestURI().getPath();
 		StorageArea reqStorageArea;
 		try {
