@@ -32,8 +32,8 @@ public class GetMethodAuthorization extends AbstractMethodAuthorization {
 			return false;
 		} 
 		String reqPath = reqStorageArea.getRealPath(path);
-		String operation = Constants.PREPARE_TO_GET_OPERATION;
-		return askAuth(operation, reqPath);
+//		String operation = Constants.PREPARE_TO_GET_OPERATION;
+		return askAuth(Constants.READ_OPERATION, reqPath);
 	}
 
 }
