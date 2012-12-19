@@ -23,7 +23,7 @@ public class GetMethodAuthorization extends AbstractMethodAuthorization {
 		StorageArea reqStorageArea;
 		String path = stripContext(getHttpHelper().getRequestStringURI());
 		try {
-			reqStorageArea = StorageAreaManager.getMatchingSA(getHttpHelper().getRequestURI());
+			reqStorageArea = StorageAreaManager.getMatchingSA(path);
 		} catch (IllegalArgumentException e) {
 			e.printStackTrace();
 			return false;
