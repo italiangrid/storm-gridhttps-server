@@ -16,6 +16,7 @@ package it.grid.storm.gridhttps.servlet;
 import it.grid.storm.storagearea.StorageArea;
 import it.grid.storm.storagearea.StorageAreaManager;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
@@ -71,7 +72,7 @@ public class MapperServlet extends HttpServlet {
 	private StorageArea getMatchingSA(String pathDecoded) throws ServletException {
 		StorageArea SA = null;
 		try {
-			SA = StorageAreaManager.getMatchingSA(pathDecoded);
+			SA = StorageAreaManager.getMatchingSA(new File(pathDecoded));
 		} catch (IllegalArgumentException e) {
 			log.error("Unable to get matching SA for path " + pathDecoded + ". IllegalArgumentException : " + e.getMessage());
 			throw new ServletException("Unable to get matching SA for path " + pathDecoded, e);
