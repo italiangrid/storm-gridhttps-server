@@ -158,6 +158,12 @@ public class StormGridhttpsServer {
 		((Element) initParams.item(3)).setTextContent(frontendInfo.getHostname());
 		log.debug("setting storm frontend port as '" + frontendInfo.getPort() + "'...");
 		((Element) initParams.item(4)).setTextContent(String.valueOf(frontendInfo.getPort()));
+		log.debug("setting webdav service context path as '" + gridhttpsInfo.getWebdavContextPath() + "'...");
+		((Element) initParams.item(5)).setTextContent(gridhttpsInfo.getWebdavContextPath());
+		log.debug("setting filetransfer service context path as '" + gridhttpsInfo.getFiletransferContextPath() + "'...");
+		((Element) initParams.item(6)).setTextContent(gridhttpsInfo.getFiletransferContextPath());
+		log.debug("setting root directory as '" + gridhttpsInfo.getRootDirectory() + "'...");
+		((Element) initParams.item(7)).setTextContent(gridhttpsInfo.getRootDirectory().getPath());
 		doc.save();
 	}
 

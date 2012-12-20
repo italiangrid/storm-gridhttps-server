@@ -51,6 +51,9 @@ public class StormAuthorizationFilter implements Filter {
 			Configuration.BACKEND_SERVICE_PORT = Integer.valueOf(fc.getInitParameter("stormBackendServicePort"));
 			Configuration.FRONTEND_HOSTNAME = fc.getInitParameter("stormFrontendHostname");
 			Configuration.FRONTEND_PORT = Integer.valueOf(fc.getInitParameter("stormFrontendPort"));
+			Configuration.GPFS_ROOT_DIRECTORY = fc.getInitParameter("rootDirectory");
+			Configuration.WEBDAV_CONTEXT_PATH = fc.getInitParameter("webdavContextPath");
+			Configuration.FILETRANSFER_CONTEXTPATH = fc.getInitParameter("fileTransferContextPath");
 		} catch (Exception e) {
 			log.error(e.getMessage());
 			throw new ServletException(e.getMessage());

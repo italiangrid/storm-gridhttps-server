@@ -8,8 +8,7 @@ public class Configuration {
 	public static String FRONTEND_HOSTNAME;
 	public static int FRONTEND_PORT; 
 	
-	public final static String FILETRANSFER_CONTEXTPATH = "fileTransfer";
-	
-	public final static String GPFS_ROOT_DIRECTORY = "/";
-	public final static String WEBDAV_CONTEXT_PATH = "";
+	public static String FILETRANSFER_CONTEXTPATH;
+	public static String GPFS_ROOT_DIRECTORY;
+	public static String WEBDAV_CONTEXT_PATH;
 }

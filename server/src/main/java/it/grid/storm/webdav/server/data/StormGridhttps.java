@@ -17,6 +17,10 @@ public class StormGridhttps {
 	private SSLOptions ssloptions;
 	private String logFile;
 	private File warFile;
+	
+	private File rootDirectory;
+	private String webdavContextPath;
+	private String filetransferContextPath;
 
 	public StormGridhttps() {
 		this.setHttpPort(DefaultConfiguration.STORM_GHTTPS_HTTP_PORT);
@@ -35,6 +39,9 @@ public class StormGridhttps {
 		this.setSsloptions(sslOptions);
 		this.setLogFile(DefaultConfiguration.STORM_GHTTPS_LOG_FILE);
 		this.warFile = null;
+		this.setFiletransferContextPath(DefaultConfiguration.FILETRANSFER_CONTEXTPATH);
+		this.setWebdavContextPath(DefaultConfiguration.WEBAPP_CONTEXTPATH);
+		this.setRootDirectory(new File(DefaultConfiguration.ROOTDIRECTORY));
 	}
 
 	public String getHostname() {
@@ -138,6 +145,30 @@ public class StormGridhttps {
 
 	public void setWarFile(File warFile) {
 		this.warFile = warFile;
+	}
+	
+	public File getRootDirectory() {
+		return rootDirectory;
+	}
+
+	public void setRootDirectory(File rootDirectory) {
+		this.rootDirectory = rootDirectory;
+	}
+
+	public String getWebdavContextPath() {
+		return webdavContextPath;
+	}
+
+	public void setWebdavContextPath(String webdavContextPath) {
+		this.webdavContextPath = webdavContextPath;
+	}
+
+	public String getFiletransferContextPath() {
+		return filetransferContextPath;
+	}
+
+	public void setFiletransferContextPath(String filetransferContextPath) {
+		this.filetransferContextPath = filetransferContextPath;
 	}
 
 }

@@ -26,4 +26,9 @@ public class DefaultConfiguration {
 	public final static String STORM_GHTTPS_WEBAPPS_DIRECTORY = "/var/lib/storm";	
 	public final static String STORM_GHTTPS_LOG_FILE = "/etc/storm/gridhttps-server/logback.xml";
 	public final static String WEBAPP_DIRECTORY_NAME = "gridhttps-server/webapp";
+	
+	public final static String WEBAPP_CONTEXTPATH = "";
+	public final static String FILETRANSFER_CONTEXTPATH = "fileTransfer";
+	public final static String ROOTDIRECTORY = "/";
+	
 }

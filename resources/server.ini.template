@@ -32,6 +32,15 @@
 # GridHTTPs logging configuration file
 # Default: /etc/storm/gridhttps-server/logback.xml
 #log.configuration-file = /etc/storm/gridhttps-server/logback.xml
+# GridHTTPs webdav service context-path
+# Default: 
+#webdav.context-path = 
+# GridHTTPs file-transfer service context-path
+# Default: fileTransfer
+#filetransfer.context-path = fileTransfer
+# GridHTTPs root directory - the base directory of the storage areas fs-rootDirectories retrieved
+# Default: /
+#root-directory = /
 
 
 [connectors]

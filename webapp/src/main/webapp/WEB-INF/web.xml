@@ -27,6 +27,18 @@
 			<param-name>stormFrontendPort</param-name>
 			<param-value>_TO_DEFINE_</param-value>
 		</init-param>
+		<init-param>
+			<param-name>rootDirectory</param-name>
+			<param-value>_TO_DEFINE_</param-value>
+		</init-param>
+		<init-param>
+			<param-name>webdavContextPath</param-name>
+			<param-value>_TO_DEFINE_</param-value>
+		</init-param>
+		<init-param>
+			<param-name>fileTransferContextPath</param-name>
+			<param-value>_TO_DEFINE_</param-value>
+		</init-param>
 	</filter>
 
 	<filter>

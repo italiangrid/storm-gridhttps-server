@@ -169,6 +169,12 @@ public class Main {
 			stormGridhttps.setLogFile(configuration.get("service", "log.configuration-file"));
 		if (configuration.get("service").containsKey("webapp-directory"))
 			stormGridhttps.setWebappsDirectory(configuration.get("service", "webapp-directory"));
+		if (configuration.get("service").containsKey("webdav.context-path"))
+			stormGridhttps.setWebdavContextPath(configuration.get("service", "webdav.context-path"));
+		if (configuration.get("service").containsKey("filetransfer.context-path"))
+			stormGridhttps.setFiletransferContextPath(configuration.get("service", "filetransfer.context-path"));
+		if (configuration.get("service").containsKey("root-directory"))
+			stormGridhttps.setRootDirectory(new File(configuration.get("service", "root-directory")));
 
 		/* connectors */
 		if (!configuration.keySet().contains("connectors"))
