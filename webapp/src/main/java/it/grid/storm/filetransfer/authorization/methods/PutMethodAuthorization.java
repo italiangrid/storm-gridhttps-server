@@ -48,7 +48,7 @@ public class PutMethodAuthorization extends AbstractMethodAuthorization {
 			File resource = new File(reqPath);
 			if (resource.exists()) {
 				if (resource.isFile()) {
-					AuthorizationStatus status = doPrepareToPutStatus(resource);
+					AuthorizationStatus status = doPrepareToPutStatus(resource, reqStorageArea);
 					if (status.isAuthorized()) {
 						if (askAuth(Constants.WRITE_OPERATION, reqPath)) {
 							return new AuthorizationStatus(true, "");
@@ -59,19 +59,19 @@ public class PutMethodAuthorization extends AbstractMethodAuthorization {
 						return status;
 					}
 				} else {
-					return new AuthorizationStatus(false, "resource required is not a file"); 
+					return new AuthorizationStatus(false, "Resource required is not a file"); 
 				}
 			} else {
-				return new AuthorizationStatus(false, "file does not exist"); 
+				return new AuthorizationStatus(false, "File not exist! You must do a prepare-to-put on surl '" + (new Surl(resource, reqStorageArea)).asString() + "' before!"); 
 			}
 		} else {
-			return new AuthorizationStatus(false, "no storage area matched with path = " + path);
+			return new AuthorizationStatus(false, "No storage area matched with path = " + path);
 		}
 	}
 
-	private AuthorizationStatus doPrepareToPutStatus(File resource) {
+	private AuthorizationStatus doPrepareToPutStatus(File resource, StorageArea reqStorageArea) {
 		log.debug("Check for a prepare-to-put");
-		Surl surl = new Surl(resource);
+		Surl surl = new Surl(resource, reqStorageArea);
 		BackendApi backend;
 		SurlArrayRequestOutputData outputSPtP;
 		try {

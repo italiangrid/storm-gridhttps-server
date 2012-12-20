@@ -48,7 +48,7 @@ public class GetMethodAuthorization extends AbstractMethodAuthorization {
 			File resource = new File(reqPath);
 			if (resource.exists()) {
 				if (resource.isFile()) {
-					AuthorizationStatus status = doPrepareToGetStatus(resource);
+					AuthorizationStatus status = doPrepareToGetStatus(resource, reqStorageArea);
 					if (status.isAuthorized()) {
 						if (askAuth(Constants.READ_OPERATION, reqPath)) {
 							return new AuthorizationStatus(true, "");
@@ -59,19 +59,19 @@ public class GetMethodAuthorization extends AbstractMethodAuthorization {
 						return status;
 					}
 				} else {
-					return new AuthorizationStatus(false, "resource required is not a file"); 
+					return new AuthorizationStatus(false, "Resource required is not a file"); 
 				}
 			} else {
-				return new AuthorizationStatus(false, "file does not exist"); 
+				return new AuthorizationStatus(false, "File does not exist"); 
 			}
 		} else {
-			return new AuthorizationStatus(false, "no storage area matched with path = " + path);
+			return new AuthorizationStatus(false, "No storage area matched with path = " + path);
 		}
 	}
 
-	private AuthorizationStatus doPrepareToGetStatus(File resource) {
+	private AuthorizationStatus doPrepareToGetStatus(File resource, StorageArea reqStorageArea) {
 		log.debug("Check for a prepare-to-get");
-		Surl surl = new Surl(resource);
+		Surl surl = new Surl(resource, reqStorageArea);
 		BackendApi backend;
 		SurlArrayRequestOutputData outputSPtG;
 		try {
