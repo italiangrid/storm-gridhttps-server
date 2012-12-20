@@ -78,8 +78,24 @@ if [ -z $STORM_USER ]; then
    STORM_USER=gridhttps
 fi
 if ! su "$STORM_USER" -s /bin/sh -c "test -w '$STORM_LOGDIR'"; then
-    chown -R $STORM_USER:$STORM_USER $STORM_LOGDIR
+    chmod g+w $STORM_LOGDIR
+    if ! su "$STORM_USER" -s /bin/sh -c "test -w '$STORM_LOGDIR'"; then
+       log_failure_msg "Unable to write to log directory $STORM_LOGDIR"
+       exit 1
+    fi
 fi
+
+for LOG_FILE in $(ls ${STORM_LOGDIR}/*gridhttps-server*); do
+	if ! su "$STORM_USER" -s /bin/sh -c "test -w '$LOG_FILE'"; then
+    	chown $STORM_USER:$STORM_USER $LOG_FILE
+       if ! su "$STORM_USER" -s /bin/sh -c "test -w '$LOG_FILE'"; then
+          log_failure_msg "Unable to write to log file $LOG_FILE"
+          exit 1   
+       fi	
+    fi
+fi
+done 
+
 
 
 start () {
