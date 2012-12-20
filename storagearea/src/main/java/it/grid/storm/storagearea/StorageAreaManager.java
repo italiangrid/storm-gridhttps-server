@@ -20,8 +20,8 @@ import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.List;
 
 import org.apache.http.HttpEntity;
@@ -81,20 +81,69 @@ public class StorageAreaManager {
 	public HashMap<String, String> getFsRootFromStfn() {
 		return fsRootFromStfn;
 	}
+	
+	public static StorageArea getMatchingSA(File localFile) throws IllegalArgumentException, IllegalStateException {
+		if (localFile == null) {
+			log.error("Unable to match StorageArea, the provided localFile is null");
+			throw new IllegalArgumentException("Provided localFile is null!");
+		}
+		if (!isInitialized()) {
+			log.error("Unable to match StorageArea, class not initialized. " + "Call init() first");
+			throw new IllegalStateException("Unable to match any StorageArea, class not initialized.");
+		}
+		String path = localFile.getPath();
+		log.debug("Looking for a StorageArea that matches " + path);
+		StorageArea mapped = null;
+		for (StorageArea storageArea : StorageAreaManager.getInstance().getStorageAreas()) {
+			if (path.startsWith(storageArea.getFSRoot())) {
+					if (mapped == null || storageArea.getFSRoot().length() > mapped.getFSRoot().length()) {
+						mapped = storageArea;
+					}
+			}
+		}
+		if (mapped == null) {
+			log.debug("No match found");
+		} else {
+			log.debug("Matched StorageArea " + mapped.toString());
+		}
+		return mapped;
+	}
 
-//	public StorageArea getStorageAreaFromStfnRoot(String stfnRoot) {
-//		for (StorageArea sa : getStorageAreas()) {
-//			if (sa.getStfnRoot().equals(stfnRoot))
-//				return sa;
-//		}
-//		return null;
-//	}
-//
-//	public StorageArea getStorageAreaFromFsRoot(String fsRoot) {
-//		String stfnRoot = getStfnRootFromFs().get(fsRoot);
-//		return getStorageAreaFromStfnRoot(stfnRoot);
-//	}
-
+	public static StorageArea getMatchingSA(URI uri) throws IllegalArgumentException, IllegalStateException {
+		if (uri == null) {
+			log.error("Unable to match StorageArea, the provided uri is null");
+			throw new IllegalArgumentException("Provided uri is null!");
+		}
+		return getMatchingSA(uri.getPath());
+	}
+	
+	public static StorageArea getMatchingSA(String uriPath) throws IllegalArgumentException, IllegalStateException {
+		if (uriPath == null) {
+			log.error("Unable to match StorageArea, the provided uriPath is null");
+			throw new IllegalArgumentException("Provided uriPath is null!");
+		}
+		if (!isInitialized()) {
+			log.error("Unable to match StorageArea, class not initialized. " + "Call init() first");
+			throw new IllegalStateException("Unable to match any StorageArea, class not initialized.");
+		}
+		log.debug("URI path = " + uriPath);
+		StorageArea matched = null;
+		log.debug("Looking for a StorageArea that matches " + uriPath);
+		for (StorageArea storageArea : StorageAreaManager.getInstance().getStorageAreas()) {
+			if (uriPath.startsWith(storageArea.getStfnRoot())) {
+				if (matched == null || storageArea.getStfnRoot().length() > matched.getStfnRoot().length()) {
+					matched = storageArea;				
+				}
+			}
+		}
+		if (matched == null) {
+			log.debug("No match found");
+		} else {
+			log.debug("Matched StorageArea " + matched.toString());
+		}
+		return matched;
+	}
+	
 	/* PRIVATE METHODS */
 
 	private StorageAreaManager(String stormBEHostname, int stormBEPort) throws Exception {
@@ -114,7 +163,7 @@ public class StorageAreaManager {
 		URI uri = buildConfigDiscoveryServiceUri(beHostname, bePort);
 		HttpResponse httpResponse = callConfigDiscoveryService(uri);
 		String output = getResponseBodyAsString(httpResponse.getEntity());
-		LinkedList<StorageArea> storageAreaList = decodeStorageAreaList(output);
+		ArrayList<StorageArea> storageAreaList = decodeStorageAreaList(output);
 		return storageAreaList;
 	}
 
@@ -201,13 +250,13 @@ public class StorageAreaManager {
 	 * @return never null, a list that contains the decoded storage areas. None
 	 *         of the elements can be null
 	 */
-	private LinkedList<StorageArea> decodeStorageAreaList(String storageAreaListString) {
+	private ArrayList<StorageArea> decodeStorageAreaList(String storageAreaListString) {
 		log.debug("Decoding the receive response");
 		if (storageAreaListString == null) {
 			log.error("Decoding failed, received a null storage area list string!");
 			throw new IllegalArgumentException("Received a null storage area list string");
 		}
-		LinkedList<StorageArea> local = new LinkedList<StorageArea>();
+		ArrayList<StorageArea> local = new ArrayList<StorageArea>();
 		String[] SAEncodedArray = storageAreaListString.trim().split("" + ConfigDiscoveryServiceConstants.VFS_LIST_SEPARATOR);
 		log.debug("Decoding " + SAEncodedArray.length + " storage areas");
 		for (String SAEncoded : SAEncodedArray) {
@@ -229,11 +278,11 @@ public class StorageAreaManager {
 			throw new IllegalArgumentException("Received a null encoded storage area");
 		}
 		log.debug("Deconding storage area string \'" + sAEncoded + "\'");
-		LinkedList<StorageArea> producedList = new LinkedList<StorageArea>();
+		ArrayList<StorageArea> producedList = new ArrayList<StorageArea>();
 		String name = null;
 		String root = null;
-		List<String> stfnRootList = new LinkedList<String>();
-		List<String> protocolList = new LinkedList<String>();
+		ArrayList<String> stfnRootList = new ArrayList<String>();
+		ArrayList<String> protocolList = new ArrayList<String>();
 		String[] SAFields = sAEncoded.trim().split("" + ConfigDiscoveryServiceConstants.VFS_FIELD_SEPARATOR);
 		for (String SAField : SAFields) {
 			String[] keyValue = SAField.trim().split("" + ConfigDiscoveryServiceConstants.VFS_FIELD_MATCHER);
@@ -278,67 +327,7 @@ public class StorageAreaManager {
 		return producedList;
 	}
 
-	public static StorageArea getMatchingSA(File localFile) throws IllegalArgumentException, IllegalStateException {
-		if (localFile == null) {
-			log.error("Unable to match StorageArea, the provided localFile is null");
-			throw new IllegalArgumentException("Provided localFile is null!");
-		}
-		if (!isInitialized()) {
-			log.error("Unable to match StorageArea, class not initialized. " + "Call init() first");
-			throw new IllegalStateException("Unable to match any StorageArea, class not initialized.");
-		}
-		String path = localFile.getPath();
-		log.debug("Looking for a StorageArea that matches " + path);
-		StorageArea mapped = null;
-		for (StorageArea storageArea : StorageAreaManager.getInstance().getStorageAreas()) {
-			if (path.startsWith(storageArea.getFSRoot())) {
-					if (mapped == null || storageArea.getFSRoot().length() > mapped.getFSRoot().length()) {
-						mapped = storageArea;
-					}
-			}
-		}
-		if (mapped == null) {
-			log.debug("No match found");
-		} else {
-			log.debug("Matched StorageArea " + mapped.toString());
-		}
-		return mapped;
-	}
-
-	public static StorageArea getMatchingSA(URI uri) throws IllegalArgumentException, IllegalStateException {
-		if (uri == null) {
-			log.error("Unable to match StorageArea, the provided uri is null");
-			throw new IllegalArgumentException("Provided uri is null!");
-		}
-		return getMatchingSA(uri.getPath());
-	}
 	
-	public static StorageArea getMatchingSA(String uriPath) throws IllegalArgumentException, IllegalStateException {
-		if (uriPath == null) {
-			log.error("Unable to match StorageArea, the provided uriPath is null");
-			throw new IllegalArgumentException("Provided uriPath is null!");
-		}
-		if (!isInitialized()) {
-			log.error("Unable to match StorageArea, class not initialized. " + "Call init() first");
-			throw new IllegalStateException("Unable to match any StorageArea, class not initialized.");
-		}
-		log.debug("URI path = " + uriPath);
-		StorageArea matched = null;
-		log.debug("Looking for a StorageArea that matches " + uriPath);
-		for (StorageArea storageArea : StorageAreaManager.getInstance().getStorageAreas()) {
-			if (uriPath.startsWith(storageArea.getStfnRoot())) {
-				if (matched == null || storageArea.getStfnRoot().length() > matched.getStfnRoot().length()) {
-					matched = storageArea;				
-				}
-			}
-		}
-		if (matched == null) {
-			log.debug("No match found");
-		} else {
-			log.debug("Matched StorageArea " + matched.toString());
-		}
-		return matched;
-	}
 	
 	
 
