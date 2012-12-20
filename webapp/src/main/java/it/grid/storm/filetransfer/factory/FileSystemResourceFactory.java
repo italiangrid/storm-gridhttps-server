@@ -36,11 +36,11 @@ public final class FileSystemResourceFactory implements ResourceFactory {
 
 	public FileSystemResourceFactory() throws RuntimeApiException {
 		log.info("FileSystem Resource factory init");
-		setRoot(new File("/"));
+		setRoot(new File(Configuration.GPFS_ROOT_DIRECTORY));
 		setSecurityManager(new NullSecurityManager());
-		setContextPath("fileTransfer");
+		setContextPath(Configuration.FILETRANSFER_CONTEXTPATH);
         contentService = new SimpleFileContentService();
-        backend = StormBackendApi.getBackend(Configuration.stormBackendHostname, Configuration.stormBackendPort);
+        backend = StormBackendApi.getBackend(Configuration.BACKEND_HOSTNAME, Configuration.BACKEND_PORT);
 	}
 	
 	public BackendApi getBackend() {

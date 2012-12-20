@@ -23,10 +23,10 @@ public class OptionsMethodAuthorization extends AbstractMethodAuthorization {
 	@Override
 	public AuthorizationStatus isUserAuthorized() {
 		/* ping storm-backend if method = OPTIONS */
-		log.info("ping " + Configuration.stormBackendHostname + ":" + Configuration.stormBackendPort);
+		log.info("ping " + Configuration.BACKEND_HOSTNAME + ":" + Configuration.BACKEND_PORT);
 		try {
 			UserCredentials user = new UserCredentials(getHttpHelper());
-			PingOutputData output = StormResourceHelper.doPing(Configuration.stormBackendHostname, Configuration.stormBackendPort, user);
+			PingOutputData output = StormResourceHelper.doPing(Configuration.BACKEND_HOSTNAME, Configuration.BACKEND_PORT, user);
 			log.info(output.getBeOs());
 			log.info(output.getBeVersion());
 			log.info(output.getVersionInfo());

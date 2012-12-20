@@ -16,6 +16,7 @@ import it.grid.storm.webdav.factory.StormResourceHelper;
 import it.grid.storm.webdav.factory.exceptions.RuntimeApiException;
 import it.grid.storm.xmlrpc.outputdata.PingOutputData;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
 
@@ -45,11 +46,11 @@ public class StormAuthorizationFilter implements Filter {
 
 	public void init(FilterConfig fc) throws ServletException {
 		try {
-			Configuration.stormBackendHostname = fc.getInitParameter("stormBackendHostname");
-			Configuration.stormBackendPort = Integer.valueOf(fc.getInitParameter("stormBackendPort"));
-			Configuration.stormBackendServicePort = Integer.valueOf(fc.getInitParameter("stormBackendServicePort"));
-			Configuration.stormFrontendHostname = fc.getInitParameter("stormFrontendHostname");
-			Configuration.stormFrontendPort = Integer.valueOf(fc.getInitParameter("stormFrontendPort"));
+			Configuration.BACKEND_HOSTNAME = fc.getInitParameter("stormBackendHostname");
+			Configuration.BACKEND_PORT = Integer.valueOf(fc.getInitParameter("stormBackendPort"));
+			Configuration.BACKEND_SERVICE_PORT = Integer.valueOf(fc.getInitParameter("stormBackendServicePort"));
+			Configuration.FRONTEND_HOSTNAME = fc.getInitParameter("stormFrontendHostname");
+			Configuration.FRONTEND_PORT = Integer.valueOf(fc.getInitParameter("stormFrontendPort"));
 		} catch (Exception e) {
 			log.error(e.getMessage());
 			throw new ServletException(e.getMessage());
@@ -57,7 +58,7 @@ public class StormAuthorizationFilter implements Filter {
 		printConfiguration();
 		/* Load Storage Area List */
 		try {
-			StorageAreaManager.init(Configuration.stormBackendHostname, Configuration.stormBackendServicePort);
+			StorageAreaManager.init(Configuration.BACKEND_HOSTNAME, Configuration.BACKEND_SERVICE_PORT);
 		} catch (Exception e) {
 			log.error(e.getMessage());
 			throw new ServletException(e.getMessage());
@@ -115,7 +116,7 @@ public class StormAuthorizationFilter implements Filter {
 		try {
 			if (isFileTransferRequest(path)) {
 				log.info("Received a file-transfer request");
-				return new FileTransferAuthorizationFilter(httpHelper, Configuration.FILETRANSFER_CONTEXTPATH);
+				return new FileTransferAuthorizationFilter(httpHelper, File.separator + Configuration.FILETRANSFER_CONTEXTPATH);
 			} else {
 				log.info("Received a webdav request");
 				return new WebDAVAuthorizationFilter(httpHelper);
@@ -140,7 +141,7 @@ public class StormAuthorizationFilter implements Filter {
 	}
 	
 	private boolean isFileTransferRequest(String requestedURI) {
-		return requestedURI.startsWith(Configuration.FILETRANSFER_CONTEXTPATH);
+		return requestedURI.startsWith(File.separator + Configuration.FILETRANSFER_CONTEXTPATH);
 	}
 
 	private void sendError(int errorCode, String errorMessage) {
@@ -154,18 +155,18 @@ public class StormAuthorizationFilter implements Filter {
 
 	private void printConfiguration() {
 		log.debug("StoRM-Authorization-filter init-parameters' values:");
-		log.debug(" - stormBackendHostname    : " + Configuration.stormBackendHostname);
-		log.debug(" - stormBackendPort        : " + Configuration.stormBackendPort);
-		log.debug(" - stormBackendServicePort : " + Configuration.stormBackendServicePort);
-		log.debug(" - stormFrontendHostname   : " + Configuration.stormFrontendHostname);
-		log.debug(" - stormFrontendPort       : " + Configuration.stormFrontendPort);
+		log.debug(" - stormBackendHostname    : " + Configuration.BACKEND_HOSTNAME);
+		log.debug(" - stormBackendPort        : " + Configuration.BACKEND_PORT);
+		log.debug(" - stormBackendServicePort : " + Configuration.BACKEND_SERVICE_PORT);
+		log.debug(" - stormFrontendHostname   : " + Configuration.FRONTEND_HOSTNAME);
+		log.debug(" - stormFrontendPort       : " + Configuration.FRONTEND_PORT);
 	}
 
 	private void doPing() {
 		// doPing
-		log.info("ping " + Configuration.stormBackendHostname + ":" + Configuration.stormBackendPort);
+		log.info("ping " + Configuration.BACKEND_HOSTNAME + ":" + Configuration.BACKEND_PORT);
 		try {
-			PingOutputData output = StormResourceHelper.doPing(Configuration.stormBackendHostname, Configuration.stormBackendPort, getUser());
+			PingOutputData output = StormResourceHelper.doPing(Configuration.BACKEND_HOSTNAME, Configuration.BACKEND_PORT, getUser());
 			log.info(output.getBeOs());
 			log.info(output.getBeVersion());
 			log.info(output.getVersionInfo());

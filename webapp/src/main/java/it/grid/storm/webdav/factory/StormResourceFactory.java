@@ -41,7 +41,7 @@ public final class StormResourceFactory implements ResourceFactory {
 		setContextPath(Configuration.WEBDAV_CONTEXT_PATH);
         contentService = new SimpleFileContentService();
         try {
-			this.backendApi = new BackendApi(Configuration.stormBackendHostname, new Long(Configuration.stormBackendPort));
+			this.backendApi = new BackendApi(Configuration.BACKEND_HOSTNAME, new Long(Configuration.BACKEND_PORT));
 		} catch (ApiException e) {
 			log.error(e.getMessage());
 		}

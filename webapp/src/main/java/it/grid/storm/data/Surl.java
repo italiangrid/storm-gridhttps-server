@@ -19,7 +19,7 @@ public class Surl {
 	private final String scheme = "srm";
 	
 	public Surl(String path) {
-		this(Configuration.stormFrontendHostname, Configuration.stormFrontendPort, path);
+		this(Configuration.FRONTEND_HOSTNAME, Configuration.FRONTEND_PORT, path);
 	}
 	
 	public Surl(String feHostname, int fePort, String path) {
@@ -32,7 +32,7 @@ public class Surl {
 	}
 	
 	public Surl(File resource) {
-		this(Configuration.stormFrontendHostname, Configuration.stormFrontendPort, resource);
+		this(Configuration.FRONTEND_HOSTNAME, Configuration.FRONTEND_PORT, resource);
 	}
 	
 	public Surl(String feHostname, int fePort, File resource, StorageArea storageArea) {
@@ -40,7 +40,7 @@ public class Surl {
 	}
 	
 	public Surl(File resource, StorageArea storageArea) {
-		this(Configuration.stormFrontendHostname, Configuration.stormFrontendPort, resource, storageArea);
+		this(Configuration.FRONTEND_HOSTNAME, Configuration.FRONTEND_PORT, resource, storageArea);
 	}
 	
 	private void buildURI(String feHostname, int fePort, String path) {
