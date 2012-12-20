@@ -352,7 +352,7 @@ public class StormBackendApi {
 		ArrayList<String> surlList = new ArrayList<String>();
 		surlList.add(surl);
 		LsOutputData output = null;
-		log.debug("lsDetailed surl: " + surl);
+		log.debug("ls surl: " + surl);
 		try {
 			if (user.isAnonymous()) { // HTTP
 				output = backend.ls(surlList);

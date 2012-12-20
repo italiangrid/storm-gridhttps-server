@@ -58,7 +58,7 @@ public class StormResourceHelper {
 			throws NotAuthorizedException, ConflictException, BadRequestException {
 		log.info("Called doMoveTo()");
 		String fromSurl = source.getSurl().asString();
-		String toSurl = (new Surl(source.getSurl(), newName)).asString();		
+		String toSurl = (new Surl(newParent.getSurl(), newName)).asString();		
 		StormBackendApi.mv(source.getFactory().getBackendApi(), fromSurl, toSurl, user);
 	}
 
