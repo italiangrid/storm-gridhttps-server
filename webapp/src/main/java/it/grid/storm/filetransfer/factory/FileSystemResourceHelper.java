@@ -1,6 +1,5 @@
 package it.grid.storm.filetransfer.factory;
 
-import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
@@ -27,21 +26,6 @@ public class FileSystemResourceHelper {
 			throw new NotFoundException("Couldn't locate content");
 		}
 		return in;
-	}
-	
-	public static boolean doPut(DirectoryResource sourceDir, String name, InputStream in) {
-		log.info("Called doPut()");
-		File destinationFile = new File(sourceDir.file, name);
-		try {
-			sourceDir.contentService.setFileContent(destinationFile, in);
-		} catch (FileNotFoundException e) {
-			log.error(e.getMessage());
-			return false;
-		} catch (IOException e) {
-			log.error(e.getMessage());
-			return false;
-		}
-		return true;
 	}
 	
 	public static boolean doPutOverwrite(FileResource source, InputStream in) throws BadRequestException, ConflictException, NotAuthorizedException {

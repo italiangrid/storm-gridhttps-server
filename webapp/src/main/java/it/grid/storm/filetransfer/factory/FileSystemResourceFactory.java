@@ -32,15 +32,19 @@ public final class FileSystemResourceFactory implements ResourceFactory {
 	String defaultPage;
 	boolean digestAllowed = true;
 	private String ssoPrefix;
-	BackendApi backend;
+	private BackendApi backend;
+	
+	private String localhostname;
 
-	public FileSystemResourceFactory() throws RuntimeApiException {
+	public FileSystemResourceFactory() throws RuntimeApiException, UnknownHostException {
 		log.info("FileSystem Resource factory init");
 		setRoot(new File(Configuration.GPFS_ROOT_DIRECTORY));
 		setSecurityManager(new NullSecurityManager());
 		setContextPath(Configuration.FILETRANSFER_CONTEXTPATH);
-        contentService = new SimpleFileContentService();
-        backend = StormBackendApi.getBackend(Configuration.BACKEND_HOSTNAME, Configuration.BACKEND_PORT);
+        setContentService(new SimpleFileContentService());
+        setBackend(StormBackendApi.getBackend(Configuration.BACKEND_HOSTNAME, Configuration.BACKEND_PORT));
+        java.net.InetAddress localMachine = java.net.InetAddress.getLocalHost();
+        setLocalhostname(localMachine.getHostName());
 	}
 	
 	public BackendApi getBackend() {
@@ -62,56 +66,40 @@ public final class FileSystemResourceFactory implements ResourceFactory {
 		}
 	}
 	
-	public boolean isLocalResource(String host) throws UnknownHostException {
+	public boolean isLocalResource(String host) {
 		String hostNoPort = host.indexOf(':') != -1 ? host.substring(0,host.indexOf(':')) : host;
-		java.net.InetAddress localMachine = java.net.InetAddress.getLocalHost();
-		log.debug("localhost: " + localMachine.getHostName());
-		log.debug("host: " + hostNoPort);
-		return localMachine.getHostName().equals(hostNoPort);
+		return hostNoPort.equals(getLocalhostname());
 	}
 
+	private String stripContext(String urlPath) {
+		return urlPath.replaceFirst(File.separator + getContextPath(), "");
+	}
+	
 	public Resource getResource(String host, String url) {
 		log.debug("getResource: host: " + host + " - url:" + url);
-		boolean isLocal;
-		try {
-			isLocal = (isLocalResource(host));
-		} catch (UnknownHostException e) {
-			log.error(e.getMessage());
-			return null;
-		}
-		if (isLocal) {
-			url = url.replaceFirst('/' + contextPath, "");
-			StorageArea currentSA = null;
-			try {
-				currentSA = StorageAreaManager.getMatchingSA(url);
-			} catch (Exception e) {
-				log.error(e.getMessage());
-				e.printStackTrace();
-			} 
-			if (currentSA != null) {				
-				url = url.replaceFirst(currentSA.getStfnRoot(), currentSA.getFSRoot());
-				log.debug("stripped context: " + url);
-				File requested = resolvePath(root, url);
+		if (isLocalResource(host)) {
+			String stripped = stripContext(url);
+			log.debug("context-cleaned: " + stripped);
+			StorageArea currentSA = StorageAreaManager.getMatchingSA(stripped);
+			if (currentSA != null) {
+				String realPath = currentSA.getRealPath(stripped);
+				log.debug("real-path: " + realPath);
+				File requested = resolvePath(root, realPath);
 				return resolveFile(host, requested, currentSA);
 			}
 		}
 		return null;
 	}
 
-	public FileSystemResource resolveFile(String host, File file, StorageArea storageArea) {
-		FileSystemResource r;
-		if (!file.exists()) {
-			log.warn("file not found: " + file.getAbsolutePath());
-			return null;
-		} else if (file.isDirectory()) {
-			r = new DirectoryResource(host, this, file, contentService, storageArea);
+	public FileResource resolveFile(String host, File file, StorageArea storageArea) {
+		FileResource resource = null;
+		if (file.exists()) {
+			resource = new FileResource(host, this, file, contentService, storageArea);
+			resource.ssoPrefix = ssoPrefix;
 		} else {
-			r = new FileResource(host, this, file, contentService, storageArea);
+			log.warn("file not found: " + file.getAbsolutePath());
 		}
-		if (r != null) {
-			r.ssoPrefix = ssoPrefix;
-		}
-		return r;
+		return resource;
 	}
 
 	public File resolvePath(File root, String url) {
@@ -229,4 +217,17 @@ public final class FileSystemResourceFactory implements ResourceFactory {
 	public void setContentService(FileContentService contentService) {
 		this.contentService = contentService;
 	}
+	
+	public String getLocalhostname() {
+		return localhostname;
+	}
+
+	private void setLocalhostname(String localhostname) {
+		this.localhostname = localhostname;
+	}
+
+	private void setBackend(BackendApi backend) {
+		this.backend = backend;
+	}
+
 }
