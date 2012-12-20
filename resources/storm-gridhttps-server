@@ -86,14 +86,13 @@ if ! su "$STORM_USER" -s /bin/sh -c "test -w '$STORM_LOGDIR'"; then
 fi
 
 for LOG_FILE in $(ls ${STORM_LOGDIR}/*gridhttps-server*); do
-	if ! su "$STORM_USER" -s /bin/sh -c "test -w '$LOG_FILE'"; then
-    	chown $STORM_USER:$STORM_USER $LOG_FILE
-       if ! su "$STORM_USER" -s /bin/sh -c "test -w '$LOG_FILE'"; then
-          log_failure_msg "Unable to write to log file $LOG_FILE"
-          exit 1   
-       fi	
-    fi
-fi
+   if ! su "$STORM_USER" -s /bin/sh -c "test -w '$LOG_FILE'"; then
+      chown $STORM_USER:$STORM_USER $LOG_FILE
+      if ! su "$STORM_USER" -s /bin/sh -c "test -w '$LOG_FILE'"; then
+         log_failure_msg "Unable to write to log file $LOG_FILE"
+         exit 1   
+      fi	
+   fi
 done 
 
 
