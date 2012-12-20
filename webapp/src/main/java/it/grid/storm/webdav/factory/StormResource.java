@@ -6,7 +6,6 @@ import io.milton.http.http11.auth.DigestResponse;
 import io.milton.resource.*;
 import it.grid.storm.data.Surl;
 import it.grid.storm.storagearea.StorageArea;
-import it.grid.storm.storagearea.StorageAreaManager;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -22,20 +21,40 @@ public abstract class StormResource implements Resource, MoveableResource, Copya
 
 	private static final Logger log = LoggerFactory.getLogger(StormResource.class);
 	private File file;
-	private final StormResourceFactory factory;
-	private final String host;
+	private StormResourceFactory factory;
+	private String host;
 	private Surl surl;
 	private StorageArea storageArea;
 	String ssoPrefix;
 
 	public StormResource(String host, StormResourceFactory factory, File file, StorageArea storageArea) {
-		this.host = host;
-		this.file = file;
-		this.factory = factory;
-		this.storageArea = storageArea;
-		this.surl = new Surl(this.file, this.storageArea);
+		setHost(host);
+		setFile(file);
+		setFactory(factory);
+		setStorageArea(storageArea);
+		setSurl(new Surl(getFile(), getStorageArea()));
 	}
 
+	protected void setHost(String host) {
+		this.host = host;
+	}
+	
+	protected void setFactory(StormResourceFactory factory) {
+		this.factory = factory;
+	}
+
+	protected void setSurl(Surl surl) {
+		this.surl = surl;
+	}
+
+	protected void setStorageArea(StorageArea storageArea) {
+		this.storageArea = storageArea;
+	}
+
+	protected void setFile(File newFile) {
+		this.file = newFile;
+	}
+		
 	public String getHost() {
 		return host;
 	}
@@ -46,10 +65,6 @@ public abstract class StormResource implements Resource, MoveableResource, Copya
 
 	public StormResourceFactory getFactory() {
 		return factory;
-	}
-	
-	protected void setFile(File newFile) {
-		this.file = newFile;
 	}
 	
 	public String getUniqueId() {
@@ -110,7 +125,7 @@ public abstract class StormResource implements Resource, MoveableResource, Copya
 	public InputStream getInputStream() {
 		InputStream in;
 		try {
-			in = new FileInputStream(file);
+			in = new FileInputStream(getFile());
 		} catch (FileNotFoundException e) {
 			log.error(e.getMessage());
 			return null;
@@ -119,7 +134,7 @@ public abstract class StormResource implements Resource, MoveableResource, Copya
 	}
 	
 	public StorageArea getStorageArea() {
-		return StorageAreaManager.getMatchingSA(getFile());
+		return storageArea;
 	}
 
 }

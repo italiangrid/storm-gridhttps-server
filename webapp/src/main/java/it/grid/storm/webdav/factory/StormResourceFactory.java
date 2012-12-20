@@ -1,6 +1,5 @@
 package it.grid.storm.webdav.factory;
 
-import io.milton.common.Path;
 import io.milton.http.ResourceFactory;
 import io.milton.http.fs.FileContentService;
 import io.milton.http.fs.SimpleFileContentService;
@@ -8,10 +7,14 @@ import io.milton.http.SecurityManager;
 import io.milton.http.fs.NullSecurityManager;
 import io.milton.resource.Resource;
 import it.grid.storm.Configuration;
+import it.grid.storm.srm.types.TFileType;
 import it.grid.storm.storagearea.StorageArea;
 import it.grid.storm.storagearea.StorageAreaManager;
+import it.grid.storm.webdav.factory.exceptions.RuntimeApiException;
+import it.grid.storm.webdav.factory.exceptions.StormResourceException;
 import it.grid.storm.xmlrpc.ApiException;
 import it.grid.storm.xmlrpc.BackendApi;
+import it.grid.storm.xmlrpc.outputdata.LsOutputData.SurlInfo;
 
 import java.io.File;
 import java.net.UnknownHostException;
@@ -74,15 +77,24 @@ public final class StormResourceFactory implements ResourceFactory {
 		return host.equals(localhostname);
 	}
 
-	public Resource getResource(String host, String uriPath) {
+	public Resource getResource(String host, String uriPath) throws RuntimeApiException, StormResourceException {
 		String hostNoPort = stripPortFromHost(host);
 		log.debug("getResource: host: " + hostNoPort + " - url:" + uriPath);
 		if (isLocalResource(hostNoPort)) {
 			StorageArea currentSA = StorageAreaManager.getMatchingSA(uriPath);
 			if (currentSA != null) {
 				String fsPath = currentSA.getRealPath(uriPath);
-				log.debug("real path: " + fsPath);				
-				File requested = resolvePath(root, fsPath);
+				log.debug("real path: " + fsPath);
+//				Surl surl = new Surl(uriPath);
+//				HttpHelper httpHelper = new HttpHelper(MiltonServlet.request(), MiltonServlet.response());
+//				UserCredentials user = new UserCredentials(httpHelper);
+//				SurlInfo surlInfo;
+//				surlInfo = StormBackendApi.getSurlInfo(getBackendApi(), surl.asString(), user, new RecursionLevel(Recursion.NONE));
+//				return resolveSurlInfo(host, surlInfo, currentSA);				
+				
+//				File requested = resolvePath(root, fsPath);
+				
+				File requested = new File(getRoot(), fsPath);
 				return resolveFile(host, requested, currentSA);
 			}
 		}
@@ -104,18 +116,35 @@ public final class StormResourceFactory implements ResourceFactory {
 		}
 		return r;
 	}
-
-	public File resolvePath(File root, String url) {
-		log.debug("resolve path url: " + url);
-		Path path = Path.path(url);
-		File f = root;
-		for (String s : path.getParts()) {
-			f = new File(f, s);
+	
+	public StormResource resolveSurlInfo(String host, SurlInfo surlInfo, StorageArea storageArea) {
+		StormResource resource = null;
+		if (surlInfo != null) {
+			if (surlInfo.getType().equals(TFileType.DIRECTORY)) {
+				resource = new StormDirectoryResource(host, this, new File(surlInfo.getStfn()), storageArea);
+			} else if (surlInfo.getType().equals(TFileType.FILE)) {
+				resource = new StormFileResource(host, this, new File(surlInfo.getStfn()), storageArea);
+			}
+		} else {
+			log.warn("Null surl-info! Impossible to return a StormResource!");
 		}
-		log.debug("resolve path return file name: " + f.getName());
-		log.debug("resolve path return file path: " + f.getPath());
-		return f;
+		if (resource != null) {
+			resource.ssoPrefix = ssoPrefix;
+		}
+		return resource;
 	}
+
+//	public File resolvePath(File root, String url) {
+//		log.debug("resolve path url: " + url);
+//		Path path = Path.path(url);
+//		File f = root;
+//		for (String s : path.getParts()) {
+//			f = new File(f, s);
+//		}
+//		log.debug("resolve path return file name: " + f.getName());
+//		log.debug("resolve path return file path: " + f.getPath());
+//		return f;
+//	}
 
 	public String getRealm(String host) {
 		return securityManager.getRealm(host);

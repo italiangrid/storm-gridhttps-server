@@ -43,6 +43,10 @@ public class Surl {
 		this(Configuration.FRONTEND_HOSTNAME, Configuration.FRONTEND_PORT, resource, storageArea);
 	}
 	
+	public Surl(Surl baseSurl, String childName) {
+		buildURI(baseSurl.asURI().getHost(), baseSurl.asURI().getPort(), baseSurl.asURI().getPath() + File.separator + childName);
+	}
+	
 	private void buildURI(String feHostname, int fePort, String path) {
 		try {
 			surl = new URI(scheme, null, feHostname, fePort, path, null, null);

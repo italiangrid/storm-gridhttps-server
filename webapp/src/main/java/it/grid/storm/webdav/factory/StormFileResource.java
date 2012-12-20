@@ -34,7 +34,7 @@ public class StormFileResource extends StormResource implements CopyableResource
 	public StormFileResource(String host, StormResourceFactory fileSystemResourceFactory, File file, StorageArea storageArea) {
 		super(host, fileSystemResourceFactory, file, storageArea);
 	}
-
+	
 	public SurlInfo getExtraProperties() {
 		ArrayList<SurlInfo> info = null;
 		try {

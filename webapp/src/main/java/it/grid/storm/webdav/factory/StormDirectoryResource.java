@@ -56,9 +56,7 @@ public class StormDirectoryResource extends StormResource implements MakeCollect
 			httpHelper.sendError(409, "Conflict");
 			return null;
 		}
-		StormResourceHelper.doMkCol(this, name);
-		File fnew = new File(getFile(), name);
-		return new StormDirectoryResource(getHost(), getFactory(), fnew, getStorageArea());
+		return StormResourceHelper.doMkCol(this, name);
 	}
 
 	public Resource child(String name) {
@@ -68,16 +66,20 @@ public class StormDirectoryResource extends StormResource implements MakeCollect
 
 	public List<? extends Resource> getChildren() {
 		ArrayList<StormResource> list = new ArrayList<StormResource>();
-		File[] files = getFile().listFiles();
-		if (files != null) {
-			for (File fchild : files) {
-				StormResource res = getFactory().resolveFile(getHost(), fchild, getStorageArea());
-				if (res != null) {
-					list.add(res);
+		try {
+			for (SurlInfo entry : StormResourceHelper.doLs(this).get(0).getSubpathInfo()) {
+				File fchild = new File(getStorageArea().getRealPath(entry.getStfn()));
+				StormResource resource = getFactory().resolveFile(getHost(), fchild, getStorageArea());
+				if (resource != null) {
+					list.add(resource);
 				} else {
 					log.error("Couldnt resolve file {}", fchild.getAbsolutePath());
 				}
 			}
+		} catch (RuntimeApiException e) {
+			log.error(e.getMessage());
+		} catch (StormResourceException e) {
+			log.error(e.getMessage());
 		}
 		return list;
 	}
@@ -99,9 +101,7 @@ public class StormDirectoryResource extends StormResource implements MakeCollect
 	public Resource createNew(String name, InputStream in, Long length, String contentType) throws IOException, NotAuthorizedException,
 			ConflictException, BadRequestException {
 		log.info("Called function for PUT FILE");
-		StormResourceHelper.doPut(this, name, in);
-		File destinationFile = new File(getFile(), name);
-		return getFactory().resolveFile(getHost(), destinationFile, getStorageArea());
+		return StormResourceHelper.doPut(this, name, in);
 	}
 
 	/**
@@ -150,7 +150,7 @@ public class StormDirectoryResource extends StormResource implements MakeCollect
 		w.close("tr");
 		SimpleDateFormat dateFormat = new SimpleDateFormat("EEE, d MMM yyyy HH:mm:ss");
 		DecimalFormat decimalFormat = new DecimalFormat("#.##");
-		for (SurlInfo entry : StormResourceHelper.doLsDetailed(this, Recursion.FULL).get(0).getSubpathInfo()) {
+		for (SurlInfo entry : StormResourceHelper.doLsDetailed(this, Recursion.NONE).get(0).getSubpathInfo()) {
 			w.open("tr");
 			w.open("td");
 			// entry name-link

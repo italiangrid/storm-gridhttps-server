@@ -19,6 +19,7 @@ import it.grid.storm.srm.types.TRequestToken;
 import it.grid.storm.authorization.UserCredentials;
 import it.grid.storm.webdav.factory.exceptions.StormResourceException;
 import it.grid.storm.backendApi.StormBackendApi;
+import it.grid.storm.data.Surl;
 import it.grid.storm.webdav.factory.StormDirectoryResource;
 import it.grid.storm.webdav.factory.StormFileResource;
 import it.grid.storm.webdav.factory.StormResource;
@@ -46,28 +47,19 @@ public class StormResourceHelper {
 		StormBackendApi.abortRequest(backend, token, user);
 	}
 
-	public static StormResource doMoveTo(StormResource source, StormResource newParent, String newName) throws NotAuthorizedException,
+	public static void doMoveTo(StormResource source, StormResource newParent, String newName) throws NotAuthorizedException,
 			ConflictException, BadRequestException {
 		HttpHelper httpHelper = new HttpHelper(MiltonServlet.request(), MiltonServlet.response());
 		UserCredentials user = new UserCredentials(httpHelper);
-		return doMoveTo(source, newParent, newName, user);
+		doMoveTo(source, newParent, newName, user);
 	}
 
-	public static StormResource doMoveTo(StormResource source, StormResource newParent, String newName, UserCredentials user)
+	public static void doMoveTo(StormResource source, StormResource newParent, String newName, UserCredentials user)
 			throws NotAuthorizedException, ConflictException, BadRequestException {
 		log.info("Called doMoveTo()");
-		File fsDest = new File(newParent.getFile(), newName);
-		StormResource srmDest = null;
-		if (source instanceof StormDirectoryResource)
-			srmDest = new StormDirectoryResource(source.getHost(), source.getFactory(), fsDest, newParent.getStorageArea());
-		if (source instanceof StormFileResource)
-			srmDest = new StormFileResource(source.getHost(), source.getFactory(), fsDest, newParent.getStorageArea());
-		if (srmDest == null)
-			throw new StormResourceException("Source resource not valid!");
 		String fromSurl = source.getSurl().asString();
-		String toSurl = srmDest.getSurl().asString();
+		String toSurl = (new Surl(source.getSurl(), newName)).asString();		
 		StormBackendApi.mv(source.getFactory().getBackendApi(), fromSurl, toSurl, user);
-		return srmDest;
 	}
 
 	public static void doDelete(StormResource source) throws NotAuthorizedException, ConflictException, BadRequestException {
@@ -224,15 +216,14 @@ public class StormResourceHelper {
 		return StormBackendApi.ping(backend, user);
 	}
 
-	public static StormDirectoryResource doCopyDirectory(StormDirectoryResource sourceDir, StormDirectoryResource newParent, String newName)
+	public static void doCopyDirectory(StormDirectoryResource sourceDir, StormDirectoryResource newParent, String newName)
 			throws NotAuthorizedException, ConflictException, BadRequestException {
 		HttpHelper httpHelper = new HttpHelper(MiltonServlet.request(), MiltonServlet.response());
 		UserCredentials user = new UserCredentials(httpHelper);
-		boolean isDepthInfinity = httpHelper.isDepthInfinity();
-		return doCopyDirectory(sourceDir, newParent, newName, isDepthInfinity, user);
+		doCopyDirectory(sourceDir, newParent, newName, httpHelper.isDepthInfinity(), user);
 	}
 
-	public static StormDirectoryResource doCopyDirectory(StormDirectoryResource sourceDir, StormDirectoryResource newParent, String newName,
+	public static void doCopyDirectory(StormDirectoryResource sourceDir, StormDirectoryResource newParent, String newName,
 			boolean isDepthInfinity, UserCredentials user) throws NotAuthorizedException, ConflictException, BadRequestException {
 		log.info("Called doCopyDirectory()");
 		// create destination folder:
@@ -254,26 +245,24 @@ public class StormResourceHelper {
 				}
 			}
 		}
-		return destinationResource;
 	}
 
-	public static StormFileResource doCopyFile(StormFileResource source, StormDirectoryResource newParent, String newName) throws RuntimeApiException,
+	public static void doCopyFile(StormFileResource source, StormDirectoryResource newParent, String newName) throws RuntimeApiException,
 			StormResourceException {
 		HttpHelper httpHelper = new HttpHelper(MiltonServlet.request(), MiltonServlet.response());
 		UserCredentials user = new UserCredentials(httpHelper);
-		return doCopyFile(source, newParent, newName, user);
+		doCopyFile(source, newParent, newName, user);
 	}
 
-	public static StormFileResource doCopyFile(StormFileResource source, StormDirectoryResource newParent, String newName, UserCredentials user)
+	public static void doCopyFile(StormFileResource source, StormDirectoryResource newParent, String newName, UserCredentials user)
 			throws RuntimeApiException, StormResourceException {
 		log.info("Called doCopyFile()");
 		/* prepareToGet on source file to lock the resource */
 		PtGOutputData outputPtG = StormBackendApi.prepareToGet(source.getFactory().getBackendApi(), source.getSurl().asString(), user,
 				source.getStorageArea().getProtocols());
-		StormFileResource srmFile = null;
 		try {
 			/* create destination */
-			srmFile = StormResourceHelper.doPut(newParent, newName, source.getInputStream(), user);
+			StormResourceHelper.doPut(newParent, newName, source.getInputStream(), user);
 			/* release source resource */
 			StormBackendApi.releaseFile(source.getFactory().getBackendApi(), source.getSurl().asString(), outputPtG.getToken(), user);
 		} catch (RuntimeException e) {
@@ -286,7 +275,6 @@ public class StormResourceHelper {
 			StormBackendApi.abortRequest(source.getFactory().getBackendApi(), outputPtG.getToken(), user);
 			throw e;
 		}
-		return srmFile;
 	}
 
 	public static RequestOutputData doPrepareToGetStatus(StormFileResource source) throws NotFoundException, RuntimeApiException,
@@ -314,5 +302,6 @@ public class StormResourceHelper {
 		log.info("Called doPrepareToPutStatus()");
 		return StormBackendApi.prepareToPutStatus(source.getFactory().getBackendApi(), source.getSurl().asString(), user);
 	}
+
 
 }
