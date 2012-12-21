@@ -148,7 +148,7 @@ public class StormDirectoryResource extends StormResource implements MakeCollect
 		w.close("head");
 		w.open("body");
 		w.begin("h1").writeAtt("class", "title").open().writeText("StoRM Gridhttps-server WebDAV").close();
-		w.begin("img").writeAtt("alt", "").writeAtt("src", HtmlPageBuilder.getStormLogo()).open().close();
+//		w.begin("img").writeAtt("alt", "").writeAtt("src", HtmlPageBuilder.getStormLogo()).open().close();
 		w.begin("table").writeAtt("class", "navigator").open();
 		w.begin("tr").open().begin("td").open().writeText(this.getStorageArea().getStfn(getFile().getPath())).close().close();
 		w.close("table");
@@ -197,7 +197,7 @@ public class StormDirectoryResource extends StormResource implements MakeCollect
 		}
 		w.close("table");
 		w.close("body");
-		w.begin("img").writeAtt("alt", "").writeAtt("src", HtmlPageBuilder.getMiltonLogo()).open().close();
+//		w.begin("img").writeAtt("alt", "").writeAtt("src", HtmlPageBuilder.getMiltonLogo()).open().close();
 		w.close("html");
 		w.flush();
 	}
