@@ -132,4 +132,9 @@ public class StorageArea {
 		return path.replaceFirst(getStfnRoot(), getFSRoot()).replace("//", "/");
 	}
 
+	public String getStfn(String fsPath) {
+		return fsPath.replaceFirst(getFSRoot(), getStfnRoot()).replace("//", "/");
+	}
+
+	
 }

@@ -29,6 +29,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -40,7 +41,7 @@ public class StormDirectoryResource extends StormResource implements MakeCollect
 	public StormDirectoryResource(StormResourceFactory factory, File dir, StorageArea storageArea) {
 		super(factory.getLocalhostname(), factory, dir, storageArea);
 	}
-	
+
 	public StormDirectoryResource(StormDirectoryResource parentDir, String childDirName) {
 		this(parentDir.getFactory(), new File(parentDir.getFile(), childDirName), parentDir.getStorageArea());
 	}
@@ -141,10 +142,16 @@ public class StormDirectoryResource extends StormResource implements MakeCollect
 		XmlWriter w = new XmlWriter(out);
 		w.open("html");
 		w.open("head");
-		w.begin("style").writeAtt("type", "text/css").open().writeText(getTableStyle()).close();
+		String cssStyle = HtmlPageBuilder.getEntryListStyle() + HtmlPageBuilder.getH1Style() + HtmlPageBuilder.getMiltonLogoStyle()
+				+ HtmlPageBuilder.getNavigationTdStyle() + HtmlPageBuilder.getNavigationTableStyle() + HtmlPageBuilder.getStormLogoStyle();
+		w.begin("style").writeAtt("type", "text/css").open().writeText(cssStyle).close();
 		w.close("head");
 		w.open("body");
-		w.begin("h1").open().writeText("StoRM Gridhttps-server WebDAV - " + this.getName()).close();
+		w.begin("h1").writeAtt("class", "title").open().writeText("StoRM Gridhttps-server WebDAV").close();
+		w.begin("img").writeAtt("alt", "").writeAtt("src", HtmlPageBuilder.getStormLogo()).open().close();
+		w.begin("table").writeAtt("class", "navigator").open();
+		w.begin("tr").open().begin("td").open().writeText(this.getStorageArea().getStfn(getFile().getPath())).close().close();
+		w.close("table");
 		w.open("table");
 		w.open("tr");
 		w.begin("td").open().begin("b").open().writeText("name").close().close();
@@ -153,6 +160,17 @@ public class StormDirectoryResource extends StormResource implements MakeCollect
 		w.begin("td").open().begin("b").open().writeText("checksum-type").close().close();
 		w.begin("td").open().begin("b").open().writeText("checksum-value").close().close();
 		w.close("tr");
+		//link to parent
+		w.open("tr");
+		w.begin("td").writeAtt("colspan", "5").open();
+		String parentPath = buildParentHref(dirPath);
+		w.begin("a").writeAtt("href", parentPath).open();
+		w.begin("img").writeAtt("alt", "").writeAtt("src", HtmlPageBuilder.getFolderIco()).open().close();
+		w.writeText(".");
+		w.close("a");
+		w.close("td");
+		w.close("tr");
+		
 		SimpleDateFormat dateFormat = new SimpleDateFormat("EEE, d MMM yyyy HH:mm:ss");
 		DecimalFormat decimalFormat = new DecimalFormat("#.##");
 		for (SurlInfo entry : entries) {
@@ -162,7 +180,7 @@ public class StormDirectoryResource extends StormResource implements MakeCollect
 			String name = entry.getStfn().split("/")[entry.getStfn().split("/").length - 1];
 			String path = buildHref(dirPath, name);
 			if (entry.getType().equals(TFileType.DIRECTORY))
-				w.begin("img").writeAtt("alt", "").writeAtt("src", getFolderIco()).open().close();
+				w.begin("img").writeAtt("alt", "").writeAtt("src", HtmlPageBuilder.getFolderIco()).open().close();
 			w.begin("a").writeAtt("href", path).open().writeText(name).close();
 			w.close("td");
 			// size
@@ -179,22 +197,9 @@ public class StormDirectoryResource extends StormResource implements MakeCollect
 		}
 		w.close("table");
 		w.close("body");
+		w.begin("img").writeAtt("alt", "").writeAtt("src", HtmlPageBuilder.getMiltonLogo()).open().close();
 		w.close("html");
 		w.flush();
-	}
-
-	private String getTableStyle() {
-		String out = "table {width: 100%; font-family: Arial,\"Bitstream Vera Sans\",Helvetica,Verdana,sans-serif; color: #333;}";
-		out += "table td, table th {color: #555;}";
-		out += "table th {text-shadow: rgba(255, 255, 255, 0.796875) 0px 1px 0px; font-family: Georgia,\"Times New Roman\",\"Bitstream Charter\",Times,serif; font-weight: normal; padding: 7px 7px 8px; text-align: left; line-height: 1.3em; font-size: 14px;}";
-		out += "table td {font-size: 12px; padding: 4px 7px 2px; vertical-align: top; }";
-		out += "img {margin-right: 5px; margin-top: 0; vertical-align: bottom; width: 12px; }";
-		return out;
-	}
-
-	private String getFolderIco() {
-		String out = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAAGXcA1uAAAABGdBTUEAALGOfPtRkwAAACBjSFJNAAB6JQAAgIMAAPn/AACA6AAAdTAAAOpgAAA6lwAAF2+XqZnUAAACFklEQVR4nGL4//8/AwwDBBBDSkpKKRDvB2GAAAJxfIH4PwgDBBADsjKAAALJsMKUAQQQA0wJCAMEEIhTiCQwHYjngrQABBBIIgtZJQwDBBDYQCCjAIgbkLAmQACh2IiMAQII2cKtQDwbiDtAEgABBJNYB3MaFEcABBDMDgzLAQIIJKiPRaIOIIBgOpBd1AASAwggmEQ4SBU0tCJwuRSEAQIIpLgam91Y8CaQBoAAggVGCJGa/gMEEEhDCi4fYsGXAAII5odiIjVIAwQQTs/hwgABRLIGgAACOUcY6vEqIC4DYlF8GgACCJdnpwLxTGiimAPEFjANAAFEbOj8h2kACCCYhjwgTkdLUeh4A0gDQADBNGgRaVMpQACBNBwB4jYiNagDBBBIQwYQ3yLWHwABBNIgQIrHAQIIZ07Bgv+A1AIEEEyDUgpaZkHDebBgBQggkpMGQACRrIFUDBBAIOfLAvEbAv49B8Ss5FgAEEAgC+qIjQUi8F8gtke2ACCAQBZUICn4lwIpeX2AWAeINaC0FpQNwmpArIKEQRGoAMVyQCyJbAFAACGXFheAmAmIV1LRR+4AAQSyIBeIfwExHxDHUNFwEA4ACCCQBaBcPAWaXjdQ0fAfQMwCEEAgQxOB2AaIOYD4DxUtWAFyNEAAwSMDKBBJ5eAJAZkLEEDIFmgD8TcqGAxKqmUwcwECiOY5GSCAaG4BQIABAFbNMXYg1UnRAAAAAElFTkSuQmCC";
-		return out;
 	}
 
 	private String buildHref(String uri, String name) {
@@ -212,6 +217,20 @@ public class StormDirectoryResource extends StormResource implements MakeCollect
 		}
 	}
 
+	private String buildParentHref(String uri) {
+		String abUrl = uri;
+		if (abUrl.endsWith("/")) {
+			abUrl = abUrl.substring(0, abUrl.length()-2);
+		}
+		log.debug("abUrl without ending slash: " + abUrl);
+		String[] parts = abUrl.split("/");
+		String lastPart = parts[parts.length-1];
+		log.debug("lastPart: " + lastPart);
+		abUrl = abUrl.substring(0, abUrl.length() - lastPart.length() - 1);
+		log.debug("final abUrl: " + abUrl);
+		return abUrl;
+	}
+	
 	public Long getMaxAgeSeconds(Auth auth) {
 		return null;
 	}
