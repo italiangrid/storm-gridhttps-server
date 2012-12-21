@@ -226,7 +226,7 @@ public class StormDirectoryResource extends StormResource implements MakeCollect
 		String[] parts = abUrl.split("/");
 		String lastPart = parts[parts.length-1];
 		log.debug("lastPart: " + lastPart);
-		abUrl = abUrl.substring(0, abUrl.length() - lastPart.length() - 1);
+		abUrl = abUrl.substring(0, abUrl.length() - lastPart.length());
 		log.debug("final abUrl: " + abUrl);
 		return abUrl;
 	}
