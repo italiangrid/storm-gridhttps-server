@@ -74,21 +74,21 @@ JAVA=$JAVA_HOME/bin/java
 
 
 
-if [ -z $STORM_USER ]; then
-   STORM_USER=gridhttps
+if [ -z $STORM_GRIDHTTPS_USER ]; then
+   STORM_GRIDHTTPS_USER=gridhttps
 fi
-if ! su "$STORM_USER" -s /bin/sh -c "test -w '$STORM_LOGDIR'"; then
+if ! su "$STORM_GRIDHTTPS_USER" -s /bin/sh -c "test -w '$STORM_LOGDIR'"; then
     chmod g+w $STORM_LOGDIR
-    if ! su "$STORM_USER" -s /bin/sh -c "test -w '$STORM_LOGDIR'"; then
+    if ! su "$STORM_GRIDHTTPS_USER" -s /bin/sh -c "test -w '$STORM_LOGDIR'"; then
        log_failure_msg "Unable to write to log directory $STORM_LOGDIR"
        exit 1
     fi
 fi
 
 for LOG_FILE in $(ls ${STORM_LOGDIR}/*gridhttps-server*); do
-   if ! su "$STORM_USER" -s /bin/sh -c "test -w '$LOG_FILE'"; then
-      chown $STORM_USER:$STORM_USER $LOG_FILE
-      if ! su "$STORM_USER" -s /bin/sh -c "test -w '$LOG_FILE'"; then
+   if ! su "$STORM_GRIDHTTPS_USER" -s /bin/sh -c "test -w '$LOG_FILE'"; then
+      chown $STORM_GRIDHTTPS_USER:$STORM_GRIDHTTPS_USER $LOG_FILE
+      if ! su "$STORM_GRIDHTTPS_USER" -s /bin/sh -c "test -w '$LOG_FILE'"; then
          log_failure_msg "Unable to write to log file $LOG_FILE"
          exit 1   
       fi	
@@ -131,10 +131,10 @@ start () {
 
         run () { "$@" 1> /dev/null 2>&1 & : ; }
 
-	echo -n "Starting $NAME as user \"$STORM_USER\"..."
+	echo -n "Starting $NAME as user \"$STORM_GRIDHTTPS_USER\"..."
 	cd /usr/share/java/storm-gridhttps-server
         export PATH=$JAVA_HOME/bin:$PATH
-        run su "$STORM_USER" -m -s /bin/sh -c "java \
+        run su "$STORM_GRIDHTTPS_USER" -m -s /bin/sh -c "java \
                 ${STORM_DEBUG_OPTION} \
                 -Dstorm.log.dir='$STORM_LOGDIR' \
                 -jar /usr/share/java/storm-gridhttps-server/server.jar \
