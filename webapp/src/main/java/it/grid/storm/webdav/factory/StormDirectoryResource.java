@@ -132,7 +132,7 @@ public class StormDirectoryResource extends StormResource implements MakeCollect
 		String fsPath = StorageAreaManager.getInstance().getFsRootFromStfn().get(stfnRoot);
 		String subpath = getFile().getCanonicalPath().substring(fsPath.length()).replace('\\', '/');
 		String uri = stfnRoot + subpath;
-		Collection<SurlInfo> entries = StormResourceHelper.doLsDetailed(this, Recursion.FULL).get(0).getSubpathInfo();
+		Collection<SurlInfo> entries = StormResourceHelper.doLsDetailed(this, Recursion.NONE).get(0).getSubpathInfo();
 		buildDirectoryPage(out, uri, entries);
 	}
 
@@ -155,7 +155,7 @@ public class StormDirectoryResource extends StormResource implements MakeCollect
 		w.close("tr");
 		SimpleDateFormat dateFormat = new SimpleDateFormat("EEE, d MMM yyyy HH:mm:ss");
 		DecimalFormat decimalFormat = new DecimalFormat("#.##");
-		for (SurlInfo entry : StormResourceHelper.doLsDetailed(this, Recursion.NONE).get(0).getSubpathInfo()) {
+		for (SurlInfo entry : entries) {
 			w.open("tr");
 			w.open("td");
 			// entry name-link
