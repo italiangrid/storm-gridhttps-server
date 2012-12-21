@@ -13,7 +13,6 @@ import io.milton.http.exceptions.NotAuthorizedException;
 import io.milton.http.webdav.WebDavProtocol;
 import io.milton.property.PropertySource;
 import io.milton.resource.Resource;
-import it.grid.storm.xmlrpc.outputdata.LsOutputData.SurlInfo;
 
 class StormPropertySource implements PropertySource {
 
@@ -31,22 +30,21 @@ class StormPropertySource implements PropertySource {
 	}
 
 	public String getProperty(QName name, Resource r) throws NotAuthorizedException {
+		String value = "";
+		String property = name.getLocalPart();
 		if (checkPropery(name, r)) {
 			if (r instanceof StormFileResource) {
 				StormFileResource srmFile = (StormFileResource) r;
-				SurlInfo info = srmFile.getExtraProperties();
-				if (info != null) {
-					String property = name.getLocalPart();
-					if (property.equals("checksumType"))
-						return info.getCheckSumType() == null ? "" : info.getCheckSumType().getValue();
-					if (property.equals("checksumValue"))
-						return info.getCheckSumValue() == null ? "" : info.getCheckSumValue().getValue();
-					if (property.equals("status"))
-						return info.getStatus() == null ? "" : info.getStatus().getExplanation();
+				if (property.equals("checksumType")) {
+					value = srmFile.getCheckSumType();
+				} else if (property.equals("checksumValue")) {
+					value = srmFile.getCheckSumValue();
+				} else if (property.equals("status")) {
+					value = srmFile.getStatus();
 				}
 			}
 		}
-		return "";
+		return value;
 	}
 
 	public void setProperty(QName name, Object value, Resource r) {

@@ -34,7 +34,6 @@ public final class StormResourceFactory implements ResourceFactory {
 	String defaultPage;
 	boolean digestAllowed = true;
 	private String ssoPrefix;
-	
 	private String localhostname;
 	private BackendApi backendApi;
 	
@@ -49,7 +48,7 @@ public final class StormResourceFactory implements ResourceFactory {
 			log.error(e.getMessage());
 		}
         java.net.InetAddress localMachine = java.net.InetAddress.getLocalHost();
-        localhostname = localMachine.getHostName();
+        setLocalhostname(localMachine.getHostName());
 	}
 
 	public File getRoot() {
@@ -107,9 +106,9 @@ public final class StormResourceFactory implements ResourceFactory {
 			log.warn("file not found: " + file.getAbsolutePath());
 			return null;
 		} else if (file.isDirectory()) {
-			r = new StormDirectoryResource(host, this, file, storageArea);
+			r = new StormDirectoryResource(this, file, storageArea);
 		} else {
-			r = new StormFileResource(host, this, file, storageArea);
+			r = new StormFileResource(this, file, storageArea);
 		}
 		if (r != null) {
 			r.ssoPrefix = ssoPrefix;
@@ -121,9 +120,9 @@ public final class StormResourceFactory implements ResourceFactory {
 		StormResource resource = null;
 		if (surlInfo != null) {
 			if (surlInfo.getType().equals(TFileType.DIRECTORY)) {
-				resource = new StormDirectoryResource(host, this, new File(surlInfo.getStfn()), storageArea);
+				resource = new StormDirectoryResource(this, new File(surlInfo.getStfn()), storageArea);
 			} else if (surlInfo.getType().equals(TFileType.FILE)) {
-				resource = new StormFileResource(host, this, new File(surlInfo.getStfn()), storageArea);
+				resource = new StormFileResource(this, new File(surlInfo.getStfn()), storageArea);
 			}
 		} else {
 			log.warn("Null surl-info! Impossible to return a StormResource!");
@@ -244,5 +243,13 @@ public final class StormResourceFactory implements ResourceFactory {
 	
 	public BackendApi getBackendApi() {
 		return backendApi;
+	}
+	
+	public String getLocalhostname() {
+		return localhostname;
+	}
+
+	private void setLocalhostname(String localhostname) {
+		this.localhostname = localhostname;
 	}
 }

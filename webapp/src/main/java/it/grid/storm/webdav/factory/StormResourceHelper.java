@@ -116,9 +116,7 @@ public class StormResourceHelper {
 	public static StormDirectoryResource doMkCol(StormDirectoryResource sourceDir, String name, UserCredentials user)
 			throws RuntimeApiException, StormResourceException {
 		log.info("Called doMkCol()");
-		File fsDest = new File(sourceDir.getFile(), name);
-		StormDirectoryResource newDir = new StormDirectoryResource(sourceDir.getHost(), sourceDir.getFactory(), fsDest,
-				sourceDir.getStorageArea());
+		StormDirectoryResource newDir = new StormDirectoryResource(sourceDir, name);
 		StormBackendApi.mkdir(sourceDir.getFactory().getBackendApi(), newDir.getSurl().asString(), user);
 		return newDir;
 	}
@@ -134,7 +132,7 @@ public class StormResourceHelper {
 			throws RuntimeApiException, StormResourceException {
 		log.info("Called doPut()");
 		File fsDest = new File(sourceDir.getFile(), name);
-		StormFileResource srmDest = new StormFileResource(sourceDir.getHost(), sourceDir.getFactory(), fsDest, sourceDir.getStorageArea());
+		StormFileResource srmDest = new StormFileResource(sourceDir.getFactory(), fsDest, sourceDir.getStorageArea());
 		FileTransferOutputData outputPtp = StormBackendApi.prepareToPut(sourceDir.getFactory().getBackendApi(), srmDest.getSurl()
 				.asString(), user, sourceDir.getStorageArea().getProtocols());
 		// put

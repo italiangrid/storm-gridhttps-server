@@ -1,5 +1,7 @@
 package it.grid.storm;
 
+import io.milton.servlet.MiltonServlet;
+
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -23,6 +25,10 @@ public class HttpHelper {
 	private HttpServletRequest HTTPRequest = null;
 	private HttpServletResponse HTTPResponse = null;
 
+	public static HttpHelper getInstance() {
+		return new HttpHelper(MiltonServlet.request(), MiltonServlet.response());
+	}
+	
 	public HttpHelper(HttpServletRequest HTTPRequest, HttpServletResponse HTTPResponse) {
 		this.HTTPRequest = HTTPRequest;
 		this.HTTPResponse = HTTPResponse;

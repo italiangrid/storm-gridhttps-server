@@ -37,8 +37,12 @@ public class StormDirectoryResource extends StormResource implements MakeCollect
 
 	private static final Logger log = LoggerFactory.getLogger(StormDirectoryResource.class);
 
-	public StormDirectoryResource(String host, StormResourceFactory factory, File dir, StorageArea storageArea) {
-		super(host, factory, dir, storageArea);
+	public StormDirectoryResource(StormResourceFactory factory, File dir, StorageArea storageArea) {
+		super(factory.getLocalhostname(), factory, dir, storageArea);
+	}
+	
+	public StormDirectoryResource(StormDirectoryResource parentDir, String childDirName) {
+		this(parentDir.getFactory(), new File(parentDir.getFile(), childDirName), parentDir.getStorageArea());
 	}
 
 	public CollectionResource createCollection(String name) throws NotAuthorizedException, ConflictException, BadRequestException {
@@ -59,6 +63,7 @@ public class StormDirectoryResource extends StormResource implements MakeCollect
 		return StormResourceHelper.doMkCol(this, name);
 	}
 
+	/* works like a find child : return null if not exists */
 	public Resource child(String name) {
 		File fchild = new File(getFile(), name);
 		return getFactory().resolveFile(getHost(), fchild, getStorageArea());

@@ -31,11 +31,13 @@ public class StormFileResource extends StormResource implements CopyableResource
 
 	private static final Logger log = LoggerFactory.getLogger(StormFileResource.class);
 
-	public StormFileResource(String host, StormResourceFactory fileSystemResourceFactory, File file, StorageArea storageArea) {
-		super(host, fileSystemResourceFactory, file, storageArea);
+	private SurlInfo surlInfo;
+	
+	public StormFileResource(StormResourceFactory factory, File file, StorageArea storageArea) {
+		super(factory.getLocalhostname(), factory, file, storageArea);
 	}
 	
-	public SurlInfo getExtraProperties() {
+	private void loadSurlInfo() {
 		ArrayList<SurlInfo> info = null;
 		try {
 			info = StormResourceHelper.doLsDetailed(this, Recursion.NONE);
@@ -44,7 +46,40 @@ public class StormFileResource extends StormResource implements CopyableResource
 		} catch (StormResourceException e) {
 			log.error(e.getMessage());
 		}
-		return info != null ? info.get(0) : null;
+		setSurlInfo(info != null ? info.get(0) : null);
+	}
+	
+	public String getCheckSumType() {
+		String checksumType = "";
+		if (getSurlInfo() == null) {
+			loadSurlInfo();
+			if (getSurlInfo() != null) {
+				checksumType = getSurlInfo().getCheckSumType().getValue();
+			}
+		}
+		return checksumType;
+	}
+	
+	public String getCheckSumValue() {
+		String checksumValue = "";
+		if (getSurlInfo() == null) {
+			loadSurlInfo();
+			if (getSurlInfo() != null) {
+				checksumValue = getSurlInfo().getCheckSumValue().getValue();
+			}
+		}
+		return checksumValue;
+	}
+	
+	public String getStatus() {
+		String status = "";
+		if (getSurlInfo() == null) {
+			loadSurlInfo();
+			if (getSurlInfo() != null) {
+				status = getSurlInfo().getStatus().toString();
+			}
+		}
+		return status;	
 	}
 
 	public Long getContentLength() {
@@ -126,6 +161,14 @@ public class StormFileResource extends StormResource implements CopyableResource
 			log.error("Directory Resource class " + newParent.getClass().getName() + " not supported!");
 		}
 			
+	}
+
+	private SurlInfo getSurlInfo() {
+		return surlInfo;
+	}
+	
+	private void setSurlInfo(SurlInfo surlInfo) {
+		this.surlInfo = surlInfo;
 	}
 
 }
