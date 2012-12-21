@@ -54,7 +54,7 @@ public class StormFileResource extends StormResource implements CopyableResource
 		if (getSurlInfo() == null) {
 			loadSurlInfo();
 			if (getSurlInfo() != null) {
-				checksumType = getSurlInfo().getCheckSumType().getValue();
+				checksumType = getSurlInfo().getCheckSumType() != null ? getSurlInfo().getCheckSumType().getValue() : "";
 			}
 		}
 		return checksumType;
@@ -65,7 +65,7 @@ public class StormFileResource extends StormResource implements CopyableResource
 		if (getSurlInfo() == null) {
 			loadSurlInfo();
 			if (getSurlInfo() != null) {
-				checksumValue = getSurlInfo().getCheckSumValue().getValue();
+				checksumValue = getSurlInfo().getCheckSumValue() != null ? getSurlInfo().getCheckSumValue().getValue() : "";
 			}
 		}
 		return checksumValue;
