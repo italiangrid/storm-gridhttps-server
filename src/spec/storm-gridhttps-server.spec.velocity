@@ -54,7 +54,7 @@ test -d assembler/target/%{name}-fakeroot.dir && cp -vR assembler/target/%{name}
 #during an upgrade, the value of the argument passed in is 2
 ##if [ "$1" = "1" ] ; then
 if [ "$1" = "2" ] ; then
-  echo 'Removing StoRM GridHTTPS server 1.X stuff'
+  
   rpm -q tomcat5 &> /dev/null
   test $? -eq 0 && TOMCAT_PACKAGE_NAME="tomcat5" && TOMCAT_COMMON_LIB_DIR="common/lib" && TOMCAT_SERVER_LIB_DIR="server/lib" && TOMCAT_CONF_LOGGING_DIR="common/classes"
   rpm -q tomcat6 &> /dev/null
@@ -108,7 +108,7 @@ if [ "$1" = "2" ] ; then
 		unlink /usr/share/${TOMCAT_PACKAGE_NAME}/${TOMCAT_COMMON_LIB_DIR}/[bcprov].jar
 	fi
 	if [ -L /usr/share/${TOMCAT_PACKAGE_NAME}/${TOMCAT_COMMON_LIB_DIR}/log4j.jar ] ; then
-		unlink /usr/share/${TOMCAT_PACKAGE_NAME}/${TOMCAT_COMMON_LIB_DIR}/[log4j].jar
+		unlink /usr/share/${TOMCAT_PACKAGE_NAME}/${TOMCAT_COMMON_LIB_DIR}/log4j.jar
 	fi
 	if [ -L /usr/share/${TOMCAT_PACKAGE_NAME}/conf/log4j-trustmanager.properties ] ; then
 		unlink /usr/share/${TOMCAT_PACKAGE_NAME}/conf/log4j-trustmanager.properties
