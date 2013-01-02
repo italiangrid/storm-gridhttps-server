@@ -34,14 +34,14 @@ public class Main {
 
 	public static void main(String[] args) {
 
-		Object lock = new Object();
-		synchronized (lock) {
-			try {
-				lock.wait(5 * 1000);
-			} catch (InterruptedException e) {
-				e.printStackTrace();
-			}
-		}
+//		Object lock = new Object();
+//		synchronized (lock) {
+//			try {
+//				lock.wait(5 * 1000);
+//			} catch (InterruptedException e) {
+//				e.printStackTrace();
+//			}
+//		}
 		
 		try {
 			parseCommandLine(args);
