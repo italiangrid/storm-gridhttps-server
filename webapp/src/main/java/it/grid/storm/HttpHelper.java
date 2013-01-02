@@ -3,8 +3,10 @@ package it.grid.storm;
 import io.milton.servlet.MiltonServlet;
 
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.net.URLDecoder;
 import java.security.cert.X509Certificate;
 
 import javax.servlet.http.HttpServletRequest;
@@ -28,7 +30,7 @@ public class HttpHelper {
 	public static HttpHelper getInstance() {
 		return new HttpHelper(MiltonServlet.request(), MiltonServlet.response());
 	}
-	
+
 	public HttpHelper(HttpServletRequest HTTPRequest, HttpServletResponse HTTPResponse) {
 		this.HTTPRequest = HTTPRequest;
 		this.HTTPResponse = HTTPResponse;
@@ -42,8 +44,19 @@ public class HttpHelper {
 		return this.HTTPResponse;
 	}
 
+	private String decode(String path) {
+		String pathDecoded = path;
+		try {
+			pathDecoded = URLDecoder.decode(path, "utf-8");
+		} catch (UnsupportedEncodingException e) {
+			log.error("Unable to decode " + path + ". UnsupportedEncodingException : " + e.getMessage());
+		}
+		log.debug("Decoded path = " + pathDecoded + "");
+		return pathDecoded;
+	}
+	
 	public String getRequestStringURI() {
-		return getRequest().getRequestURI();
+		return decode(getRequest().getRequestURI());
 	}
 
 	public URI getRequestURI() {
@@ -66,7 +79,7 @@ public class HttpHelper {
 	}
 
 	public String getDestinationHeader() {
-		return getRequest().getHeader("Destination");
+		return decode(getRequest().getHeader("Destination"));
 	}
 
 	public URI getDestinationURI() {
