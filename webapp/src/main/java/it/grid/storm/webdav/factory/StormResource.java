@@ -25,7 +25,7 @@ public abstract class StormResource implements Resource, MoveableResource, Copya
 	private String host;
 	private Surl surl;
 	private StorageArea storageArea;
-	String ssoPrefix;
+//	String ssoPrefix;
 
 	public StormResource(String host, StormResourceFactory factory, File file, StorageArea storageArea) {
 		setHost(host);

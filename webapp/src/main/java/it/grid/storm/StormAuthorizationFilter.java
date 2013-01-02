@@ -1,6 +1,5 @@
 package it.grid.storm;
 
-import io.milton.http.XmlWriter;
 import it.grid.storm.Configuration;
 import it.grid.storm.authorization.AuthorizationFilter;
 import it.grid.storm.authorization.AuthorizationStatus;
@@ -14,11 +13,14 @@ import it.grid.storm.HttpHelper;
 import it.grid.storm.webdav.authorization.WebDAVAuthorizationFilter;
 import it.grid.storm.webdav.factory.StormResourceHelper;
 import it.grid.storm.webdav.factory.exceptions.RuntimeApiException;
+import it.grid.storm.webdav.factory.html.StormHtmlRootPage;
 import it.grid.storm.xmlrpc.outputdata.PingOutputData;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.util.List;
+import java.util.ListIterator;
 
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;
@@ -35,8 +37,6 @@ import org.slf4j.LoggerFactory;
 public class StormAuthorizationFilter implements Filter {
 
 	private static final Logger log = LoggerFactory.getLogger(StormAuthorizationFilter.class);
-
-	private final String HTML_CONSTANT = "<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Transitional//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd\">";
 	
 	private HttpHelper httpHelper;
 	private UserCredentials user;
@@ -182,34 +182,19 @@ public class StormAuthorizationFilter implements Filter {
 		OutputStream out = getHttpHelper().getResponse().getOutputStream();
 		getHttpHelper().getResponse().addHeader("Content-Type", "text/html");
 		getHttpHelper().getResponse().addHeader("DAV", "1");
-		XmlWriter w = new XmlWriter(out);
-		w.writeText(HTML_CONSTANT);
-		w.begin("html").writeAtt("lang", "en").writeAtt("xmlns", "http://www.w3.org/1999/xhtml").open();
-		w.open("head");
-		w.begin("style").writeAtt("type", "text/css").open().writeText(getTableStyle()).close();
-		w.close("head");
-		w.open("body");
-		w.begin("h1").open().writeText("StoRM Gridhttps-server WebDAV - /").close();
-		w.open("table");
-		w.open("tr");
-		w.begin("td").open().begin("b").open().writeText("storage-area name").close().close();
-		w.close("tr");
-		for (StorageArea sa : StorageAreaManager.getInstance().getStorageAreas()) {
-			if (!hasStorageAreaAccess(sa))
-				continue;
-			String name = sa.getStfnRoot().substring(1);
-			String path = buildHref(sa.getStfnRoot(), "");
-			w.open("tr");
-			w.open("td");
-			w.begin("img").writeAtt("alt", "").writeAtt("src", getFolderIco()).open().close();
-			w.begin("a").writeAtt("href", path).open().writeText(name).close();
-			w.close("td");
-			w.close("tr");
-		}
-		w.close("table");
-		w.close("body");
-		w.close("html");
-		w.flush();
+		StormHtmlRootPage page = new StormHtmlRootPage(out);
+		page.start();
+		page.addTitle("StoRM Gridhttps-server WebDAV");
+		page.addNavigator("/");
+		List<StorageArea> sas = StorageAreaManager.getInstance().getStorageAreas();
+		ListIterator<StorageArea> li = sas.listIterator();
+		while (li.hasNext()) {
+		   StorageArea current = li.next();
+		   if (!hasStorageAreaAccess(current))
+			   li.remove();
+		  }
+		page.addStorageAreaList(sas);
+		page.end();
 	}
 
 	private boolean hasStorageAreaAccess(StorageArea sa) {
@@ -228,28 +213,6 @@ public class StormAuthorizationFilter implements Filter {
 		return response;
 	}
 
-	private String getTableStyle() {
-		String out = "table {width: 100%; font-family: Arial,\"Bitstream Vera Sans\",Helvetica,Verdana,sans-serif; color: #333;}";
-		out += "table td, table th {color: #555;}";
-		out += "table th {text-shadow: rgba(255, 255, 255, 0.796875) 0px 1px 0px; font-family: Georgia,\"Times New Roman\",\"Bitstream Charter\",Times,serif; font-weight: normal; padding: 7px 7px 8px; text-align: left; line-height: 1.3em; font-size: 14px;}";
-		out += "table td {font-size: 12px; padding: 4px 7px 2px; vertical-align: top; }";
-		out += "img {margin-right: 5px; margin-top: 0; vertical-align: bottom; width: 12px; }";
-		return out;
-	}
-
-	private String getFolderIco() {
-		String out = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAAGXcA1uAAAABGdBTUEAALGOfPtRkwAAACBjSFJNAAB6JQAAgIMAAPn/AACA6AAAdTAAAOpgAAA6lwAAF2+XqZnUAAACFklEQVR4nGL4//8/AwwDBBBDSkpKKRDvB2GAAAJxfIH4PwgDBBADsjKAAALJsMKUAQQQA0wJCAMEEIhTiCQwHYjngrQABBBIIgtZJQwDBBDYQCCjAIgbkLAmQACh2IiMAQII2cKtQDwbiDtAEgABBJNYB3MaFEcABBDMDgzLAQIIJKiPRaIOIIBgOpBd1AASAwggmEQ4SBU0tCJwuRSEAQIIpLgam91Y8CaQBoAAggVGCJGa/gMEEEhDCi4fYsGXAAII5odiIjVIAwQQTs/hwgABRLIGgAACOUcY6vEqIC4DYlF8GgACCJdnpwLxTGiimAPEFjANAAFEbOj8h2kACCCYhjwgTkdLUeh4A0gDQADBNGgRaVMpQACBNBwB4jYiNagDBBBIQwYQ3yLWHwABBNIgQIrHAQIIZ07Bgv+A1AIEEEyDUgpaZkHDebBgBQggkpMGQACRrIFUDBBAIOfLAvEbAv49B8Ss5FgAEEAgC+qIjQUi8F8gtke2ACCAQBZUICn4lwIpeX2AWAeINaC0FpQNwmpArIKEQRGoAMVyQCyJbAFAACGXFheAmAmIV1LRR+4AAQSyIBeIfwExHxDHUNFwEA4ACCCQBaBcPAWaXjdQ0fAfQMwCEEAgQxOB2AaIOYD4DxUtWAFyNEAAwSMDKBBJ5eAJAZkLEEDIFmgD8TcqGAxKqmUwcwECiOY5GSCAaG4BQIABAFbNMXYg1UnRAAAAAElFTkSuQmCC";
-		return out;
-	}
-
-	private String buildHref(String uri, String name) {
-		String abUrl = uri;
-		if (!abUrl.endsWith("/")) {
-			abUrl += "/";
-		}
-		return abUrl + name;
-	}
-	
 	public HttpHelper getHttpHelper() {
 		return httpHelper;
 	}

@@ -7,14 +7,12 @@ import io.milton.http.SecurityManager;
 import io.milton.http.fs.NullSecurityManager;
 import io.milton.resource.Resource;
 import it.grid.storm.Configuration;
-import it.grid.storm.srm.types.TFileType;
 import it.grid.storm.storagearea.StorageArea;
 import it.grid.storm.storagearea.StorageAreaManager;
 import it.grid.storm.webdav.factory.exceptions.RuntimeApiException;
 import it.grid.storm.webdav.factory.exceptions.StormResourceException;
 import it.grid.storm.xmlrpc.ApiException;
 import it.grid.storm.xmlrpc.BackendApi;
-import it.grid.storm.xmlrpc.outputdata.LsOutputData.SurlInfo;
 
 import java.io.File;
 import java.net.UnknownHostException;
@@ -33,7 +31,7 @@ public final class StormResourceFactory implements ResourceFactory {
 	boolean allowDirectoryBrowsing;
 	String defaultPage;
 	boolean digestAllowed = true;
-	private String ssoPrefix;
+//	private String ssoPrefix;
 	private String localhostname;
 	private BackendApi backendApi;
 	
@@ -84,15 +82,6 @@ public final class StormResourceFactory implements ResourceFactory {
 			if (currentSA != null) {
 				String fsPath = currentSA.getRealPath(uriPath);
 				log.debug("real path: " + fsPath);
-//				Surl surl = new Surl(uriPath);
-//				HttpHelper httpHelper = new HttpHelper(MiltonServlet.request(), MiltonServlet.response());
-//				UserCredentials user = new UserCredentials(httpHelper);
-//				SurlInfo surlInfo;
-//				surlInfo = StormBackendApi.getSurlInfo(getBackendApi(), surl.asString(), user, new RecursionLevel(Recursion.NONE));
-//				return resolveSurlInfo(host, surlInfo, currentSA);				
-				
-//				File requested = resolvePath(root, fsPath);
-				
 				File requested = new File(getRoot(), fsPath);
 				return resolveFile(host, requested, currentSA);
 			}
@@ -110,27 +99,10 @@ public final class StormResourceFactory implements ResourceFactory {
 		} else {
 			r = new StormFileResource(this, file, storageArea);
 		}
-		if (r != null) {
-			r.ssoPrefix = ssoPrefix;
-		}
+//		if (r != null) {
+//			r.ssoPrefix = ssoPrefix;
+//		}
 		return r;
-	}
-	
-	public StormResource resolveSurlInfo(String host, SurlInfo surlInfo, StorageArea storageArea) {
-		StormResource resource = null;
-		if (surlInfo != null) {
-			if (surlInfo.getType().equals(TFileType.DIRECTORY)) {
-				resource = new StormDirectoryResource(this, new File(surlInfo.getStfn()), storageArea);
-			} else if (surlInfo.getType().equals(TFileType.FILE)) {
-				resource = new StormFileResource(this, new File(surlInfo.getStfn()), storageArea);
-			}
-		} else {
-			log.warn("Null surl-info! Impossible to return a StormResource!");
-		}
-		if (resource != null) {
-			resource.ssoPrefix = ssoPrefix;
-		}
-		return resource;
 	}
 
 //	public File resolvePath(File root, String url) {
@@ -225,13 +197,13 @@ public final class StormResourceFactory implements ResourceFactory {
 		this.digestAllowed = digestAllowed;
 	}
 
-	public void setSsoPrefix(String ssoPrefix) {
-		this.ssoPrefix = ssoPrefix;
-	}
-
-	public String getSsoPrefix() {
-		return ssoPrefix;
-	}
+//	public void setSsoPrefix(String ssoPrefix) {
+//		this.ssoPrefix = ssoPrefix;
+//	}
+//
+//	public String getSsoPrefix() {
+//		return ssoPrefix;
+//	}
 
 	public FileContentService getContentService() {
 		return contentService;

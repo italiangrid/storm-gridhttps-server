@@ -3,28 +3,23 @@ package it.grid.storm.webdav.factory;
 import io.milton.http.Auth;
 import io.milton.http.Range;
 import io.milton.http.Request;
-import io.milton.http.XmlWriter;
 import io.milton.http.exceptions.BadRequestException;
 import io.milton.http.exceptions.ConflictException;
 import io.milton.http.exceptions.NotAuthorizedException;
 import io.milton.resource.*;
 import io.milton.servlet.MiltonServlet;
 import it.grid.storm.srm.types.Recursion;
-import it.grid.storm.srm.types.SizeUnit;
-import it.grid.storm.srm.types.TFileType;
 import it.grid.storm.storagearea.StorageArea;
-import it.grid.storm.storagearea.StorageAreaManager;
 import it.grid.storm.HttpHelper;
 import it.grid.storm.webdav.factory.exceptions.RuntimeApiException;
 import it.grid.storm.webdav.factory.exceptions.StormResourceException;
+import it.grid.storm.webdav.factory.html.StormHtmlFolderPage;
 import it.grid.storm.xmlrpc.outputdata.LsOutputData.SurlInfo;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.text.DecimalFormat;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -129,106 +124,18 @@ public class StormDirectoryResource extends StormResource implements MakeCollect
 			NotAuthorizedException, RuntimeApiException, StormResourceException {
 		log.info("Called function for GET DIRECTORY");
 		HttpHelper httpHelper = new HttpHelper(MiltonServlet.request(), MiltonServlet.response());
-		String stfnRoot = "/" + httpHelper.getRequestStringURI().replaceFirst("/", "").split("/")[0];
-		String fsPath = StorageAreaManager.getInstance().getFsRootFromStfn().get(stfnRoot);
-		String subpath = getFile().getCanonicalPath().substring(fsPath.length()).replace('\\', '/');
-		String uri = stfnRoot + subpath;
 		Collection<SurlInfo> entries = StormResourceHelper.doLsDetailed(this, Recursion.NONE).get(0).getSubpathInfo();
-		buildDirectoryPage(out, uri, entries);
+		buildDirectoryPage(out, httpHelper.getRequestURI().getPath(), entries);
 	}
 
 	private void buildDirectoryPage(OutputStream out, String dirPath, Collection<SurlInfo> entries) throws RuntimeApiException,
 			StormResourceException {
-		XmlWriter w = new XmlWriter(out);
-		w.open("html");
-		w.open("head");
-		String cssStyle = HtmlPageBuilder.getEntryListStyle() + HtmlPageBuilder.getH1Style() + HtmlPageBuilder.getMiltonLogoStyle()
-				+ HtmlPageBuilder.getNavigationTdStyle() + HtmlPageBuilder.getNavigationTableStyle() + HtmlPageBuilder.getStormLogoStyle();
-		w.begin("style").writeAtt("type", "text/css").open().writeText(cssStyle).close();
-		w.close("head");
-		w.open("body");
-		w.begin("h1").writeAtt("class", "title").open().writeText("StoRM Gridhttps-server WebDAV").close();
-//		w.begin("img").writeAtt("alt", "").writeAtt("src", HtmlPageBuilder.getStormLogo()).open().close();
-		w.begin("table").writeAtt("class", "navigator").open();
-		w.begin("tr").open().begin("td").open().writeText(this.getStorageArea().getStfn(getFile().getPath())).close().close();
-		w.close("table");
-		w.open("table");
-		w.open("tr");
-		w.begin("td").open().begin("b").open().writeText("name").close().close();
-		w.begin("td").open().begin("b").open().writeText("size").close().close();
-		w.begin("td").open().begin("b").open().writeText("modified").close().close();
-		w.begin("td").open().begin("b").open().writeText("checksum-type").close().close();
-		w.begin("td").open().begin("b").open().writeText("checksum-value").close().close();
-		w.close("tr");
-		//link to parent
-		w.open("tr");
-		w.begin("td").writeAtt("colspan", "5").open();
-		String parentPath = buildParentHref(dirPath);
-		w.begin("a").writeAtt("href", parentPath).open();
-		w.begin("img").writeAtt("alt", "").writeAtt("src", HtmlPageBuilder.getFolderIco()).open().close();
-		w.writeText(".");
-		w.close("a");
-		w.close("td");
-		w.close("tr");
-		
-		SimpleDateFormat dateFormat = new SimpleDateFormat("EEE, d MMM yyyy HH:mm:ss");
-		DecimalFormat decimalFormat = new DecimalFormat("#.##");
-		for (SurlInfo entry : entries) {
-			w.open("tr");
-			w.open("td");
-			// entry name-link
-			String name = entry.getStfn().split("/")[entry.getStfn().split("/").length - 1];
-			String path = buildHref(dirPath, name);
-			if (entry.getType().equals(TFileType.DIRECTORY))
-				w.begin("img").writeAtt("alt", "").writeAtt("src", HtmlPageBuilder.getFolderIco()).open().close();
-			w.begin("a").writeAtt("href", path).open().writeText(name).close();
-			w.close("td");
-			// size
-			w.begin("td").open().writeText(decimalFormat.format(entry.getSize().getSizeIn(SizeUnit.KILOBYTES)) + " KB").close();
-			// modified date
-			w.begin("td").open().writeText(dateFormat.format(entry.getModificationTime())).close();
-			// checksum type
-			String checksumType = entry.getCheckSumType() == null ? "" : entry.getCheckSumType().toString();
-			w.begin("td").open().writeText(checksumType).close();
-			// checksum value
-			String checksumValue = entry.getCheckSumValue() == null ? "" : entry.getCheckSumValue().toString();
-			w.begin("td").open().writeText(checksumValue).close();
-			w.close("tr");
-		}
-		w.close("table");
-		w.close("body");
-//		w.begin("img").writeAtt("alt", "").writeAtt("src", HtmlPageBuilder.getMiltonLogo()).open().close();
-		w.close("html");
-		w.flush();
-	}
-
-	private String buildHref(String uri, String name) {
-		String abUrl = uri;
-		if (!abUrl.endsWith("/")) {
-			abUrl += "/";
-		}
-		if (ssoPrefix == null) {
-			return abUrl + name;
-		} else {
-			// This is to match up with the prefix set on
-			// SimpleSSOSessionProvider in MyCompanyDavServlet
-			String s = insertSsoPrefix(abUrl, ssoPrefix);
-			return s += name;
-		}
-	}
-
-	private String buildParentHref(String uri) {
-		String abUrl = uri;
-		if (abUrl.endsWith("/")) {
-			abUrl = abUrl.substring(0, abUrl.length()-2);
-		}
-		log.debug("abUrl without ending slash: " + abUrl);
-		String[] parts = abUrl.split("/");
-		String lastPart = parts[parts.length-1];
-		log.debug("lastPart: " + lastPart);
-		abUrl = abUrl.substring(0, abUrl.length() - lastPart.length());
-		log.debug("final abUrl: " + abUrl);
-		return abUrl;
+		StormHtmlFolderPage page = new StormHtmlFolderPage(out);
+		page.start();
+		page.addTitle("StoRM Gridhttps-server WebDAV");
+		page.addNavigator(getStorageArea().getStfn(getFile().getPath()));
+		page.addFolderList(dirPath, entries);
+		page.end();
 	}
 	
 	public Long getMaxAgeSeconds(Auth auth) {
@@ -243,13 +150,13 @@ public class StormDirectoryResource extends StormResource implements MakeCollect
 		return null;
 	}
 
-	public static String insertSsoPrefix(String abUrl, String prefix) {
-		// need to insert the ssoPrefix immediately after the host and port
-		int pos = abUrl.indexOf("/", 8);
-		String s = abUrl.substring(0, pos) + "/" + prefix;
-		s += abUrl.substring(pos);
-		return s;
-	}
+//	public static String insertSsoPrefix(String abUrl, String prefix) {
+//		// need to insert the ssoPrefix immediately after the host and port
+//		int pos = abUrl.indexOf("/", 8);
+//		String s = abUrl.substring(0, pos) + "/" + prefix;
+//		s += abUrl.substring(pos);
+//		return s;
+//	}
 
 	public boolean hasChildren() {
 		return (getFile().list().length > 0);
