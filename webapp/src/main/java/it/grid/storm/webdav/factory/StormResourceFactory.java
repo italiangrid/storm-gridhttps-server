@@ -2,7 +2,6 @@ package it.grid.storm.webdav.factory;
 
 import io.milton.http.ResourceFactory;
 import io.milton.http.fs.FileContentService;
-import io.milton.http.fs.SimpleFileContentService;
 import io.milton.http.SecurityManager;
 import io.milton.http.fs.NullSecurityManager;
 import io.milton.resource.Resource;
@@ -39,7 +38,7 @@ public final class StormResourceFactory implements ResourceFactory {
 		setRoot(new File(Configuration.GPFS_ROOT_DIRECTORY));
 		setSecurityManager(new NullSecurityManager());
 		setContextPath(Configuration.WEBDAV_CONTEXT_PATH);
-        contentService = new SimpleFileContentService();
+        contentService = new StormContentService();
         try {
 			this.backendApi = new BackendApi(Configuration.BACKEND_HOSTNAME, new Long(Configuration.BACKEND_PORT));
 		} catch (ApiException e) {
