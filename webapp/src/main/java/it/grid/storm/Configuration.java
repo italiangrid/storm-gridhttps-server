@@ -15,7 +15,7 @@ public class Configuration {
 
 	private static final Logger log = LoggerFactory.getLogger(Configuration.class);
 
-	private static HashMap<String, Object> map = new HashMap<String, Object>();
+	private static HashMap<String, String> map = new HashMap<String, String>();
 
 	private static final ArrayList<String> allowed = new ArrayList<String>() {
 		private static final long serialVersionUID = -1898442175212161454L;
@@ -56,7 +56,7 @@ public class Configuration {
 		}
 	}
 	
-	public static void initFromJSON(Map<String,Object> params) {
+	public static void initFromJSON(Map<String,String> params) {
 		for (String name : params.keySet())
 			if (allowed.contains(name))
 				map.put(name, params.get(name));
@@ -125,49 +125,48 @@ public class Configuration {
 	}
 	
 	public static String getBackendHostname() {
-		return map.containsKey("BACKEND_HOSTNAME") ? (String) map.get("BACKEND_HOSTNAME") : null;
+		return map.containsKey("BACKEND_HOSTNAME") ? map.get("BACKEND_HOSTNAME") : null;
 	}
 	
 	public static int getBackendPort() {
-		return map.containsKey("BACKEND_PORT") ? (Integer) map.get("BACKEND_PORT") : null;
+		return map.containsKey("BACKEND_PORT") ? Integer.parseInt(map.get("BACKEND_PORT")) : null;
 	}
 	
 	public static int getBackendServicePort() {
-		return map.containsKey("BACKEND_SERVICE_PORT") ? (Integer) map.get("BACKEND_SERVICE_PORT") : null;
+		return map.containsKey("BACKEND_SERVICE_PORT") ? Integer.parseInt(map.get("BACKEND_SERVICE_PORT")) : null;
 	}
 	
 	public static String getFrontendHostname() {
-		return map.containsKey("FRONTEND_HOSTNAME") ? (String) map.get("FRONTEND_HOSTNAME") : null;
+		return map.containsKey("FRONTEND_HOSTNAME") ? map.get("FRONTEND_HOSTNAME") : null;
 	}
 	
 	public static int getFrontendPort() {
-		return map.containsKey("FRONTEND_PORT") ? (Integer) map.get("FRONTEND_PORT") : null;
+		return map.containsKey("FRONTEND_PORT") ? Integer.parseInt(map.get("FRONTEND_PORT")) : null;
 	}
 	
 	public static String getWebdavContextPath() {
-		return map.containsKey("WEBDAV_CONTEXTPATH") ? (String) map.get("WEBDAV_CONTEXTPATH") : null;
+		return map.containsKey("WEBDAV_CONTEXTPATH") ? map.get("WEBDAV_CONTEXTPATH") : null;
 	}
 	
 	public static String getFileTransferContextPath() {
-		return map.containsKey("FILETRANSFER_CONTEXTPATH") ? (String) map.get("FILETRANSFER_CONTEXTPATH") : null;
+		return map.containsKey("FILETRANSFER_CONTEXTPATH") ? map.get("FILETRANSFER_CONTEXTPATH") : null;
 	}
 	
 	public static String getGpfsRootDirectory() {
-		return map.containsKey("GPFS_ROOT_DIRECTORY") ? (String) map.get("GPFS_ROOT_DIRECTORY") : null;
+		return map.containsKey("GPFS_ROOT_DIRECTORY") ? map.get("GPFS_ROOT_DIRECTORY") : null;
 	}
 	
 	public static boolean getComputeChecksum() {
-		return map.containsKey("COMPUTE_CHECKSUM") ? (Boolean) map.get("COMPUTE_CHECKSUM") : null;
+		return map.containsKey("COMPUTE_CHECKSUM") ? Boolean.valueOf(map.get("COMPUTE_CHECKSUM")) : null;
 	}
 	
 	public static ChecksumAlgorithm getChecksumType() {
 		ChecksumAlgorithm checksumAlgorithm = null;
 		if (map.containsKey("CHECKSUM_TYPE")) {
-			String algorithm = (String) map.get("CHECKSUM_TYPE");
-			checksumAlgorithm = ChecksumAlgorithm.getChecksumAlgorithm(algorithm);
+			checksumAlgorithm = ChecksumAlgorithm.getChecksumAlgorithm(map.get("CHECKSUM_TYPE"));
 			if (checksumAlgorithm == null) {
-				log.error("checksum algorithm '" + algorithm + "' is not supported!");
-				throw new ChecksumNotSupportedException("Checksum algorithm not supported: " + algorithm);
+				log.error("checksum algorithm '" + map.get("CHECKSUM_TYPE") + "' is not supported!");
+				throw new ChecksumNotSupportedException("Checksum algorithm not supported: " + map.get("CHECKSUM_TYPE"));
 			}
 		} 
 		return checksumAlgorithm;

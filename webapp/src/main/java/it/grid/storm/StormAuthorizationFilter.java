@@ -97,10 +97,10 @@ public class StormAuthorizationFilter implements Filter {
 	}
 
 	@SuppressWarnings("unchecked")
-	private Map<String,Object> parse(String jsonText) throws ServletException {
-		Object params = JSON.parse(jsonText);
-		if (params != null) {
-			return (Map<String,Object>) params;
+	private Map<String, String> parse(String jsonText) throws ServletException {
+		Object decoded = JSON.parse(jsonText);
+		if (decoded != null) {
+			return (Map<String, String>) decoded;
 		}
 		throw new ServletException("Error on retrieving init parameters!");
 	}

@@ -149,14 +149,14 @@ public class StormGridhttpsServer {
 	private Map<String,Object> generateParams() {
 		Map<String, Object> params = new HashMap<String, Object>();
 		params.put("BACKEND_HOSTNAME", backendInfo.getHostname());
-		params.put("BACKEND_PORT", backendInfo.getPort());
-		params.put("BACKEND_SERVICE_PORT", backendInfo.getServicePort());
+		params.put("BACKEND_PORT", String.valueOf(backendInfo.getPort()));
+		params.put("BACKEND_SERVICE_PORT", String.valueOf(backendInfo.getServicePort()));
 		params.put("FRONTEND_HOSTNAME", frontendInfo.getHostname());
-		params.put("FRONTEND_PORT", frontendInfo.getPort());
+		params.put("FRONTEND_PORT", String.valueOf(frontendInfo.getPort()));
 		params.put("GPFS_ROOT_DIRECTORY", gridhttpsInfo.getRootDirectory());
 		params.put("WEBDAV_CONTEXTPATH", gridhttpsInfo.getWebdavContextPath());
 		params.put("FILETRANSFER_CONTEXTPATH", gridhttpsInfo.getFiletransferContextPath());
-		params.put("COMPUTE_CHECKSUM", gridhttpsInfo.isComputeChecksum());
+		params.put("COMPUTE_CHECKSUM", String.valueOf(gridhttpsInfo.isComputeChecksum()));
 		params.put("CHECKSUM_TYPE", gridhttpsInfo.getChecksumType());
 		return params;
 	}
