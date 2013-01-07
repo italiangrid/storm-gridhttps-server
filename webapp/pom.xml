@@ -36,17 +36,13 @@
 			<groupId>it.grid.storm</groupId>
 			<artifactId>storagearea</artifactId>
 		</dependency>
-	
-		<dependency>
-			<groupId>com.googlecode.json-simple</groupId>
-			<artifactId>json-simple</artifactId>
-		</dependency>
-	
+
 		<dependency>
 			<groupId>commons-lang</groupId>
 			<artifactId>commons-lang</artifactId>
+			<version>${commonsLangVersion}</version>
 		</dependency>
-	
+
 		<dependency>
 			<groupId>io.milton</groupId>
 			<artifactId>milton-server-ce</artifactId>
@@ -113,15 +109,5 @@
 				</configuration>
 			</plugin>
 		</plugins>
-		<!-- <plugins> -->
-		<!-- <plugin> -->
-		<!-- <groupId>org.apache.maven.plugins</groupId> -->
-		<!-- <artifactId>maven-war-plugin</artifactId> -->
-		<!-- <version>2.3</version> -->
-		<!-- <configuration> -->
-		<!-- <failOnMissingWebXml>false</failOnMissingWebXml> -->
-		<!-- </configuration> -->
-		<!-- </plugin> -->
-		<!-- </plugins> -->
 	</build>
 </project>
