@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.util.List;
 import java.util.ListIterator;
+import java.util.Map;
 
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;
@@ -31,9 +32,7 @@ import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.bouncycastle.util.encoders.Base64;
-import org.json.simple.JSONObject;
-import org.json.simple.JSONValue;
+import org.eclipse.jetty.util.ajax.JSON;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -49,9 +48,7 @@ public class StormAuthorizationFilter implements Filter {
 	
 	public void init(FilterConfig fc) throws ServletException {
 		Configuration.loadDefaultConfiguration();
-		String decodedStr = new String(Base64.decode(fc.getInitParameter("params")));
-		log.debug("decoded json string: " + decodedStr);
-		Configuration.initFromJSON(parse(decodedStr));
+		Configuration.initFromJSON(parse(fc.getInitParameter("params")));
 		Configuration.print();
 		if (!Configuration.isValid()) {
 			log.error("Not a valid configuration!");
@@ -99,12 +96,13 @@ public class StormAuthorizationFilter implements Filter {
 		}
 	}
 
-	private JSONObject parse(String jsonText) throws ServletException {
-		JSONObject params = null;		
-		params = (JSONObject) JSONValue.parse(jsonText);
-		if (params == null)
-			throw new ServletException("Error on retrieving init parameters!");
-		return params;
+	@SuppressWarnings("unchecked")
+	private Map<String,Object> parse(String jsonText) throws ServletException {
+		Object params = JSON.parse(jsonText);
+		if (params != null) {
+			return (Map<String,Object>) params;
+		}
+		throw new ServletException("Error on retrieving init parameters!");
 	}
 	
 	private void initSession() {

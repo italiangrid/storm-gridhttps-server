@@ -3,13 +3,11 @@ package it.grid.storm;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
 
 import it.grid.storm.checksum.ChecksumNotSupportedException;
 import it.grid.storm.checksum.Checksum.ChecksumAlgorithm;
 
-import org.json.simple.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -58,14 +56,10 @@ public class Configuration {
 		}
 	}
 	
-	@SuppressWarnings("rawtypes")
-	public static void initFromJSON(JSONObject params) {
-		Iterator iter = params.entrySet().iterator();
-		while (iter.hasNext()) {
-			Map.Entry entry = (Map.Entry) iter.next();
-			if (allowed.contains((String) entry.getKey()))
-				map.put((String) entry.getKey(), entry.getValue());
-		}
+	public static void initFromJSON(Map<String,Object> params) {
+		for (String name : params.keySet())
+			if (allowed.contains(name))
+				map.put(name, params.get(name));
 	}
 
 	public static boolean isValid() {

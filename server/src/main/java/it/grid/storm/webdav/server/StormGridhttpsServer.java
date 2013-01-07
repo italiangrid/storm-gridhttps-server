@@ -14,8 +14,6 @@ import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.apache.commons.codec.binary.Base64;
-import org.apache.commons.codec.binary.Hex;
 import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.Handler;
 import org.eclipse.jetty.server.Server;
@@ -24,9 +22,9 @@ import org.eclipse.jetty.server.handler.HandlerCollection;
 import org.eclipse.jetty.server.nio.SelectChannelConnector;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
+import org.eclipse.jetty.util.ajax.JSON;
 import org.italiangrid.utils.https.SSLOptions;
 import org.italiangrid.utils.https.ServerFactory;
-import org.json.simple.JSONValue;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -167,11 +165,9 @@ public class StormGridhttpsServer {
 		XML doc = new XML(webFile);
 		String query = "/j2ee:web-app/j2ee:filter[@id='stormAuthorizationFilter']/j2ee:init-param/j2ee:param-value";
 		NodeList initParams = doc.getNodes(query, new WebNamespaceContext(null));
-		String jsonStr = JSONValue.toJSONString(generateParams());
+		String jsonStr = JSON.toString(generateParams());
 		log.debug("json string: " + jsonStr);
-		String encodedStr = new String(Base64.encodeBase64(Hex.decodeHex(jsonStr.toCharArray())));
-		log.debug("encoded json string: " + encodedStr);
-		((Element) initParams.item(0)).setTextContent(encodedStr);
+		((Element) initParams.item(0)).setTextContent(jsonStr);
 		doc.save();
 	}
 
