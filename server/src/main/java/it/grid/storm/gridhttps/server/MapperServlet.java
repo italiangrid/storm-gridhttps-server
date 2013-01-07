@@ -10,7 +10,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package it.grid.storm.gridhttps.servlet;
+package it.grid.storm.gridhttps.server;
 
 //import it.grid.storm.gridhttps.Configuration;
 import it.grid.storm.storagearea.StorageArea;

@@ -1,8 +1,8 @@
-package it.grid.storm.webdav.server.data;
+package it.grid.storm.gridhttps.server.data;
+
+import it.grid.storm.gridhttps.server.DefaultConfiguration;
 
 import java.io.File;
-
-import it.grid.storm.webdav.DefaultConfiguration;
 
 import org.italiangrid.utils.https.SSLOptions;
 

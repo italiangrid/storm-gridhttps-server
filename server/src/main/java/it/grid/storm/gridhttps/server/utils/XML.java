@@ -1,4 +1,4 @@
-package it.grid.storm.webdav.utils;
+package it.grid.storm.gridhttps.server.utils;
 
 import java.io.File;
 import java.io.IOException;

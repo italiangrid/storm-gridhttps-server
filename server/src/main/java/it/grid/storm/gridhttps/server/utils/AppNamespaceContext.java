@@ -1,4 +1,4 @@
-package it.grid.storm.webdav.utils;
+package it.grid.storm.gridhttps.server.utils;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -8,11 +8,11 @@ import java.util.Map;
 import javax.xml.XMLConstants;
 import javax.xml.namespace.NamespaceContext;
 
-public class WebNamespaceContext implements NamespaceContext {
+public class AppNamespaceContext implements NamespaceContext {
 		@SuppressWarnings("unused")
 		final private Map<String, String> prefixMap;
 
-		public WebNamespaceContext(Map<String, String> prefixMap) {
+		public AppNamespaceContext(Map<String, String> prefixMap) {
 			if (prefixMap != null) {
 				this.prefixMap = Collections.unmodifiableMap(new HashMap<String, String>(prefixMap));
 			} else {
@@ -32,9 +32,9 @@ public class WebNamespaceContext implements NamespaceContext {
 			if (prefix == null)
 				throw new NullPointerException("Invalid Namespace Prefix");
 //			else if (prefix.equals(XMLConstants.DEFAULT_NS_PREFIX))
-//				return "http://java.sun.com/xml/ns/j2ee";
-			else if ("j2ee".equals(prefix))
-				return "http://java.sun.com/xml/ns/j2ee";
+//				return "http://www.springframework.org/schema/beans";
+			else if ("spring".equals(prefix))
+				return "http://www.springframework.org/schema/beans";
 			else if ("xsi".equals(prefix))
 				return "http://www.w3.org/2001/XMLSchema-instance";
 			else

@@ -1,4 +1,4 @@
-package it.grid.storm.webdav;
+package it.grid.storm.gridhttps.server;
 
 public class DefaultConfiguration {
 

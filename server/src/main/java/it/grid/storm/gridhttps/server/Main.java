@@ -1,12 +1,10 @@
-package it.grid.storm.webdav;
+package it.grid.storm.gridhttps.server;
 
+import it.grid.storm.gridhttps.server.data.StormBackend;
+import it.grid.storm.gridhttps.server.data.StormFrontend;
+import it.grid.storm.gridhttps.server.data.StormGridhttps;
+import it.grid.storm.gridhttps.server.utils.MyCommandLineParser;
 import it.grid.storm.storagearea.StorageAreaManager;
-import it.grid.storm.webdav.server.*;
-import it.grid.storm.webdav.server.data.StormBackend;
-import it.grid.storm.webdav.server.data.StormFrontend;
-import it.grid.storm.webdav.server.data.StormGridhttps;
-import it.grid.storm.webdav.utils.*;
-
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;

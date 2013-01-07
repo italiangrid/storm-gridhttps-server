@@ -1,6 +1,7 @@
-package it.grid.storm.webdav.server.data;
+package it.grid.storm.gridhttps.server.data;
 
-import it.grid.storm.webdav.DefaultConfiguration;
+import it.grid.storm.gridhttps.server.DefaultConfiguration;
+
 
 public class MapperServlet {
 	private String contextPath;
