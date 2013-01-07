@@ -141,7 +141,7 @@ public class StormAuthorizationUtils {
 		}
 		URI uri;
 		try {
-			uri = new URI("http", null, Configuration.BACKEND_HOSTNAME, Configuration.BACKEND_SERVICE_PORT, path, qparams.isEmpty() ? null
+			uri = new URI("http", null, Configuration.getBackendHostname(), Configuration.getBackendServicePort(), path, qparams.isEmpty() ? null
 					: URLEncodedUtils.format(qparams, "UTF-8"), null);
 		} catch (URISyntaxException e) {
 			log.error("Unable to build Authorization Service URI. URISyntaxException " + e.getLocalizedMessage());

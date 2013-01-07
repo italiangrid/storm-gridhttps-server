@@ -21,6 +21,9 @@ public class StormGridhttps {
 	private File rootDirectory;
 	private String webdavContextPath;
 	private String filetransferContextPath;
+	
+	private boolean computeChecksum;
+	private String checksumType;
 
 	public StormGridhttps() {
 		this.setHttpPort(DefaultConfiguration.STORM_GHTTPS_HTTP_PORT);
@@ -42,6 +45,8 @@ public class StormGridhttps {
 		this.setFiletransferContextPath(DefaultConfiguration.FILETRANSFER_CONTEXTPATH);
 		this.setWebdavContextPath(DefaultConfiguration.WEBAPP_CONTEXTPATH);
 		this.setRootDirectory(new File(DefaultConfiguration.ROOTDIRECTORY));
+		this.setComputeChecksum(DefaultConfiguration.COMPUTE_CHECKSUM);
+		this.setChecksumType(DefaultConfiguration.CHECKSUM_TYPE);
 	}
 
 	public String getHostname() {
@@ -169,6 +174,22 @@ public class StormGridhttps {
 
 	public void setFiletransferContextPath(String filetransferContextPath) {
 		this.filetransferContextPath = filetransferContextPath;
+	}
+
+	public boolean isComputeChecksum() {
+		return computeChecksum;
+	}
+
+	public void setComputeChecksum(boolean computeChecksum) {
+		this.computeChecksum = computeChecksum;
+	}
+
+	public String getChecksumType() {
+		return checksumType;
+	}
+
+	public void setChecksumType(String checksumType) {
+		this.checksumType = checksumType;
 	}
 
 }

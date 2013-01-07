@@ -11,6 +11,8 @@ import it.grid.storm.webdav.utils.XML;
 import it.grid.storm.webdav.utils.Zip;
 
 import java.io.File;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.Handler;
@@ -22,6 +24,7 @@ import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
 import org.italiangrid.utils.https.SSLOptions;
 import org.italiangrid.utils.https.ServerFactory;
+import org.json.simple.JSONValue;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -143,27 +146,28 @@ public class StormGridhttpsServer {
 		undeployWebapp();
 	}
 
+	private Map<String,Object> generateParams() {
+		Map<String, Object> params = new HashMap<String, Object>();
+		params.put("BACKEND_HOSTNAME", backendInfo.getHostname());
+		params.put("BACKEND_PORT", backendInfo.getPort());
+		params.put("BACKEND_SERVICE_PORT", backendInfo.getServicePort());
+		params.put("FRONTEND_HOSTNAME", frontendInfo.getHostname());
+		params.put("FRONTEND_PORT", frontendInfo.getPort());
+		params.put("GPFS_ROOT_DIRECTORY", gridhttpsInfo.getRootDirectory());
+		params.put("WEBDAV_CONTEXTPATH", gridhttpsInfo.getWebdavContextPath());
+		params.put("FILETRANSFER_CONTEXTPATH", gridhttpsInfo.getFiletransferContextPath());
+		params.put("COMPUTE_CHECKSUM", gridhttpsInfo.isComputeChecksum());
+		params.put("CHECKSUM_TYPE", gridhttpsInfo.getChecksumType());
+		return params;
+	}
+	
 	private void configureWebFile(File webFile) throws Exception {
-		// modify web.xml file
 		XML doc = new XML(webFile);
 		String query = "/j2ee:web-app/j2ee:filter[@id='stormAuthorizationFilter']/j2ee:init-param/j2ee:param-value";
 		NodeList initParams = doc.getNodes(query, new WebNamespaceContext(null));
-		log.debug("setting storm backend hostname as '" + backendInfo.getHostname() + "'...");
-		((Element) initParams.item(0)).setTextContent(backendInfo.getHostname());
-		log.debug("setting storm backend port as '" + backendInfo.getPort() + "'...");
-		((Element) initParams.item(1)).setTextContent(String.valueOf(backendInfo.getPort()));
-		log.debug("setting storm backend service port as '" + backendInfo.getServicePort() + "'...");
-		((Element) initParams.item(2)).setTextContent(String.valueOf(backendInfo.getServicePort()));
-		log.debug("setting storm frontend hostname as '" + frontendInfo.getHostname() + "'...");
-		((Element) initParams.item(3)).setTextContent(frontendInfo.getHostname());
-		log.debug("setting storm frontend port as '" + frontendInfo.getPort() + "'...");
-		((Element) initParams.item(4)).setTextContent(String.valueOf(frontendInfo.getPort()));
-		log.debug("setting root directory as '" + gridhttpsInfo.getRootDirectory() + "'...");
-		((Element) initParams.item(5)).setTextContent(gridhttpsInfo.getRootDirectory().getPath());
-		log.debug("setting webdav service context path as '" + gridhttpsInfo.getWebdavContextPath() + "'...");
-		((Element) initParams.item(6)).setTextContent(gridhttpsInfo.getWebdavContextPath());
-		log.debug("setting filetransfer service context path as '" + gridhttpsInfo.getFiletransferContextPath() + "'...");
-		((Element) initParams.item(7)).setTextContent(gridhttpsInfo.getFiletransferContextPath());
+		String jsonText = JSONValue.toJSONString(generateParams());
+		log.debug("encoded params: " + jsonText);
+		((Element) initParams.item(0)).setTextContent(jsonText);
 		doc.save();
 	}
 

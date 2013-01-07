@@ -35,12 +35,12 @@ public final class StormResourceFactory implements ResourceFactory {
 	private BackendApi backendApi;
 	
 	public StormResourceFactory() throws UnknownHostException {
-		setRoot(new File(Configuration.GPFS_ROOT_DIRECTORY));
+		setRoot(new File(Configuration.getGpfsRootDirectory()));
 		setSecurityManager(new NullSecurityManager());
-		setContextPath(Configuration.WEBDAV_CONTEXT_PATH);
+		setContextPath(Configuration.getWebdavContextPath());
         contentService = new StormContentService();
         try {
-			this.backendApi = new BackendApi(Configuration.BACKEND_HOSTNAME, new Long(Configuration.BACKEND_PORT));
+			this.backendApi = new BackendApi(Configuration.getBackendHostname(), new Long(Configuration.getBackendPort()));
 		} catch (ApiException e) {
 			log.error(e.getMessage());
 		}

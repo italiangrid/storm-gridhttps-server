@@ -1,6 +1,7 @@
 package it.grid.storm.webdav.factory;
 
 import io.milton.http.fs.FileContentService;
+import it.grid.storm.Configuration;
 import it.grid.storm.checksum.ChecksumFileReadException;
 import it.grid.storm.checksum.ChecksumNotSupportedException;
 import it.grid.storm.checksum.Checksum.ChecksumAlgorithm;
@@ -11,12 +12,14 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.zip.Adler32;
 import java.util.zip.CRC32;
 import java.util.zip.CheckedInputStream;
 
+import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -26,8 +29,12 @@ public class StormContentService implements FileContentService {
 	private static final int BUFFER_SIZE = 4096;
 
 	public void setFileContent(File file, InputStream in) throws FileNotFoundException, IOException {
-		String checksum = computeCopyWithChecksum(in, new FileOutputStream(file), ChecksumAlgorithm.ADLER32.name());
-		System.out.println("checksum: " + checksum);
+		if (Configuration.getComputeChecksum()) {
+			String checksum = computeCopyWithChecksum(in, new FileOutputStream(file), Configuration.getChecksumType());
+			log.debug("checksum: " + checksum);
+		} else {
+			doSimpleSetFileContent(in, new FileOutputStream(file));
+		}
 	}
 
 	public InputStream getFileContent(File file) throws FileNotFoundException {
@@ -35,12 +42,16 @@ public class StormContentService implements FileContentService {
 		return fin;
 	}
 
-	private String computeCopyWithChecksum(InputStream inputStream, FileOutputStream outputStream, String algorithm) {
+	private void doSimpleSetFileContent(InputStream in, OutputStream out) throws FileNotFoundException, IOException {
+        try {
+            IOUtils.copy(in, out);
+        } finally {
+            IOUtils.closeQuietly(out);
+        }
+    }
+	
+	private String computeCopyWithChecksum(InputStream inputStream, FileOutputStream outputStream, ChecksumAlgorithm checksumAlgorithm) {
 
-		ChecksumAlgorithm checksumAlgorithm = ChecksumAlgorithm.getChecksumAlgorithm(algorithm);
-		if (checksumAlgorithm == null) {
-			throw new ChecksumNotSupportedException("Checksum algorithm not supported: " + algorithm);
-		}
 		String checksum;
 		try {
 			if (checksumAlgorithm == ChecksumAlgorithm.CRC32) {
@@ -55,7 +66,7 @@ public class StormContentService implements FileContentService {
 		} catch (IOException e) {
 			throw new ChecksumFileReadException("Error reading inputstream", e);
 		} catch (NoSuchAlgorithmException e) {
-			throw new ChecksumNotSupportedException("Checksum algorithm not supported: " + algorithm);
+			throw new ChecksumNotSupportedException("Checksum algorithm not supported: " + checksumAlgorithm.toString());
 		} finally {
 			if (inputStream != null)
 				try {

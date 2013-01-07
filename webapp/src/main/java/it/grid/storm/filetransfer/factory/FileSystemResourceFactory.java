@@ -38,11 +38,11 @@ public final class FileSystemResourceFactory implements ResourceFactory {
 
 	public FileSystemResourceFactory() throws RuntimeApiException, UnknownHostException {
 		log.info("FileSystem Resource factory init");
-		setRoot(new File(Configuration.GPFS_ROOT_DIRECTORY));
+		setRoot(new File(Configuration.getGpfsRootDirectory()));
 		setSecurityManager(new NullSecurityManager());
-		setContextPath(Configuration.FILETRANSFER_CONTEXTPATH);
+		setContextPath(Configuration.getFileTransferContextPath());
         setContentService(new SimpleFileContentService());
-        setBackend(StormBackendApi.getBackend(Configuration.BACKEND_HOSTNAME, Configuration.BACKEND_PORT));
+        setBackend(StormBackendApi.getBackend(Configuration.getBackendHostname(), Configuration.getBackendPort()));
         java.net.InetAddress localMachine = java.net.InetAddress.getLocalHost();
         setLocalhostname(localMachine.getHostName());
 	}

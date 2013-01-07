@@ -31,37 +31,33 @@ import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
+import org.json.simple.parser.ParseException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class StormAuthorizationFilter implements Filter {
 
 	private static final Logger log = LoggerFactory.getLogger(StormAuthorizationFilter.class);
-	
+
 	private HttpHelper httpHelper;
 	private UserCredentials user;
 
 	public void destroy() {
 	}
-
+	
 	public void init(FilterConfig fc) throws ServletException {
-		try {
-			Configuration.BACKEND_HOSTNAME = fc.getInitParameter("stormBackendHostname");
-			Configuration.BACKEND_PORT = Integer.valueOf(fc.getInitParameter("stormBackendPort"));
-			Configuration.BACKEND_SERVICE_PORT = Integer.valueOf(fc.getInitParameter("stormBackendServicePort"));
-			Configuration.FRONTEND_HOSTNAME = fc.getInitParameter("stormFrontendHostname");
-			Configuration.FRONTEND_PORT = Integer.valueOf(fc.getInitParameter("stormFrontendPort"));
-			Configuration.GPFS_ROOT_DIRECTORY = fc.getInitParameter("rootDirectory");
-			Configuration.WEBDAV_CONTEXT_PATH = fc.getInitParameter("webdavContextPath");
-			Configuration.FILETRANSFER_CONTEXTPATH = fc.getInitParameter("fileTransferContextPath");
-		} catch (Exception e) {
-			log.error(e.getMessage());
-			throw new ServletException(e.getMessage());
+		Configuration.loadDefaultConfiguration();
+		Configuration.initFromJSON(parse(fc.getInitParameter("params")));
+		Configuration.print();
+		if (!Configuration.isValid()) {
+			log.error("Not a valid configuration!");
+			throw new ServletException("Not a valid Configuration!");
 		}
-		printConfiguration();
 		/* Load Storage Area List */
 		try {
-			StorageAreaManager.init(Configuration.BACKEND_HOSTNAME, Configuration.BACKEND_SERVICE_PORT);
+			StorageAreaManager.init(Configuration.getBackendHostname(), Configuration.getBackendPort());
 		} catch (Exception e) {
 			log.error(e.getMessage());
 			throw new ServletException(e.getMessage());
@@ -75,7 +71,7 @@ public class StormAuthorizationFilter implements Filter {
 		initSession();
 		String requestedPath = getHttpHelper().getRequestURI().getPath();
 		log.debug("Requested-URI: " + requestedPath);
-		
+
 		if (isRootPath(requestedPath)) {
 			log.debug("Requested-URI is root");
 			processRootRequest();
@@ -95,11 +91,26 @@ public class StormAuthorizationFilter implements Filter {
 					sendError(HttpServletResponse.SC_UNAUTHORIZED, status.getReason());
 				}
 			} else {
-				sendError(HttpServletResponse.SC_BAD_REQUEST, "Unable to identify the right handler to evaluate the requested path " + requestedPath);
+				sendError(HttpServletResponse.SC_BAD_REQUEST, "Unable to identify the right handler to evaluate the requested path "
+						+ requestedPath);
 			}
 		}
 	}
 
+	private JSONObject parse(String jsonText) throws ServletException {
+		JSONParser parser = new JSONParser();		
+		JSONObject params = null;		
+		try {
+			params = (JSONObject) parser.parse(jsonText);
+			if (params == null)
+				throw new ServletException("Error on retrieving init parameters!");
+		} catch (ParseException e) {
+			log.error(e.getMessage());
+			throw new ServletException(e.getMessage());
+		}
+		return params;
+	}
+	
 	private void initSession() {
 		getHttpHelper().getRequest().getSession(true);
 		getHttpHelper().getRequest().getSession().setAttribute("forced", false);
@@ -114,12 +125,12 @@ public class StormAuthorizationFilter implements Filter {
 			sendRootPage();
 		}
 	}
-	
+
 	private AuthorizationFilter getAuthorizationHandler(String path) {
 		try {
 			if (isFileTransferRequest(path)) {
 				log.info("Received a file-transfer request");
-				return new FileTransferAuthorizationFilter(httpHelper, File.separator + Configuration.FILETRANSFER_CONTEXTPATH);
+				return new FileTransferAuthorizationFilter(httpHelper, File.separator + Configuration.getFileTransferContextPath());
 			} else {
 				log.info("Received a webdav request");
 				return new WebDAVAuthorizationFilter(httpHelper);
@@ -142,9 +153,9 @@ public class StormAuthorizationFilter implements Filter {
 	private boolean isFavicon(String requestedPath) {
 		return requestedPath.equals("/favicon.ico");
 	}
-	
+
 	private boolean isFileTransferRequest(String requestedURI) {
-		return requestedURI.startsWith(File.separator + Configuration.FILETRANSFER_CONTEXTPATH);
+		return requestedURI.startsWith(File.separator + Configuration.getFileTransferContextPath());
 	}
 
 	private void sendError(int errorCode, String errorMessage) {
@@ -156,20 +167,11 @@ public class StormAuthorizationFilter implements Filter {
 		}
 	}
 
-	private void printConfiguration() {
-		log.debug("StoRM-Authorization-filter init-parameters' values:");
-		log.debug(" - stormBackendHostname    : " + Configuration.BACKEND_HOSTNAME);
-		log.debug(" - stormBackendPort        : " + Configuration.BACKEND_PORT);
-		log.debug(" - stormBackendServicePort : " + Configuration.BACKEND_SERVICE_PORT);
-		log.debug(" - stormFrontendHostname   : " + Configuration.FRONTEND_HOSTNAME);
-		log.debug(" - stormFrontendPort       : " + Configuration.FRONTEND_PORT);
-	}
-
 	private void doPing() {
 		// doPing
-		log.info("ping " + Configuration.BACKEND_HOSTNAME + ":" + Configuration.BACKEND_PORT);
+		log.info("ping " + Configuration.getBackendHostname() + ":" + Configuration.getBackendPort());
 		try {
-			PingOutputData output = StormResourceHelper.doPing(Configuration.BACKEND_HOSTNAME, Configuration.BACKEND_PORT, getUser());
+			PingOutputData output = StormResourceHelper.doPing(Configuration.getBackendHostname(), Configuration.getBackendPort(), getUser());
 			log.info(output.getBeOs());
 			log.info(output.getBeVersion());
 			log.info(output.getVersionInfo());
@@ -189,10 +191,10 @@ public class StormAuthorizationFilter implements Filter {
 		List<StorageArea> sas = StorageAreaManager.getInstance().getStorageAreas();
 		ListIterator<StorageArea> li = sas.listIterator();
 		while (li.hasNext()) {
-		   StorageArea current = li.next();
-		   if (!hasStorageAreaAccess(current))
-			   li.remove();
-		  }
+			StorageArea current = li.next();
+			if (!hasStorageAreaAccess(current))
+				li.remove();
+		}
 		page.addStorageAreaList(sas);
 		page.end();
 	}
@@ -200,7 +202,7 @@ public class StormAuthorizationFilter implements Filter {
 	private boolean hasStorageAreaAccess(StorageArea sa) {
 		return (sa.getProtocols().contains(getHttpHelper().getRequestProtocol()) && isUserAuthorized(sa));
 	}
-	
+
 	private boolean isUserAuthorized(StorageArea sa) {
 		boolean response = false;
 		try {

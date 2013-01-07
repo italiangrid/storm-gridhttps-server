@@ -8,36 +8,8 @@
 		<filter-name>stormAuthorizationFilter</filter-name>
 		<filter-class>it.grid.storm.StormAuthorizationFilter</filter-class>
 		<init-param>
-			<param-name>stormBackendHostname</param-name>
-			<param-value>_TO_DEFINE_</param-value>
-		</init-param>
-		<init-param>
-			<param-name>stormBackendPort</param-name>
-			<param-value>_TO_DEFINE_</param-value>
-		</init-param>
-		<init-param>
-			<param-name>stormBackendServicePort</param-name>
-			<param-value>_TO_DEFINE_</param-value>
-		</init-param>
-		<init-param>
-			<param-name>stormFrontendHostname</param-name>
-			<param-value>_TO_DEFINE_</param-value>
-		</init-param>
-		<init-param>
-			<param-name>stormFrontendPort</param-name>
-			<param-value>_TO_DEFINE_</param-value>
-		</init-param>
-		<init-param>
-			<param-name>rootDirectory</param-name>
-			<param-value>_TO_DEFINE_</param-value>
-		</init-param>
-		<init-param>
-			<param-name>webdavContextPath</param-name>
-			<param-value>_TO_DEFINE_</param-value>
-		</init-param>
-		<init-param>
-			<param-name>fileTransferContextPath</param-name>
-			<param-value>_TO_DEFINE_</param-value>
+			<param-name>params</param-name>
+			<param-value>_JSON_ENCODED_STRING_VALUE_</param-value>
 		</init-param>
 	</filter>
 

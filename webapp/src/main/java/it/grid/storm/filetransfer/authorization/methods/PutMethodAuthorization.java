@@ -28,7 +28,7 @@ public class PutMethodAuthorization extends AbstractMethodAuthorization {
 	}
 
 	private String stripContext(String url) {
-		return url.replaceFirst(File.separator + Configuration.FILETRANSFER_CONTEXTPATH, "");
+		return url.replaceFirst(File.separator + Configuration.getFileTransferContextPath(), "");
 	}
 	
 	public AuthorizationStatus isUserAuthorized() {
@@ -75,7 +75,7 @@ public class PutMethodAuthorization extends AbstractMethodAuthorization {
 		BackendApi backend;
 		SurlArrayRequestOutputData outputSPtP;
 		try {
-			backend = StormBackendApi.getBackend(Configuration.BACKEND_HOSTNAME, Configuration.BACKEND_PORT);
+			backend = StormBackendApi.getBackend(Configuration.getBackendHostname(), Configuration.getBackendPort());
 			outputSPtP = StormBackendApi.prepareToPutStatus(backend, surl.asString(), getUser());
 		} catch (RuntimeApiException e) {
 			log.error(e.getMessage());

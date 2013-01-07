@@ -29,6 +29,8 @@ public class DefaultConfiguration {
 	
 	public final static String WEBAPP_CONTEXTPATH = "";
 	public final static String FILETRANSFER_CONTEXTPATH = "fileTransfer";
-	public final static String ROOTDIRECTORY = "/";
 	
+	public final static String ROOTDIRECTORY = "/";
+	public final static boolean COMPUTE_CHECKSUM = true;
+	public final static String CHECKSUM_TYPE = "adler32";
 }

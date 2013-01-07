@@ -38,10 +38,6 @@
 # GridHTTPs file-transfer service context-path
 # Default: fileTransfer
 #filetransfer.context-path = fileTransfer
-# GridHTTPs root directory - the base directory of the storage areas fs-rootDirectories retrieved
-# Default: /
-#root-directory = /
-
 
 [connectors]
 # ============================
@@ -86,4 +82,17 @@ backend.hostname =
 #backend.srm-service.port = 8080
 # StoRM SRM EndPoint
 # Default: STORM_BACKEND_HOSTNAME:8444
-#srm.endpoint = ${backend.hostname}:8444 
+#srm.endpoint = ${backend.hostname}:8444
+# StoRM storage-areas' fsRoot base directory
+# Default: /
+#root-directory = /
+
+# If compute-checksum is true, for the checksum-type specified a valid checksum-value is computed for every file created
+# Default: true
+#compute-checksum = true
+
+# Checksum-type specify the kind of algorithm has to be used to compute checksum, if compute-checksum is true.
+# Default: adler32 (other values: ...)
+#checksum-type = adler32
+
+

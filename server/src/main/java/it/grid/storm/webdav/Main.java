@@ -173,8 +173,6 @@ public class Main {
 			stormGridhttps.setWebdavContextPath(configuration.get("service", "webdav.context-path"));
 		if (configuration.get("service").containsKey("filetransfer.context-path"))
 			stormGridhttps.setFiletransferContextPath(configuration.get("service", "filetransfer.context-path"));
-		if (configuration.get("service").containsKey("root-directory"))
-			stormGridhttps.setRootDirectory(new File(configuration.get("service", "root-directory")));
 
 		/* connectors */
 		if (!configuration.keySet().contains("connectors"))
@@ -208,6 +206,12 @@ public class Main {
 			stormFrontend.setHostname(configuration.get("backend", "srm.endpoint").split(":")[0]);
 			stormFrontend.setPort(Integer.valueOf(configuration.get("backend", "srm.endpoint").split(":")[1]));
 		}
+		if (configuration.get("backend").containsKey("root-directory"))
+			stormGridhttps.setRootDirectory(new File(configuration.get("backend", "root-directory")));
+		if (configuration.get("backend").containsKey("compute-checksum"))
+			stormGridhttps.setComputeChecksum(configuration.get("backend", "compute-checksum", boolean.class));
+		if (configuration.get("backend").containsKey("checksum-type"))
+			stormGridhttps.setChecksumType(configuration.get("backend", "checksum-type"));
 	}
 
 	private static void printConfiguration() {
