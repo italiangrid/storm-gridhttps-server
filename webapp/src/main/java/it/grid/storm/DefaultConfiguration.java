@@ -21,11 +21,11 @@ public class DefaultConfiguration {
 		put("CHECKSUM_TYPE", ChecksumAlgorithm.ADLER32.name());
 	}};
 
-	public static String get(String name) {
+	public static String getValue(String name) {
 		return map.get(name);
 	}
 	
-	public static Set<String> keys() {
+	public static Set<String> getKeys() {
 		return map.keySet();
 	}
 	

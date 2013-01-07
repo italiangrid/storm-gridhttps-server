@@ -50,9 +50,9 @@ public class Configuration {
 	
 	public static void loadDefaultConfiguration() {
 		map.clear();
-		for (String name : DefaultConfiguration.keys()) {
+		for (String name : DefaultConfiguration.getKeys()) {
 			if (allowed.contains(name))
-				map.put(name, DefaultConfiguration.get(name));
+				map.put(name, DefaultConfiguration.getValue(name));
 		}
 	}
 	
