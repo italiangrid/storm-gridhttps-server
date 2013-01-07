@@ -3,11 +3,11 @@
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-2.0.xsd">
 
-	<bean id="milton.fs.resource.factory" class="it.grid.storm.webdav.factory.StormResourceFactory" />
+	<bean id="milton.fs.resource.factory" class="it.grid.storm.gridhttps.webapp.webdav.factory.StormResourceFactory" />
 
-	<bean id="webdav-fs-webapp.extra.property" class="it.grid.storm.webdav.factory.StormPropertySource" />
+	<bean id="webdav-fs-webapp.extra.property" class="it.grid.storm.gridhttps.webapp.webdav.factory.StormPropertySource" />
 
-	<bean id="webdav-mainfilter" class="it.grid.storm.webdav.StormStandardFilter" />
+	<bean id="webdav-mainfilter" class="it.grid.storm.gridhttps.webapp.webdav.StormStandardFilter" />
 
 	<bean id="milton.http.manager" class="io.milton.config.HttpManagerBuilder">
 		<property name="mainResourceFactory" ref="milton.fs.resource.factory" />
