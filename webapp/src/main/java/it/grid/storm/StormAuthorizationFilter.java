@@ -31,7 +31,7 @@ import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.commons.lang.StringEscapeUtils;
+import org.bouncycastle.util.encoders.Base64;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONValue;
 import org.slf4j.Logger;
@@ -49,7 +49,9 @@ public class StormAuthorizationFilter implements Filter {
 	
 	public void init(FilterConfig fc) throws ServletException {
 		Configuration.loadDefaultConfiguration();
-		Configuration.initFromJSON(parse(fc.getInitParameter("params")));
+		String decodedStr = new String(Base64.decode(fc.getInitParameter("params")));
+		log.debug("decoded json string: " + decodedStr);
+		Configuration.initFromJSON(parse(decodedStr));
 		Configuration.print();
 		if (!Configuration.isValid()) {
 			log.error("Not a valid configuration!");
@@ -99,7 +101,7 @@ public class StormAuthorizationFilter implements Filter {
 
 	private JSONObject parse(String jsonText) throws ServletException {
 		JSONObject params = null;		
-		params = (JSONObject) JSONValue.parse(StringEscapeUtils.unescapeJava(jsonText));
+		params = (JSONObject) JSONValue.parse(jsonText);
 		if (params == null)
 			throw new ServletException("Error on retrieving init parameters!");
 		return params;

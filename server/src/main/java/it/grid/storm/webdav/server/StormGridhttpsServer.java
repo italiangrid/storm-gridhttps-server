@@ -14,7 +14,8 @@ import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.apache.commons.lang.StringEscapeUtils;
+import org.apache.commons.codec.binary.Base64;
+import org.apache.commons.codec.binary.Hex;
 import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.Handler;
 import org.eclipse.jetty.server.Server;
@@ -166,9 +167,11 @@ public class StormGridhttpsServer {
 		XML doc = new XML(webFile);
 		String query = "/j2ee:web-app/j2ee:filter[@id='stormAuthorizationFilter']/j2ee:init-param/j2ee:param-value";
 		NodeList initParams = doc.getNodes(query, new WebNamespaceContext(null));
-		String jsonText = StringEscapeUtils.escapeJava(JSONValue.toJSONString(generateParams()));
-		log.debug("encoded params: " + jsonText);
-		((Element) initParams.item(0)).setTextContent(jsonText);
+		String jsonStr = JSONValue.toJSONString(generateParams());
+		log.debug("json string: " + jsonStr);
+		String encodedStr = new String(Base64.encodeBase64(Hex.decodeHex(jsonStr.toCharArray())));
+		log.debug("encoded json string: " + encodedStr);
+		((Element) initParams.item(0)).setTextContent(encodedStr);
 		doc.save();
 	}
 
