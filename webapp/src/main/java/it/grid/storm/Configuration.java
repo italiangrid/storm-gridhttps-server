@@ -81,14 +81,6 @@ public class Configuration {
 			log.warn("GPFS_ROOT_DIRECTORY is empty!");
 			return false;
 		}
-		if (getWebdavContextPath().isEmpty()) {
-			log.warn("WEBDAV_CONTEXTPATH is empty!");
-			return false;
-		}
-		if (getFileTransferContextPath().isEmpty()) {
-			log.warn("FILETRANSFER_CONTEXTPATH is empty!");
-			return false;
-		}
 		if (getBackendPort() <= 1024) {
 			log.warn("BACKEND_PORT = " + getBackendPort() + " is not valid!");
 			return false;
