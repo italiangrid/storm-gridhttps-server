@@ -31,6 +31,7 @@ import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.commons.lang.StringEscapeUtils;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONValue;
 import org.slf4j.Logger;
@@ -98,7 +99,7 @@ public class StormAuthorizationFilter implements Filter {
 
 	private JSONObject parse(String jsonText) throws ServletException {
 		JSONObject params = null;		
-		params = (JSONObject) JSONValue.parse(jsonText);
+		params = (JSONObject) JSONValue.parse(StringEscapeUtils.unescapeJava(jsonText));
 		if (params == null)
 			throw new ServletException("Error on retrieving init parameters!");
 		return params;

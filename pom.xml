@@ -45,6 +45,7 @@
 		<javaxServletVersion>3.0.0.v201112011016</javaxServletVersion>
 		<mavenCompilerVersion>2.5.1</mavenCompilerVersion>
 		<springcontextVersion>2.0.5</springcontextVersion>
+		<jsonSimpleVersion>1.1.1</jsonSimpleVersion>
 
 		<conf_installation_prefix>/etc/storm</conf_installation_prefix>
 		<module_name>gridhttps-server</module_name>
@@ -185,7 +186,13 @@
 			<dependency>
 				<groupId>com.googlecode.json-simple</groupId>
 				<artifactId>json-simple</artifactId>
-				<version>1.1.1</version>
+				<version>${jsonSimpleVersion}</version>
+			</dependency>
+
+			<dependency>
+				<groupId>commons-lang</groupId>
+				<artifactId>commons-lang</artifactId>
+				<version>${commonsLangVersion}</version>
 			</dependency>
 
 		</dependencies>

@@ -43,6 +43,11 @@
 		</dependency>
 	
 		<dependency>
+			<groupId>commons-lang</groupId>
+			<artifactId>commons-lang</artifactId>
+		</dependency>
+	
+		<dependency>
 			<groupId>io.milton</groupId>
 			<artifactId>milton-server-ce</artifactId>
 			<version>${miltonVersion}</version>
@@ -76,11 +81,6 @@
 			<groupId>commons-io</groupId>
 			<artifactId>commons-io</artifactId>
 			<version>${commonsIOVersion}</version>
-		</dependency>
-		<dependency>
-			<groupId>commons-lang</groupId>
-			<artifactId>commons-lang</artifactId>
-			<version>${commonsLangVersion}</version>
 		</dependency>
 		<dependency>
 			<groupId>emi</groupId>
