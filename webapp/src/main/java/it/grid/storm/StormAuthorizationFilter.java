@@ -56,7 +56,7 @@ public class StormAuthorizationFilter implements Filter {
 		}
 		/* Load Storage Area List */
 		try {
-			StorageAreaManager.init(Configuration.getBackendHostname(), Configuration.getBackendPort());
+			StorageAreaManager.init(Configuration.getBackendHostname(), Configuration.getBackendServicePort());
 		} catch (Exception e) {
 			log.error(e.getMessage());
 			throw new ServletException(e.getMessage());
