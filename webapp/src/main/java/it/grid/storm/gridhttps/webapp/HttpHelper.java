@@ -53,7 +53,7 @@ public class HttpHelper {
 	
 	public String getRequestStringURI() {
 		if (Configuration.getRemoveSpaces())
-			return getRequest().getRequestURI().replaceAll(" ", "");
+			return getRequest().getRequestURI().replaceAll(" ", Configuration.getRemoveSpacesWith());
 		return getRequest().getRequestURI();
 	}
 
@@ -77,6 +77,8 @@ public class HttpHelper {
 	}
 
 	public String getDestinationHeader() {
+		if (Configuration.getRemoveSpaces())
+			return getRequest().getHeader("Destination").replaceAll(" ", Configuration.getRemoveSpacesWith());
 		return getRequest().getHeader("Destination");
 	}
 

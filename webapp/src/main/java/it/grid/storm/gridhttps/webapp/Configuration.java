@@ -31,6 +31,7 @@ public class Configuration {
 			add("COMPUTE_CHECKSUM");
 			add("CHECKSUM_TYPE");
 			add("REMOVE_SPACES");
+			add("REMOVE_SPACES_WITH");
 		}
 	};
 	
@@ -169,6 +170,10 @@ public class Configuration {
 	
 	public static boolean getRemoveSpaces() {
 		return map.containsKey("REMOVE_SPACES") ? Boolean.valueOf(map.get("REMOVE_SPACES")) : null;
+	}
+	
+	public static String getRemoveSpacesWith() {
+		return map.containsKey("REMOVE_SPACES_WITH") ? map.get("REMOVE_SPACES_WITH") : null;
 	}
 	
 }

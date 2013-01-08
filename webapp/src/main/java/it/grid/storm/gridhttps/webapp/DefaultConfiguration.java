@@ -20,6 +20,7 @@ public class DefaultConfiguration {
 		put("COMPUTE_CHECKSUM", "true");
 		put("CHECKSUM_TYPE", ChecksumAlgorithm.ADLER32.name());
 		put("REMOVE_SPACES", "true");
+		put("REMOVE_SPACES_WITH", "_");
 	}};
 
 	public static String getValue(String name) {
