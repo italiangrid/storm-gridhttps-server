@@ -8,6 +8,7 @@ import io.milton.http.exceptions.ConflictException;
 import io.milton.http.exceptions.NotAuthorizedException;
 import io.milton.resource.*;
 import io.milton.servlet.MiltonServlet;
+import it.grid.storm.gridhttps.webapp.Configuration;
 import it.grid.storm.gridhttps.webapp.HttpHelper;
 import it.grid.storm.gridhttps.webapp.webdav.factory.exceptions.RuntimeApiException;
 import it.grid.storm.gridhttps.webapp.webdav.factory.exceptions.StormResourceException;
@@ -56,6 +57,8 @@ public class StormDirectoryResource extends StormResource implements MakeCollect
 			httpHelper.sendError(409, "Conflict");
 			return null;
 		}
+		if (Configuration.getRemoveSpaces())
+			name = name.replaceAll(" ", "");
 		return StormResourceHelper.doMkCol(this, name);
 	}
 
@@ -102,6 +105,8 @@ public class StormDirectoryResource extends StormResource implements MakeCollect
 	public Resource createNew(String name, InputStream in, Long length, String contentType) throws IOException, NotAuthorizedException,
 			ConflictException, BadRequestException {
 		log.info("Called function for PUT FILE");
+		if (Configuration.getRemoveSpaces())
+			name = name.replaceAll(" ", "");
 		return StormResourceHelper.doPut(this, name, in);
 	}
 
@@ -169,6 +174,8 @@ public class StormDirectoryResource extends StormResource implements MakeCollect
 
 	public void moveTo(CollectionResource newParent, String newName) throws NotAuthorizedException, ConflictException, BadRequestException {
 		log.info("Called function for MOVE DIRECTORY");
+		if (Configuration.getRemoveSpaces())
+			newName = newName.replaceAll(" ", "");
 		if (newParent instanceof StormDirectoryResource) {
 			StormResourceHelper.doMoveTo(this, (StormDirectoryResource) newParent, newName);
 			setFile(((StormDirectoryResource) newParent).getFile());
@@ -178,6 +185,8 @@ public class StormDirectoryResource extends StormResource implements MakeCollect
 
 	public void copyTo(CollectionResource newParent, String newName) throws NotAuthorizedException, ConflictException, BadRequestException {
 		log.info("Called function for COPY DIRECTORY");
+		if (Configuration.getRemoveSpaces())
+			newName = newName.replaceAll(" ", "");
 		if (newParent instanceof StormDirectoryResource) {
 			StormResourceHelper.doCopyDirectory(this, (StormDirectoryResource) newParent, newName);
 		} else
