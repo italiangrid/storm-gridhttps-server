@@ -7,6 +7,7 @@ import it.grid.storm.gridhttps.webapp.authorization.methods.AbstractMethodAuthor
 import it.grid.storm.gridhttps.webapp.webdav.authorization.methods.CopyMethodAuthorization;
 import it.grid.storm.gridhttps.webapp.webdav.authorization.methods.DeleteMethodAuthorization;
 import it.grid.storm.gridhttps.webapp.webdav.authorization.methods.GetMethodAuthorization;
+import it.grid.storm.gridhttps.webapp.webdav.authorization.methods.HeadMethodAuthorization;
 import it.grid.storm.gridhttps.webapp.webdav.authorization.methods.MkcolMethodAuthorization;
 import it.grid.storm.gridhttps.webapp.webdav.authorization.methods.MoveMethodAuthorization;
 import it.grid.storm.gridhttps.webapp.webdav.authorization.methods.OptionsMethodAuthorization;
@@ -146,6 +147,7 @@ public class WebDAVAuthorizationFilter extends AuthorizationFilter {
 		METHODS_MAP.put("MKCOL", new MkcolMethodAuthorization(httpHelper));
 		METHODS_MAP.put("MOVE", new MoveMethodAuthorization(httpHelper));
 		METHODS_MAP.put("COPY", new CopyMethodAuthorization(httpHelper));
+		METHODS_MAP.put("HEAD", new HeadMethodAuthorization(httpHelper));
 	}
 		
 	public AbstractMethodAuthorization getAuthorizationHandler() {
