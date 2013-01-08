@@ -38,6 +38,7 @@ public class WebDAVAuthorizationFilter extends AuthorizationFilter {
 		add("MOVE");
 		add("MKCOL");
 		add("COPY");
+		add("HEAD");
 	}};	
 	
 	private ArrayList<String> destinationMethods = new ArrayList<String>() {
