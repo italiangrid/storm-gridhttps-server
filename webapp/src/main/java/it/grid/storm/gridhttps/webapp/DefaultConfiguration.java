@@ -19,6 +19,7 @@ public class DefaultConfiguration {
 		put("GPFS_ROOT_DIRECTORY", "/");
 		put("COMPUTE_CHECKSUM", "true");
 		put("CHECKSUM_TYPE", ChecksumAlgorithm.ADLER32.name());
+		put("REMOVE_SPACES", "true");
 	}};
 
 	public static String getValue(String name) {

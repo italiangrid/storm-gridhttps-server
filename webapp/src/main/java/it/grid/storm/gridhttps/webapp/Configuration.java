@@ -30,6 +30,7 @@ public class Configuration {
 			add("GPFS_ROOT_DIRECTORY");
 			add("COMPUTE_CHECKSUM");
 			add("CHECKSUM_TYPE");
+			add("REMOVE_SPACES");
 		}
 	};
 	
@@ -45,6 +46,7 @@ public class Configuration {
 			add("FILETRANSFER_CONTEXTPATH");
 			add("GPFS_ROOT_DIRECTORY");
 			add("COMPUTE_CHECKSUM");
+			add("REMOVE_SPACES");
 		}
 	};
 	
@@ -114,6 +116,7 @@ public class Configuration {
 		log.debug(" - GPFS_ROOT_DIRECTORY      : " + getGpfsRootDirectory());
 		log.debug(" - COMPUTE_CHECKSUM         : " + getComputeChecksum());
 		log.debug(" - CHECKSUM_TYPE            : " + getChecksumType());
+		log.debug(" - REMOVE_SPACES            : " + getRemoveSpaces());
 	}
 	
 	public static String getBackendHostname() {
@@ -162,6 +165,10 @@ public class Configuration {
 			}
 		} 
 		return checksumAlgorithm;
+	}
+	
+	public static boolean getRemoveSpaces() {
+		return map.containsKey("REMOVE_SPACES") ? Boolean.valueOf(map.get("REMOVE_SPACES")) : null;
 	}
 	
 }
