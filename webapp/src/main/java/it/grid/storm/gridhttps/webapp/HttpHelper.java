@@ -99,8 +99,6 @@ public class HttpHelper {
 	}
 
 	public String getOverwriteHeader() {
-		if (Configuration.getRemoveSpaces())
-			return getRequest().getHeader("Overwrite").replaceAll(" ", "");
 		return getRequest().getHeader("Overwrite");
 	}
 
