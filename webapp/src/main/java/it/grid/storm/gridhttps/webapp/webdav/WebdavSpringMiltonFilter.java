@@ -75,6 +75,7 @@ public class WebdavSpringMiltonFilter implements javax.servlet.Filter {
 			this.httpManager = (HttpManager) milton;
 		} else if (milton instanceof HttpManagerBuilder) {
 			HttpManagerBuilder builder = (HttpManagerBuilder) milton;
+			builder.getHandlerHelper().setEnableExpectContinue(false);
 			this.httpManager = builder.buildHttpManager();
 		}
 		servletContext = fc.getServletContext();
