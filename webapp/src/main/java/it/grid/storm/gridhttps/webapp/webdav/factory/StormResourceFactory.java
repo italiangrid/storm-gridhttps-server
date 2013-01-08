@@ -1,10 +1,13 @@
 package it.grid.storm.gridhttps.webapp.webdav.factory;
 
+import io.milton.http.HttpManager;
 import io.milton.http.ResourceFactory;
 import io.milton.http.fs.FileContentService;
 import io.milton.http.SecurityManager;
 import io.milton.http.fs.NullSecurityManager;
 import io.milton.resource.Resource;
+import io.milton.servlet.Config;
+import io.milton.servlet.Initable;
 import it.grid.storm.gridhttps.webapp.Configuration;
 import it.grid.storm.gridhttps.webapp.webdav.factory.exceptions.RuntimeApiException;
 import it.grid.storm.gridhttps.webapp.webdav.factory.exceptions.StormResourceException;
@@ -19,7 +22,7 @@ import java.net.UnknownHostException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public final class StormResourceFactory implements ResourceFactory {
+public final class StormResourceFactory implements Initable, ResourceFactory {
 
 	private static final Logger log = LoggerFactory.getLogger(StormResourceFactory.class);
 	private FileContentService contentService;
@@ -224,5 +227,15 @@ public final class StormResourceFactory implements ResourceFactory {
 
 	private void setLocalhostname(String localhostname) {
 		this.localhostname = localhostname;
+	}
+
+	@Override
+	public void init(Config config, HttpManager manager) {
+        manager.setEnableExpectContinue(false);		
+	}
+
+	@Override
+	public void destroy(HttpManager manager) {
+		// TODO Auto-generated method stub
 	}
 }
