@@ -82,6 +82,7 @@ public class WebdavSpringMiltonFilter implements javax.servlet.Filter {
 		String sExcludePaths = fc.getInitParameter("milton.exclude.paths");
 		log.info("init: exclude paths: " + sExcludePaths);
 		excludeMiltonPaths = sExcludePaths.split(",");
+		httpManager.setEnableExpectContinue(false);
 	}
 
 	public void doFilter(ServletRequest req, ServletResponse resp, FilterChain fc) throws IOException, ServletException {
