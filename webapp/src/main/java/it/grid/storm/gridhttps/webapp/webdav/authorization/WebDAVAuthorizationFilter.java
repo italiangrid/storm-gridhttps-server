@@ -92,12 +92,14 @@ public class WebDAVAuthorizationFilter extends AuthorizationFilter {
 			log.warn("Received a request for a not allowed method : " + method);
 			return new AuthorizationStatus(false, "Method " + method + " not allowed!");
 		}
+		log.info(method + " " + httpHelper.getRequestURI().getPath());
 		String reqProtocol = httpHelper.getRequestProtocol();
 		if (!isRequestProtocolAllowed(reqProtocol)) {
 			log.warn("Received a request-uri with a not allowed protocol: " + reqProtocol);
 			return new AuthorizationStatus(false, "Protocol " + reqProtocol + " not allowed!");
 		}
 		if (hasDestination(method)) {
+			log.info("destination: " + httpHelper.getDestinationURI().getPath());
 			String destProtocol = httpHelper.getDestinationProtocol();
 			if (!isDestinationProtocolAllowed(destProtocol)) {
 				log.warn("Received a destination-uri with a not allowed protocol: " + destProtocol);
