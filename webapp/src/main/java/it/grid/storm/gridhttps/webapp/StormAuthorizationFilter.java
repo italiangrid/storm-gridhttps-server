@@ -104,8 +104,8 @@ public class StormAuthorizationFilter implements Filter {
 	}
 	
 	private void initSession() {
-		getHttpHelper().getRequest().getSession(true);
-		getHttpHelper().getRequest().getSession().setAttribute("forced", false);
+		getHttpHelper().initSession();
+		getHttpHelper().getSession().setAttribute("forced", false);
 	}
 
 	private void processRootRequest() throws IOException {

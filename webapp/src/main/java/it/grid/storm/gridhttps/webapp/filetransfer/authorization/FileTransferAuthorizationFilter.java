@@ -13,8 +13,8 @@ import java.util.Arrays;
 import java.util.HashMap;
 
 import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+//import javax.servlet.http.HttpServletRequest;
+//import javax.servlet.http.HttpServletResponse;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -89,13 +89,13 @@ public class FileTransferAuthorizationFilter extends AuthorizationFilter {
 		this.httpHelper = httpHelper;
 	}
 
-	public HttpServletResponse getHTTPResponse() {
-		return getHttpHelper().getResponse();
-	}
-	
-	public HttpServletRequest getHTTPRequest() {
-		return getHttpHelper().getRequest();
-	}
+//	public HttpServletResponse getHTTPResponse() {
+//		return getHttpHelper().getResponse();
+//	}
+//	
+//	public HttpServletRequest getHTTPRequest() {
+//		return getHttpHelper().getRequest();
+//	}
 
 	public String getContextPath() {
 		return contextPath;

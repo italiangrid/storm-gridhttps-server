@@ -11,7 +11,6 @@ import io.milton.http.exceptions.NotAuthorizedException;
 import io.milton.http.exceptions.NotFoundException;
 import io.milton.resource.*;
 import io.milton.servlet.MiltonServlet;
-import it.grid.storm.gridhttps.webapp.Configuration;
 import it.grid.storm.gridhttps.webapp.HttpHelper;
 import it.grid.storm.gridhttps.webapp.webdav.factory.exceptions.RuntimeApiException;
 import it.grid.storm.gridhttps.webapp.webdav.factory.exceptions.StormResourceException;
@@ -146,8 +145,6 @@ public class StormFileResource extends StormResource implements CopyableResource
 
 	public void moveTo(CollectionResource newParent, String newName) throws NotAuthorizedException, ConflictException, BadRequestException {
 		log.info("Called function for MOVE FILE");
-		if (Configuration.getRemoveSpaces())
-			newName = newName.replaceAll(" ", "");
 		if (newParent instanceof StormDirectoryResource) {
 			StormResourceHelper.doMoveTo(this, (StormDirectoryResource) newParent, newName);
 			setFile(new File(((StormDirectoryResource) newParent).getFile(), newName));
@@ -157,15 +154,12 @@ public class StormFileResource extends StormResource implements CopyableResource
 
 	public void copyTo(CollectionResource newParent, String newName) throws NotAuthorizedException, ConflictException, BadRequestException {
 		log.info("Called function for COPY FILE");		
-		if (Configuration.getRemoveSpaces())
-			newName = newName.replaceAll(" ", "");
 		if (newParent instanceof StormDirectoryResource) {
 			StormDirectoryResource newFsParent = (StormDirectoryResource) newParent;
 			StormResourceHelper.doCopyFile(this, newFsParent, newName);
 		} else {
 			log.error("Directory Resource class " + newParent.getClass().getName() + " not supported!");
 		}
-			
 	}
 
 	private SurlInfo getSurlInfo() {

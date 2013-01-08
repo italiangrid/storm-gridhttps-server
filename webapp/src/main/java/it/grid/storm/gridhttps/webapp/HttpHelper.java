@@ -9,6 +9,7 @@ import java.security.cert.X509Certificate;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -34,8 +35,16 @@ public class HttpHelper {
 		this.HTTPResponse = HTTPResponse;
 	}
 
-	public HttpServletRequest getRequest() {
+	private HttpServletRequest getRequest() {
 		return this.HTTPRequest;
+	}
+	
+	public HttpSession getSession() {
+		return this.HTTPRequest.getSession();
+	}
+	
+	public void initSession() {
+		this.HTTPRequest.getSession(true);
 	}
 
 	public HttpServletResponse getResponse() {
@@ -43,6 +52,8 @@ public class HttpHelper {
 	}
 	
 	public String getRequestStringURI() {
+		if (Configuration.getRemoveSpaces())
+			return getRequest().getRequestURI().replaceAll(" ", "");
 		return getRequest().getRequestURI();
 	}
 
@@ -86,6 +97,8 @@ public class HttpHelper {
 	}
 
 	public String getOverwriteHeader() {
+		if (Configuration.getRemoveSpaces())
+			return getRequest().getHeader("Overwrite").replaceAll(" ", "");
 		return getRequest().getHeader("Overwrite");
 	}
 

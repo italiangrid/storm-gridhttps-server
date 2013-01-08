@@ -74,11 +74,11 @@ public class UserCredentials {
 	}
 	
 	private void setForcedAnonymous() {
-		httpHelper.getRequest().getSession().setAttribute("forced", true);
+		httpHelper.getSession().setAttribute("forced", true);
 	}
 	
 	private boolean isForcedAnonymous() {
-		return (Boolean) httpHelper.getRequest().getSession().getAttribute("forced");
+		return (Boolean) httpHelper.getSession().getAttribute("forced");
 	}
 	
 
