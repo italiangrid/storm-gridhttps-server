@@ -75,8 +75,8 @@ public final class StormResourceFactory implements ResourceFactory {
 
 	public Resource getResource(String host, String uriPath) throws RuntimeApiException, StormResourceException {
 		String hostNoPort = stripPortFromHost(host);
-		if (Configuration.getRemoveSpaces())
-			uriPath.replaceAll(" ", Configuration.getRemoveSpacesWith());
+//		if (Configuration.getRemoveSpaces())
+//			uriPath.replaceAll(" ", Configuration.getRemoveSpacesWith());
 		log.debug("getResource: host: " + hostNoPort + " - url:" + uriPath);
 		if (isLocalResource(hostNoPort)) {
 			StorageArea currentSA = StorageAreaManager.getMatchingSA(uriPath);
