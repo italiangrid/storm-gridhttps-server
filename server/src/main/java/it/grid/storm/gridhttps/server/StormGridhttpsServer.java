@@ -98,7 +98,7 @@ public class StormGridhttpsServer {
 			throw new ServerException("Error on webapp creation - webapp is null!");
 		}
 	}
-	
+
 	private void initMapperServlet() throws ServerException {
 		mapperServlet = new MapperServlet();
 		if (mapperServlet != null) {
@@ -108,7 +108,7 @@ public class StormGridhttpsServer {
 			throw new ServerException("Error on mapper-servlet creation - mapper-servlet is null!");
 		}
 	}
-	
+
 	private WebAppContext getWebappContext() {
 		WebAppContext context = new WebAppContext();
 		context.setDescriptor(webapp.getDescriptorFile().toString());
@@ -116,7 +116,7 @@ public class StormGridhttpsServer {
 		context.setParentLoaderPriority(true);
 		return context;
 	}
-	
+
 	private ServletContextHandler getMapperServletContext() {
 		ServletContextHandler context = new ServletContextHandler(ServletContextHandler.SESSIONS);
 		context.setContextPath(File.separator + gridhttpsInfo.getMapperServlet().getContextPath());
@@ -132,31 +132,32 @@ public class StormGridhttpsServer {
 		}
 		log.info("server started ");
 	}
-	
+
 	public boolean isRunning() {
-		boolean running = server.isRunning();
-		log.info(running ? "server is running" : "server is stopped");
-		return running;
+		return server.isRunning();
 	}
 
 	public void stop() throws ServerException {
-		undeploy();
-		try {
-			server.stop();
-		} catch (Exception e) {
-			throw new ServerException(e);
+		if (isRunning()) {
+			undeploy();
+			try {
+				server.stop();
+			} catch (Exception e) {
+				throw new ServerException(e);
+			}
+			log.info("server stopped ");
 		}
-		log.info("server stopped ");
 	}
 
 	public void status() {
-		if (!server.isStarted()) {
+		if (isRunning()) {
+			if (gridhttpsInfo.isEnabledHttp())
+				log.info("server is running on ports " + gridhttpsInfo.getHttpsPort() + "(https) and " +gridhttpsInfo.getHttpPort() + "(http)");
+			else 
+				log.info("server is running on port " + gridhttpsInfo.getHttpsPort() + "(https)");
+		} else {
 			log.info("server is not running ");
-			return;
 		}
-		log.info("server is running over ssl on port " + gridhttpsInfo.getHttpsPort());
-		if (gridhttpsInfo.isEnabledHttp())
-			log.info("server supports HTTP connections on port " + gridhttpsInfo.getHttpPort());
 	}
 
 	private void undeploy() throws ServerException {
@@ -181,7 +182,7 @@ public class StormGridhttpsServer {
 			doc.save();
 		} catch (Exception e) {
 			throw new ServerException(e);
-		}	
+		}
 	}
 
 	private Map<String, String> generateParams() {
@@ -222,28 +223,5 @@ public class StormGridhttpsServer {
 	private void setFrontendInfo(StormFrontend frontendInfo) {
 		this.frontendInfo = frontendInfo;
 	}
-
-	// public void undeployAll() throws Exception {
-	// undeployWebapp();
-	// }
-
-	// private Map<String,String> generateParams() {
-	// Map<String, String> params = new HashMap<String, String>();
-	// params.put("BACKEND_HOSTNAME", backendInfo.getHostname());
-	// params.put("BACKEND_PORT", String.valueOf(backendInfo.getPort()));
-	// params.put("BACKEND_SERVICE_PORT",
-	// String.valueOf(backendInfo.getServicePort()));
-	// params.put("FRONTEND_HOSTNAME", frontendInfo.getHostname());
-	// params.put("FRONTEND_PORT", String.valueOf(frontendInfo.getPort()));
-	// params.put("GPFS_ROOT_DIRECTORY",
-	// gridhttpsInfo.getRootDirectory().getAbsolutePath());
-	// params.put("WEBDAV_CONTEXTPATH", gridhttpsInfo.getWebdavContextPath());
-	// params.put("FILETRANSFER_CONTEXTPATH",
-	// gridhttpsInfo.getFiletransferContextPath());
-	// params.put("COMPUTE_CHECKSUM",
-	// String.valueOf(gridhttpsInfo.isComputeChecksum()));
-	// params.put("CHECKSUM_TYPE", gridhttpsInfo.getChecksumType());
-	// return params;
-	// }
 
 }

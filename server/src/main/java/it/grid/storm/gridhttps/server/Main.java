@@ -36,15 +36,15 @@ public class Main {
 
 	public static void main(String[] args) {
 
-//		Object lock = new Object();
-//		synchronized (lock) {
-//			try {
-//				lock.wait(5 * 1000);
-//			} catch (InterruptedException e) {
-//				e.printStackTrace();
-//			}
-//		}
-		
+		// Object lock = new Object();
+		// synchronized (lock) {
+		// try {
+		// lock.wait(5 * 1000);
+		// } catch (InterruptedException e) {
+		// e.printStackTrace();
+		// }
+		// }
+
 		try {
 			parseCommandLine(args);
 			loadDefaultConfiguration();
@@ -52,9 +52,9 @@ public class Main {
 			checkConfiguration();
 			initLogging(stormGridhttps.getLogFile());
 			initStorageAreas(stormBackend.getHostname(), stormBackend.getServicePort());
-			
+
 			printConfiguration();
-			
+
 			server = new StormGridhttpsServer(stormGridhttps, stormBackend, stormFrontend);
 			server.start();
 			server.status();
@@ -70,16 +70,20 @@ public class Main {
 				}
 			}
 		}
-		
+
 		// adds an handler to CTRL-C that stops and deletes the webapps
 		// directory
 		Runtime.getRuntime().addShutdownHook(new Thread() {
 			public void run() {
-				try {
-					server.stop();
-				} catch (Exception e2) {
-					log.error(e2.getMessage());
-					e2.printStackTrace();
+				if (server != null) {
+					if (server.isRunning()) {
+						try {
+							server.stop();
+						} catch (Exception e2) {
+							log.error(e2.getMessage());
+							e2.printStackTrace();
+						}
+					}
 				}
 			}
 		});
