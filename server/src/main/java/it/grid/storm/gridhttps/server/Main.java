@@ -5,6 +5,7 @@ import it.grid.storm.gridhttps.server.data.StormFrontend;
 import it.grid.storm.gridhttps.server.data.StormGridhttps;
 import it.grid.storm.gridhttps.server.exceptions.InitException;
 import it.grid.storm.gridhttps.server.exceptions.ServerException;
+import it.grid.storm.gridhttps.server.utils.FileUtils;
 import it.grid.storm.gridhttps.server.utils.MyCommandLineParser;
 import it.grid.storm.storagearea.StorageAreaManager;
 import java.io.File;
@@ -55,9 +56,8 @@ public class Main {
 			checkConfiguration();
 			initLogging(stormGridhttps.getLogFile());
 			initStorageAreas(stormBackend.getHostname(), stormBackend.getServicePort());
-
 			printConfiguration();
-
+			deleteWebappDirectory();
 			server = new StormGridhttpsServer(stormGridhttps, stormBackend, stormFrontend);
 			server.start();
 			server.status();
@@ -65,13 +65,18 @@ public class Main {
 			System.err.println(e.getMessage());
 		} catch (ServerException e) {
 			log.error(e.getMessage());
-			if (server.isRunning()) {
-				try {
-					server.stop();
-				} catch (Exception e2) {
-					log.error(e2.getMessage());
+			if (server != null) {
+				if (server.isRunning()) {
+					try {
+						server.stop();
+					} catch (Exception e2) {
+						log.error(e2.getMessage());
+						e2.printStackTrace();
+					}
 				}
 			}
+		} finally {
+			deleteWebappDirectory();
 		}
 
 		// adds an handler to CTRL-C that stops and deletes the webapps
@@ -88,9 +93,21 @@ public class Main {
 						}
 					}
 				}
+				deleteWebappDirectory();
 			}
 		});
 
+	}
+
+	private static void deleteWebappDirectory() {
+		File toDelete = new File(stormGridhttps.getWebappsDirectory(), DefaultConfiguration.WEBAPP_DIRECTORY_NAME);
+		if (toDelete.exists()) {
+			try {
+				FileUtils.deleteDirectory(toDelete);
+			} catch (IOException e) {
+				log.error(e.getMessage());
+			}
+		}
 	}
 
 	private static void initStorageAreas(String hostname, int port) throws InitException {

@@ -4,7 +4,6 @@ import it.grid.storm.gridhttps.server.data.StormBackend;
 import it.grid.storm.gridhttps.server.data.StormFrontend;
 import it.grid.storm.gridhttps.server.data.StormGridhttps;
 import it.grid.storm.gridhttps.server.exceptions.ServerException;
-import it.grid.storm.gridhttps.server.utils.FileUtils;
 import it.grid.storm.gridhttps.server.utils.WebNamespaceContext;
 import it.grid.storm.gridhttps.server.utils.XML;
 import it.grid.storm.gridhttps.server.utils.Zip;
@@ -166,11 +165,6 @@ public class StormGridhttpsServer {
 		log.debug(" - undeploying mapper-servlet...");
 		contextHandlerCollection.removeHandler(getMapperServletContext());
 		log.debug(" - clearing webapp directory...");
-		try {
-			FileUtils.deleteDirectory(webapp.getResourceBase());
-		} catch (IOException e) {
-			throw new ServerException(e);
-		}
 	}
 
 	private void configureDescriptor(File descriptorFile, Map<String, String> params) throws ServerException {
