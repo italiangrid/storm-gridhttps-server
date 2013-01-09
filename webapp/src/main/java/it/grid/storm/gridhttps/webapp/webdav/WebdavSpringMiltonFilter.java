@@ -20,6 +20,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.BeansException;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
 import org.springframework.context.support.StaticApplicationContext;
 
@@ -70,7 +71,13 @@ public class WebdavSpringMiltonFilter implements javax.servlet.Filter {
 		parent.getBeanFactory().registerSingleton("webRoot", webRoot);
 		log.debug("Registered root webapp path in: webroot=" + webRoot.getAbsolutePath());
 		parent.refresh();
-		context = new ClassPathXmlApplicationContext(new String[]{"applicationContext.xml"}, parent);
+		try {
+			context = new ClassPathXmlApplicationContext(new String[]{filterConfig.getInitParameter("context.filename")}, parent);
+		} catch (BeansException e) {
+			log.error(e.getMessage());
+			e.printStackTrace();
+			return;
+		}
 		Object milton = context.getBean("milton.http.manager");
 		if (milton instanceof HttpManager) {
 			this.httpManager = (HttpManager) milton;
