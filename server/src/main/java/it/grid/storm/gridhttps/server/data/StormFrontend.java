@@ -1,6 +1,7 @@
 package it.grid.storm.gridhttps.server.data;
 
 import it.grid.storm.gridhttps.server.DefaultConfiguration;
+import it.grid.storm.gridhttps.server.exceptions.InitException;
 
 
 public class StormFrontend {
@@ -37,10 +38,10 @@ public class StormFrontend {
 		return "{'" + hostname + "', " + port + "}";
 	}
 
-	public void checkConfiguration() throws Exception {
+	public void checkConfiguration() throws InitException {
 		if (hostname.isEmpty())
-			throw new Exception("backend hostname is empty!");
+			throw new InitException("backend hostname is empty!");
 		if (port <= 0)
-			throw new Exception("backend port is " + port + "!");
+			throw new InitException("backend port is " + port + "!");
 	}
 }

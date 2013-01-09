@@ -1,6 +1,7 @@
 package it.grid.storm.gridhttps.server.data;
 
 import it.grid.storm.gridhttps.server.DefaultConfiguration;
+import it.grid.storm.gridhttps.server.exceptions.InitException;
 
 
 public class MapperServlet {
@@ -38,10 +39,10 @@ public class MapperServlet {
 		return "{'" + contextPath + "', " + contextSpec + "}";
 	}
 
-	public void checkConfiguration() throws Exception {
+	public void checkConfiguration() throws InitException {
 		if (contextPath.isEmpty())
-			throw new Exception("contextPath is empty!");
+			throw new InitException("contextPath is empty!");
 		if (contextSpec.isEmpty())
-			throw new Exception("contextSpec is empty!");
+			throw new InitException("contextSpec is empty!");
 	}
 }

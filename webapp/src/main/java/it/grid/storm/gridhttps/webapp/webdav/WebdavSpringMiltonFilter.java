@@ -3,6 +3,7 @@ package it.grid.storm.gridhttps.webapp.webdav;
 import io.milton.config.HttpManagerBuilder;
 import io.milton.http.HttpManager;
 import io.milton.http.Request;
+import io.milton.http.Request.Method;
 import io.milton.http.Response;
 import io.milton.servlet.FilterConfigWrapper;
 import io.milton.servlet.MiltonServlet;
@@ -17,6 +18,7 @@ import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
@@ -75,7 +77,6 @@ public class WebdavSpringMiltonFilter implements javax.servlet.Filter {
 			this.httpManager = (HttpManager) milton;
 		} else if (milton instanceof HttpManagerBuilder) {
 			HttpManagerBuilder builder = (HttpManagerBuilder) milton;
-			builder.getHandlerHelper().setEnableExpectContinue(false);
 			this.httpManager = builder.buildHttpManager();
 		}
 		servletContext = fc.getServletContext();

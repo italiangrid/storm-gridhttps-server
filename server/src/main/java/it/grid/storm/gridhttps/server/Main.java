@@ -3,10 +3,13 @@ package it.grid.storm.gridhttps.server;
 import it.grid.storm.gridhttps.server.data.StormBackend;
 import it.grid.storm.gridhttps.server.data.StormFrontend;
 import it.grid.storm.gridhttps.server.data.StormGridhttps;
+import it.grid.storm.gridhttps.server.exceptions.InitException;
+import it.grid.storm.gridhttps.server.exceptions.ServerException;
 import it.grid.storm.gridhttps.server.utils.MyCommandLineParser;
 import it.grid.storm.storagearea.StorageAreaManager;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.UnknownHostException;
 
@@ -17,6 +20,7 @@ import org.slf4j.LoggerFactory;
 
 import ch.qos.logback.classic.LoggerContext;
 import ch.qos.logback.classic.joran.JoranConfigurator;
+import ch.qos.logback.core.joran.spi.JoranException;
 
 public class Main {
 
@@ -46,36 +50,33 @@ public class Main {
 			loadDefaultConfiguration();
 			loadConfiguration();
 			checkConfiguration();
-			initLogging();
-		} catch (Exception e) {
+			initLogging(stormGridhttps.getLogFile());
+			initStorageAreas(stormBackend.getHostname(), stormBackend.getServicePort());
+			
+			printConfiguration();
+			
+			server = new StormGridhttpsServer(stormGridhttps, stormBackend, stormFrontend);
+			server.start();
+			server.status();
+		} catch (InitException e) {
 			System.err.println(e.getMessage());
-			e.printStackTrace();
-			System.exit(1);
-		}
-		printConfiguration();
-		
-		try {
-			StorageAreaManager.init(stormBackend.getHostname(), stormBackend.getServicePort());
-			initServer();
-			startServer();
-		} catch (Exception e) {
+		} catch (ServerException e) {
 			log.error(e.getMessage());
-			e.printStackTrace();
-			try {
-				stopServer();
-			} catch (Exception e2) {
-				log.error(e2.getMessage());
-				e2.printStackTrace();
+			if (server.isRunning()) {
+				try {
+					server.stop();
+				} catch (Exception e2) {
+					log.error(e2.getMessage());
+				}
 			}
-			System.exit(1);
 		}
-
+		
 		// adds an handler to CTRL-C that stops and deletes the webapps
 		// directory
 		Runtime.getRuntime().addShutdownHook(new Thread() {
 			public void run() {
 				try {
-					stopServer();
+					server.stop();
 				} catch (Exception e2) {
 					log.error(e2.getMessage());
 					e2.printStackTrace();
@@ -85,62 +86,66 @@ public class Main {
 
 	}
 
-	private static void checkConfiguration() throws Exception {
+	private static void initStorageAreas(String hostname, int port) throws InitException {
+		try {
+			StorageAreaManager.init(hostname, port);
+		} catch (Exception e) {
+			throw new InitException(e);
+		}
+	}
+
+	private static void checkConfiguration() throws InitException {
 		stormBackend.checkConfiguration();
 		stormFrontend.checkConfiguration();
 		stormGridhttps.checkConfiguration();
 	}
 
-	private static void initLogging() throws Exception {
+	private static void initLogging(String logFilePath) throws InitException {
 		/* INIT LOGGING COMPONENT */
 		System.out.println("init logger");
 		LoggerContext loggerContext = (LoggerContext) LoggerFactory.getILoggerFactory();
 		loggerContext.reset();
 		JoranConfigurator configurator = new JoranConfigurator();
 		configurator.setContext(loggerContext);
-		FileInputStream fin = new FileInputStream(stormGridhttps.getLogFile());
-		configurator.doConfigure(fin);
-		fin.close();
+		try {
+			FileInputStream fin = new FileInputStream(logFilePath);
+			configurator.doConfigure(fin);
+			fin.close();
+		} catch (FileNotFoundException e) {
+			throw new InitException(e);
+		} catch (JoranException e) {
+			throw new InitException(e);
+		} catch (IOException e) {
+			throw new InitException(e);
+		}
 		loggerContext.start();
 		log = LoggerFactory.getLogger(Main.class);
 		System.out.println("logger loaded successfully");
 	}
 
-	private static void initServer() throws Exception {
-		log.info("Start storm-gridhttps-server initialization");
-		server = new StormGridhttpsServer(stormGridhttps, stormBackend, stormFrontend);
-		log.debug("Server created");
-	}
-
-	private static void startServer() throws Exception {
-		log.info("Starting WebDAV-server...");
-		server.start();
-		server.status();
-	}
-
-	private static void stopServer() throws Exception {
-		if (server == null)
-			return;
-		log.info("Undeploying all webapps...");
-		server.undeployAll();
-		log.info("Stopping WebDAV-server...");
-		server.stop();
-	}
-
-	private static void parseCommandLine(String[] args) throws Exception {
+	private static void parseCommandLine(String[] args) throws InitException {
 		MyCommandLineParser cli = new MyCommandLineParser(args);
 		cli.addOption("w", "the absolute file path of the WebDAV webapp template [mandatory]", true, true);
 		cli.addOption("conf", "the absolute file path of the server configuration file [mandatory]", true, true);
-		webappFileName = cli.getString("w");
-		System.out.println("webdav-webapp:         " + webappFileName);
-		configurationFileName = cli.getString("conf");
-		System.out.println("server-configuration:  " + configurationFileName);
+		try {
+			webappFileName = cli.getString("w");
+			System.out.println("webdav-webapp:         " + webappFileName);
+			configurationFileName = cli.getString("conf");
+			System.out.println("server-configuration:  " + configurationFileName);
+		} catch (Exception e) {
+			throw new InitException(e);
+		}
 	}
 
-	private static void loadDefaultConfiguration() throws UnknownHostException {
+	private static void loadDefaultConfiguration() throws InitException {
 		/* gridhttps */
 		stormGridhttps = new StormGridhttps();
-		java.net.InetAddress localMachine = java.net.InetAddress.getLocalHost();
+		java.net.InetAddress localMachine;
+		try {
+			localMachine = java.net.InetAddress.getLocalHost();
+		} catch (UnknownHostException e) {
+			throw new InitException(e);
+		}
 		stormGridhttps.setHostname(localMachine.getHostName());
 		stormGridhttps.setWarFile(new File(webappFileName));
 		/* backend */
@@ -151,18 +156,18 @@ public class Main {
 		stormFrontend.setHostname(localMachine.getHostName());
 	}
 
-	private static void loadConfiguration() throws Exception {
+	private static void loadConfiguration() throws InitException {
 		Wini configuration;
 		try {
 			configuration = new Wini(new File(configurationFileName));
 		} catch (InvalidFileFormatException e) {
-			throw new Exception(e.getMessage());
+			throw new InitException(e);
 		} catch (IOException e) {
-			throw new Exception(e.getMessage());
+			throw new InitException(e);
 		}
 		/* service */
 		if (!configuration.keySet().contains("service"))
-			throw new Exception("Configuration file 'service' section missed!");
+			throw new InitException("Configuration file 'service' section missed!");
 		if (configuration.get("service").containsKey("log.configuration-file"))
 			stormGridhttps.setLogFile(configuration.get("service", "log.configuration-file"));
 		if (configuration.get("service").containsKey("webapp-directory"))
@@ -174,7 +179,7 @@ public class Main {
 
 		/* connectors */
 		if (!configuration.keySet().contains("connectors"))
-			throw new Exception("Configuration file 'connectors' section missed!");
+			throw new InitException("Configuration file 'connectors' section missed!");
 		if (configuration.get("connectors").containsKey("http.enabled"))
 			stormGridhttps.setEnabledHttp(configuration.get("connectors", "http.enabled", boolean.class));
 		if (configuration.get("connectors").containsKey("http.port"))
@@ -193,7 +198,7 @@ public class Main {
 
 		/* backend */
 		if (!configuration.keySet().contains("backend"))
-			throw new Exception("Configuration file 'backend' section missed!");
+			throw new InitException("Configuration file 'backend' section missed!");
 		if (configuration.get("backend").containsKey("backend.hostname"))
 			stormBackend.setHostname(configuration.get("backend", "backend.hostname"));
 		if (configuration.get("backend").containsKey("backend.authorization-service.port"))

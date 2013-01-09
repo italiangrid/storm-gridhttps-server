@@ -1,6 +1,7 @@
 package it.grid.storm.gridhttps.server.data;
 
 import it.grid.storm.gridhttps.server.DefaultConfiguration;
+import it.grid.storm.gridhttps.server.exceptions.InitException;
 
 import java.io.File;
 
@@ -118,30 +119,30 @@ public class StormGridhttps {
 				+ "', " + ssloptions + ", '" + logFile + "', '" + warFile + "'}";
 	}
 
-	public void checkConfiguration() throws Exception {
+	public void checkConfiguration() throws InitException {
 		mapperServlet.checkConfiguration();
 		if (warFile == null)
-			throw new Exception("war file is null!");
+			throw new InitException("war file is null!");
 		if (!warFile.exists())
-			throw new Exception("war file does not exist!");
+			throw new InitException("war file does not exist!");
 		if (hostname.isEmpty())
-			throw new Exception("gridhttps hostname is empty!");
+			throw new InitException("gridhttps hostname is empty!");
 		if (logFile.isEmpty())
-			throw new Exception("gridhttps log filename is empty!");
+			throw new InitException("gridhttps log filename is empty!");
 		if (webappsDirectory.isEmpty())
-			throw new Exception("gridhttps webapps directory is empty!");
+			throw new InitException("gridhttps webapps directory is empty!");
 		if (httpPort <= 0)
-			throw new Exception("gridhttps http port is " + httpPort + "!");
+			throw new InitException("gridhttps http port is " + httpPort + "!");
 		if (httpsPort == 0)
-			throw new Exception("gridhttps https port is " + httpsPort + "!");
+			throw new InitException("gridhttps https port is " + httpsPort + "!");
 		if (httpsPort == httpPort)
-			throw new Exception("gridhttps http and https port are equal!");
+			throw new InitException("gridhttps http and https port are equal!");
 		if (ssloptions.getCertificateFile().isEmpty())
-			throw new Exception("gridhttps ssloptions host certificate file is empty!");
+			throw new InitException("gridhttps ssloptions host certificate file is empty!");
 		if (ssloptions.getKeyFile().isEmpty())
-			throw new Exception("gridhttps ssloptions host key file is empty!");
+			throw new InitException("gridhttps ssloptions host key file is empty!");
 		if (ssloptions.getTrustStoreDirectory().isEmpty())
-			throw new Exception("gridhttps ssloptions trust store directory is empty!");
+			throw new InitException("gridhttps ssloptions trust store directory is empty!");
 	}
 
 	public File getWarFile() {

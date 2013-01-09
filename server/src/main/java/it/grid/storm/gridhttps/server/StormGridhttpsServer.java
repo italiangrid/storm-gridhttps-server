@@ -3,10 +3,14 @@ package it.grid.storm.gridhttps.server;
 import it.grid.storm.gridhttps.server.data.StormBackend;
 import it.grid.storm.gridhttps.server.data.StormFrontend;
 import it.grid.storm.gridhttps.server.data.StormGridhttps;
+import it.grid.storm.gridhttps.server.exceptions.ServerException;
 import it.grid.storm.gridhttps.server.utils.FileUtils;
+import it.grid.storm.gridhttps.server.utils.WebNamespaceContext;
+import it.grid.storm.gridhttps.server.utils.XML;
 import it.grid.storm.gridhttps.server.utils.Zip;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -18,43 +22,36 @@ import org.eclipse.jetty.server.handler.HandlerCollection;
 import org.eclipse.jetty.server.nio.SelectChannelConnector;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
+import org.eclipse.jetty.util.ajax.JSON;
+import org.eclipse.jetty.webapp.WebAppContext;
 import org.italiangrid.utils.https.ServerFactory;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.w3c.dom.Element;
+import org.w3c.dom.NodeList;
 
 public class StormGridhttpsServer {
 
 	private static final int MAX_IDLE_TIME = 30000;
 
 	private static final Logger log = LoggerFactory.getLogger(StormGridhttpsServer.class);
-	private StormGridhttps gridhttpsInfo;
 	private StormBackend backendInfo;
 	private StormFrontend frontendInfo;
+	private StormGridhttps gridhttpsInfo;
 	private Server server;
 	private ContextHandlerCollection contextHandlerCollection;
 	private WebApp webapp;
 	private MapperServlet mapperServlet;
-	
-	public StormGridhttpsServer(StormGridhttps gridhttpsInfo, StormBackend backendInfo, StormFrontend frontendInfo) throws Exception {
-		this.gridhttpsInfo = gridhttpsInfo;
-		this.backendInfo = backendInfo;
-		this.frontendInfo = frontendInfo;
+
+	public StormGridhttpsServer(StormGridhttps gridhttpsInfo, StormBackend backendInfo, StormFrontend frontendInfo) throws ServerException {
+		setGridhttpsInfo(gridhttpsInfo);
+		setBackendInfo(backendInfo);
+		setFrontendInfo(frontendInfo);
+		createServer();
 		initServer();
 	}
 
-	private void initServer() throws Exception {
-		createServer();
-		createWebapp();
-		deployWebapp();
-		createMapperServlet();
-		deployMapperServlet();
-		
-		
-		log.debug("mapper-servlet deployed!");
-		log.debug("server initialization - finished");
-	}
-	
 	private void createServer() {
 		server = ServerFactory.newServer(gridhttpsInfo.getHostname(), gridhttpsInfo.getHttpsPort(), gridhttpsInfo.getSsloptions());
 		server.setStopAtShutdown(true);
@@ -70,51 +67,85 @@ public class StormGridhttpsServer {
 			server.addConnector(connector);
 		}
 	}
-	
-	private void createWebapp() throws Exception {
+
+	private void initServer() throws ServerException {
+		initWebapp();
+		initMapperServlet();
+	}
+
+	private void initWebapp() throws ServerException {
 		webapp = new WebApp(new File(gridhttpsInfo.getWebappsDirectory(), DefaultConfiguration.WEBAPP_DIRECTORY_NAME));
-		if (!webapp.getResourceBase().exists()) {
-			if (webapp.getResourceBase().mkdirs()) {
-				Zip.unzip(gridhttpsInfo.getWarFile().toString(), webapp.getResourceBase().toString());
-				webapp.configureDescriptor(generateParams());
+		if (webapp != null) {
+			if (!webapp.getResourceBase().exists()) {
+				if (webapp.getResourceBase().mkdirs()) {
+					try {
+						Zip.unzip(gridhttpsInfo.getWarFile().toString(), webapp.getResourceBase().toString());
+					} catch (IOException e) {
+						throw new ServerException(e);
+					}
+					configureDescriptor(webapp.getDescriptorFile(), generateParams());
+					contextHandlerCollection.addHandler(getWebappContext());
+				} else {
+					log.error("Error on creation of '" + webapp.getResourceBase() + "' directory!");
+					throw new ServerException("Error on creation of '" + webapp.getResourceBase() + "' directory!");
+				}
 			} else {
-				throw new Exception("Error on creation of '" + webapp.getResourceBase() + "' directory!");
+				log.error("'" + webapp.getResourceBase() + "' already exists!");
+				throw new ServerException("'" + webapp.getResourceBase() + "' already exists!");
 			}
 		} else {
-			log.error(webapp.getResourceBase() + " already exists!");
+			log.error("Error on webapp creation - webapp is null!");
+			throw new ServerException("Error on webapp creation - webapp is null!");
 		}
 	}
 	
-	private void createMapperServlet() {
+	private void initMapperServlet() throws ServerException {
 		mapperServlet = new MapperServlet();
+		if (mapperServlet != null) {
+			contextHandlerCollection.addHandler(getMapperServletContext());
+		} else {
+			log.error("Error on mapper-servlet creation - mapper-servlet is null!");
+			throw new ServerException("Error on mapper-servlet creation - mapper-servlet is null!");
+		}
 	}
 	
-	private void deployWebapp() throws Exception {	
-		if (webapp != null) {
-			contextHandlerCollection.addHandler(webapp.getContext());
-		} else {
-			log.error("webapp not initialized - unable to deploy it!");
-		}
+	private WebAppContext getWebappContext() {
+		WebAppContext context = new WebAppContext();
+		context.setDescriptor(webapp.getDescriptorFile().toString());
+		context.setResourceBase(webapp.getResourceBase().getAbsolutePath());
+		context.setParentLoaderPriority(true);
+		return context;
+	}
+	
+	private ServletContextHandler getMapperServletContext() {
+		ServletContextHandler context = new ServletContextHandler(ServletContextHandler.SESSIONS);
+		context.setContextPath(File.separator + gridhttpsInfo.getMapperServlet().getContextPath());
+		context.addServlet(new ServletHolder(mapperServlet), File.separator + gridhttpsInfo.getMapperServlet().getContextSpec());
+		return context;
 	}
 
-	private void deployMapperServlet() {	
-		if (mapperServlet != null) {
-			ServletContextHandler context = new ServletContextHandler(ServletContextHandler.SESSIONS);
-			context.setContextPath(File.separator + gridhttpsInfo.getMapperServlet().getContextPath());
-			context.addServlet(new ServletHolder(mapperServlet), File.separator + gridhttpsInfo.getMapperServlet().getContextSpec());
-			contextHandlerCollection.addHandler(context);
-		} else {
-			log.error("mapperServlet not initialized - unable to deploy it!");
+	public void start() throws ServerException {
+		try {
+			server.start();
+		} catch (Exception e) {
+			throw new ServerException(e);
 		}
-	}
-	
-	public void start() throws Exception {
-		server.start();
 		log.info("server started ");
 	}
+	
+	public boolean isRunning() {
+		boolean running = server.isRunning();
+		log.info(running ? "server is running" : "server is stopped");
+		return running;
+	}
 
-	public void stop() throws Exception {
-		server.stop();
+	public void stop() throws ServerException {
+		undeploy();
+		try {
+			server.stop();
+		} catch (Exception e) {
+			throw new ServerException(e);
+		}
 		log.info("server stopped ");
 	}
 
@@ -128,30 +159,91 @@ public class StormGridhttpsServer {
 			log.info("server supports HTTP connections on port " + gridhttpsInfo.getHttpPort());
 	}
 
-	private void undeployWebapp() throws Exception {
+	private void undeploy() throws ServerException {
 		log.debug(" - undeploying webapp...");
-		log.debug(" - removing context from handler collection...");
-		contextHandlerCollection.removeHandler(webapp.getContext());
-		FileUtils.deleteDirectory(webapp.getResourceBase());
+		contextHandlerCollection.removeHandler(getWebappContext());
+		log.debug(" - undeploying mapper-servlet...");
+		contextHandlerCollection.removeHandler(getMapperServletContext());
+		log.debug(" - clearing webapp directory...");
+		try {
+			FileUtils.deleteDirectory(webapp.getResourceBase());
+		} catch (IOException e) {
+			throw new ServerException(e);
+		}
 	}
 
-	public void undeployAll() throws Exception {
-		undeployWebapp();
+	private void configureDescriptor(File descriptorFile, Map<String, String> params) throws ServerException {
+		String query = "/j2ee:web-app/j2ee:filter[@id='stormAuthorizationFilter']/j2ee:init-param/j2ee:param-value";
+		try {
+			XML doc = new XML(descriptorFile);
+			NodeList initParams = doc.getNodes(query, new WebNamespaceContext(null));
+			((Element) initParams.item(0)).setTextContent(JSON.toString(params));
+			doc.save();
+		} catch (Exception e) {
+			throw new ServerException(e);
+		}	
 	}
 
-	private Map<String,String> generateParams() {
+	private Map<String, String> generateParams() {
 		Map<String, String> params = new HashMap<String, String>();
-		params.put("BACKEND_HOSTNAME", backendInfo.getHostname());
-		params.put("BACKEND_PORT", String.valueOf(backendInfo.getPort()));
-		params.put("BACKEND_SERVICE_PORT", String.valueOf(backendInfo.getServicePort()));
-		params.put("FRONTEND_HOSTNAME", frontendInfo.getHostname());
-		params.put("FRONTEND_PORT", String.valueOf(frontendInfo.getPort()));
-		params.put("GPFS_ROOT_DIRECTORY", gridhttpsInfo.getRootDirectory().getAbsolutePath());
-		params.put("WEBDAV_CONTEXTPATH", gridhttpsInfo.getWebdavContextPath());
-		params.put("FILETRANSFER_CONTEXTPATH", gridhttpsInfo.getFiletransferContextPath());
-		params.put("COMPUTE_CHECKSUM", String.valueOf(gridhttpsInfo.isComputeChecksum()));
-		params.put("CHECKSUM_TYPE", gridhttpsInfo.getChecksumType());
+		params.put("BACKEND_HOSTNAME", getBackendInfo().getHostname());
+		params.put("BACKEND_PORT", String.valueOf(getBackendInfo().getPort()));
+		params.put("BACKEND_SERVICE_PORT", String.valueOf(getBackendInfo().getServicePort()));
+		params.put("FRONTEND_HOSTNAME", getFrontendInfo().getHostname());
+		params.put("FRONTEND_PORT", String.valueOf(getFrontendInfo().getPort()));
+		params.put("GPFS_ROOT_DIRECTORY", getGridhttpsInfo().getRootDirectory().getAbsolutePath());
+		params.put("WEBDAV_CONTEXTPATH", getGridhttpsInfo().getWebdavContextPath());
+		params.put("FILETRANSFER_CONTEXTPATH", getGridhttpsInfo().getFiletransferContextPath());
+		params.put("COMPUTE_CHECKSUM", String.valueOf(getGridhttpsInfo().isComputeChecksum()));
+		params.put("CHECKSUM_TYPE", getGridhttpsInfo().getChecksumType());
 		return params;
 	}
-	
+
+	private StormGridhttps getGridhttpsInfo() {
+		return gridhttpsInfo;
+	}
+
+	private void setGridhttpsInfo(StormGridhttps gridhttpsInfo) {
+		this.gridhttpsInfo = gridhttpsInfo;
+	}
+
+	private StormBackend getBackendInfo() {
+		return backendInfo;
+	}
+
+	private void setBackendInfo(StormBackend backendInfo) {
+		this.backendInfo = backendInfo;
+	}
+
+	private StormFrontend getFrontendInfo() {
+		return frontendInfo;
+	}
+
+	private void setFrontendInfo(StormFrontend frontendInfo) {
+		this.frontendInfo = frontendInfo;
+	}
+
+	// public void undeployAll() throws Exception {
+	// undeployWebapp();
+	// }
+
+	// private Map<String,String> generateParams() {
+	// Map<String, String> params = new HashMap<String, String>();
+	// params.put("BACKEND_HOSTNAME", backendInfo.getHostname());
+	// params.put("BACKEND_PORT", String.valueOf(backendInfo.getPort()));
+	// params.put("BACKEND_SERVICE_PORT",
+	// String.valueOf(backendInfo.getServicePort()));
+	// params.put("FRONTEND_HOSTNAME", frontendInfo.getHostname());
+	// params.put("FRONTEND_PORT", String.valueOf(frontendInfo.getPort()));
+	// params.put("GPFS_ROOT_DIRECTORY",
+	// gridhttpsInfo.getRootDirectory().getAbsolutePath());
+	// params.put("WEBDAV_CONTEXTPATH", gridhttpsInfo.getWebdavContextPath());
+	// params.put("FILETRANSFER_CONTEXTPATH",
+	// gridhttpsInfo.getFiletransferContextPath());
+	// params.put("COMPUTE_CHECKSUM",
+	// String.valueOf(gridhttpsInfo.isComputeChecksum()));
+	// params.put("CHECKSUM_TYPE", gridhttpsInfo.getChecksumType());
+	// return params;
+	// }
+
 }
