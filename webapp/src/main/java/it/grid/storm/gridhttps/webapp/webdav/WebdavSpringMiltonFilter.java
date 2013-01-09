@@ -3,7 +3,6 @@ package it.grid.storm.gridhttps.webapp.webdav;
 import io.milton.config.HttpManagerBuilder;
 import io.milton.http.HttpManager;
 import io.milton.http.Request;
-import io.milton.http.Request.Method;
 import io.milton.http.Response;
 import io.milton.servlet.FilterConfigWrapper;
 import io.milton.servlet.MiltonServlet;
@@ -61,17 +60,17 @@ public class WebdavSpringMiltonFilter implements javax.servlet.Filter {
 	private String[] excludeMiltonPaths;
 
 	public void init(FilterConfig fc) throws ServletException {
-		log.info("WebDAV-SpringMiltonFilter init");
-		this.filterConfig = fc;
+		log.debug("WebDAV-SpringMiltonFilter init");
+		filterConfig = fc;
 		StaticApplicationContext parent = new StaticApplicationContext();
-		FilterConfigWrapper configWrapper = new FilterConfigWrapper(this.filterConfig);
+		FilterConfigWrapper configWrapper = new FilterConfigWrapper(filterConfig);
 		parent.getBeanFactory().registerSingleton("config", configWrapper);
-		parent.getBeanFactory().registerSingleton("servletContext", fc.getServletContext());
-		File webRoot = new File(fc.getServletContext().getRealPath("/"));
+		parent.getBeanFactory().registerSingleton("servletContext", filterConfig.getServletContext());
+		File webRoot = new File(filterConfig.getServletContext().getRealPath("/"));
 		parent.getBeanFactory().registerSingleton("webRoot", webRoot);
-		log.info("Registered root webapp path in: webroot=" + webRoot.getAbsolutePath());
+		log.debug("Registered root webapp path in: webroot=" + webRoot.getAbsolutePath());
 		parent.refresh();
-		context = new ClassPathXmlApplicationContext(fc.getInitParameter("context.filename"));
+		context = new ClassPathXmlApplicationContext(new String[]{"applicationContext.xml"}, parent);
 		Object milton = context.getBean("milton.http.manager");
 		if (milton instanceof HttpManager) {
 			this.httpManager = (HttpManager) milton;
@@ -79,10 +78,10 @@ public class WebdavSpringMiltonFilter implements javax.servlet.Filter {
 			HttpManagerBuilder builder = (HttpManagerBuilder) milton;
 			this.httpManager = builder.buildHttpManager();
 		}
-		servletContext = fc.getServletContext();
+		servletContext = filterConfig.getServletContext();
 		System.out.println("servletContext: " + servletContext.getClass());
-		String sExcludePaths = fc.getInitParameter("milton.exclude.paths");
-		log.info("init: exclude paths: " + sExcludePaths);
+		String sExcludePaths = filterConfig.getInitParameter("milton.exclude.paths");
+		log.debug("init: exclude paths: " + sExcludePaths);
 		excludeMiltonPaths = sExcludePaths.split(",");
 	}
 

@@ -14,6 +14,7 @@
 		<property name="enableFormAuth" value="false" />
 		<property name="enableCookieAuth" value="false" />
 		<property name="enableCompression" value="false" />
+		<property name="enableExpectContinue" value="false" />
 		<!-- enableCompression may be true...? -->
 		<property name="enabledJson" value="false" />
 	</bean>

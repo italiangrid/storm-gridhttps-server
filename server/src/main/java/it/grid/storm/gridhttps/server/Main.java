@@ -36,14 +36,17 @@ public class Main {
 
 	public static void main(String[] args) {
 
-		// Object lock = new Object();
-		// synchronized (lock) {
-		// try {
-		// lock.wait(5 * 1000);
-		// } catch (InterruptedException e) {
-		// e.printStackTrace();
-		// }
-		// }
+		Object lock = new Object();
+		synchronized (lock) {
+			try {
+				int waitfor = 5000;
+				System.out.println("Waiting for " + waitfor + " ms");
+				lock.wait(waitfor);
+				System.out.println("It's time to boot!");
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+		}
 
 		try {
 			parseCommandLine(args);
