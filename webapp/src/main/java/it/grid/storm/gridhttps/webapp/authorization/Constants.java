@@ -1,5 +1,5 @@
 /*
- * Copyright (c) Istituto Nazionale di Fisica Nucleare (INFN). 2006-2010.
+ * Copyright (c) Istituto Nazionale di Fisica Nucleare (INFN). 2006-2013.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -10,7 +10,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package it.grid.storm.gridhttps.webapp.authorization;
 /**
  * @author Michele Dibenedetto
