@@ -18,22 +18,29 @@ public class AuthorizationStatus {
 	private String reason;
 	
 	public AuthorizationStatus(boolean authorized, String reason) {
-		super();
-		this.setAuthorized(authorized);
-		this.setReason(reason);
+		if (authorized) {
+			setAuthorized();
+		} else {
+			setUnauthorized(reason);
+		}
 	}
 	
 	public boolean isAuthorized() {
 		return authorized;
 	}
-	private void setAuthorized(boolean authorized) {
-		this.authorized = authorized;
+	
+	public void setAuthorized() {
+		this.authorized = true;
+		this.reason = "";
 	}
+	
+	public void setUnauthorized(String msg) {
+		this.authorized = false;
+		this.reason = msg;
+	}
+	
 	public String getReason() {
 		return reason;
-	}
-	private void setReason(String reason) {
-		this.reason = reason;
 	}
 
 }
