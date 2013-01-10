@@ -17,6 +17,7 @@ import it.grid.storm.gridhttps.webapp.Configuration;
 import it.grid.storm.gridhttps.webapp.checksum.Checksum.ChecksumAlgorithm;
 import it.grid.storm.gridhttps.webapp.checksum.ChecksumFileReadException;
 import it.grid.storm.gridhttps.webapp.checksum.ChecksumNotSupportedException;
+import it.grid.storm.gridhttps.webapp.utils.Chronometer;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -41,12 +42,18 @@ public class StormContentService implements FileContentService {
 	private static final int BUFFER_SIZE = 4096;
 
 	public void setFileContent(File file, InputStream in) throws FileNotFoundException, IOException {
+		Chronometer chrono = new Chronometer();
 		if (Configuration.getComputeChecksum()) {
+			chrono.start();
 			String checksum = computeCopyWithChecksum(in, new FileOutputStream(file), Configuration.getChecksumType());
+			chrono.stop();	
 			log.debug("checksum: " + checksum);
 		} else {
+			chrono.start();
 			doSimpleSetFileContent(in, new FileOutputStream(file));
+			chrono.stop();
 		}
+		log.debug("ELAPSED TIME: " + chrono.getMinutes() + "':" + chrono.getSeconds() + "'':" + chrono.getMilliseconds());
 	}
 
 	public InputStream getFileContent(File file) throws FileNotFoundException {
