@@ -258,7 +258,7 @@ public class StorageAreaManager {
 		}
 		ArrayList<StorageArea> local = new ArrayList<StorageArea>();
 		String[] SAEncodedArray = storageAreaListString.trim().split("" + ConfigDiscoveryServiceConstants.VFS_LIST_SEPARATOR);
-		log.debug("Decoding " + SAEncodedArray.length + " storage areas");
+		log.info("Decoding " + SAEncodedArray.length + " storage areas");
 		for (String SAEncoded : SAEncodedArray) {
 			local.addAll(decodeStorageArea(SAEncoded));
 		}
@@ -277,7 +277,7 @@ public class StorageAreaManager {
 			log.error("Decoding failed, received a null encoded storage area!");
 			throw new IllegalArgumentException("Received a null encoded storage area");
 		}
-		log.debug("Deconding storage area string \'" + sAEncoded + "\'");
+		log.debug("Decoding storage area string \'" + sAEncoded + "\'");
 		ArrayList<StorageArea> producedList = new ArrayList<StorageArea>();
 		String name = null;
 		String root = null;
@@ -320,15 +320,11 @@ public class StorageAreaManager {
 		}
 		for (String stfnRoot : stfnRootList) {
 			StorageArea storageArea = new StorageArea(name, root, stfnRoot, protocolList);
-			log.debug("Decoded storage area: [" + storageArea.toString() + "]");
+			log.info("Decoded storage area: [" + storageArea.toString() + "]");
 			producedList.add(storageArea);
 		}
 		log.debug("Decoded " + producedList.size() + " storage areas");
 		return producedList;
 	}
-
-	
-	
-	
 
 }

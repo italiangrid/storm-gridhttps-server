@@ -37,17 +37,10 @@ public class Main {
 
 	public static void main(String[] args) {
 
-		Object lock = new Object();
-		synchronized (lock) {
-			try {
-				int waitfor = 5000;
-				System.out.println("Waiting for " + waitfor + " ms");
-				lock.wait(waitfor);
-				System.out.println("It's time to boot!");
-			} catch (InterruptedException e) {
-				e.printStackTrace();
-			}
-		}
+		System.out.println("StoRM Gridhttps-server");
+		System.out.println("bootstrapping...");
+		
+		waitfor(0);
 
 		try {
 			parseCommandLine(args);
@@ -63,40 +56,46 @@ public class Main {
 			server.status();
 		} catch (InitException e) {
 			System.err.println(e.getMessage());
+			System.exit(0);
 		} catch (ServerException e) {
 			log.error(e.getMessage());
-			if (server != null) {
-				if (server.isRunning()) {
-					try {
-						server.stop();
-					} catch (Exception e2) {
-						log.error(e2.getMessage());
-						e2.printStackTrace();
-					}
-				}
-			}
-		} finally {
-			deleteWebappDirectory();
+			System.exit(0);
 		}
 
-		// adds an handler to CTRL-C that stops and deletes the webapps
-		// directory
+		// adds an handler to CTRL-C that stops and deletes the webapp directory
 		Runtime.getRuntime().addShutdownHook(new Thread() {
 			public void run() {
+				log.info("Exiting gridhttps-server...");
 				if (server != null) {
 					if (server.isRunning()) {
+						log.info("Shutting down server...");
 						try {
 							server.stop();
-						} catch (Exception e2) {
-							log.error(e2.getMessage());
-							e2.printStackTrace();
+						} catch (Exception e) {
+							log.error(e.getMessage());
 						}
 					}
 				}
+				log.info("Deleting webapp temporary directory...");
 				deleteWebappDirectory();
+				log.info("Bye");
 			}
 		});
 
+	}
+
+	private static void waitfor(int waitfor) {
+		if (waitfor == 0) return;
+		Object lock = new Object();
+		System.out.println("Waiting for " + waitfor + " ms");
+		synchronized (lock) {
+			try {
+				lock.wait(waitfor);
+				System.out.println("It's time to boot!");
+			} catch (InterruptedException e) {
+				System.err.println(e.getMessage());
+			}
+		}
 	}
 
 	private static void deleteWebappDirectory() {
@@ -119,14 +118,17 @@ public class Main {
 	}
 
 	private static void checkConfiguration() throws InitException {
+		log.debug("checking backend configuration...");
 		stormBackend.checkConfiguration();
+		log.debug("checking frontend configuration...");
 		stormFrontend.checkConfiguration();
+		log.debug("checking gridhttps configuration...");
 		stormGridhttps.checkConfiguration();
 	}
 
 	private static void initLogging(String logFilePath) throws InitException {
 		/* INIT LOGGING COMPONENT */
-		System.out.println("init logger");
+		System.out.println("init logging...");
 		LoggerContext loggerContext = (LoggerContext) LoggerFactory.getILoggerFactory();
 		loggerContext.reset();
 		JoranConfigurator configurator = new JoranConfigurator();
@@ -144,18 +146,19 @@ public class Main {
 		}
 		loggerContext.start();
 		log = LoggerFactory.getLogger(Main.class);
-		System.out.println("logger loaded successfully");
+		System.out.println("log successfully initialized");
 	}
 
 	private static void parseCommandLine(String[] args) throws InitException {
+		System.out.println("received as command line arguments: ");
 		MyCommandLineParser cli = new MyCommandLineParser(args);
 		cli.addOption("w", "the absolute file path of the WebDAV webapp template [mandatory]", true, true);
 		cli.addOption("conf", "the absolute file path of the server configuration file [mandatory]", true, true);
 		try {
 			webappFileName = cli.getString("w");
-			System.out.println("webdav-webapp:         " + webappFileName);
+			System.out.println("webapp-file: " + webappFileName);
 			configurationFileName = cli.getString("conf");
-			System.out.println("server-configuration:  " + configurationFileName);
+			System.out.println("configuration-file: " + configurationFileName);
 		} catch (Exception e) {
 			throw new InitException(e);
 		}
@@ -181,6 +184,7 @@ public class Main {
 	}
 
 	private static void loadConfiguration() throws InitException {
+		System.out.println("loading configuration from file...");
 		Wini configuration;
 		try {
 			configuration = new Wini(new File(configurationFileName));
@@ -239,6 +243,8 @@ public class Main {
 			stormGridhttps.setComputeChecksum(configuration.get("backend", "compute-checksum", boolean.class));
 		if (configuration.get("backend").containsKey("checksum-type"))
 			stormGridhttps.setChecksumType(configuration.get("backend", "checksum-type"));
+		
+		System.out.println("configuration successfully loaded");
 	}
 
 	private static void printConfiguration() {

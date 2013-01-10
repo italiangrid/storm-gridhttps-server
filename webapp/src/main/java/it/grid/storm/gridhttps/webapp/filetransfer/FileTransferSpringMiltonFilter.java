@@ -59,7 +59,7 @@ public class FileTransferSpringMiltonFilter implements javax.servlet.Filter {
 	private String[] excludeMiltonPaths;
 
 	public void init(FilterConfig fc) throws ServletException {
-		log.info("FileTransfer-SpringMiltonFilter init");
+		log.debug("FileTransfer-SpringMiltonFilter init");
 		this.filterConfig = fc;
 		StaticApplicationContext parent = new StaticApplicationContext();
 		FilterConfigWrapper configWrapper = new FilterConfigWrapper(this.filterConfig);
@@ -67,7 +67,7 @@ public class FileTransferSpringMiltonFilter implements javax.servlet.Filter {
 		parent.getBeanFactory().registerSingleton("servletContext", fc.getServletContext());
 		File webRoot = new File(fc.getServletContext().getRealPath("/"));
 		parent.getBeanFactory().registerSingleton("webRoot", webRoot);
-		log.info("Registered root webapp path in: webroot=" + webRoot.getAbsolutePath());
+		log.debug("Registered root webapp path in: webroot=" + webRoot.getAbsolutePath());
 		parent.refresh();
 		context = new ClassPathXmlApplicationContext(new String[]{fc.getInitParameter("context.filename")}, parent);
 		Object milton = context.getBean("milton.http.ftmanager");
@@ -78,9 +78,9 @@ public class FileTransferSpringMiltonFilter implements javax.servlet.Filter {
 			this.httpManager = builder.buildHttpManager();
 		}
 		servletContext = fc.getServletContext();
-		System.out.println("servletContext: " + servletContext.getClass());
+		log.debug("servletContext: " + servletContext.getClass());
 		String sExcludePaths = fc.getInitParameter("milton.exclude.paths");
-		log.info("init: exclude paths: " + sExcludePaths);
+		log.debug("init: exclude paths: " + sExcludePaths);
 		excludeMiltonPaths = sExcludePaths.split(",");
 	}
 

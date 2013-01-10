@@ -86,7 +86,7 @@ public class WebdavSpringMiltonFilter implements javax.servlet.Filter {
 			this.httpManager = builder.buildHttpManager();
 		}
 		servletContext = filterConfig.getServletContext();
-		System.out.println("servletContext: " + servletContext.getClass());
+		log.debug("servletContext: " + servletContext.getClass());
 		String sExcludePaths = filterConfig.getInitParameter("milton.exclude.paths");
 		log.debug("init: exclude paths: " + sExcludePaths);
 		excludeMiltonPaths = sExcludePaths.split(",");
