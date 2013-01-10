@@ -118,11 +118,11 @@ public class Main {
 	}
 
 	private static void checkConfiguration() throws InitException {
-		log.debug("checking backend configuration...");
+		System.out.println("checking backend configuration...");
 		stormBackend.checkConfiguration();
-		log.debug("checking frontend configuration...");
+		System.out.println("checking frontend configuration...");
 		stormFrontend.checkConfiguration();
-		log.debug("checking gridhttps configuration...");
+		System.out.println("checking gridhttps configuration...");
 		stormGridhttps.checkConfiguration();
 	}
 
