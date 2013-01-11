@@ -135,8 +135,9 @@ public class StormContentService implements FileContentService {
 	
 	public URI buildSetChecksumValueUri(File target, ChecksumType type, String checksum) throws UnsupportedEncodingException, URISyntaxException {
 		String encodedFilename = URLEncoder.encode(target.getAbsolutePath(), "UTF-8");
-		String path = "/" + Constants.RESOURCE + "/" + Constants.VERSION + "/" + encodedFilename + "/" + type.toString() + "?" + Constants.CHECKSUM_VALUE_KEY + "=" + checksum;
-		URI uri = new URI("http", null, Configuration.getBackendHostname(), Configuration.getBackendServicePort(), path, null, null);
+		String path = "/" + Constants.RESOURCE + "/" + Constants.VERSION + "/" + encodedFilename + "/" + type.toString();
+		String query = Constants.CHECKSUM_VALUE_KEY + "=" + checksum;
+		URI uri = new URI("http", null, Configuration.getBackendHostname(), Configuration.getBackendServicePort(), path, query, null);
 		log.debug("Built set checksum value URI: " + uri);
 		return uri;
 	}
