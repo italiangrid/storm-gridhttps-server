@@ -60,6 +60,7 @@ public class StormAuthorizationUtils {
 			user.forceAnonymous(user.getUserDN(), user.getUserFQANS());
 			uri = StormAuthorizationUtils.prepareURI(path, operation, user.getUserDN(), user.getUserFQANS());
 			response = getAuthResponse(uri);
+			user.unforceAnonymous();
 		}
 		return response;
 	}

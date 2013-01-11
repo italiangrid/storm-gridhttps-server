@@ -77,6 +77,10 @@ public class UserCredentials {
 			setForcedAnonymous();
 		}
 	}
+	
+	public void unforceAnonymous() {
+		httpHelper.getSession().removeAttribute("forced");
+	}
 
 	/* private methods */
 	
