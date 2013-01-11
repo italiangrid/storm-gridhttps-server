@@ -51,7 +51,7 @@ import org.slf4j.LoggerFactory;
 public class StormContentService implements FileContentService {
 
 	private static final Logger log = LoggerFactory.getLogger(StormResourceFactory.class);
-
+	
 	public void setFileContent(File file, InputStream in) throws FileNotFoundException, IOException {
 		OutputStream out = new FileOutputStream(file);
 		Chronometer chrono = new Chronometer();
