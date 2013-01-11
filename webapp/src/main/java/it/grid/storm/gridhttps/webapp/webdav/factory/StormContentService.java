@@ -31,9 +31,11 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.net.URLEncoder;
 import java.security.NoSuchAlgorithmException;
 
 import org.apache.commons.io.IOUtils;
@@ -131,16 +133,10 @@ public class StormContentService implements FileContentService {
 		}
 	}
 	
-	public URI buildSetChecksumValueUri(File target, ChecksumType type, String checksum) throws Exception {
-		String path = "/" + Constants.RESOURCE + "/" + Constants.VERSION;
-		path += target.getAbsolutePath() + "/" + type.name() + "?" + Constants.CHECKSUM_VALUE_KEY + "=" + checksum;
-		URI uri;
-		try {
-			uri = new URI("http", null, Configuration.getBackendHostname(), Configuration.getBackendPort(), path, null, null);
-		} catch (URISyntaxException e) {
-			log.error("Unable to create set checksum value URI. URISyntaxException " + e.getLocalizedMessage());
-			throw new Exception("Unable to create Configuration Discovery URI");
-		}
+	public URI buildSetChecksumValueUri(File target, ChecksumType type, String checksum) throws UnsupportedEncodingException, URISyntaxException {
+		String encodedFilename = URLEncoder.encode(target.getAbsolutePath(), "UTF-8");
+		String path = "/" + Constants.RESOURCE + "/" + Constants.VERSION + "/" + encodedFilename + "/" + type.toString() + "?" + Constants.CHECKSUM_VALUE_KEY + "=" + checksum;
+		URI uri = new URI("http", null, Configuration.getBackendHostname(), Configuration.getBackendServicePort(), path, null, null);
 		log.debug("Built set checksum value URI: " + uri);
 		return uri;
 	}
