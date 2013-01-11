@@ -12,9 +12,6 @@
  */
 package it.grid.storm.gridhttps.webapp;
 
-import it.grid.storm.gridhttps.webapp.checksum.Checksum.ChecksumAlgorithm;
-import it.grid.storm.gridhttps.webapp.checksum.ChecksumNotSupportedException;
-
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -168,16 +165,8 @@ public class Configuration {
 		return map.containsKey("COMPUTE_CHECKSUM") ? Boolean.valueOf(map.get("COMPUTE_CHECKSUM")) : null;
 	}
 	
-	public static ChecksumAlgorithm getChecksumType() {
-		ChecksumAlgorithm checksumAlgorithm = null;
-		if (map.containsKey("CHECKSUM_TYPE")) {
-			checksumAlgorithm = ChecksumAlgorithm.getChecksumAlgorithm(map.get("CHECKSUM_TYPE"));
-			if (checksumAlgorithm == null) {
-				log.error("checksum algorithm '" + map.get("CHECKSUM_TYPE") + "' is not supported!");
-				throw new ChecksumNotSupportedException("Checksum algorithm not supported: " + map.get("CHECKSUM_TYPE"));
-			}
-		} 
-		return checksumAlgorithm;
+	public static String getChecksumType() {
+		return map.containsKey("CHECKSUM_TYPE") ? map.get("CHECKSUM_TYPE") : null;
 	}
 	
 	public static boolean getRemoveSpaces() {

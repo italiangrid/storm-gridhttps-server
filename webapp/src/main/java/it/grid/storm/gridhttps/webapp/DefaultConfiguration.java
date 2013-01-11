@@ -12,7 +12,7 @@
  */
 package it.grid.storm.gridhttps.webapp;
 
-import it.grid.storm.gridhttps.webapp.checksum.Checksum.ChecksumAlgorithm;
+import it.grid.storm.gridhttps.webapp.checksum.ChecksumType;
 
 import java.util.HashMap;
 import java.util.Set;
@@ -30,7 +30,7 @@ public class DefaultConfiguration {
 		put("FILETRANSFER_CONTEXTPATH", "fileTransfer");
 		put("GPFS_ROOT_DIRECTORY", "/");
 		put("COMPUTE_CHECKSUM", "true");
-		put("CHECKSUM_TYPE", ChecksumAlgorithm.ADLER32.name());
+		put("CHECKSUM_TYPE", ChecksumType.ADLER32.name());
 		put("REMOVE_SPACES", "true");
 		put("REMOVE_SPACES_WITH", "_");
 	}};

@@ -12,27 +12,23 @@
  */
 package it.grid.storm.gridhttps.webapp.checksum;
 
-public class ChecksumFileReadException extends RuntimeException {
+public class ChecksumReadException extends RuntimeException {
 
     private static final long serialVersionUID = 2191687748137531046L;
 
-    public ChecksumFileReadException() {
-        // TODO Auto-generated constructor stub
+    public ChecksumReadException() {
     }
 
-    public ChecksumFileReadException(String message) {
+    public ChecksumReadException(String message) {
         super(message);
-        // TODO Auto-generated constructor stub
     }
 
-    public ChecksumFileReadException(Throwable cause) {
+    public ChecksumReadException(Throwable cause) {
         super(cause);
-        // TODO Auto-generated constructor stub
     }
 
-    public ChecksumFileReadException(String message, Throwable cause) {
+    public ChecksumReadException(String message, Throwable cause) {
         super(message, cause);
-        // TODO Auto-generated constructor stub
     }
 
 }

@@ -13,10 +13,14 @@
 package it.grid.storm.gridhttps.webapp.webdav.factory;
 
 import io.milton.http.fs.FileContentService;
+import it.grid.storm.ea.remote.Constants;
 import it.grid.storm.gridhttps.webapp.Configuration;
-import it.grid.storm.gridhttps.webapp.checksum.Checksum.ChecksumAlgorithm;
-import it.grid.storm.gridhttps.webapp.checksum.ChecksumFileReadException;
-import it.grid.storm.gridhttps.webapp.checksum.ChecksumNotSupportedException;
+import it.grid.storm.gridhttps.webapp.checksum.ChecksumReadException;
+import it.grid.storm.gridhttps.webapp.checksum.ChecksumType;
+import it.grid.storm.gridhttps.webapp.checksum.algorithm.Adler32ChecksumAlgorithm;
+import it.grid.storm.gridhttps.webapp.checksum.algorithm.CRC32ChecksumAlgorithm;
+import it.grid.storm.gridhttps.webapp.checksum.algorithm.ChecksumAlgorithm;
+import it.grid.storm.gridhttps.webapp.checksum.algorithm.MDChecksumAlgorithm;
 import it.grid.storm.gridhttps.webapp.utils.Chronometer;
 import it.grid.storm.gridhttps.webapp.utils.Chronometer.ElapsedTime;
 
@@ -27,28 +31,61 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.security.MessageDigest;
+import java.net.HttpURLConnection;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.security.NoSuchAlgorithmException;
-import java.util.zip.Adler32;
-import java.util.zip.CRC32;
-import java.util.zip.CheckedInputStream;
 
 import org.apache.commons.io.IOUtils;
+import org.apache.http.HttpResponse;
+import org.apache.http.StatusLine;
+import org.apache.http.client.ClientProtocolException;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.impl.client.DefaultHttpClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class StormContentService implements FileContentService {
 
 	private static final Logger log = LoggerFactory.getLogger(StormResourceFactory.class);
-	private static final int BUFFER_SIZE = 4096;
 
 	public void setFileContent(File file, InputStream in) throws FileNotFoundException, IOException {
+		OutputStream out = new FileOutputStream(file);
 		Chronometer chrono = new Chronometer();
 		if (Configuration.getComputeChecksum()) {
-			chrono.start();
-			String checksum = computeCopyWithChecksum(in, new FileOutputStream(file), Configuration.getChecksumType());
-			chrono.stop();	
-			log.debug("checksum: " + checksum);
+			ChecksumAlgorithm algorithm = null;
+			try {
+				algorithm = getChecksumAlgorithm(Configuration.getChecksumType());
+			} catch (NoSuchAlgorithmException e) {
+				log.error(e.getMessage());
+			}
+			if (algorithm != null) {
+				String checksum = null;
+				log.debug("Computing " + algorithm.getType().name());
+				try {
+					chrono.start();
+					checksum = algorithm.compute(in, out);
+					chrono.stop();
+					IOUtils.closeQuietly(out);
+					sendChecksum(file, algorithm.getType(), checksum);
+				} catch (ChecksumReadException e) {
+					log.error(e.getMessage());
+					log.error("Impossible to terminate file transfer!");
+					log.warn("Trying to transfer file without checksum...");
+					in.reset();
+					chrono.start();
+					doSimpleSetFileContent(in, out);
+					chrono.stop();
+				} finally {
+					log.debug("Checksum: " + checksum);
+				}
+			} else {
+				log.warn("Checksum algorithm '" + Configuration.getChecksumType() + "' not supported! Proceeding with nochecksum file transfer...");
+				chrono.start();
+				doSimpleSetFileContent(in, out);
+				chrono.stop();
+			}
 		} else {
 			chrono.start();
 			doSimpleSetFileContent(in, new FileOutputStream(file));
@@ -62,7 +99,7 @@ public class StormContentService implements FileContentService {
 		FileInputStream fin = new FileInputStream(file);
 		return fin;
 	}
-
+	
 	private void doSimpleSetFileContent(InputStream in, OutputStream out) throws FileNotFoundException, IOException {
         try {
             IOUtils.copy(in, out);
@@ -71,97 +108,73 @@ public class StormContentService implements FileContentService {
         }
     }
 	
-	private String computeCopyWithChecksum(InputStream inputStream, FileOutputStream outputStream, ChecksumAlgorithm checksumAlgorithm) {
-
-		String checksum;
-		try {
-			if (checksumAlgorithm == ChecksumAlgorithm.CRC32) {
-				log.debug("Computing " + ChecksumAlgorithm.CRC32);
-				checksum = computeCopyWithChecksumCRC32(inputStream, outputStream);
-			} else if (checksumAlgorithm == ChecksumAlgorithm.ADLER32) {
-				log.debug("Computing " + ChecksumAlgorithm.ADLER32);
-				checksum = computeCopyWithChecksumAdler32(inputStream, outputStream);
-			} else {
-				checksum = computeCopyWithChecksumMD(inputStream, outputStream, checksumAlgorithm);
-			}
-		} catch (IOException e) {
-			throw new ChecksumFileReadException("Error reading inputstream", e);
-		} catch (NoSuchAlgorithmException e) {
-			throw new ChecksumNotSupportedException("Checksum algorithm not supported: " + checksumAlgorithm.toString());
-		} finally {
-			if (inputStream != null)
-				try {
-					inputStream.close();
-				} catch (IOException e) {
-					log.warn("Some errors occured closing inputstream");
-				}
-			if (outputStream != null)
-				try {
-					outputStream.close();
-				} catch (IOException e) {
-					log.warn("Some errors occured closing outputstream");
-				}	
+	private ChecksumAlgorithm getChecksumAlgorithm(String checksumTypeStr) throws NoSuchAlgorithmException {
+		ChecksumType checksumType = ChecksumType.valueOf(checksumTypeStr);
+		if (checksumType == null)
+			throw new NoSuchAlgorithmException(checksumTypeStr + " not a valid checksum algorithm!");
+		if (checksumType.equals(ChecksumType.ADLER32)) {
+			return new Adler32ChecksumAlgorithm();
+		} else if (checksumType.equals(ChecksumType.CRC32)) {
+			return new CRC32ChecksumAlgorithm();
+		} else {
+			return new MDChecksumAlgorithm(checksumType.name());
 		}
-		return checksum;
+	}
+	
+	private void sendChecksum(File file, ChecksumType type, String checksum) {
+		HttpResponse response = null;
+		try {
+			response = callSetChecksumService(buildSetChecksumValueUri(file, type, checksum));
+			log.info(response.getEntity().toString());
+		} catch (Exception e) {
+			log.error(e.getMessage());
+		}
+	}
+	
+	public URI buildSetChecksumValueUri(File target, ChecksumType type, String checksum) throws Exception {
+		String path = "/" + Constants.RESOURCE + "/" + Constants.VERSION;
+		path += target.getAbsolutePath() + "/" + type.name() + "?" + Constants.CHECKSUM_VALUE_KEY + "=" + checksum;
+		URI uri;
+		try {
+			uri = new URI("http", null, Configuration.getBackendHostname(), Configuration.getBackendPort(), path, null, null);
+		} catch (URISyntaxException e) {
+			log.error("Unable to create set checksum value URI. URISyntaxException " + e.getLocalizedMessage());
+			throw new Exception("Unable to create Configuration Discovery URI");
+		}
+		log.debug("Built set checksum value URI: " + uri);
+		return uri;
 	}
 
-	private static String computeCopyWithChecksumAdler32(InputStream inputStream, FileOutputStream outputStream)
-            throws IOException {
-
-        byte[] bArray = new byte[BUFFER_SIZE];
-        CheckedInputStream cis = new CheckedInputStream(inputStream, new Adler32());
-        int bytes_read;
-        while ((bytes_read = cis.read(bArray)) != -1) {
-        	outputStream.write(bArray, 0, bytes_read);
-        }
-        String checksum = Long.toHexString(cis.getChecksum().getValue());
-        bArray = null;
-        return checksum;
-    }
-
-    private static String computeCopyWithChecksumCRC32(InputStream inputStream, FileOutputStream outputStream)
-            throws IOException {
-        
-    	String checksum = null;
-        byte[] bArray = new byte[BUFFER_SIZE];
-        CRC32 crc32 = new CRC32();
-        while (true) {
-            int count = inputStream.read(bArray, 0, BUFFER_SIZE);
-            if (count == -1) {
-                break;
-            }
-            crc32.update(bArray, 0, count);
-            outputStream.write(bArray, 0, count);
-        }
-        bArray = null;
-        checksum = Long.toHexString(crc32.getValue());
-        return checksum;
-    }
-
-    private static String computeCopyWithChecksumMD(InputStream inputStream, FileOutputStream outputStream,
-            ChecksumAlgorithm checksumType) throws IOException, NoSuchAlgorithmException {
-
-        String algorithm = checksumType.toString();
-        byte[] bArray = new byte[BUFFER_SIZE];
-        MessageDigest md = MessageDigest.getInstance(algorithm);
-        log.debug("Computing " + algorithm);
-        while (true) {
-            int count = inputStream.read(bArray, 0, BUFFER_SIZE);
-            if (count == -1) {
-                break;
-            }
-            md.update(bArray, 0, count);
-            outputStream.write(bArray, 0, count);
-        }
-        byte[] hash = md.digest();
-        StringBuffer sb = new StringBuffer();
-        for (int i = 0; i < hash.length; i++) {
-            sb.append(Integer.toString((hash[i] & 0xff) + 0x100, 16).substring(1));
-        }
-        bArray = null;
-        hash = null;
-        return sb.toString();
-    }
-	
+	private HttpResponse callSetChecksumService(URI uri) throws Exception {
+		log.info("Calling set checksum service at uri: " + uri);
+		HttpGet httpget = new HttpGet(uri);
+		HttpClient httpclient = new DefaultHttpClient();
+		HttpResponse httpResponse = null;
+		try {
+			httpResponse = httpclient.execute(httpget);
+		} catch (ClientProtocolException e) {
+			log.error("Error executing http call. ClientProtocolException " + e.getLocalizedMessage());
+			throw new Exception("Error contacting set checksum service.");
+		} catch (IOException e) {
+			log.error("Error executing http call. IOException " + e.getLocalizedMessage());
+			throw new Exception("Error contacting set checksum service.");
+		}
+		StatusLine status = httpResponse.getStatusLine();
+		if (status == null) {
+			// never return null
+			log.error("Unexpected error! response.getStatusLine() returned null!");
+			throw new Exception("Unexpected error! response.getStatusLine() returned null! Please contact storm support");
+		}
+		int httpCode = status.getStatusCode();
+		String httpMessage = status.getReasonPhrase();
+		log.debug("Http call return code is: " + httpCode);
+		log.debug("Http call return reason phrase is: " + httpMessage);
+		if (httpCode != HttpURLConnection.HTTP_OK) {
+			log.warn("Unable to get a valid response from server. Received a non HTTP 200 response from the server : \'" + httpCode + "\' "
+					+ httpMessage);
+			throw new Exception("Unable to get a valid response from server. " + httpMessage);
+		}
+		return httpResponse;
+	}
 	
 }
