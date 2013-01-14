@@ -22,7 +22,6 @@ import it.grid.storm.gridhttps.webapp.checksum.algorithm.CRC32ChecksumAlgorithm;
 import it.grid.storm.gridhttps.webapp.checksum.algorithm.ChecksumAlgorithm;
 import it.grid.storm.gridhttps.webapp.checksum.algorithm.MDChecksumAlgorithm;
 import it.grid.storm.gridhttps.webapp.utils.Chronometer;
-import it.grid.storm.gridhttps.webapp.utils.Chronometer.ElapsedTime;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -56,34 +55,28 @@ public class StormContentService implements FileContentService {
 		OutputStream out = new FileOutputStream(file);
 		Chronometer chrono = new Chronometer();
 		if (Configuration.getComputeChecksum()) {
+			String checksum = null;
 			ChecksumAlgorithm algorithm = null;
 			try {
 				algorithm = getChecksumAlgorithm(Configuration.getChecksumType());
+				chrono.start();
+				checksum = algorithm.compute(in, out);
+				chrono.stop();
+				log.debug("Checksum: " + checksum);
+				IOUtils.closeQuietly(out);
+				sendChecksum(file, algorithm.getType(), checksum);
 			} catch (NoSuchAlgorithmException e) {
 				log.error(e.getMessage());
-			}
-			if (algorithm != null) {
-				String checksum = null;
-				log.debug("Computing " + algorithm.getType().name());
-				try {
-					chrono.start();
-					checksum = algorithm.compute(in, out);
-					chrono.stop();
-					IOUtils.closeQuietly(out);
-					sendChecksum(file, algorithm.getType(), checksum);
-				} catch (ChecksumReadException e) {
-					log.error(e.getMessage());
-					log.error("Impossible to terminate file transfer!");
-					log.warn("Trying to transfer file without checksum...");
-					in.reset();
-					chrono.start();
-					doSimpleSetFileContent(in, out);
-					chrono.stop();
-				} finally {
-					log.debug("Checksum: " + checksum);
-				}
-			} else {
-				log.warn("Checksum algorithm '" + Configuration.getChecksumType() + "' not supported! Proceeding with nochecksum file transfer...");
+				log.warn("Checksum algorithm '" + Configuration.getChecksumType() + "' not supported!");
+				log.info("Proceeding with nochecksum file transfer...");
+				chrono.start();
+				doSimpleSetFileContent(in, out);
+				chrono.stop();
+			} catch (ChecksumReadException e) {
+				log.error(e.getMessage());
+				log.error("File transfer is failed!");
+				log.warn("Trying to transfer file without checksum...");
+				in.reset();
 				chrono.start();
 				doSimpleSetFileContent(in, out);
 				chrono.stop();
@@ -93,8 +86,7 @@ public class StormContentService implements FileContentService {
 			doSimpleSetFileContent(in, new FileOutputStream(file));
 			chrono.stop();
 		}
-		ElapsedTime elapsed = chrono.getElapsedTime();
-		log.debug("ELAPSED TIME: " + elapsed.getMinutes() + "':" + elapsed.getSeconds() + "'':" + elapsed.getMilliseconds());
+		log.debug("File-transfer time: " + chrono.getElapsedTime());
 	}
 
 	public InputStream getFileContent(File file) throws FileNotFoundException {

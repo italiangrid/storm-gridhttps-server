@@ -20,6 +20,7 @@ public class CRC32ChecksumAlgorithm implements ChecksumAlgorithm {
 	}
 
 	public String compute(InputStream inputStream) throws ChecksumReadException {
+		log.info("Computing " + getType().name() + " checksum");
 		String checksum = null;
 		byte[] bArray = new byte[BUFFER_SIZE];
 		CRC32 crc32 = new CRC32();
@@ -38,6 +39,7 @@ public class CRC32ChecksumAlgorithm implements ChecksumAlgorithm {
 	}
 
 	public String compute(InputStream inputStream, OutputStream outputStream) throws ChecksumReadException {
+		log.info("Computing " + getType().name() + " checksum");
 		String checksum = null;
 		byte[] bArray = new byte[BUFFER_SIZE];
 		CRC32 crc32 = new CRC32();

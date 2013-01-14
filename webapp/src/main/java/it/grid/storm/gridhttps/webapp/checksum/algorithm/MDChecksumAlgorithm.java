@@ -27,8 +27,8 @@ public class MDChecksumAlgorithm implements ChecksumAlgorithm {
 	}
 	
 	public String compute(InputStream inputStream) throws ChecksumReadException {
+		log.info("Computing " + getType().name() + " checksum");
 		byte[] bArray = new byte[BUFFER_SIZE];
-		log.trace("Computing " + md.getAlgorithm());
 		int count;
 		try {
 			while ((count = inputStream.read(bArray, 0, BUFFER_SIZE)) != -1) {
@@ -49,8 +49,8 @@ public class MDChecksumAlgorithm implements ChecksumAlgorithm {
 	}
 
 	public String compute(InputStream inputStream, OutputStream outputStream) throws ChecksumReadException {
+		log.info("Computing " + getType().name() + " checksum");
 		byte[] bArray = new byte[BUFFER_SIZE];
-		log.trace("Computing " + md.getAlgorithm());
 		int count;
 		try {
 			while ((count = inputStream.read(bArray, 0, BUFFER_SIZE)) != -1) {

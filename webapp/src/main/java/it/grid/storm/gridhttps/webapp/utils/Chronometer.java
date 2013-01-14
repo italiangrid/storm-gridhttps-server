@@ -25,6 +25,10 @@ public final class Chronometer{
 		public long getHours() {
 			return hrs;
 		}
+		public String toString() {
+			String filter = "%2dh%2d'%2d\"%2d";
+			return String.format(filter, hrs, mins, secs, millis);			
+		}
 	}
 	
     private long begin, end;

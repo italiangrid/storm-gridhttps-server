@@ -21,6 +21,7 @@ public class Adler32ChecksumAlgorithm implements ChecksumAlgorithm {
 	}
 
 	public String compute(InputStream inputStream) throws ChecksumReadException {
+		log.info("Computing " + getType().name() + " checksum");
 		byte[] bAarray = new byte[BUFFER_SIZE];
 		CheckedInputStream cis = new CheckedInputStream(inputStream, new Adler32());
 		try {
@@ -36,6 +37,7 @@ public class Adler32ChecksumAlgorithm implements ChecksumAlgorithm {
 	}
 
 	public String compute(InputStream inputStream, OutputStream outputStream) throws ChecksumReadException {
+		log.info("Computing " + getType().name() + " checksum");
 		byte[] bArray = new byte[BUFFER_SIZE];
         CheckedInputStream cis = new CheckedInputStream(inputStream, new Adler32());
         int bytes_read;
