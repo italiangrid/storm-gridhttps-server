@@ -83,7 +83,7 @@ public class StormContentService implements FileContentService {
 			}
 		} else {
 			chrono.start();
-			doSimpleSetFileContent(in, new FileOutputStream(file));
+			doSimpleSetFileContent(in, out);
 			chrono.stop();
 		}
 		log.debug("File-transfer time: " + chrono.getElapsedTime());
