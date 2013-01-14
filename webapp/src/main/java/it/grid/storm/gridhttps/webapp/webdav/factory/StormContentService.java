@@ -43,7 +43,7 @@ import org.apache.http.HttpResponse;
 import org.apache.http.StatusLine;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.HttpClient;
-import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpPut;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -138,17 +138,17 @@ public class StormContentService implements FileContentService {
 		String path = "/" + Constants.RESOURCE + "/" + Constants.VERSION + "/" + encodedFilename + "/" + type.toString();
 		String query = Constants.CHECKSUM_VALUE_KEY + "=" + checksum;
 		URI uri = new URI("http", null, Configuration.getBackendHostname(), Configuration.getBackendServicePort(), path, query, null);
-		log.debug("Built set checksum value URI: " + uri);
+		log.debug("Built checksum service URI: " + uri);
 		return uri;
 	}
 
 	private HttpResponse callSetChecksumService(URI uri) throws Exception {
-		log.info("Calling set checksum service at uri: " + uri);
-		HttpGet httpget = new HttpGet(uri);
+		log.info("Put checksum value at uri: " + uri);
+		HttpPut httpput = new HttpPut(uri);
 		HttpClient httpclient = new DefaultHttpClient();
 		HttpResponse httpResponse = null;
 		try {
-			httpResponse = httpclient.execute(httpget);
+			httpResponse = httpclient.execute(httpput);
 		} catch (ClientProtocolException e) {
 			log.error("Error executing http call. ClientProtocolException " + e.getLocalizedMessage());
 			throw new Exception("Error contacting set checksum service.");
@@ -166,8 +166,8 @@ public class StormContentService implements FileContentService {
 		String httpMessage = status.getReasonPhrase();
 		log.debug("Http call return code is: " + httpCode);
 		log.debug("Http call return reason phrase is: " + httpMessage);
-		if (httpCode != HttpURLConnection.HTTP_OK) {
-			log.warn("Unable to get a valid response from server. Received a non HTTP 200 response from the server : \'" + httpCode + "\' "
+		if (httpCode != HttpURLConnection.HTTP_NO_CONTENT) {
+			log.warn("Unable to get a valid response from server. Received a non HTTP 204 response from the server : \'" + httpCode + "\' "
 					+ httpMessage);
 			throw new Exception("Unable to get a valid response from server. " + httpMessage);
 		}
