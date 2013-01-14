@@ -21,13 +21,13 @@ import it.grid.storm.gridhttps.webapp.Configuration;
 import it.grid.storm.gridhttps.webapp.HttpHelper;
 import it.grid.storm.gridhttps.webapp.authorization.AuthorizationStatus;
 import it.grid.storm.gridhttps.webapp.authorization.Constants;
+import it.grid.storm.gridhttps.webapp.authorization.UserCredentials;
 import it.grid.storm.gridhttps.webapp.authorization.methods.AbstractMethodAuthorization;
 import it.grid.storm.gridhttps.webapp.backendApi.StormBackendApi;
 import it.grid.storm.gridhttps.webapp.data.Surl;
 import it.grid.storm.gridhttps.webapp.webdav.factory.exceptions.RuntimeApiException;
 import it.grid.storm.gridhttps.webapp.webdav.factory.exceptions.StormResourceException;
 import it.grid.storm.storagearea.StorageArea;
-import it.grid.storm.storagearea.StorageAreaManager;
 import it.grid.storm.xmlrpc.BackendApi;
 import it.grid.storm.xmlrpc.outputdata.SurlArrayRequestOutputData;
 
@@ -35,8 +35,10 @@ public class PutMethodAuthorization extends AbstractMethodAuthorization {
 
 	private static final Logger log = LoggerFactory.getLogger(PutMethodAuthorization.class);
 	
-	public PutMethodAuthorization(HttpHelper httpHelper) {
-		super(httpHelper);
+	private StorageArea SA;
+	
+	public PutMethodAuthorization(StorageArea SA) {
+		this.SA = SA;
 	}
 
 	private String stripContext(String url) {
@@ -44,23 +46,13 @@ public class PutMethodAuthorization extends AbstractMethodAuthorization {
 	}
 	
 	public AuthorizationStatus isUserAuthorized() {
-		StorageArea reqStorageArea;
-		String path = stripContext(getHttpHelper().getRequestStringURI());
-		try {
-			reqStorageArea = StorageAreaManager.getMatchingSA(path);
-		} catch (IllegalArgumentException e) {
-			e.printStackTrace();
-			return new AuthorizationStatus(false, e.getMessage());
-		} catch (IllegalStateException e) {
-			e.printStackTrace();
-			return new AuthorizationStatus(false, e.getMessage());
-		}
-		if (reqStorageArea != null) {
-			String reqPath = reqStorageArea.getRealPath(path);
+		String path = stripContext(HttpHelper.getHelper().getRequestURI().getPath());
+		if (SA != null) {
+			String reqPath = SA.getRealPath(path);
 			File resource = new File(reqPath);
 			if (resource.exists()) {
 				if (resource.isFile()) {
-					AuthorizationStatus status = doPrepareToPutStatus(resource, reqStorageArea);
+					AuthorizationStatus status = doPrepareToPutStatus(resource, SA);
 					if (status.isAuthorized()) {
 						if (askAuth(Constants.WRITE_OPERATION, reqPath)) {
 							return new AuthorizationStatus(true, "");
@@ -74,7 +66,8 @@ public class PutMethodAuthorization extends AbstractMethodAuthorization {
 					return new AuthorizationStatus(false, "Resource required is not a file"); 
 				}
 			} else {
-				return new AuthorizationStatus(false, "File not exist! You must do a prepare-to-put on surl '" + (new Surl(resource, reqStorageArea)).asString() + "' before!"); 
+				Surl surl = new Surl(resource, SA);
+				return new AuthorizationStatus(false, "File not exist! You must do a prepare-to-put on surl '" + surl + "' before!"); 
 			}
 		} else {
 			return new AuthorizationStatus(false, "No storage area matched with path = " + path);
@@ -88,7 +81,7 @@ public class PutMethodAuthorization extends AbstractMethodAuthorization {
 		SurlArrayRequestOutputData outputSPtP;
 		try {
 			backend = StormBackendApi.getBackend(Configuration.getBackendHostname(), Configuration.getBackendPort());
-			outputSPtP = StormBackendApi.prepareToPutStatus(backend, surl.asString(), getUser());
+			outputSPtP = StormBackendApi.prepareToPutStatus(backend, surl.asString(), UserCredentials.getUser());
 		} catch (RuntimeApiException e) {
 			log.error(e.getMessage());
 			return new AuthorizationStatus(false, e.getMessage());

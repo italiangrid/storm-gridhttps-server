@@ -19,7 +19,6 @@ import io.milton.http.exceptions.BadRequestException;
 import io.milton.http.exceptions.ConflictException;
 import io.milton.http.exceptions.NotAuthorizedException;
 import io.milton.resource.*;
-import io.milton.servlet.MiltonServlet;
 import it.grid.storm.gridhttps.webapp.HttpHelper;
 import it.grid.storm.gridhttps.webapp.webdav.factory.exceptions.RuntimeApiException;
 import it.grid.storm.gridhttps.webapp.webdav.factory.exceptions.StormResourceException;
@@ -55,8 +54,7 @@ public class StormDirectoryResource extends StormResource implements MakeCollect
 
 	public CollectionResource createCollection(String name) throws NotAuthorizedException, ConflictException, BadRequestException {
 		log.info("Called function for MKCOL DIRECTORY");
-		HttpHelper httpHelper = new HttpHelper(MiltonServlet.request(), MiltonServlet.response());
-		String methodName = httpHelper.getRequestMethod();
+		String methodName = HttpHelper.getHelper().getRequestMethod();
 		if (methodName.equals("PUT")) {
 			/*
 			 * it is a PUT with a path that contains a directory that does not
@@ -65,7 +63,7 @@ public class StormDirectoryResource extends StormResource implements MakeCollect
 			 * be a problem!!!
 			 */
 			log.warn("Auto-creation of directory for " + methodName + " requests is disabled!");
-			httpHelper.sendError(409, "Conflict");
+			HttpHelper.getHelper().sendError(409, "Conflict");
 			return null;
 		}
 		return StormResourceHelper.doMkCol(this, name);
@@ -135,13 +133,13 @@ public class StormDirectoryResource extends StormResource implements MakeCollect
 	public void sendContent(OutputStream out, Range range, Map<String, String> params, String contentType) throws IOException,
 			NotAuthorizedException, RuntimeApiException, StormResourceException {
 		log.info("Called function for GET DIRECTORY");
-		HttpHelper httpHelper = new HttpHelper(MiltonServlet.request(), MiltonServlet.response());
 		Collection<SurlInfo> entries = StormResourceHelper.doLsDetailed(this, Recursion.NONE).get(0).getSubpathInfo();
-		buildDirectoryPage(out, httpHelper.getRequestURI().getPath(), entries);
+		buildDirectoryPage(out, entries);
 	}
 
-	private void buildDirectoryPage(OutputStream out, String dirPath, Collection<SurlInfo> entries) throws RuntimeApiException,
+	private void buildDirectoryPage(OutputStream out, Collection<SurlInfo> entries) throws RuntimeApiException,
 			StormResourceException {
+		String dirPath = HttpHelper.getHelper().getRequestURI().getPath();
 		StormHtmlFolderPage page = new StormHtmlFolderPage(out);
 		page.start();
 		page.addTitle("StoRM Gridhttps-server WebDAV");

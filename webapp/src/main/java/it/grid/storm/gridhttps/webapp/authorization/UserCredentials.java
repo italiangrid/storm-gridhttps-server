@@ -32,7 +32,17 @@ public class UserCredentials {
 	private ArrayList<String> userFQANS;
 	private HttpHelper httpHelper;
 	
-	public UserCredentials(HttpHelper httpHelper) {
+	private static UserCredentials instance;
+	
+	public static void init(HttpHelper httpHelper) {
+		instance = new UserCredentials(httpHelper);
+	}
+	
+	public static UserCredentials getUser() {
+		return instance;
+	}
+		
+	private UserCredentials(HttpHelper httpHelper) {
 		this.httpHelper = httpHelper;
 		initAsAnonymous();
 		if (this.httpHelper.isHttp())

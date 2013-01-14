@@ -23,7 +23,6 @@ import io.milton.http.exceptions.ConflictException;
 import io.milton.http.exceptions.NotAuthorizedException;
 import io.milton.http.exceptions.NotFoundException;
 import io.milton.resource.Resource;
-import io.milton.servlet.MiltonServlet;
 import it.grid.storm.gridhttps.webapp.HttpHelper;
 import it.grid.storm.gridhttps.webapp.authorization.UserCredentials;
 import it.grid.storm.gridhttps.webapp.backendApi.StormBackendApi;
@@ -57,8 +56,7 @@ public class StormResourceHelper {
 
 	public static void doMoveTo(StormResource source, StormResource newParent, String newName) throws NotAuthorizedException,
 			ConflictException, BadRequestException {
-		HttpHelper httpHelper = new HttpHelper(MiltonServlet.request(), MiltonServlet.response());
-		UserCredentials user = new UserCredentials(httpHelper);
+		UserCredentials user = UserCredentials.getUser();
 		doMoveTo(source, newParent, newName, user);
 	}
 
@@ -71,8 +69,7 @@ public class StormResourceHelper {
 	}
 
 	public static void doDelete(StormResource source) throws NotAuthorizedException, ConflictException, BadRequestException {
-		HttpHelper httpHelper = new HttpHelper(MiltonServlet.request(), MiltonServlet.response());
-		UserCredentials user = new UserCredentials(httpHelper);
+		UserCredentials user = UserCredentials.getUser();
 		doDelete(source, user);
 	}
 
@@ -93,8 +90,7 @@ public class StormResourceHelper {
 	}
 
 	public static InputStream doGetFile(StormFileResource source) throws NotFoundException, RuntimeApiException, StormResourceException {
-		HttpHelper httpHelper = new HttpHelper(MiltonServlet.request(), MiltonServlet.response());
-		UserCredentials user = new UserCredentials(httpHelper);
+		UserCredentials user = UserCredentials.getUser();
 		return doGetFile(source, user);
 	}
 
@@ -116,8 +112,7 @@ public class StormResourceHelper {
 
 	public static StormDirectoryResource doMkCol(StormDirectoryResource sourceDir, String name) throws RuntimeApiException,
 			StormResourceException {
-		HttpHelper httpHelper = new HttpHelper(MiltonServlet.request(), MiltonServlet.response());
-		UserCredentials user = new UserCredentials(httpHelper);
+		UserCredentials user = UserCredentials.getUser();
 		return doMkCol(sourceDir, name, user);
 	}
 
@@ -131,8 +126,7 @@ public class StormResourceHelper {
 
 	public static StormFileResource doPut(StormDirectoryResource sourceDir, String name, InputStream in) throws RuntimeApiException,
 			StormResourceException {
-		HttpHelper httpHelper = new HttpHelper(MiltonServlet.request(), MiltonServlet.response());
-		UserCredentials user = new UserCredentials(httpHelper);
+		UserCredentials user = UserCredentials.getUser();
 		return doPut(sourceDir, name, in, user);
 	}
 
@@ -161,8 +155,7 @@ public class StormResourceHelper {
 
 	public static StormFileResource doPutOverwrite(StormFileResource source, InputStream in) throws BadRequestException, ConflictException,
 			NotAuthorizedException {
-		HttpHelper httpHelper = new HttpHelper(MiltonServlet.request(), MiltonServlet.response());
-		UserCredentials user = new UserCredentials(httpHelper);
+		UserCredentials user = UserCredentials.getUser();
 		return doPutOverwrite(source, in, user);
 	}
 
@@ -185,8 +178,7 @@ public class StormResourceHelper {
 
 	public static ArrayList<SurlInfo> doLsDetailed(StormResource source, Recursion recursion) throws RuntimeApiException,
 			StormResourceException {
-		HttpHelper httpHelper = new HttpHelper(MiltonServlet.request(), MiltonServlet.response());
-		UserCredentials user = new UserCredentials(httpHelper);
+		UserCredentials user = UserCredentials.getUser();
 		return doLsDetailed(source, recursion, user);
 	}
 
@@ -199,8 +191,7 @@ public class StormResourceHelper {
 	}
 
 	public static ArrayList<SurlInfo> doLs(StormResource source) throws RuntimeApiException, StormResourceException {
-		HttpHelper httpHelper = new HttpHelper(MiltonServlet.request(), MiltonServlet.response());
-		UserCredentials user = new UserCredentials(httpHelper);
+		UserCredentials user = UserCredentials.getUser();
 		return doLs(source, user);
 	}
 
@@ -211,8 +202,7 @@ public class StormResourceHelper {
 	}
 
 	public static PingOutputData doPing(String stormBackendHostname, int stormBackendPort) throws RuntimeApiException {
-		HttpHelper httpHelper = new HttpHelper(MiltonServlet.request(), MiltonServlet.response());
-		UserCredentials user = new UserCredentials(httpHelper);
+		UserCredentials user = UserCredentials.getUser();
 		return doPing(stormBackendHostname, stormBackendPort, user);
 	}
 
@@ -224,9 +214,8 @@ public class StormResourceHelper {
 
 	public static void doCopyDirectory(StormDirectoryResource sourceDir, StormDirectoryResource newParent, String newName)
 			throws NotAuthorizedException, ConflictException, BadRequestException {
-		HttpHelper httpHelper = new HttpHelper(MiltonServlet.request(), MiltonServlet.response());
-		UserCredentials user = new UserCredentials(httpHelper);
-		doCopyDirectory(sourceDir, newParent, newName, httpHelper.isDepthInfinity(), user);
+		UserCredentials user = UserCredentials.getUser();
+		doCopyDirectory(sourceDir, newParent, newName, HttpHelper.getHelper().isDepthInfinity(), user);
 	}
 
 	public static void doCopyDirectory(StormDirectoryResource sourceDir, StormDirectoryResource newParent, String newName,
@@ -255,8 +244,7 @@ public class StormResourceHelper {
 
 	public static void doCopyFile(StormFileResource source, StormDirectoryResource newParent, String newName) throws RuntimeApiException,
 			StormResourceException {
-		HttpHelper httpHelper = new HttpHelper(MiltonServlet.request(), MiltonServlet.response());
-		UserCredentials user = new UserCredentials(httpHelper);
+		UserCredentials user = UserCredentials.getUser();
 		doCopyFile(source, newParent, newName, user);
 	}
 
@@ -285,8 +273,7 @@ public class StormResourceHelper {
 
 	public static RequestOutputData doPrepareToGetStatus(StormFileResource source) throws NotFoundException, RuntimeApiException,
 			StormResourceException {
-		HttpHelper httpHelper = new HttpHelper(MiltonServlet.request(), MiltonServlet.response());
-		UserCredentials user = new UserCredentials(httpHelper);
+		UserCredentials user = UserCredentials.getUser();
 		return doPrepareToGetStatus(source, user);
 	}
 
@@ -298,8 +285,7 @@ public class StormResourceHelper {
 
 	public static RequestOutputData doPrepareToPutStatus(StormFileResource source) throws NotFoundException, RuntimeApiException,
 			StormResourceException {
-		HttpHelper httpHelper = new HttpHelper(MiltonServlet.request(), MiltonServlet.response());
-		UserCredentials user = new UserCredentials(httpHelper);
+		UserCredentials user = UserCredentials.getUser();
 		return doPrepareToPutStatus(source, user);
 	}
 

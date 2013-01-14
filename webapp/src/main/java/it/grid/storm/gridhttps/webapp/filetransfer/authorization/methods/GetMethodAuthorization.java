@@ -21,13 +21,13 @@ import it.grid.storm.gridhttps.webapp.Configuration;
 import it.grid.storm.gridhttps.webapp.HttpHelper;
 import it.grid.storm.gridhttps.webapp.authorization.AuthorizationStatus;
 import it.grid.storm.gridhttps.webapp.authorization.Constants;
+import it.grid.storm.gridhttps.webapp.authorization.UserCredentials;
 import it.grid.storm.gridhttps.webapp.authorization.methods.AbstractMethodAuthorization;
 import it.grid.storm.gridhttps.webapp.backendApi.StormBackendApi;
 import it.grid.storm.gridhttps.webapp.data.Surl;
 import it.grid.storm.gridhttps.webapp.webdav.factory.exceptions.RuntimeApiException;
 import it.grid.storm.gridhttps.webapp.webdav.factory.exceptions.StormResourceException;
 import it.grid.storm.storagearea.StorageArea;
-import it.grid.storm.storagearea.StorageAreaManager;
 import it.grid.storm.xmlrpc.BackendApi;
 import it.grid.storm.xmlrpc.outputdata.SurlArrayRequestOutputData;
 
@@ -35,8 +35,10 @@ public class GetMethodAuthorization extends AbstractMethodAuthorization {
 
 	private static final Logger log = LoggerFactory.getLogger(GetMethodAuthorization.class);
 	
-	public GetMethodAuthorization(HttpHelper httpHelper) {
-		super(httpHelper);
+	private StorageArea SA;
+	
+	public GetMethodAuthorization(StorageArea SA) {
+		this.SA = SA;
 	}
 
 	private String stripContext(String url) {
@@ -44,23 +46,13 @@ public class GetMethodAuthorization extends AbstractMethodAuthorization {
 	}
 
 	public AuthorizationStatus isUserAuthorized() {
-		StorageArea reqStorageArea;
-		String path = stripContext(getHttpHelper().getRequestStringURI());
-		try {
-			reqStorageArea = StorageAreaManager.getMatchingSA(path);
-		} catch (IllegalArgumentException e) {
-			e.printStackTrace();
-			return new AuthorizationStatus(false, e.getMessage());
-		} catch (IllegalStateException e) {
-			e.printStackTrace();
-			return new AuthorizationStatus(false, e.getMessage());
-		}
-		if (reqStorageArea != null) {
-			String reqPath = reqStorageArea.getRealPath(path);
+		String path = stripContext(HttpHelper.getHelper().getRequestURI().getPath());
+		if (SA != null) {
+			String reqPath = SA.getRealPath(path);
 			File resource = new File(reqPath);
 			if (resource.exists()) {
 				if (resource.isFile()) {
-					AuthorizationStatus status = doPrepareToGetStatus(resource, reqStorageArea);
+					AuthorizationStatus status = doPrepareToGetStatus(resource, SA);
 					if (status.isAuthorized()) {
 						if (askAuth(Constants.READ_OPERATION, reqPath)) {
 							return new AuthorizationStatus(true, "");
@@ -88,7 +80,7 @@ public class GetMethodAuthorization extends AbstractMethodAuthorization {
 		SurlArrayRequestOutputData outputSPtG;
 		try {
 			backend = StormBackendApi.getBackend(Configuration.getBackendHostname(), Configuration.getBackendPort());
-			outputSPtG = StormBackendApi.prepareToGetStatus(backend, surl.asString(), getUser());
+			outputSPtG = StormBackendApi.prepareToGetStatus(backend, surl.asString(), UserCredentials.getUser());
 		} catch (RuntimeApiException e) {
 			log.error(e.getMessage());
 			return new AuthorizationStatus(false, e.getMessage());

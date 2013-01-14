@@ -12,41 +12,30 @@
  */
 package it.grid.storm.gridhttps.webapp.webdav.authorization.methods;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import java.net.URI;
 
 import it.grid.storm.gridhttps.webapp.HttpHelper;
 import it.grid.storm.gridhttps.webapp.authorization.AuthorizationStatus;
 import it.grid.storm.gridhttps.webapp.authorization.Constants;
 import it.grid.storm.gridhttps.webapp.authorization.methods.AbstractMethodAuthorization;
 import it.grid.storm.storagearea.StorageArea;
-import it.grid.storm.storagearea.StorageAreaManager;
 
 public class PutMethodAuthorization extends AbstractMethodAuthorization {
 
-	private static final Logger log = LoggerFactory.getLogger(PutMethodAuthorization.class);
-
-	public PutMethodAuthorization(HttpHelper httpHelper) {
-		super(httpHelper);
+	private StorageArea SA;
+	
+	public PutMethodAuthorization(StorageArea SA) {
+		this.SA = SA;
 	}
-
+	
 	public AuthorizationStatus isUserAuthorized() {
-		StorageArea reqStorageArea;
-		try {
-			reqStorageArea = StorageAreaManager.getMatchingSA(getHttpHelper().getRequestURI());
-		} catch (IllegalArgumentException e) {
-			log.error(e.getMessage());
-			return new AuthorizationStatus(false, e.getMessage());
-		} catch (IllegalStateException e) {
-			log.error(e.getMessage());
-			return new AuthorizationStatus(false, e.getMessage());
-		}
-		String reqPath = reqStorageArea.getRealPath(getHttpHelper().getRequestURI().getPath());
-		String operation = getHttpHelper().isOverwriteRequest() ? Constants.PREPARE_TO_PUT_OVERWRITE_OPERATION : Constants.PREPARE_TO_PUT_OPERATION;
-		if (askAuth(operation, reqPath)) {
+		URI requestedURI = HttpHelper.getHelper().getRequestURI();
+		String requiredPath = SA.getRealPath(requestedURI.getPath());
+		String operation = HttpHelper.getHelper().isOverwriteRequest() ? Constants.PREPARE_TO_PUT_OVERWRITE_OPERATION : Constants.PREPARE_TO_PUT_OPERATION;
+		if (askAuth(operation, requiredPath)) {
 			return new AuthorizationStatus(true, "");
 		} else {
-			return new AuthorizationStatus(false, "You are not authorized to access the required resource");
+			return new AuthorizationStatus(false, "You are not authorized to access the requested resource");
 		}
 	}
 }

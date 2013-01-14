@@ -24,10 +24,6 @@ import it.grid.storm.storagearea.StorageArea;
 import java.util.Arrays;
 import java.util.HashMap;
 
-import javax.servlet.ServletException;
-//import javax.servlet.http.HttpServletRequest;
-//import javax.servlet.http.HttpServletResponse;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -38,13 +34,11 @@ public class FileTransferAuthorizationFilter extends AuthorizationFilter {
 	private String[] allowedMethods = {"GET", "PUT"};	
 	private HashMap<String, AbstractMethodAuthorization> METHODS_MAP;
 	private StorageArea storageArea;
-	private HttpHelper httpHelper;
 	private String contextPath;
 	
-	public FileTransferAuthorizationFilter(HttpHelper httpHelper, String contextPath) throws ServletException {
+	public FileTransferAuthorizationFilter(String contextPath) throws Exception {
 		super();
 		this.setContextPath(contextPath);
-		this.setHttpHelper(httpHelper);
 		initStorageArea();
 		doInitMethodMap();
 	}
@@ -58,16 +52,16 @@ public class FileTransferAuthorizationFilter extends AuthorizationFilter {
 	}
 
 	public String stripContext() {
-		return httpHelper.getRequestStringURI().replaceFirst(getContextPath(), "");
+		return HttpHelper.getHelper().getRequestURI().getPath().replaceFirst(getContextPath(), "");
 	}
 
 	public AuthorizationStatus isUserAuthorized() {
-		String method = httpHelper.getRequestMethod();
+		String method = HttpHelper.getHelper().getRequestMethod();
 		if (!isMethodAllowed(method)) {
 			log.warn("Received a request for a not allowed method : " + method);
 			return new AuthorizationStatus(false, "Method " + method + " not allowed!");
 		}
-		String reqProtocol = httpHelper.getRequestProtocol();
+		String reqProtocol = HttpHelper.getHelper().getRequestProtocol();
 		if (!isProtocolAllowed(reqProtocol)) {
 			log.warn("Received a request-uri with a not allowed protocol: " + reqProtocol);
 			return new AuthorizationStatus(false, "Protocol " + reqProtocol + " not allowed!");
@@ -75,17 +69,12 @@ public class FileTransferAuthorizationFilter extends AuthorizationFilter {
 		return getAuthorizationHandler().isUserAuthorized();
 	}
 	
-	private void initStorageArea() throws ServletException {
+	private void initStorageArea() throws Exception {
 		storageArea = null;
-		try {
-			storageArea = StorageAreaManager.getMatchingSA(this.stripContext());
-		} catch (Exception e) {
-			log.error(e.getMessage());
-			throw new ServletException(e);
-		}
+		storageArea = StorageAreaManager.getMatchingSA(stripContext());
 		if (storageArea == null) {
 			log.error("No matching StorageArea found for path " + this.stripContext() + " Unable to build http(s) relative path");
-			throw new ServletException("No matching StorageArea found for the provided path");
+			throw new Exception("No matching StorageArea found for the provided path");
 		}
 	}
 	
@@ -93,22 +82,6 @@ public class FileTransferAuthorizationFilter extends AuthorizationFilter {
 		return storageArea;
 	}
 	
-	public HttpHelper getHttpHelper() {
-		return httpHelper;
-	}
-
-	private void setHttpHelper(HttpHelper httpHelper) {
-		this.httpHelper = httpHelper;
-	}
-
-//	public HttpServletResponse getHTTPResponse() {
-//		return getHttpHelper().getResponse();
-//	}
-//	
-//	public HttpServletRequest getHTTPRequest() {
-//		return getHttpHelper().getRequest();
-//	}
-
 	public String getContextPath() {
 		return contextPath;
 	}
@@ -120,12 +93,12 @@ public class FileTransferAuthorizationFilter extends AuthorizationFilter {
 	private void doInitMethodMap() {
 		METHODS_MAP = new HashMap<String, AbstractMethodAuthorization>();
 		METHODS_MAP.clear();
-		METHODS_MAP.put("GET", new GetMethodAuthorization(httpHelper));
-		METHODS_MAP.put("PUT", new PutMethodAuthorization(httpHelper));
+		METHODS_MAP.put("GET", new GetMethodAuthorization(storageArea));
+		METHODS_MAP.put("PUT", new PutMethodAuthorization(storageArea));
 	}
 		
 	public AbstractMethodAuthorization getAuthorizationHandler() {
-		return METHODS_MAP.get(httpHelper.getRequestMethod());
+		return METHODS_MAP.get(HttpHelper.getHelper().getRequestMethod());
 	}
 	
 }

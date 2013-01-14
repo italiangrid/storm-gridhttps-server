@@ -12,8 +12,6 @@
  */
 package it.grid.storm.gridhttps.webapp;
 
-import io.milton.servlet.MiltonServlet;
-
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -35,14 +33,20 @@ public class HttpHelper {
 
 	private static final Logger log = LoggerFactory.getLogger(HttpHelper.class);
 
-	private HttpServletRequest HTTPRequest = null;
-	private HttpServletResponse HTTPResponse = null;
-
-	public static HttpHelper getInstance() {
-		return new HttpHelper(MiltonServlet.request(), MiltonServlet.response());
+	private static HttpHelper instance;
+	
+	public static void init(HttpServletRequest HTTPRequest, HttpServletResponse HTTPResponse) {
+		instance = new HttpHelper(HTTPRequest, HTTPResponse);
+	}
+	
+	public static HttpHelper getHelper() {
+		return instance;
 	}
 
-	public HttpHelper(HttpServletRequest HTTPRequest, HttpServletResponse HTTPResponse) {
+	private HttpServletRequest HTTPRequest = null;
+	private HttpServletResponse HTTPResponse = null;
+	
+	private HttpHelper(HttpServletRequest HTTPRequest, HttpServletResponse HTTPResponse) {
 		this.HTTPRequest = HTTPRequest;
 		this.HTTPResponse = HTTPResponse;
 	}
@@ -64,8 +68,6 @@ public class HttpHelper {
 	}
 	
 	public String getRequestStringURI() {
-//		if (Configuration.getRemoveSpaces())
-//			return getRequest().getRequestURI().replaceAll(" ", Configuration.getRemoveSpacesWith());
 		return getRequest().getRequestURI();
 	}
 
@@ -89,9 +91,11 @@ public class HttpHelper {
 	}
 
 	public String getDestinationHeader() {
-//		if (Configuration.getRemoveSpaces())
-//			return getRequest().getHeader("Destination").replaceAll(" ", Configuration.getRemoveSpacesWith());
 		return getRequest().getHeader("Destination");
+	}
+	
+	public boolean hasDestinationHeader() {
+		return getRequest().getHeader("Destination") != null;
 	}
 
 	public URI getDestinationURI() {

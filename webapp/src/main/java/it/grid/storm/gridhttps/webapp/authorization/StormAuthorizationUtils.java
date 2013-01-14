@@ -45,8 +45,9 @@ public class StormAuthorizationUtils {
 
 	/* Public methods */
 
-	public static boolean isUserAuthorized(UserCredentials user, String operation, String path) throws Exception,
+	public static boolean isUserAuthorized(String operation, String path) throws Exception,
 			IllegalArgumentException {
+		UserCredentials user = UserCredentials.getUser();
 		if (path == null || operation == null || user.getUserFQANS() == null || user.getUserDN() == null) {
 			String errorMsg = "Received null mandatory parameter(s) at isUserAuthorized: ";
 			errorMsg += "path=" + path + " operation=" + operation;

@@ -31,8 +31,6 @@ import it.grid.storm.storagearea.StorageAreaManager;
 import java.util.ArrayList;
 import java.util.HashMap;
 
-import javax.servlet.ServletException;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -61,17 +59,16 @@ public class WebDAVAuthorizationFilter extends AuthorizationFilter {
 		add("COPY");
 	}};	
 	
-	private HttpHelper httpHelper;
 	private HashMap<String, AbstractMethodAuthorization> METHODS_MAP;
 	private StorageArea reqStorageArea;
 	private StorageArea destStorageArea;
 
 	
-	public WebDAVAuthorizationFilter(HttpHelper httpHelper) throws ServletException {
+	public WebDAVAuthorizationFilter() throws Exception {
 		super();
-		this.httpHelper = httpHelper;
-		doInitMethodMap();
 		initStorageAreas();
+		doInitMethodMap();
+		
 	}
 
 	private boolean isMethodAllowed(String method) {
@@ -99,6 +96,7 @@ public class WebDAVAuthorizationFilter extends AuthorizationFilter {
 	}
 
 	public AuthorizationStatus isUserAuthorized() {
+		HttpHelper httpHelper = HttpHelper.getHelper();
 		String method = httpHelper.getRequestMethod();
 		if (!isMethodAllowed(method)) {
 			log.warn("Received a request for a not allowed method : " + method);
@@ -121,31 +119,22 @@ public class WebDAVAuthorizationFilter extends AuthorizationFilter {
 		return getAuthorizationHandler().isUserAuthorized(); 
 	}
 
-	private void initStorageAreas() throws ServletException {
+	private void initStorageAreas() throws Exception {
+		HttpHelper httpHelper = HttpHelper.getHelper();
 		reqStorageArea = null;
-		log.debug("searching storagearea by uri: " + httpHelper.getRequestStringURI());
-		try {
-			reqStorageArea = StorageAreaManager.getMatchingSA(httpHelper.getRequestURI());
-		} catch (Exception e) {
-			log.error(e.getMessage());
-			throw new ServletException(e);
-		}
+		log.debug("searching storagearea by uri: " + httpHelper.getRequestURI().getPath());
+		reqStorageArea = StorageAreaManager.getMatchingSA(httpHelper.getRequestURI());
 		if (reqStorageArea == null) {
-			log.error("No matching StorageArea found for uri " + httpHelper.getRequestStringURI() + " Unable to build http(s) relative path");
-			throw new ServletException("No matching StorageArea found for the provided path");
+			log.error("No matching StorageArea found for uri " + httpHelper.getRequestURI().getPath() + " Unable to build http(s) relative path");
+			throw new Exception("No matching StorageArea found for the provided path");
 		}
 		destStorageArea = null;
 		if (hasDestination(httpHelper.getRequestMethod())) {
-			log.debug("searching storagearea by uri: " + httpHelper.getDestinationURI());
-			try {
-				destStorageArea = StorageAreaManager.getMatchingSA(httpHelper.getDestinationURI());
-			} catch (Exception e) {
-				log.error(e.getMessage());
-				throw new ServletException(e);
-			}
+			log.debug("searching storagearea by uri: " + httpHelper.getDestinationURI().getPath());
+			destStorageArea = StorageAreaManager.getMatchingSA(httpHelper.getDestinationURI());
 			if (destStorageArea == null) {
 				log.error("No matching StorageArea found for uri " + httpHelper.getDestinationURI().getPath() + " Unable to build http(s) relative path");
-				throw new ServletException("No matching StorageArea found for the provided path");
+				throw new Exception("No matching StorageArea found for the provided path");
 			}
 		}
 	}
@@ -153,19 +142,19 @@ public class WebDAVAuthorizationFilter extends AuthorizationFilter {
 	private void doInitMethodMap() {
 		METHODS_MAP = new HashMap<String, AbstractMethodAuthorization>();
 		METHODS_MAP.clear();
-		METHODS_MAP.put("PROPFIND", new PropfindMethodAuthorization(httpHelper));
-		METHODS_MAP.put("OPTIONS", new OptionsMethodAuthorization(httpHelper));
-		METHODS_MAP.put("GET", new GetMethodAuthorization(httpHelper));
-		METHODS_MAP.put("DELETE", new DeleteMethodAuthorization(httpHelper));
-		METHODS_MAP.put("PUT", new PutMethodAuthorization(httpHelper));
-		METHODS_MAP.put("MKCOL", new MkcolMethodAuthorization(httpHelper));
-		METHODS_MAP.put("MOVE", new MoveMethodAuthorization(httpHelper));
-		METHODS_MAP.put("COPY", new CopyMethodAuthorization(httpHelper));
-		METHODS_MAP.put("HEAD", new HeadMethodAuthorization(httpHelper));
+		METHODS_MAP.put("PROPFIND", new PropfindMethodAuthorization(reqStorageArea));
+		METHODS_MAP.put("OPTIONS", new OptionsMethodAuthorization());
+		METHODS_MAP.put("GET", new GetMethodAuthorization(reqStorageArea));
+		METHODS_MAP.put("DELETE", new DeleteMethodAuthorization(reqStorageArea));
+		METHODS_MAP.put("PUT", new PutMethodAuthorization(reqStorageArea));
+		METHODS_MAP.put("MKCOL", new MkcolMethodAuthorization(reqStorageArea));
+		METHODS_MAP.put("MOVE", new MoveMethodAuthorization(reqStorageArea, destStorageArea));
+		METHODS_MAP.put("COPY", new CopyMethodAuthorization(reqStorageArea, destStorageArea));
+		METHODS_MAP.put("HEAD", new HeadMethodAuthorization());
 	}
 		
 	public AbstractMethodAuthorization getAuthorizationHandler() {
-		return METHODS_MAP.get(httpHelper.getRequestMethod());
+		return METHODS_MAP.get(HttpHelper.getHelper().getRequestMethod());
 	}
 	
 }

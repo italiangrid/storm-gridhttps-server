@@ -13,7 +13,6 @@
 package it.grid.storm.gridhttps.webapp.webdav.authorization.methods;
 
 import it.grid.storm.gridhttps.webapp.Configuration;
-import it.grid.storm.gridhttps.webapp.HttpHelper;
 import it.grid.storm.gridhttps.webapp.authorization.AuthorizationStatus;
 import it.grid.storm.gridhttps.webapp.authorization.UserCredentials;
 import it.grid.storm.gridhttps.webapp.authorization.methods.AbstractMethodAuthorization;
@@ -28,16 +27,12 @@ public class OptionsMethodAuthorization extends AbstractMethodAuthorization {
 
 	private static final Logger log = LoggerFactory.getLogger(OptionsMethodAuthorization.class);
 
-	public OptionsMethodAuthorization(HttpHelper httpHelper) {
-		super(httpHelper);
-	}
-
 	@Override
 	public AuthorizationStatus isUserAuthorized() {
 		/* ping storm-backend if method = OPTIONS */
 		log.info("ping " + Configuration.getBackendHostname() + ":" + Configuration.getBackendPort());
 		try {
-			UserCredentials user = new UserCredentials(getHttpHelper());
+			UserCredentials user = UserCredentials.getUser();
 			PingOutputData output = StormResourceHelper.doPing(Configuration.getBackendHostname(), Configuration.getBackendPort(), user);
 			log.info(output.getBeOs());
 			log.info(output.getBeVersion());
