@@ -124,10 +124,21 @@ public class StormContentService implements FileContentService {
 	}
 	
 	private void sendChecksum(File file, ChecksumType type, String checksum) {
-		HttpResponse response = null;
+		log.info("Set checksum " + type.name() + " = " + checksum + " to file " + file.getAbsolutePath());
 		try {
-			response = callSetChecksumService(buildSetChecksumValueUri(file, type, checksum));
-			log.info(response.getEntity().toString());
+			HttpResponse response = callSetChecksumService(buildSetChecksumValueUri(file, type, checksum));
+			StatusLine status = response.getStatusLine();
+			if (status != null) {
+				log.debug("Http call return code is: " + status.getStatusCode());
+				log.debug("Http call return reason phrase is: " + status.getReasonPhrase());
+				if (status.getStatusCode() == HttpURLConnection.HTTP_NO_CONTENT) {
+					log.info("Checksum successfully set!");
+				} else {
+					throw new Exception("Unable to get a valid response from server. Received a non HTTP 204 response from the server!");
+				}
+			} else { 
+				throw new Exception("Unexpected error! response.getStatusLine() returned null!");
+			}
 		} catch (Exception e) {
 			log.error(e.getMessage());
 		}
@@ -155,21 +166,6 @@ public class StormContentService implements FileContentService {
 		} catch (IOException e) {
 			log.error("Error executing http call. IOException " + e.getLocalizedMessage());
 			throw new Exception("Error contacting set checksum service.");
-		}
-		StatusLine status = httpResponse.getStatusLine();
-		if (status == null) {
-			// never return null
-			log.error("Unexpected error! response.getStatusLine() returned null!");
-			throw new Exception("Unexpected error! response.getStatusLine() returned null! Please contact storm support");
-		}
-		int httpCode = status.getStatusCode();
-		String httpMessage = status.getReasonPhrase();
-		log.debug("Http call return code is: " + httpCode);
-		log.debug("Http call return reason phrase is: " + httpMessage);
-		if (httpCode != HttpURLConnection.HTTP_NO_CONTENT) {
-			log.warn("Unable to get a valid response from server. Received a non HTTP 204 response from the server : \'" + httpCode + "\' "
-					+ httpMessage);
-			throw new Exception("Unable to get a valid response from server. " + httpMessage);
 		}
 		return httpResponse;
 	}
