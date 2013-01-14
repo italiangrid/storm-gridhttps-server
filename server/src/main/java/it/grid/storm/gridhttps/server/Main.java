@@ -254,8 +254,11 @@ public class Main {
 		if (configuration.get("backend").containsKey("compute-checksum"))
 			stormGridhttps.setComputeChecksum(configuration.get("backend", "compute-checksum", boolean.class));
 		if (configuration.get("backend").containsKey("checksum-type"))
-			stormGridhttps.setChecksumType(configuration.get("backend", "checksum-type"));
-		
+			if (!configuration.get("backend", "checksum-type").toLowerCase().equals(DefaultConfiguration.CHECKSUM_TYPE.toLowerCase())) {
+				log.warn("Invalid checksum type: " + configuration.get("backend", "checksum-type"));
+			} else {
+				stormGridhttps.setChecksumType(configuration.get("backend", "checksum-type"));
+			}
 		System.out.println("configuration successfully loaded");
 	}
 
