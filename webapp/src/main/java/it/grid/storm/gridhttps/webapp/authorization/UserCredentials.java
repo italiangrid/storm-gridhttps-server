@@ -23,25 +23,25 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class UserCredentials {
-	
+
 	private static final Logger log = LoggerFactory.getLogger(UserCredentials.class);
-	
+
 	private final String EMPTY_USERDN = "";
-	
+
 	private String userDN;
 	private ArrayList<String> userFQANS;
 	private HttpHelper httpHelper;
-	
+
 	private static UserCredentials instance;
-	
+
 	public static void init(HttpHelper httpHelper) {
 		instance = new UserCredentials(httpHelper);
 	}
-	
+
 	public static UserCredentials getUser() {
 		return instance;
 	}
-		
+
 	private UserCredentials(HttpHelper httpHelper) {
 		this.httpHelper = httpHelper;
 		initAsAnonymous();
@@ -66,9 +66,9 @@ public class UserCredentials {
 				log.debug("fqan = " + s);
 			}
 	}
-	
+
 	/* public methods */
-	
+
 	public String getUserDN() {
 		return isForcedAnonymous() ? getEmptyUserDN() : userDN;
 	}
@@ -80,47 +80,40 @@ public class UserCredentials {
 	public boolean isAnonymous() {
 		return isForcedAnonymous() || (httpHelper.isHttp() && isUserDNEmpty() && isUserFQANSEmpty());
 	}
-	
-	public void forceAnonymous(String userDN, ArrayList<String> userFQANS) {
-		/* it's a kind of security check... */
-		if (userDN.equals(getUserDN()) && userFQANS.equals(getUserFQANS())) {
-			setForcedAnonymous();
-		}
+
+	public void forceAnonymous() {
+		httpHelper.getSession().setAttribute("forced", true);
 	}
-	
+
 	public void unforceAnonymous() {
 		httpHelper.getSession().setAttribute("forced", false);
 	}
 
 	/* private methods */
-	
+
 	private void initAsAnonymous() {
 		userDN = getEmptyUserDN();
 		userFQANS = getEmptyUserFQANS();
 	}
-	
-	private void setForcedAnonymous() {
-		httpHelper.getSession().setAttribute("forced", true);
-	}
-	
+
 	private boolean isForcedAnonymous() {
 		return (Boolean) httpHelper.getSession().getAttribute("forced");
 	}
-	
 
 	private String getEmptyUserDN() {
 		return EMPTY_USERDN;
 	}
-	
+
 	private ArrayList<String> getEmptyUserFQANS() {
 		return new ArrayList<String>();
 	}
-	
+
 	private boolean isUserDNEmpty() {
 		return userDN.isEmpty();
 	}
-	
+
 	private boolean isUserFQANSEmpty() {
 		return userFQANS.isEmpty();
 	}
+	
 }

@@ -40,35 +40,26 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class StormAuthorizationUtils {
-	
+
 	private static final Logger log = LoggerFactory.getLogger(StormAuthorizationUtils.class);
 
 	/* Public methods */
 
-	public static boolean isUserAuthorized(String operation, String path) throws Exception,
-			IllegalArgumentException {
-		UserCredentials user = UserCredentials.getUser();
-		if (path == null || operation == null || user.getUserFQANS() == null || user.getUserDN() == null) {
-			String errorMsg = "Received null mandatory parameter(s) at isUserAuthorized: ";
-			errorMsg += "path=" + path + " operation=" + operation;
-			errorMsg += " userDN=" + user.getUserDN() + " FQANs=" + StringUtils.join(user.getUserFQANS(), ",");
-			log.error(errorMsg);
-			throw new IllegalArgumentException("Received null mandatory parameter(s)");
-		}
-		URI uri = StormAuthorizationUtils.prepareURI(path, operation, user.getUserDN(), user.getUserFQANS());
-		boolean response = getAuthResponse(uri);
-		if (!response && !user.isAnonymous()) {
-			user.forceAnonymous(user.getUserDN(), user.getUserFQANS());
-			uri = StormAuthorizationUtils.prepareURI(path, operation, user.getUserDN(), user.getUserFQANS());
-			response = getAuthResponse(uri);
-			user.unforceAnonymous();
-		}
-		return response;
+	public static boolean isUserAuthorized(UserCredentials user, String operation, String path) throws Exception, IllegalArgumentException {
+		if (path == null)
+			throw new IllegalArgumentException("Received null path at isUserAuthorized!");
+		if (operation == null)
+			throw new IllegalArgumentException("Received null operation at isUserAuthorized!");
+		if (user == null)
+			throw new IllegalArgumentException("Received null user at isUserAuthorized!");
+		
+		log.debug("Asking authorization for operation " + operation + " on " + path);
+		return getAuthorizationResponse(prepareURI(path, operation, user));
 	}
 
 	/* Private methods */
-	
-	private static boolean getAuthResponse(URI uri) throws Exception {
+
+	private static boolean getAuthorizationResponse(URI uri) throws Exception {
 		HttpGet httpget = new HttpGet(uri);
 		HttpClient httpclient = new DefaultHttpClient();
 		HttpResponse httpResponse;
@@ -128,17 +119,11 @@ public class StormAuthorizationUtils {
 		return response.booleanValue();
 	}
 
-	private static URI prepareURI(String resourcePath, String operation, String userDN, ArrayList<String> fqans) throws Exception,
-			IllegalArgumentException {
-		if (resourcePath == null || operation == null || fqans == null) {
-			log.error("Received null mandatory parameter(s) at prepareURL: resourcePath=" + resourcePath + " operation=" + operation
-					+ " fqans=" + fqans.toString());
-			throw new IllegalArgumentException("Received null mandatory parameter(s)");
-		}
+	private static URI prepareURI(String resourcePath, String operation, UserCredentials user) throws Exception {
 		log.debug("Encoding Authorization request parameters");
 		String path;
-		boolean hasSubjectDN = (userDN != null && userDN.length() > 0);
-		boolean hasVOMSExtension = (fqans.size() > 0);
+		boolean hasSubjectDN = (!user.isAnonymous());
+		boolean hasVOMSExtension = (!user.isAnonymous()) && (!user.getUserFQANS().isEmpty());
 		try {
 			path = buildpath(URLEncoder.encode(resourcePath, Constants.ENCODING_SCHEME), operation, hasSubjectDN, hasVOMSExtension);
 		} catch (UnsupportedEncodingException e) {
@@ -147,16 +132,16 @@ public class StormAuthorizationUtils {
 		}
 		List<NameValuePair> qparams = new ArrayList<NameValuePair>();
 		if (hasSubjectDN) {
-			qparams.add(new BasicNameValuePair(Constants.DN_KEY, userDN));
+			qparams.add(new BasicNameValuePair(Constants.DN_KEY, user.getUserDN()));
 		}
 		if (hasVOMSExtension) {
-			String fqansList = StringUtils.join(fqans, Constants.FQANS_SEPARATOR);
+			String fqansList = StringUtils.join(user.getUserFQANS(), Constants.FQANS_SEPARATOR);
 			qparams.add(new BasicNameValuePair(Constants.FQANS_KEY, fqansList));
 		}
 		URI uri;
 		try {
-			uri = new URI("http", null, Configuration.getBackendHostname(), Configuration.getBackendServicePort(), path, qparams.isEmpty() ? null
-					: URLEncodedUtils.format(qparams, "UTF-8"), null);
+			uri = new URI("http", null, Configuration.getBackendHostname(), Configuration.getBackendServicePort(), path,
+					qparams.isEmpty() ? null : URLEncodedUtils.format(qparams, "UTF-8"), null);
 		} catch (URISyntaxException e) {
 			log.error("Unable to build Authorization Service URI. URISyntaxException " + e.getLocalizedMessage());
 			throw new Exception("Unable to build Authorization Service URI");

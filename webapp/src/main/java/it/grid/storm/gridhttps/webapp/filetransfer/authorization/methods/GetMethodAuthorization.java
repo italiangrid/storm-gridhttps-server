@@ -37,7 +37,8 @@ public class GetMethodAuthorization extends AbstractMethodAuthorization {
 	
 	private StorageArea SA;
 	
-	public GetMethodAuthorization(StorageArea SA) {
+	public GetMethodAuthorization(HttpHelper httpHelper, StorageArea SA) {
+		super(httpHelper);
 		this.SA = SA;
 	}
 
@@ -45,57 +46,53 @@ public class GetMethodAuthorization extends AbstractMethodAuthorization {
 		return url.replaceFirst(File.separator + Configuration.getFileTransferContextPath(), "");
 	}
 
-	public AuthorizationStatus isUserAuthorized() {
-		String path = stripContext(HttpHelper.getHelper().getRequestURI().getPath());
+	public AuthorizationStatus isUserAuthorized(UserCredentials user) {
+		String path = stripContext(getHTTPHelper().getRequestURI().getPath());
 		if (SA != null) {
 			String reqPath = SA.getRealPath(path);
 			File resource = new File(reqPath);
 			if (resource.exists()) {
 				if (resource.isFile()) {
-					AuthorizationStatus status = doPrepareToGetStatus(resource, SA);
+					AuthorizationStatus status = doPrepareToGetStatus(user, resource, SA);
 					if (status.isAuthorized()) {
-						if (askAuth(Constants.READ_OPERATION, reqPath)) {
-							return new AuthorizationStatus(true, "");
-						} else {
-							return new AuthorizationStatus(false, "You are not authorized to access the required resource"); 
-						}
+						return askAuth(user, Constants.READ_OPERATION, reqPath);
 					} else {
 						return status;
 					}
 				} else {
-					return new AuthorizationStatus(false, "Resource required is not a file"); 
+					return AuthorizationStatus.NOTAUTHORIZED("Resource required is not a file"); 
 				}
 			} else {
-				return new AuthorizationStatus(false, "File does not exist"); 
+				return AuthorizationStatus.NOTAUTHORIZED("File does not exist"); 
 			}
 		} else {
-			return new AuthorizationStatus(false, "No storage area matched with path = " + path);
+			return AuthorizationStatus.NOTAUTHORIZED("No storage area matched with path = " + path);
 		}
 	}
 
-	private AuthorizationStatus doPrepareToGetStatus(File resource, StorageArea reqStorageArea) {
+	private AuthorizationStatus doPrepareToGetStatus(UserCredentials user, File resource, StorageArea reqStorageArea) {
 		log.debug("Check for a prepare-to-get");
 		Surl surl = new Surl(resource, reqStorageArea);
 		BackendApi backend;
 		SurlArrayRequestOutputData outputSPtG;
 		try {
 			backend = StormBackendApi.getBackend(Configuration.getBackendHostname(), Configuration.getBackendPort());
-			outputSPtG = StormBackendApi.prepareToGetStatus(backend, surl.asString(), UserCredentials.getUser());
+			outputSPtG = StormBackendApi.prepareToGetStatus(backend, surl.asString(), user);
 		} catch (RuntimeApiException e) {
 			log.error(e.getMessage());
-			return new AuthorizationStatus(false, e.getMessage());
+			return AuthorizationStatus.NOTAUTHORIZED(e.getMessage());
 		} catch (StormResourceException e) {
 			log.error(e.getMessage());
-			return new AuthorizationStatus(false, e.getMessage());
+			return AuthorizationStatus.NOTAUTHORIZED(e.getMessage());
 		}
 		String requestStatus = outputSPtG.getStatus().getStatusCode().getValue();
 		log.info("Request-status: " + requestStatus);
 		String surlStatus = outputSPtG.getStatus(surl.asString()).getStatusCode().getValue();
 		log.info("Surl-status: " + surlStatus);
 		if (requestStatus.equals("SRM_SUCCESS") && surlStatus.equals("SRM_FILE_PINNED")) {
-			return new AuthorizationStatus(true, "");
+			return AuthorizationStatus.AUTHORIZED();
 		} else {
-			return new AuthorizationStatus(false, "You must do a prepare-to-get on surl '" + surl.asString() + "' before!");
+			return AuthorizationStatus.NOTAUTHORIZED("You must do a prepare-to-get on surl '" + surl.asString() + "' before!");
 		}
 	}
 	

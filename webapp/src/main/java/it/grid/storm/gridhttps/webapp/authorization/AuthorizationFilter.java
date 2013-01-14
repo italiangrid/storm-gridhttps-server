@@ -12,8 +12,24 @@
  */
 package it.grid.storm.gridhttps.webapp.authorization;
 
+import it.grid.storm.gridhttps.webapp.HttpHelper;
+
 public abstract class AuthorizationFilter {
 	
-	public abstract AuthorizationStatus isUserAuthorized();
+	private HttpHelper httpHelper;
+	
+	public AuthorizationFilter(HttpHelper httpHelper) {
+		this.setHTTPHelper(httpHelper);
+	}
+	
+	public abstract AuthorizationStatus isUserAuthorized(UserCredentials user);
+
+	protected HttpHelper getHTTPHelper() {
+		return httpHelper;
+	}
+
+	private void setHTTPHelper(HttpHelper httpHelper) {
+		this.httpHelper = httpHelper;
+	}
 		
 }

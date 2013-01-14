@@ -17,6 +17,7 @@ import java.net.URI;
 import it.grid.storm.gridhttps.webapp.HttpHelper;
 import it.grid.storm.gridhttps.webapp.authorization.AuthorizationStatus;
 import it.grid.storm.gridhttps.webapp.authorization.Constants;
+import it.grid.storm.gridhttps.webapp.authorization.UserCredentials;
 import it.grid.storm.gridhttps.webapp.authorization.methods.AbstractMethodAuthorization;
 import it.grid.storm.storagearea.StorageArea;
 
@@ -25,31 +26,27 @@ public class MoveMethodAuthorization extends AbstractMethodAuthorization {
 	private StorageArea srcSA;
 	private StorageArea destSA;
 
-	public MoveMethodAuthorization(StorageArea srcSA, StorageArea destSA) {
+	public MoveMethodAuthorization(HttpHelper httpHelper, StorageArea srcSA, StorageArea destSA) {
+		super(httpHelper);
 		this.srcSA = srcSA;
 		this.destSA = destSA;
 	}
 	
-	public AuthorizationStatus isUserAuthorized() {
-		HttpHelper httpHelper = HttpHelper.getHelper();
-		if (httpHelper.hasDestinationHeader()) { 
-			URI srcURI = httpHelper.getRequestURI();
-			URI destURI = httpHelper.getDestinationURI();
-			String srcPath = srcSA.getRealPath(srcURI.getPath());
-			if (askAuth(Constants.MOVE_FROM_OPERATION, srcPath)) {
-				String destPath = destSA.getRealPath(destURI.getPath());
-				String operation = httpHelper.isOverwriteRequest() ? Constants.MOVE_TO_OVERWRITE_OPERATION : Constants.MOVE_TO_OPERATION;
-				if (askAuth(operation, destPath)) {
-					return new AuthorizationStatus(true, "");
-				} else {
-					return new AuthorizationStatus(false, "You are not authorized to access the destination resource");
-				}
-			} else {
-				return new AuthorizationStatus(false, "You are not authorized to access the requested resource");
-			}
-		} else {
-			return new AuthorizationStatus(false, "no destination header found");
-		}
+	public AuthorizationStatus isUserAuthorized(UserCredentials user) {
+		if (getHTTPHelper().hasDestinationHeader()) { 
+			URI srcURI = getHTTPHelper().getRequestURI();
+			URI destURI = getHTTPHelper().getDestinationURI();
+			String path = srcSA.getRealPath(srcURI.getPath());
+			String operation = Constants.MOVE_FROM_OPERATION;
+			AuthorizationStatus srcResponse = askAuth(user, operation, path);
+			if (srcResponse.isAuthorized()) {
+				path = destSA.getRealPath(destURI.getPath());
+				operation = getHTTPHelper().isOverwriteRequest() ? Constants.MOVE_TO_OVERWRITE_OPERATION : Constants.MOVE_TO_OPERATION;
+				return askAuth(user, operation, path);
+			} 
+			return srcResponse;
+		} 
+		return AuthorizationStatus.NOTAUTHORIZED("no destination header found");
 	}
 	
 }

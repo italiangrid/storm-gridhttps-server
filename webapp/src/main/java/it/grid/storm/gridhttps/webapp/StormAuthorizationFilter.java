@@ -101,7 +101,7 @@ public class StormAuthorizationFilter implements Filter {
 		} else {
 			AuthorizationFilter filter = getAuthorizationHandler(requestedPath);
 			if (filter != null) {
-				AuthorizationStatus status = filter.isUserAuthorized();
+				AuthorizationStatus status = filter.isUserAuthorized(UserCredentials.getUser());
 				if (status.isAuthorized()) {
 					log.info("User is authorized to access the requested resource");
 					chain.doFilter(request, response);
@@ -136,10 +136,10 @@ public class StormAuthorizationFilter implements Filter {
 		try {
 			if (isFileTransferRequest(path)) {
 				log.info("Received a file-transfer request");
-				return new FileTransferAuthorizationFilter(File.separator + Configuration.getFileTransferContextPath());
+				return new FileTransferAuthorizationFilter(HttpHelper.getHelper(), File.separator + Configuration.getFileTransferContextPath());
 			} else {
 				log.info("Received a webdav request");
-				return new WebDAVAuthorizationFilter();
+				return new WebDAVAuthorizationFilter(HttpHelper.getHelper());
 			}
 		} catch (Exception e) {
 			log.error(e.getMessage());
@@ -194,17 +194,17 @@ public class StormAuthorizationFilter implements Filter {
 		page.start();
 		page.addTitle("StoRM Gridhttps-server WebDAV");
 		page.addNavigator("/");
-		page.addStorageAreaList(getAuthorizedStorageAreas());
+		page.addStorageAreaList(getUserAuthorizedStorageAreas(UserCredentials.getUser()));
 		page.end();
 	}
 
-	private List<StorageArea> getAuthorizedStorageAreas() {
+	private List<StorageArea> getUserAuthorizedStorageAreas(UserCredentials user) {
 		List<StorageArea> in = StorageAreaManager.getInstance().getStorageAreas();
 		List<StorageArea> out = new ArrayList<StorageArea>();
 		String reqProtocol = HttpHelper.getHelper().getRequestProtocol();
 		for (StorageArea current : in) {
 			if (current.getProtocols().contains(reqProtocol)) {
-				if (isUserAuthorized(current.getFSRoot())) {
+				if (isUserAuthorized(user, current.getFSRoot())) {
 					out.add(current);
 				}
 			}
@@ -212,14 +212,26 @@ public class StormAuthorizationFilter implements Filter {
 		return out;
 	}
 	
-	private boolean isUserAuthorized(String path) {
+	private boolean isUserAuthorized(UserCredentials user, String path) {
 		boolean response = false;
 		try {
-			response = StormAuthorizationUtils.isUserAuthorized(Constants.PREPARE_TO_GET_OPERATION, path);
+			response = StormAuthorizationUtils.isUserAuthorized(user, Constants.PREPARE_TO_GET_OPERATION, path);
 		} catch (IllegalArgumentException e) {
 			e.printStackTrace();
 		} catch (Exception e) {
 			e.printStackTrace();
+		}
+		if (!response &&  !user.isAnonymous()) {
+			/* Re-try as anonymous user: */
+			user.forceAnonymous();
+			try {
+				response = StormAuthorizationUtils.isUserAuthorized(user, Constants.PREPARE_TO_GET_OPERATION, path);
+			} catch (IllegalArgumentException e) {
+				e.printStackTrace();
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+			user.unforceAnonymous();
 		}
 		return response;
 	}

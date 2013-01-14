@@ -15,6 +15,7 @@ package it.grid.storm.gridhttps.webapp.filetransfer.authorization;
 import it.grid.storm.gridhttps.webapp.HttpHelper;
 import it.grid.storm.gridhttps.webapp.authorization.AuthorizationFilter;
 import it.grid.storm.gridhttps.webapp.authorization.AuthorizationStatus;
+import it.grid.storm.gridhttps.webapp.authorization.UserCredentials;
 import it.grid.storm.gridhttps.webapp.authorization.methods.AbstractMethodAuthorization;
 import it.grid.storm.gridhttps.webapp.filetransfer.authorization.methods.GetMethodAuthorization;
 import it.grid.storm.gridhttps.webapp.filetransfer.authorization.methods.PutMethodAuthorization;
@@ -36,8 +37,8 @@ public class FileTransferAuthorizationFilter extends AuthorizationFilter {
 	private StorageArea storageArea;
 	private String contextPath;
 	
-	public FileTransferAuthorizationFilter(String contextPath) throws Exception {
-		super();
+	public FileTransferAuthorizationFilter(HttpHelper httpHelper, String contextPath) throws Exception {
+		super(httpHelper);
 		this.setContextPath(contextPath);
 		initStorageArea();
 		doInitMethodMap();
@@ -48,25 +49,25 @@ public class FileTransferAuthorizationFilter extends AuthorizationFilter {
 	}
 	
 	public boolean isProtocolAllowed(String protocol) {
-		return Arrays.asList(storageArea.getProtocolAsStrArray()).contains(protocol);
+		return Arrays.asList(getStorageArea().getProtocolAsStrArray()).contains(protocol);
 	}
 
 	public String stripContext() {
 		return HttpHelper.getHelper().getRequestURI().getPath().replaceFirst(getContextPath(), "");
 	}
 
-	public AuthorizationStatus isUserAuthorized() {
-		String method = HttpHelper.getHelper().getRequestMethod();
+	public AuthorizationStatus isUserAuthorized(UserCredentials user) {
+		String method = getHTTPHelper().getRequestMethod();
 		if (!isMethodAllowed(method)) {
 			log.warn("Received a request for a not allowed method : " + method);
-			return new AuthorizationStatus(false, "Method " + method + " not allowed!");
+			return AuthorizationStatus.NOTAUTHORIZED("Method " + method + " not allowed!");
 		}
-		String reqProtocol = HttpHelper.getHelper().getRequestProtocol();
+		String reqProtocol = getHTTPHelper().getRequestProtocol();
 		if (!isProtocolAllowed(reqProtocol)) {
 			log.warn("Received a request-uri with a not allowed protocol: " + reqProtocol);
-			return new AuthorizationStatus(false, "Protocol " + reqProtocol + " not allowed!");
+			return AuthorizationStatus.NOTAUTHORIZED("Protocol " + reqProtocol + " not allowed!");
 		}
-		return getAuthorizationHandler().isUserAuthorized();
+		return getAuthorizationHandler().isUserAuthorized(user);
 	}
 	
 	private void initStorageArea() throws Exception {
@@ -93,8 +94,8 @@ public class FileTransferAuthorizationFilter extends AuthorizationFilter {
 	private void doInitMethodMap() {
 		METHODS_MAP = new HashMap<String, AbstractMethodAuthorization>();
 		METHODS_MAP.clear();
-		METHODS_MAP.put("GET", new GetMethodAuthorization(storageArea));
-		METHODS_MAP.put("PUT", new PutMethodAuthorization(storageArea));
+		METHODS_MAP.put("GET", new GetMethodAuthorization(getHTTPHelper(), getStorageArea()));
+		METHODS_MAP.put("PUT", new PutMethodAuthorization(getHTTPHelper(), getStorageArea()));
 	}
 		
 	public AbstractMethodAuthorization getAuthorizationHandler() {

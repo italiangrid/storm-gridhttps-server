@@ -12,29 +12,47 @@
  */
 package it.grid.storm.gridhttps.webapp.authorization.methods;
 
+import it.grid.storm.gridhttps.webapp.HttpHelper;
 import it.grid.storm.gridhttps.webapp.authorization.AuthorizationStatus;
 import it.grid.storm.gridhttps.webapp.authorization.StormAuthorizationUtils;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import it.grid.storm.gridhttps.webapp.authorization.UserCredentials;
 
 public abstract class AbstractMethodAuthorization {
 
-	private static final Logger log = LoggerFactory.getLogger(AbstractMethodAuthorization.class);
-
-	protected boolean askAuth(String operation, String path) {
-		log.debug("Asking authorization for operation " + operation + " on " + path);
-		boolean response = false;
-		try {
-			response = StormAuthorizationUtils.isUserAuthorized(operation, path);
-		} catch (Exception e) {
-			log.error(e.getMessage());
-			return false;
-		}
-		log.debug("Response: " + response);
-		return response;
+	private HttpHelper httpHelper;
+	
+	public AbstractMethodAuthorization(HttpHelper httpHelper) {
+		this.setHTTPHelper(httpHelper);
+	}
+	
+	protected HttpHelper getHTTPHelper() {
+		return httpHelper;
 	}
 
-	public abstract AuthorizationStatus isUserAuthorized();
+	private void setHTTPHelper(HttpHelper httpHelper) {
+		this.httpHelper = httpHelper;
+	}
+	
+	public abstract AuthorizationStatus isUserAuthorized(UserCredentials user);
 
+	protected AuthorizationStatus askAuth(UserCredentials user, String operation, String path) {	
+		try {
+			boolean response = StormAuthorizationUtils.isUserAuthorized(user, operation, path);
+			if (!response && !user.isAnonymous()) {
+				/* Re-try as anonymous user: */
+				user.forceAnonymous();
+				response = StormAuthorizationUtils.isUserAuthorized(user, operation, path);
+			}
+			if (response) {
+				return AuthorizationStatus.AUTHORIZED();
+			} else {
+				return AuthorizationStatus.NOTAUTHORIZED("You are not authorized to access the requested resource");
+			}			
+		} catch (IllegalArgumentException e) {
+			return AuthorizationStatus.NOTAUTHORIZED("Error: " + e.getMessage());
+		} catch (Exception e) {
+			return AuthorizationStatus.NOTAUTHORIZED("Error: " + e.getMessage());
+		}
+	}
+	
 }

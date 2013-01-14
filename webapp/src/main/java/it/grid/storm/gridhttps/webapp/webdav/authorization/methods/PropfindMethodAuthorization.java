@@ -12,30 +12,25 @@
  */
 package it.grid.storm.gridhttps.webapp.webdav.authorization.methods;
 
-import java.net.URI;
-
 import it.grid.storm.gridhttps.webapp.HttpHelper;
 import it.grid.storm.gridhttps.webapp.authorization.AuthorizationStatus;
 import it.grid.storm.gridhttps.webapp.authorization.Constants;
+import it.grid.storm.gridhttps.webapp.authorization.UserCredentials;
 import it.grid.storm.gridhttps.webapp.authorization.methods.AbstractMethodAuthorization;
 import it.grid.storm.storagearea.StorageArea;
 
 public class PropfindMethodAuthorization extends AbstractMethodAuthorization {
-
+	
 	private StorageArea SA;
 	
-	public PropfindMethodAuthorization(StorageArea SA) {
+	public PropfindMethodAuthorization(HttpHelper httpHelper, StorageArea SA) {
+		super(httpHelper);
 		this.SA = SA;
 	}
 	
-	public AuthorizationStatus isUserAuthorized() {
-		URI requestedURI = HttpHelper.getHelper().getRequestURI();
-		String requiredPath = SA.getRealPath(requestedURI.getPath());
+	public AuthorizationStatus isUserAuthorized(UserCredentials user) {
+		String path = SA.getRealPath(getHTTPHelper().getRequestURI().getPath());
 		String operation = Constants.LS_OPERATION;
-		if (askAuth(operation, requiredPath)) {
-			return new AuthorizationStatus(true, "");
-		} else {
-			return new AuthorizationStatus(false, "You are not authorized to access the requested resource");
-		}
+		return askAuth(user, operation, path);
 	}
 }

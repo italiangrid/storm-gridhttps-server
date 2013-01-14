@@ -12,30 +12,26 @@
  */
 package it.grid.storm.gridhttps.webapp.webdav.authorization.methods;
 
-import java.net.URI;
-
 import it.grid.storm.gridhttps.webapp.HttpHelper;
 import it.grid.storm.gridhttps.webapp.authorization.AuthorizationStatus;
 import it.grid.storm.gridhttps.webapp.authorization.Constants;
+import it.grid.storm.gridhttps.webapp.authorization.UserCredentials;
 import it.grid.storm.gridhttps.webapp.authorization.methods.AbstractMethodAuthorization;
 import it.grid.storm.storagearea.StorageArea;
 
 public class PutMethodAuthorization extends AbstractMethodAuthorization {
-
+	
 	private StorageArea SA;
 	
-	public PutMethodAuthorization(StorageArea SA) {
+	public PutMethodAuthorization(HttpHelper httpHelper, StorageArea SA) {
+		super(httpHelper);
 		this.SA = SA;
 	}
 	
-	public AuthorizationStatus isUserAuthorized() {
-		URI requestedURI = HttpHelper.getHelper().getRequestURI();
-		String requiredPath = SA.getRealPath(requestedURI.getPath());
-		String operation = HttpHelper.getHelper().isOverwriteRequest() ? Constants.PREPARE_TO_PUT_OVERWRITE_OPERATION : Constants.PREPARE_TO_PUT_OPERATION;
-		if (askAuth(operation, requiredPath)) {
-			return new AuthorizationStatus(true, "");
-		} else {
-			return new AuthorizationStatus(false, "You are not authorized to access the requested resource");
-		}
+	public AuthorizationStatus isUserAuthorized(UserCredentials user) {
+		String path = SA.getRealPath(getHTTPHelper().getRequestURI().getPath());
+		String operation = getHTTPHelper().isOverwriteRequest() ? Constants.PREPARE_TO_PUT_OVERWRITE_OPERATION : Constants.PREPARE_TO_PUT_OPERATION;
+		return askAuth(user, operation, path);
 	}
+	
 }

@@ -13,32 +13,40 @@
 package it.grid.storm.gridhttps.webapp.authorization;
 
 public class AuthorizationStatus {
-	
+
+	public static AuthorizationStatus AUTHORIZED() {
+		return new AuthorizationStatus(true, "");
+	}
+
+	public static AuthorizationStatus NOTAUTHORIZED(String errorMsg) {
+		return new AuthorizationStatus(false, errorMsg);
+	}
+
 	private boolean authorized;
 	private String reason;
-	
-	public AuthorizationStatus(boolean authorized, String reason) {
+
+	private AuthorizationStatus(boolean authorized, String reason) {
 		if (authorized) {
 			setAuthorized();
 		} else {
 			setUnauthorized(reason);
 		}
 	}
-	
+
 	public boolean isAuthorized() {
 		return authorized;
 	}
-	
+
 	public void setAuthorized() {
 		this.authorized = true;
 		this.reason = "";
 	}
-	
+
 	public void setUnauthorized(String msg) {
 		this.authorized = false;
 		this.reason = msg;
 	}
-	
+
 	public String getReason() {
 		return reason;
 	}
