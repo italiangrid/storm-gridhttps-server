@@ -31,8 +31,6 @@ import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.handler.ContextHandlerCollection;
 import org.eclipse.jetty.server.handler.HandlerCollection;
 import org.eclipse.jetty.server.nio.SelectChannelConnector;
-import org.eclipse.jetty.servlet.ServletContextHandler;
-import org.eclipse.jetty.servlet.ServletHolder;
 import org.eclipse.jetty.util.ajax.JSON;
 import org.eclipse.jetty.webapp.WebAppContext;
 import org.italiangrid.utils.https.ServerFactory;
@@ -53,7 +51,6 @@ public class StormGridhttpsServer {
 	private Server server;
 	private ContextHandlerCollection contextHandlerCollection;
 	private WebApp webapp;
-	private MapperServlet mapperServlet;
 
 	public StormGridhttpsServer(StormGridhttps gridhttpsInfo, StormBackend backendInfo, StormFrontend frontendInfo) throws ServerException {
 		setGridhttpsInfo(gridhttpsInfo);
@@ -81,7 +78,6 @@ public class StormGridhttpsServer {
 
 	private void initServer() throws ServerException {
 		initWebapp();
-		//initMapperServlet();
 	}
 
 	private void initWebapp() throws ServerException {
@@ -110,28 +106,11 @@ public class StormGridhttpsServer {
 		}
 	}
 
-	private void initMapperServlet() throws ServerException {
-		mapperServlet = new MapperServlet();
-		if (mapperServlet != null) {
-			contextHandlerCollection.addHandler(getMapperServletContext());
-		} else {
-			log.error("Error on mapper-servlet creation - mapper-servlet is null!");
-			throw new ServerException("Error on mapper-servlet creation - mapper-servlet is null!");
-		}
-	}
-
 	private WebAppContext getWebappContext() {
 		WebAppContext context = new WebAppContext();
 		context.setDescriptor(webapp.getDescriptorFile().toString());
 		context.setResourceBase(webapp.getResourceBase().getAbsolutePath());
 		context.setParentLoaderPriority(true);
-		return context;
-	}
-
-	private ServletContextHandler getMapperServletContext() {
-		ServletContextHandler context = new ServletContextHandler(ServletContextHandler.SESSIONS);
-		context.setContextPath(File.separator + gridhttpsInfo.getMapperServlet().getContextPath());
-		context.addServlet(new ServletHolder(mapperServlet), File.separator + gridhttpsInfo.getMapperServlet().getContextSpec());
 		return context;
 	}
 
@@ -174,8 +153,6 @@ public class StormGridhttpsServer {
 	private void undeploy() throws ServerException {
 		log.debug(" - undeploying webapp...");
 		contextHandlerCollection.removeHandler(getWebappContext());
-//		log.debug(" - undeploying mapper-servlet...");
-//		contextHandlerCollection.removeHandler(getMapperServletContext());
 	}
 
 	private void configureDescriptor(File descriptorFile, Map<String, String> params) throws ServerException {

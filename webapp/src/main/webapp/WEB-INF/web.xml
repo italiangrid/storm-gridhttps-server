@@ -4,11 +4,6 @@
 	xsi:schemaLocation="http://java.sun.com/xml/ns/j2ee http://java.sun.com/xml/ns/j2ee/web-app_2_4.xsd"
 	version="2.4">
 
-	<filter>
-		<filter-name>stormMapperServlet</filter-name>
-		<filter-class>it.grid.storm.gridhttps.webapp.mapperservlet.StormMapperServlet</filter-class>
-	</filter>
-
 	<filter id="stormAuthorizationFilter">
 		<filter-name>stormAuthorizationFilter</filter-name>
 		<filter-class>it.grid.storm.gridhttps.webapp.StormAuthorizationFilter</filter-class>
@@ -16,6 +11,11 @@
 			<param-name>params</param-name>
 			<param-value>_JSON_ENCODED_STRING_VALUE_</param-value>
 		</init-param>
+	</filter>
+
+	<filter>
+		<filter-name>stormMapperServlet</filter-name>
+		<filter-class>it.grid.storm.gridhttps.webapp.mapperservlet.StormMapperServlet</filter-class>
 	</filter>
 
 	<filter>
