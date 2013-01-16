@@ -1,4 +1,4 @@
-package it.grid.storm.gridhttps.mapperservlet;
+package it.grid.storm.gridhttps.webapp.mapperservlet;
 
 import it.grid.storm.gridhttps.webapp.Configuration;
 import it.grid.storm.storagearea.StorageArea;

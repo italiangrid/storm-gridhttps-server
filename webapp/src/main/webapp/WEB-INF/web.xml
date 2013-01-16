@@ -4,7 +4,7 @@
 	xsi:schemaLocation="http://java.sun.com/xml/ns/j2ee http://java.sun.com/xml/ns/j2ee/web-app_2_4.xsd"
 	version="2.4">
 
-	<filter id="stormMapperServlet">
+	<filter>
 		<filter-name>stormMapperServlet</filter-name>
 		<filter-class>it.grid.storm.gridhttps.webapp.mapperservlet.StormMapperServlet</filter-class>
 	</filter>
@@ -46,7 +46,7 @@
 
 	<filter-mapping>
 		<filter-name>stormMapperServlet</filter-name>
-		<url-pattern>/gridhttps_webapp/resourceMapping?path=*</url-pattern>
+		<url-pattern>/gridhttps_webapp/resourceMapping</url-pattern>
 	</filter-mapping>
 
 	<filter-mapping>
