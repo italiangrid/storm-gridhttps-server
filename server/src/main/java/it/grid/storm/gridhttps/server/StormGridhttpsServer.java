@@ -81,7 +81,7 @@ public class StormGridhttpsServer {
 
 	private void initServer() throws ServerException {
 		initWebapp();
-		initMapperServlet();
+		//initMapperServlet();
 	}
 
 	private void initWebapp() throws ServerException {
@@ -174,9 +174,8 @@ public class StormGridhttpsServer {
 	private void undeploy() throws ServerException {
 		log.debug(" - undeploying webapp...");
 		contextHandlerCollection.removeHandler(getWebappContext());
-		log.debug(" - undeploying mapper-servlet...");
-		contextHandlerCollection.removeHandler(getMapperServletContext());
-		log.debug(" - clearing webapp directory...");
+//		log.debug(" - undeploying mapper-servlet...");
+//		contextHandlerCollection.removeHandler(getMapperServletContext());
 	}
 
 	private void configureDescriptor(File descriptorFile, Map<String, String> params) throws ServerException {

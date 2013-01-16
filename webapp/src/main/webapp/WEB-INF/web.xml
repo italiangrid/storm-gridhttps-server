@@ -4,6 +4,11 @@
 	xsi:schemaLocation="http://java.sun.com/xml/ns/j2ee http://java.sun.com/xml/ns/j2ee/web-app_2_4.xsd"
 	version="2.4">
 
+	<filter id="stormMapperServlet">
+		<filter-name>stormMapperServlet</filter-name>
+		<filter-class>it.grid.storm.gridhttps.webapp.mapperservlet.StormMapperServlet</filter-class>
+	</filter>
+
 	<filter id="stormAuthorizationFilter">
 		<filter-name>stormAuthorizationFilter</filter-name>
 		<filter-class>it.grid.storm.gridhttps.webapp.StormAuthorizationFilter</filter-class>
@@ -18,7 +23,7 @@
 		<filter-class>it.grid.storm.gridhttps.webapp.webdav.WebdavSpringMiltonFilter</filter-class>
 		<init-param>
 			<param-name>milton.exclude.paths</param-name>
-			<param-value>/index.jsp,/fileTransfer</param-value>
+			<param-value>/index.jsp,/fileTransfer,/gridhttps_webapp/resourceMapping</param-value>
 		</init-param>
 		<init-param>
 			<param-name>context.filename</param-name>
@@ -31,13 +36,18 @@
 		<filter-class>it.grid.storm.gridhttps.webapp.filetransfer.FileTransferSpringMiltonFilter</filter-class>
 		<init-param>
 			<param-name>milton.exclude.paths</param-name>
-			<param-value>/index.jsp</param-value>
+			<param-value>/index.jsp,/gridhttps_webapp/resourceMapping</param-value>
 		</init-param>
 		<init-param>
 			<param-name>context.filename</param-name>
 			<param-value>fileTransferApplicationContext.xml</param-value>
 		</init-param>
 	</filter>
+
+	<filter-mapping>
+		<filter-name>stormMapperServlet</filter-name>
+		<url-pattern>/gridhttps_webapp/resourceMapping?path=*</url-pattern>
+	</filter-mapping>
 
 	<filter-mapping>
 		<filter-name>stormAuthorizationFilter</filter-name>
