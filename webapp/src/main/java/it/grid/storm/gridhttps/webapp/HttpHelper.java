@@ -79,6 +79,7 @@ public class HttpHelper {
 			log.error(e.getMessage());
 			throw new RuntimeException("Unable to create URI object from the string: " + getRequestStringURI());
 		}
+		uri.normalize();
 		return uri;
 	}
 
@@ -106,6 +107,7 @@ public class HttpHelper {
 			log.error(e.getMessage());
 			throw new RuntimeException("Unable to create URI object from the string: " + getDestinationHeader());
 		}
+		uri.normalize();
 		return uri;
 	}
 
