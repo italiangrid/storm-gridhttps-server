@@ -169,7 +169,7 @@ public class StormDirectoryResource extends StormResource implements MakeCollect
 //	}
 
 	public boolean hasChildren() {
-		return (getFile().list().length > 0);
+		return !getChildren().isEmpty();
 	}
 
 	public void delete() throws NotAuthorizedException, ConflictException, BadRequestException {
