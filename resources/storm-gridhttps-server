@@ -85,7 +85,7 @@ if ! su "$STORM_GRIDHTTPS_USER" -s /bin/sh -c "test -w '$STORM_LOGDIR'"; then
     fi
 fi
 
-for LOG_FILE in $(ls ${STORM_LOGDIR}/*gridhttps-server*); do
+for LOG_FILE in $(ls ${STORM_LOGDIR}/*gridhttps-server* 2> /dev/null); do
    if ! su "$STORM_GRIDHTTPS_USER" -s /bin/sh -c "test -w '$LOG_FILE'"; then
       chown $STORM_GRIDHTTPS_USER:$STORM_GRIDHTTPS_USER $LOG_FILE
       if ! su "$STORM_GRIDHTTPS_USER" -s /bin/sh -c "test -w '$LOG_FILE'"; then
