@@ -57,7 +57,7 @@ public class UserCredentials {
 			return;
 		}
 		currentContext.setClientCertChain(certChain);
-		userDN = currentContext.getClientDN() != null ? currentContext.getClientDN().getX500() : getEmptyUserDN();
+		userDN = currentContext.getClientName() != null ? currentContext.getClientName() : getEmptyUserDN();
 		log.debug("DN = " + userDN);
 		userFQANS.clear();
 		for (VOMSAttribute voms : currentContext.getVOMSAttributes())
