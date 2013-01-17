@@ -169,7 +169,15 @@ public class StormDirectoryResource extends StormResource implements MakeCollect
 //	}
 
 	public boolean hasChildren() {
-		return !getChildren().isEmpty();
+		try {
+			return !StormResourceHelper.doLs(this).get(0).getSubpathInfo().isEmpty();
+		} catch (RuntimeApiException e) {
+			log.error(e.getMessage());
+			return false;
+		} catch (StormResourceException e) {
+			log.error(e.getMessage());
+			return false;
+		}
 	}
 
 	public void delete() throws NotAuthorizedException, ConflictException, BadRequestException {
