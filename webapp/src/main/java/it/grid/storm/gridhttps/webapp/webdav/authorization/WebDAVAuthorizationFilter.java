@@ -102,7 +102,7 @@ public class WebDAVAuthorizationFilter extends AuthorizationFilter {
 			log.warn("Received a request for a not allowed method : " + method);
 			return AuthorizationStatus.NOTAUTHORIZED(405, "Method " + method + " not allowed!");
 		}
-		log.info(method + " " + getHTTPHelper().getRequestURI().getPath());
+		log.debug(method + " " + getHTTPHelper().getRequestURI().getPath());
 		String reqProtocol = getHTTPHelper().getRequestProtocol();
 		if (!isRequestProtocolAllowed(reqProtocol)) {
 			log.warn("Received a request-uri with a not allowed protocol: " + reqProtocol);

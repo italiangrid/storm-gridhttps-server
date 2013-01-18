@@ -87,9 +87,9 @@ public class PutMethodAuthorization extends AbstractMethodAuthorization {
 			return AuthorizationStatus.NOTAUTHORIZED(500, e.getMessage());
 		}
 		String requestStatus = outputSPtP.getStatus().getStatusCode().getValue();
-		log.info("Request-status: " + requestStatus);
+		log.debug("Request-status: " + requestStatus);
 		String surlStatus = outputSPtP.getStatus(surl.asString()).getStatusCode().getValue();
-		log.info("Surl-status: " + surlStatus);
+		log.debug("Surl-status: " + surlStatus);
 		if (requestStatus.equals("SRM_SUCCESS") && surlStatus.equals("SRM_SPACE_AVAILABLE")) {
 			return AuthorizationStatus.AUTHORIZED();
 		} else {

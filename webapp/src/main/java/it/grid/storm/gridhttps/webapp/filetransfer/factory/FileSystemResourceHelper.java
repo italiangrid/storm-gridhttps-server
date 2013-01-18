@@ -29,7 +29,7 @@ public class FileSystemResourceHelper {
 	private static final Logger log = LoggerFactory.getLogger(FileSystemResourceHelper.class);
 	
 	public static InputStream doGetFile(FileResource source) throws NotFoundException {
-		log.info("Called doGetFile()");
+		log.debug("Called doGetFile()");
 		InputStream in = null;
 		try {
 			in = source.contentService.getFileContent(source.file);
@@ -41,7 +41,7 @@ public class FileSystemResourceHelper {
 	}
 	
 	public static boolean doPutOverwrite(FileResource source, InputStream in) throws BadRequestException, ConflictException, NotAuthorizedException {
-		log.info("Called doPutOverewrite()");
+		log.debug("Called doPutOverwrite()");
 		try {
 			// overwrite
 			source.contentService.setFileContent(source.file, in);

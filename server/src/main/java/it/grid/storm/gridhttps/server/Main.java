@@ -77,7 +77,7 @@ public class Main {
 		// adds an handler to CTRL-C that stops and deletes the webapp directory
 		Runtime.getRuntime().addShutdownHook(new Thread() {
 			public void run() {
-				log.info("Exiting gridhttps-server...");
+				log.debug("Exiting gridhttps-server...");
 				if (server != null) {
 					if (server.isRunning()) {
 						log.info("Shutting down server...");
@@ -88,7 +88,7 @@ public class Main {
 						}
 					}
 				}
-				log.info("Deleting webapp temporary directory...");
+				log.debug("Deleting webapp temporary directory...");
 				deleteWebappDirectory();
 				log.info("Bye");
 			}

@@ -50,7 +50,7 @@ public class StormResourceHelper {
 	/* STORM METHOD */
 
 	private static void abortRequest(BackendApi backend, TRequestToken token, UserCredentials user) throws RuntimeApiException {
-		log.info("Aborting srm request...");
+		log.debug("Aborting srm request...");
 		StormBackendApi.abortRequest(backend, token, user);
 	}
 
@@ -62,7 +62,7 @@ public class StormResourceHelper {
 
 	public static void doMoveTo(StormResource source, StormResource newParent, String newName, UserCredentials user)
 			throws NotAuthorizedException, ConflictException, BadRequestException {
-		log.info("Called doMoveTo()");
+		log.debug("Called doMoveTo()");
 		String fromSurl = source.getSurl().asString();
 		String toSurl = (new Surl(newParent.getSurl(), newName)).asString();		
 		StormBackendApi.mv(source.getFactory().getBackendApi(), fromSurl, toSurl, user);
@@ -75,7 +75,7 @@ public class StormResourceHelper {
 
 	public static void doDelete(StormResource source, UserCredentials user) throws NotAuthorizedException, ConflictException,
 			BadRequestException {
-		log.info("Called doDelete()");
+		log.debug("Called doDelete()");
 		if (source instanceof StormDirectoryResource) { // DIRECTORY
 			StormDirectoryResource sourceDir = (StormDirectoryResource) source;
 			if (sourceDir.hasChildren()) {
@@ -96,7 +96,7 @@ public class StormResourceHelper {
 
 	public static InputStream doGetFile(StormFileResource source, UserCredentials user) throws NotFoundException, RuntimeApiException,
 			StormResourceException {
-		log.info("Called doGetFile()");
+		log.debug("Called doGetFile()");
 		PtGOutputData outputPtG = StormBackendApi.prepareToGet(source.getFactory().getBackendApi(), source.getSurl().asString(), user,
 				source.getStorageArea().getProtocols());
 		InputStream in = null;
@@ -118,7 +118,7 @@ public class StormResourceHelper {
 
 	public static StormDirectoryResource doMkCol(StormDirectoryResource sourceDir, String name, UserCredentials user)
 			throws RuntimeApiException, StormResourceException {
-		log.info("Called doMkCol()");
+		log.debug("Called doMkCol()");
 		StormDirectoryResource newDir = new StormDirectoryResource(sourceDir, name);
 		StormBackendApi.mkdir(sourceDir.getFactory().getBackendApi(), newDir.getSurl().asString(), user);
 		return newDir;
@@ -132,7 +132,7 @@ public class StormResourceHelper {
 
 	public static StormFileResource doPut(StormDirectoryResource sourceDir, String name, InputStream in, UserCredentials user)
 			throws RuntimeApiException, StormResourceException {
-		log.info("Called doPut()");
+		log.debug("Called doPut()");
 		File fsDest = new File(sourceDir.getFile(), name);
 		StormFileResource srmDest = new StormFileResource(sourceDir.getFactory(), fsDest, sourceDir.getStorageArea());
 		FileTransferOutputData outputPtp = StormBackendApi.prepareToPut(sourceDir.getFactory().getBackendApi(), srmDest.getSurl()
@@ -161,7 +161,7 @@ public class StormResourceHelper {
 
 	public static StormFileResource doPutOverwrite(StormFileResource source, InputStream in, UserCredentials user) throws BadRequestException,
 			ConflictException, NotAuthorizedException {
-		log.info("Called doPutOverewrite()");
+		log.debug("Called doPutOverewrite()");
 		FileTransferOutputData outputPtp = StormBackendApi.prepareToPutOverwrite(source.getFactory().getBackendApi(), source.getSurl()
 				.asString(), user, source.getStorageArea().getProtocols());
 		// overwrite
@@ -184,7 +184,7 @@ public class StormResourceHelper {
 
 	public static ArrayList<SurlInfo> doLsDetailed(StormResource source, Recursion recursion, UserCredentials user)
 			throws RuntimeApiException, StormResourceException {
-		log.info("Called doLsDetailed()");
+		log.debug("Called doLsDetailed()");
 		LsOutputData output = StormBackendApi.lsDetailed(source.getFactory().getBackendApi(), source.getSurl().asString(), user,
 				new RecursionLevel(recursion));
 		return (ArrayList<SurlInfo>) output.getInfos();
@@ -196,7 +196,7 @@ public class StormResourceHelper {
 	}
 
 	public static ArrayList<SurlInfo> doLs(StormResource source, UserCredentials user) throws RuntimeApiException, StormResourceException {
-		log.info("Called doLs()");
+		log.debug("Called doLs()");
 		LsOutputData output = StormBackendApi.ls(source.getFactory().getBackendApi(), source.getSurl().asString(), user);
 		return (ArrayList<SurlInfo>) output.getInfos();
 	}
@@ -207,7 +207,7 @@ public class StormResourceHelper {
 	}
 
 	public static PingOutputData doPing(String stormBackendHostname, int stormBackendPort, UserCredentials user) throws RuntimeApiException {
-		log.info("Called doPing()");
+		log.debug("Called doPing()");
 		BackendApi backend = StormBackendApi.getBackend(stormBackendHostname, stormBackendPort);
 		return StormBackendApi.ping(backend, user);
 	}
@@ -220,7 +220,7 @@ public class StormResourceHelper {
 
 	public static void doCopyDirectory(StormDirectoryResource sourceDir, StormDirectoryResource newParent, String newName,
 			boolean isDepthInfinity, UserCredentials user) throws NotAuthorizedException, ConflictException, BadRequestException {
-		log.info("Called doCopyDirectory()");
+		log.debug("Called doCopyDirectory()");
 		// create destination folder:
 		StormDirectoryResource destinationResource = doMkCol(newParent, newName, user);
 		// COPY every resource from the source to the destination folder:
@@ -250,7 +250,7 @@ public class StormResourceHelper {
 
 	public static void doCopyFile(StormFileResource source, StormDirectoryResource newParent, String newName, UserCredentials user)
 			throws RuntimeApiException, StormResourceException {
-		log.info("Called doCopyFile()");
+		log.debug("Called doCopyFile()");
 		/* prepareToGet on source file to lock the resource */
 		PtGOutputData outputPtG = StormBackendApi.prepareToGet(source.getFactory().getBackendApi(), source.getSurl().asString(), user,
 				source.getStorageArea().getProtocols());
@@ -279,7 +279,7 @@ public class StormResourceHelper {
 
 	public static RequestOutputData doPrepareToGetStatus(StormFileResource source, UserCredentials user) throws NotFoundException,
 			RuntimeApiException, StormResourceException {
-		log.info("Called doPrepareToGetStatus()");
+		log.debug("Called doPrepareToGetStatus()");
 		return StormBackendApi.prepareToGetStatus(source.getFactory().getBackendApi(), source.getSurl().asString(), user);
 	}
 
@@ -291,7 +291,7 @@ public class StormResourceHelper {
 
 	public static RequestOutputData doPrepareToPutStatus(StormFileResource source, UserCredentials user) throws NotFoundException,
 			RuntimeApiException, StormResourceException {
-		log.info("Called doPrepareToPutStatus()");
+		log.debug("Called doPrepareToPutStatus()");
 		return StormBackendApi.prepareToPutStatus(source.getFactory().getBackendApi(), source.getSurl().asString(), user);
 	}
 

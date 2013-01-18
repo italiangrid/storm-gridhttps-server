@@ -99,7 +99,7 @@ public class StormBackendApi {
 			throw new RuntimeApiException(e.getMessage(), e);
 		}
 		log.debug(outputPtG.getStatus().getStatusCode().getValue());
-		log.info(outputPtG.getStatus().getExplanation());
+		log.debug(outputPtG.getStatus().getExplanation());
 		if (!outputPtG.getStatus().getStatusCode().getValue().equals("SRM_FILE_PINNED")) {
 			throw new StormResourceException("prepare-to-get status is " + outputPtG.getStatus().getStatusCode().getValue());
 		}
@@ -129,7 +129,7 @@ public class StormBackendApi {
 			throw e;
 		}
 		log.debug(output.getStatus().getStatusCode().getValue());
-		log.info(output.getStatus().getExplanation());
+		log.debug(output.getStatus().getExplanation());
 		if (!output.isSuccess()) {
 			abortRequest(backend, token, user);
 			throw new StormResourceException("release-files status is " + output.getStatus().getStatusCode().getValue());
@@ -155,7 +155,7 @@ public class StormBackendApi {
 			throw new RuntimeApiException(e.getMessage(), e);
 		}
 		log.debug(outputPtp.getStatus().getStatusCode().getValue());
-		log.info(outputPtp.getStatus().getExplanation());
+		log.debug(outputPtp.getStatus().getExplanation());
 		if (!outputPtp.getStatus().getStatusCode().getValue().equals("SRM_SPACE_AVAILABLE")) {
 			throw new StormResourceException("prepare-to-put status is " + outputPtp.getStatus().getStatusCode().getValue());
 		}
@@ -180,7 +180,7 @@ public class StormBackendApi {
 			throw new RuntimeApiException(e.getMessage(), e);
 		}
 		log.debug(outputPtp.getStatus().getStatusCode().getValue());
-		log.info(outputPtp.getStatus().getExplanation());
+		log.debug(outputPtp.getStatus().getExplanation());
 		if (!outputPtp.getStatus().getStatusCode().getValue().equals("SRM_SPACE_AVAILABLE")) {
 			throw new StormResourceException("prepare-to-put-overwrite status is " + outputPtp.getStatus().getStatusCode().getValue());
 		}
@@ -210,7 +210,7 @@ public class StormBackendApi {
 			throw e;
 		}
 		log.debug(outputPd.getStatus().getStatusCode().getValue());
-		log.info(outputPd.getStatus().getExplanation());
+		log.debug(outputPd.getStatus().getExplanation());
 		if (!outputPd.isSuccess()) {
 			abortRequest(backend, token, user);
 			throw new StormResourceException("put-done status is " + outputPd.getStatus().getStatusCode().getValue());
@@ -234,7 +234,7 @@ public class StormBackendApi {
 			throw new RuntimeApiException(e.getMessage(), e);
 		}
 		log.debug(output.getStatus().getStatusCode().getValue());
-		log.info(output.getStatus().getExplanation());
+		log.debug(output.getStatus().getExplanation());
 		if (!output.isSuccess()) {
 			throw new StormResourceException("mkdir status is " + output.getStatus().getStatusCode().getValue());
 		}
@@ -259,7 +259,7 @@ public class StormBackendApi {
 			throw new RuntimeApiException(e.getMessage(), e);
 		}
 		log.debug(output.getStatus().getStatusCode().getValue());
-		log.info(output.getStatus().getExplanation());
+		log.debug(output.getStatus().getExplanation());
 		if (!output.isSuccess()) {
 			throw new StormResourceException("rm status is " + output.getStatus().getStatusCode().getValue());
 		}
@@ -282,7 +282,7 @@ public class StormBackendApi {
 			throw new RuntimeApiException(e.getMessage(), e);
 		}
 		log.debug(output.getStatus().getStatusCode().getValue());
-		log.info(output.getStatus().getExplanation());
+		log.debug(output.getStatus().getExplanation());
 		if (!output.isSuccess()) {
 			throw new StormResourceException("rm-dir status is " + output.getStatus().getStatusCode().getValue());
 		}
@@ -305,7 +305,7 @@ public class StormBackendApi {
 			throw new RuntimeApiException(e.getMessage(), e);
 		}
 		log.debug(output.getStatus().getStatusCode().getValue());
-		log.info(output.getStatus().getExplanation());
+		log.debug(output.getStatus().getExplanation());
 		if (!output.isSuccess()) {
 			throw new StormResourceException("rm-dir-recoursively status is " + output.getStatus().getStatusCode().getValue());
 		}
@@ -328,7 +328,7 @@ public class StormBackendApi {
 			throw new RuntimeApiException(e.getMessage(), e);
 		}
 		log.debug(output.getStatus().getStatusCode().getValue());
-		log.info(output.getStatus().getExplanation());
+		log.debug(output.getStatus().getExplanation());
 		if (!output.isSuccess()) {
 			throw new StormResourceException("mv status is " + output.getStatus().getStatusCode().getValue());
 		}
@@ -353,7 +353,7 @@ public class StormBackendApi {
 			throw new RuntimeApiException(e.getMessage(), e);
 		}
 		log.debug(output.getStatus().getStatusCode().getValue());
-		log.info(output.getStatus().getExplanation());
+		log.debug(output.getStatus().getExplanation());
 		if (!output.isSuccess()) {
 			throw new StormResourceException("ls-detailed status is " + output.getStatus().getStatusCode().getValue());
 		}
@@ -378,7 +378,7 @@ public class StormBackendApi {
 			throw new RuntimeApiException("Backend API Exception!", e);
 		}
 		log.debug(output.getStatus().getStatusCode().getValue());
-		log.info(output.getStatus().getExplanation());
+		log.debug(output.getStatus().getExplanation());
 		if (!output.isSuccess()) {
 			throw new StormResourceException("ls status is " + output.getStatus().getStatusCode().getValue());
 		}
@@ -403,7 +403,7 @@ public class StormBackendApi {
 			throw new RuntimeApiException(e.getMessage(), e);
 		}
 		log.debug(outputSPtp.getStatus().getStatusCode().getValue());
-		log.info(outputSPtp.getStatus().getExplanation());
+		log.debug(outputSPtp.getStatus().getExplanation());
 //		if (!outputSPtp.getStatus().getStatusCode().getValue().equals("SRM_SUCCESS")) {
 //			throw new StormResourceException("prepare-to-put-status status is " + outputSPtp.getStatus().getStatusCode().getValue());
 //		}
@@ -428,7 +428,7 @@ public class StormBackendApi {
 			throw new RuntimeApiException(e.getMessage(), e);
 		}
 		log.debug(outputSPtg.getStatus().getStatusCode().getValue());
-		log.info(outputSPtg.getStatus().getExplanation());
+		log.debug(outputSPtg.getStatus().getExplanation());
 //		if (!outputSPtg.getStatus().getStatusCode().getValue().equals("SRM_SUCCESS")) {
 //			throw new StormResourceException("prepare-to-get-status status is " + outputSPtg.getStatus().getStatusCode().getValue());
 //		}

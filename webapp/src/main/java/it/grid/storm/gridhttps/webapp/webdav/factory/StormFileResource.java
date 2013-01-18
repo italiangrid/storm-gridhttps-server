@@ -111,7 +111,7 @@ public class StormFileResource extends StormResource implements CopyableResource
 	}
 
 	public void sendContent(OutputStream out, Range range, Map<String, String> params, String contentType) throws IOException, NotAuthorizedException, BadRequestException, NotFoundException {
-		log.info("Called function for GET FILE");
+		log.debug("Called function for GET FILE");
 		InputStream in = StormResourceHelper.doGetFile(this);
 		if (in == null) {
 			log.error("Unable to get resource content '" + getFile().toString() + "'");
@@ -141,7 +141,7 @@ public class StormFileResource extends StormResource implements CopyableResource
 	}
 
 	public void replaceContent(InputStream in, Long length) throws BadRequestException, ConflictException, NotAuthorizedException {
-		log.info("Called function for PUT-OVERWRITE");
+		log.debug("Called function for PUT-OVERWRITE");
 		if (!HttpHelper.getHelper().isOverwriteRequest()) {
 			throw new NotAuthorizedException("Resource exists but this is not an overwrite request!", this);
 		}
@@ -149,12 +149,12 @@ public class StormFileResource extends StormResource implements CopyableResource
 	}
 
 	public void delete() throws NotAuthorizedException, ConflictException, BadRequestException {
-		log.info("Called function for DELETE FILE");
+		log.debug("Called function for DELETE FILE");
 		StormResourceHelper.doDelete(this);
 	}
 
 	public void moveTo(CollectionResource newParent, String newName) throws NotAuthorizedException, ConflictException, BadRequestException {
-		log.info("Called function for MOVE FILE");
+		log.debug("Called function for MOVE FILE");
 		if (newParent instanceof StormDirectoryResource) {
 			StormResourceHelper.doMoveTo(this, (StormDirectoryResource) newParent, newName);
 			setFile(new File(((StormDirectoryResource) newParent).getFile(), newName));
@@ -163,7 +163,7 @@ public class StormFileResource extends StormResource implements CopyableResource
 	}
 
 	public void copyTo(CollectionResource newParent, String newName) throws NotAuthorizedException, ConflictException, BadRequestException {
-		log.info("Called function for COPY FILE");		
+		log.debug("Called function for COPY FILE");		
 		if (newParent instanceof StormDirectoryResource) {
 			StormDirectoryResource newFsParent = (StormDirectoryResource) newParent;
 			StormResourceHelper.doCopyFile(this, newFsParent, newName);

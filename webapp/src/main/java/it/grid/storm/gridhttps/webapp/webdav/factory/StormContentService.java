@@ -68,7 +68,7 @@ public class StormContentService implements FileContentService {
 			} catch (NoSuchAlgorithmException e) {
 				log.error(e.getMessage());
 				log.warn("Checksum algorithm '" + Configuration.getChecksumType() + "' not supported!");
-				log.info("Proceeding with nochecksum file transfer...");
+				log.debug("Proceeding with nochecksum file transfer...");
 				chrono.start();
 				doSimpleSetFileContent(in, out);
 				chrono.stop();
@@ -116,7 +116,7 @@ public class StormContentService implements FileContentService {
 	}
 	
 	private void sendChecksum(File file, ChecksumType type, String checksum) {
-		log.info("Set checksum " + type.name() + " = " + checksum + " to file " + file.getAbsolutePath());
+		log.debug("Set checksum " + type.name() + " = " + checksum + " to file " + file.getAbsolutePath());
 		try {
 			HttpResponse response = callSetChecksumService(buildSetChecksumValueUri(file, type, checksum));
 			StatusLine status = response.getStatusLine();
@@ -124,7 +124,7 @@ public class StormContentService implements FileContentService {
 				log.debug("Http call return code is: " + status.getStatusCode());
 				log.debug("Http call return reason phrase is: " + status.getReasonPhrase());
 				if (status.getStatusCode() == HttpURLConnection.HTTP_NO_CONTENT) {
-					log.info("Checksum successfully set!");
+					log.debug("Checksum successfully set!");
 				} else {
 					throw new Exception("Unable to get a valid response from server. Received a non HTTP 204 response from the server!");
 				}
@@ -146,7 +146,7 @@ public class StormContentService implements FileContentService {
 	}
 
 	private HttpResponse callSetChecksumService(URI uri) throws Exception {
-		log.info("Put checksum value at uri: " + uri);
+		log.debug("Put checksum value at uri: " + uri);
 		HttpPut httpput = new HttpPut(uri);
 		HttpClient httpclient = new DefaultHttpClient();
 		HttpResponse httpResponse = null;

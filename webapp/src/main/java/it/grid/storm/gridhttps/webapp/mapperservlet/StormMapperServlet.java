@@ -36,13 +36,13 @@ public class StormMapperServlet implements Filter {
 
 	@Override
 	public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
-		log.info("Serving a mapping request");
+		log.debug("Serving a mapping request");
 		String pathDecoded = getDecodedPath((HttpServletRequest) request);
 		log.debug("Decoded filePath = " + pathDecoded + " . Retrieving matching StorageArea");
 		StorageArea SA = getMatchingSA(pathDecoded);
 		log.debug("Storage-Area: " + SA);
 		String relativeUrl = File.separator + Configuration.getFileTransferContextPath() + SA.getStfn(pathDecoded);
-		log.debug("Writing in the response the relative URL : " + relativeUrl);
+		log.info("MAPPING: '" + pathDecoded + "' to '" + relativeUrl + "'");
 		sendResponse((HttpServletResponse) response, relativeUrl);
 	}
 

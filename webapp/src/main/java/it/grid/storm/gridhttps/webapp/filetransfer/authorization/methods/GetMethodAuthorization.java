@@ -86,9 +86,9 @@ public class GetMethodAuthorization extends AbstractMethodAuthorization {
 			return AuthorizationStatus.NOTAUTHORIZED(500, e.getMessage());
 		}
 		String requestStatus = outputSPtG.getStatus().getStatusCode().getValue();
-		log.info("Request-status: " + requestStatus);
+		log.debug("Request-status: " + requestStatus);
 		String surlStatus = outputSPtG.getStatus(surl.asString()).getStatusCode().getValue();
-		log.info("Surl-status: " + surlStatus);
+		log.debug("Surl-status: " + surlStatus);
 		if (requestStatus.equals("SRM_SUCCESS") && surlStatus.equals("SRM_FILE_PINNED")) {
 			return AuthorizationStatus.AUTHORIZED();
 		} else {

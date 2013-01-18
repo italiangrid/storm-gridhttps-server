@@ -62,7 +62,7 @@ public class FileResource extends FileSystemResource implements GetableResource,
 
 	public void sendContent(OutputStream out, Range range, Map<String, String> params, String contentType) throws IOException,
 			NotAuthorizedException, BadRequestException, NotFoundException {
-		log.info("Called function for GET FILE");
+		log.debug("Called function for GET FILE");
 		
 //		log.debug("Check for a prepare-to-get");
 //		HttpHelper httpHelper = new HttpHelper(MiltonServlet.request(), MiltonServlet.response());
@@ -99,7 +99,7 @@ public class FileResource extends FileSystemResource implements GetableResource,
 	}
 
 	public void replaceContent(InputStream in, Long length) throws BadRequestException, ConflictException, NotAuthorizedException {
-		log.info("Called function for PUT-OVERWRITE");
+		log.debug("Called function for PUT-OVERWRITE");
 		
 //		log.debug("Check for a prepare-to-put");
 //		HttpHelper httpHelper = new HttpHelper(MiltonServlet.request(), MiltonServlet.response());

@@ -103,7 +103,7 @@ public class StormAuthorizationFilter implements Filter {
 			if (filter != null) {
 				AuthorizationStatus status = filter.isUserAuthorized(UserCredentials.getUser());
 				if (status.isAuthorized()) {
-					log.info("User is authorized to access the requested resource");
+					log.debug("User is authorized to access the requested resource");
 					chain.doFilter(request, response);
 				} else {
 					log.warn("User is not authorized to access the requested resource");
@@ -135,10 +135,10 @@ public class StormAuthorizationFilter implements Filter {
 	private AuthorizationFilter getAuthorizationHandler(String path) {
 		try {
 			if (isFileTransferRequest(path)) {
-				log.info("Received a file-transfer request");
+				log.debug("Received a file-transfer request");
 				return new FileTransferAuthorizationFilter(HttpHelper.getHelper(), File.separator + Configuration.getFileTransferContextPath());
 			} else {
-				log.info("Received a webdav request");
+				log.debug("Received a webdav request");
 				return new WebDAVAuthorizationFilter(HttpHelper.getHelper());
 			}
 		} catch (Exception e) {
@@ -175,12 +175,12 @@ public class StormAuthorizationFilter implements Filter {
 
 	private void doPing() {
 		// doPing
-		log.info("ping " + Configuration.getBackendHostname() + ":" + Configuration.getBackendPort());
+		log.debug("ping " + Configuration.getBackendHostname() + ":" + Configuration.getBackendPort());
 		try {
 			PingOutputData output = StormResourceHelper.doPing(Configuration.getBackendHostname(), Configuration.getBackendPort());
-			log.info(output.getBeOs());
-			log.info(output.getBeVersion());
-			log.info(output.getVersionInfo());
+			log.debug(output.getBeOs());
+			log.debug(output.getBeVersion());
+			log.debug(output.getVersionInfo());
 		} catch (RuntimeApiException e) {
 			log.error(e.getMessage());
 		}
