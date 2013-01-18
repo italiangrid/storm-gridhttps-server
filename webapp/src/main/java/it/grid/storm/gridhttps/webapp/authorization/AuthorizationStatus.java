@@ -15,21 +15,22 @@ package it.grid.storm.gridhttps.webapp.authorization;
 public class AuthorizationStatus {
 
 	public static AuthorizationStatus AUTHORIZED() {
-		return new AuthorizationStatus(true, "");
+		return new AuthorizationStatus(true, 0, "");
 	}
 
-	public static AuthorizationStatus NOTAUTHORIZED(String errorMsg) {
-		return new AuthorizationStatus(false, errorMsg);
+	public static AuthorizationStatus NOTAUTHORIZED(int errorcode, String errorMsg) {
+		return new AuthorizationStatus(false, errorcode, errorMsg);
 	}
 
 	private boolean authorized;
 	private String reason;
+	private int errorcode;
 
-	private AuthorizationStatus(boolean authorized, String reason) {
+	private AuthorizationStatus(boolean authorized, int errorcode, String reason) {
 		if (authorized) {
 			setAuthorized();
 		} else {
-			setUnauthorized(reason);
+			setUnauthorized(errorcode, reason);
 		}
 	}
 
@@ -40,15 +41,21 @@ public class AuthorizationStatus {
 	public void setAuthorized() {
 		this.authorized = true;
 		this.reason = "";
+		this.errorcode = 0;
 	}
 
-	public void setUnauthorized(String msg) {
+	public void setUnauthorized(int errorcode, String msg) {
 		this.authorized = false;
 		this.reason = msg;
+		this.errorcode = errorcode;
 	}
 
 	public String getReason() {
 		return reason;
+	}
+	
+	public int getErrorCode() {
+		return errorcode;
 	}
 
 }

@@ -46,7 +46,7 @@ public class MoveMethodAuthorization extends AbstractMethodAuthorization {
 			} 
 			return srcResponse;
 		} 
-		return AuthorizationStatus.NOTAUTHORIZED("no destination header found");
+		return AuthorizationStatus.NOTAUTHORIZED(400, "no destination header found");
 	}
 	
 }

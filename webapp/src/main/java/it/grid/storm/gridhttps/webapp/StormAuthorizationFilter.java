@@ -108,7 +108,7 @@ public class StormAuthorizationFilter implements Filter {
 				} else {
 					log.warn("User is not authorized to access the requested resource");
 					log.warn("Reason: " + status.getReason());
-					sendError(HttpServletResponse.SC_UNAUTHORIZED, status.getReason());
+					sendError(status.getErrorCode(), status.getReason());
 				}
 			} else {
 				sendError(HttpServletResponse.SC_BAD_REQUEST, "Unable to identify the right handler to evaluate the requested path "

@@ -60,14 +60,14 @@ public class PutMethodAuthorization extends AbstractMethodAuthorization {
 						return status;
 					}
 				} else {
-					return AuthorizationStatus.NOTAUTHORIZED("Resource required is not a file"); 
+					return AuthorizationStatus.NOTAUTHORIZED(400, "Resource required is not a file"); 
 				}
 			} else {
 				Surl surl = new Surl(resource, SA);
-				return AuthorizationStatus.NOTAUTHORIZED("File not exist! You must do a prepare-to-put on surl '" + surl + "' before!"); 
+				return AuthorizationStatus.NOTAUTHORIZED(412, "File not exist! You must do a prepare-to-put on surl '" + surl + "' before!"); 
 			}
 		} else {
-			return AuthorizationStatus.NOTAUTHORIZED("No storage area matched with path = " + path);
+			return AuthorizationStatus.NOTAUTHORIZED(400, "No storage area matched with path = " + path);
 		}
 	}
 
@@ -81,10 +81,10 @@ public class PutMethodAuthorization extends AbstractMethodAuthorization {
 			outputSPtP = StormBackendApi.prepareToPutStatus(backend, surl.asString(), user);
 		} catch (RuntimeApiException e) {
 			log.error(e.getMessage());
-			return AuthorizationStatus.NOTAUTHORIZED(e.getMessage());
+			return AuthorizationStatus.NOTAUTHORIZED(500, e.getMessage());
 		} catch (StormResourceException e) {
 			log.error(e.getMessage());
-			return AuthorizationStatus.NOTAUTHORIZED(e.getMessage());
+			return AuthorizationStatus.NOTAUTHORIZED(500, e.getMessage());
 		}
 		String requestStatus = outputSPtP.getStatus().getStatusCode().getValue();
 		log.info("Request-status: " + requestStatus);
@@ -93,7 +93,7 @@ public class PutMethodAuthorization extends AbstractMethodAuthorization {
 		if (requestStatus.equals("SRM_SUCCESS") && surlStatus.equals("SRM_SPACE_AVAILABLE")) {
 			return AuthorizationStatus.AUTHORIZED();
 		} else {
-			return AuthorizationStatus.NOTAUTHORIZED("You must do a prepare-to-put on surl '" + surl.asString() + "' before!");
+			return AuthorizationStatus.NOTAUTHORIZED(412, "You must do a prepare-to-put on surl '" + surl.asString() + "' before!");
 		}
 	}
 }

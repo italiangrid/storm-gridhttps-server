@@ -46,12 +46,12 @@ public abstract class AbstractMethodAuthorization {
 			if (response) {
 				return AuthorizationStatus.AUTHORIZED();
 			} else {
-				return AuthorizationStatus.NOTAUTHORIZED("You are not authorized to access the requested resource");
+				return AuthorizationStatus.NOTAUTHORIZED(401, "You are not authorized to access the requested resource");
 			}			
 		} catch (IllegalArgumentException e) {
-			return AuthorizationStatus.NOTAUTHORIZED("Error: " + e.getMessage());
+			return AuthorizationStatus.NOTAUTHORIZED(500, "Error: " + e.getMessage());
 		} catch (Exception e) {
-			return AuthorizationStatus.NOTAUTHORIZED("Error: " + e.getMessage());
+			return AuthorizationStatus.NOTAUTHORIZED(500, "Error: " + e.getMessage());
 		}
 	}
 	

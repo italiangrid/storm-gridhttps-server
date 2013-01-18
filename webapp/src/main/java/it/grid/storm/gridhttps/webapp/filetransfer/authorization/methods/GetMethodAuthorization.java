@@ -60,13 +60,13 @@ public class GetMethodAuthorization extends AbstractMethodAuthorization {
 						return status;
 					}
 				} else {
-					return AuthorizationStatus.NOTAUTHORIZED("Resource required is not a file"); 
+					return AuthorizationStatus.NOTAUTHORIZED(400,"Resource required is not a file"); 
 				}
 			} else {
-				return AuthorizationStatus.NOTAUTHORIZED("File does not exist"); 
+				return AuthorizationStatus.NOTAUTHORIZED(400, "File does not exist"); 
 			}
 		} else {
-			return AuthorizationStatus.NOTAUTHORIZED("No storage area matched with path = " + path);
+			return AuthorizationStatus.NOTAUTHORIZED(400, "No storage area matched with path = " + path);
 		}
 	}
 
@@ -80,10 +80,10 @@ public class GetMethodAuthorization extends AbstractMethodAuthorization {
 			outputSPtG = StormBackendApi.prepareToGetStatus(backend, surl.asString(), user);
 		} catch (RuntimeApiException e) {
 			log.error(e.getMessage());
-			return AuthorizationStatus.NOTAUTHORIZED(e.getMessage());
+			return AuthorizationStatus.NOTAUTHORIZED(500, e.getMessage());
 		} catch (StormResourceException e) {
 			log.error(e.getMessage());
-			return AuthorizationStatus.NOTAUTHORIZED(e.getMessage());
+			return AuthorizationStatus.NOTAUTHORIZED(500, e.getMessage());
 		}
 		String requestStatus = outputSPtG.getStatus().getStatusCode().getValue();
 		log.info("Request-status: " + requestStatus);
@@ -92,7 +92,7 @@ public class GetMethodAuthorization extends AbstractMethodAuthorization {
 		if (requestStatus.equals("SRM_SUCCESS") && surlStatus.equals("SRM_FILE_PINNED")) {
 			return AuthorizationStatus.AUTHORIZED();
 		} else {
-			return AuthorizationStatus.NOTAUTHORIZED("You must do a prepare-to-get on surl '" + surl.asString() + "' before!");
+			return AuthorizationStatus.NOTAUTHORIZED(412, "You must do a prepare-to-get on surl '" + surl.asString() + "' before!");
 		}
 	}
 	
