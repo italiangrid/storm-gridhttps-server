@@ -52,6 +52,7 @@ public class StormStandardFilter implements Filter {
 				if (log.isTraceEnabled()) {
 					log.trace("delegate to method handler: " + handler.getClass().getCanonicalName());
 				}
+				printCommand(request);
 				handler.process(manager, request, response);
 				if (response.getEntity() != null) {
 					manager.sendResponseEntity(response);
@@ -89,6 +90,17 @@ public class StormStandardFilter implements Filter {
 		}
 	}
 	
+	private void printCommand(Request request) {
+		// TODO Auto-generated method stub
+		String msg = "";
+		msg += request.getMethod().name();
+		msg += " " + request.getAbsolutePath();
+		if (request.getMethod().equals(Request.Method.COPY) || request.getMethod().equals(Request.Method.MOVE)) {
+			msg += " to " + request.getHeaders().get("destination");
+		}
+		log.info(msg);
+	}
+
 	private void sendResponse(Response response, Status status, final String htmlPage) {
 		response.setStatus(status);
 		response.setEntity(new Response.Entity() {

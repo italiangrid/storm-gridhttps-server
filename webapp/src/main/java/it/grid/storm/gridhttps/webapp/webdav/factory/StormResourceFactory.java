@@ -108,7 +108,7 @@ public final class StormResourceFactory implements Initable, ResourceFactory {
 	public StormResource resolveFile(String host, File file, StorageArea storageArea) {
 		StormResource r;
 		if (!file.exists()) {
-			log.warn("file not found: " + file.getAbsolutePath());
+			log.debug("file not found: " + file.getAbsolutePath());
 			return null;
 		} else if (file.isDirectory()) {
 			r = new StormDirectoryResource(this, file, storageArea);
