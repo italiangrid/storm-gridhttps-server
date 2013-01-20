@@ -1,6 +1,6 @@
 <configuration>
 
-	<appender name="PROCESS" class="ch.qos.logback.core.FileAppender">
+	<appender name="PROCESS" class="ch.qos.logback.core.rolling.RollingFileAppender">
 		<file>${storm.log.dir}/storm-gridhttps-server.log</file>
 		<ImmediateFlush>true</ImmediateFlush>
 
