@@ -31,4 +31,4 @@ clean:
 	rm -f ${mirror_conf_name}
 
 prepare:
-	wget $(mirror_conf_url) -O $(mirror_conf_name)
+	wget --no-check-certificate $(mirror_conf_url) -O $(mirror_conf_name)
