@@ -89,7 +89,7 @@ public class StormAuthorizationFilter implements Filter {
 		String requestedPath = httpHelper.getRequestURI().getRawPath();
 		log.debug("Requested-URI: " + requestedPath);
 
-		if (requestedPath.contains(" ")) {
+		if (requestedPath.contains("%20")) {
 			log.error("Request URI '" + requestedPath + "' contains not allowed spaces! Exiting..");
 			sendError(HttpServletResponse.SC_BAD_REQUEST, "Request URI '" + requestedPath + "' contains not allowed spaces");
 		} else if (isRootPath(requestedPath)) {
