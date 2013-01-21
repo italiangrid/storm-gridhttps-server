@@ -41,7 +41,7 @@
 		<httpcoreVersion>4.2.2</httpcoreVersion>
 		<httpclientVersion>4.2.1</httpclientVersion>
 		<apibackendVersion>0.0.15-SNAPSHOT</apibackendVersion>
-		<httpsutilsVersion>0.2-SNAPSHOT</httpsutilsVersion>
+		<httpsutilsVersion>0.2.1</httpsutilsVersion>
 		<javaxServletVersion>3.0.0.v201112011016</javaxServletVersion>
 		<mavenCompilerVersion>2.5.1</mavenCompilerVersion>
 		<springcontextVersion>2.0.5</springcontextVersion>
