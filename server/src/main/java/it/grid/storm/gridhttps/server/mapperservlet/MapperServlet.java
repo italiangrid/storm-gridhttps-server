@@ -51,16 +51,13 @@ public class MapperServlet extends HttpServlet {
 		StorageArea SA = getMatchingSA(pathDecoded);
 		log.debug("Storage-Area: " + SA);
 		String relativeUrl = File.separator + DefaultConfiguration.FILETRANSFER_CONTEXTPATH + SA.getStfn(pathDecoded);
-		log.info("MAPPING: '" + pathDecoded + "' to '" + relativeUrl + "'");
+		log.info("GET-MAPPING: '" + pathDecoded + "' to '" + relativeUrl + "'");
 		sendResponse(response, relativeUrl);
 	}
 	
 	@Override
 	public void doHead(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-//		HttpServletResponseWrapper myResponse = new HttpServletResponseWrapper(response);
-//		
-//		NoBodyResponse myResponse = new NoBodyResponse(response);
-		log.debug("HEAD");
+		log.info("HEAD-MAPPING: " + request.getRequestURI());
 	}
 	
 	
