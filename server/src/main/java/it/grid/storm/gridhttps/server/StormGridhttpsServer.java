@@ -16,6 +16,7 @@ import it.grid.storm.gridhttps.server.data.StormBackend;
 import it.grid.storm.gridhttps.server.data.StormFrontend;
 import it.grid.storm.gridhttps.server.data.StormGridhttps;
 import it.grid.storm.gridhttps.server.exceptions.ServerException;
+import it.grid.storm.gridhttps.server.mapperservlet.MapperServlet;
 import it.grid.storm.gridhttps.server.utils.WebNamespaceContext;
 import it.grid.storm.gridhttps.server.utils.XML;
 import it.grid.storm.gridhttps.server.utils.Zip;
@@ -31,6 +32,8 @@ import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.handler.ContextHandlerCollection;
 import org.eclipse.jetty.server.handler.HandlerCollection;
 import org.eclipse.jetty.server.nio.SelectChannelConnector;
+import org.eclipse.jetty.servlet.ServletContextHandler;
+import org.eclipse.jetty.servlet.ServletHolder;
 import org.eclipse.jetty.util.ajax.JSON;
 import org.eclipse.jetty.webapp.WebAppContext;
 import org.italiangrid.utils.https.ServerFactory;
@@ -48,38 +51,50 @@ public class StormGridhttpsServer {
 	private StormBackend backendInfo;
 	private StormFrontend frontendInfo;
 	private StormGridhttps gridhttpsInfo;
-	private Server server;
+	private Server davServer;
+	private Server mapServer;
 	private ContextHandlerCollection contextHandlerCollection;
 	private WebApp webapp;
+	private MapperServlet mapperServlet;
 
 	public StormGridhttpsServer(StormGridhttps gridhttpsInfo, StormBackend backendInfo, StormFrontend frontendInfo) throws ServerException {
 		setGridhttpsInfo(gridhttpsInfo);
 		setBackendInfo(backendInfo);
 		setFrontendInfo(frontendInfo);
-		createServer();
-		initServer();
+		createDavServer();
+		createMapServer();
+		initDavServer();
+		initMapServer();
 	}
 
-	private void createServer() {
-		server = ServerFactory.newServer(gridhttpsInfo.getHostname(), gridhttpsInfo.getHttpsPort(), gridhttpsInfo.getSsloptions());
-		server.setStopAtShutdown(true);
-		server.setGracefulShutdown(1000);
+	private void createMapServer() {
+		mapServer = new Server(DefaultConfiguration.STORM_GHTTPS_MAPPER_SERVLET_PORT);		
+	}
+
+	private void createDavServer() {
+		davServer = ServerFactory.newServer(gridhttpsInfo.getHostname(), gridhttpsInfo.getHttpsPort(), gridhttpsInfo.getSsloptions());
+		davServer.setStopAtShutdown(true);
+		davServer.setGracefulShutdown(1000);
 		HandlerCollection hc = new HandlerCollection();
 		contextHandlerCollection = new ContextHandlerCollection();
 		hc.setHandlers(new Handler[] { contextHandlerCollection });
-		server.setHandler(hc);
+		davServer.setHandler(hc);
 		if (gridhttpsInfo.isEnabledHttp()) {
 			Connector connector = new SelectChannelConnector();
 			connector.setPort(gridhttpsInfo.getHttpPort());
 			connector.setMaxIdleTime(MAX_IDLE_TIME);
-			server.addConnector(connector);
+			davServer.addConnector(connector);
 		}
 	}
 
-	private void initServer() throws ServerException {
+	private void initDavServer() throws ServerException {
 		initWebapp();
 	}
 
+	private void initMapServer() throws ServerException {
+		initMapperServlet();
+	}
+	
 	private void initWebapp() throws ServerException {
 		webapp = new WebApp(new File(gridhttpsInfo.getWebappsDirectory(), DefaultConfiguration.WEBAPP_DIRECTORY_NAME));
 		if (webapp != null) {
@@ -114,39 +129,59 @@ public class StormGridhttpsServer {
 		return context;
 	}
 
+	private void initMapperServlet() throws ServerException {
+		mapperServlet = new MapperServlet();
+		if (mapperServlet != null) {
+			mapServer.setHandler(getMapperServletContext());
+		} else {
+			log.error("Error on mapper-servlet creation - mapper-servlet is null!");
+			throw new ServerException("Error on mapper-servlet creation - mapper-servlet is null!");
+		}
+	}
+
+	private ServletContextHandler getMapperServletContext() {
+		ServletContextHandler context = new ServletContextHandler(ServletContextHandler.SESSIONS);
+		context.setContextPath(File.separator + gridhttpsInfo.getMapperServlet().getContextPath());
+		context.addServlet(new ServletHolder(mapperServlet), File.separator + gridhttpsInfo.getMapperServlet().getContextSpec());
+		return context;
+	}
+	
 	public void start() throws ServerException {
 		try {
-			server.start();
+			davServer.start();
+			mapServer.start();
 		} catch (Exception e) {
 			throw new ServerException(e);
 		}
-		log.info("server started ");
+		log.info("gridhttps-server started ");
 	}
 
 	public boolean isRunning() {
-		return server.isRunning();
+		return (davServer.isRunning() && mapServer.isRunning());
 	}
 
 	public void stop() throws ServerException {
 		if (isRunning()) {
 			undeploy();
 			try {
-				server.stop();
+				davServer.stop();
+				mapServer.stop();
 			} catch (Exception e) {
 				throw new ServerException(e);
 			}
-			log.info("server stopped ");
+			log.info("gridhttps-server stopped ");
 		}
 	}
 
 	public void status() {
 		if (isRunning()) {
+			log.info("gridhttps-server is listening on port " + gridhttpsInfo.getHttpsPort() + " (secure connection)");
 			if (gridhttpsInfo.isEnabledHttp())
-				log.info("server is running on ports " + gridhttpsInfo.getHttpsPort() + "(https) and " +gridhttpsInfo.getHttpPort() + "(http)");
-			else 
-				log.info("server is running on port " + gridhttpsInfo.getHttpsPort() + "(https)");
+				log.info("gridhttps-server is listening on port " + gridhttpsInfo.getHttpPort() + " (anonymous connection)");
+			log.info("mapping-service is listening on port " + gridhttpsInfo.getMapperServlet().getPort());
 		} else {
-			log.info("server is not running ");
+			log.info("gridhttps-server is not running ");
+			log.info("mapping-service is not running ");
 		}
 	}
 

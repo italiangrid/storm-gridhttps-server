@@ -42,8 +42,7 @@ public class StormGridhttps {
 		this.setHttpPort(DefaultConfiguration.STORM_GHTTPS_HTTP_PORT);
 		this.setHttpsPort(DefaultConfiguration.STORM_GHTTPS_HTTPS_PORT);
 		this.setEnabledHttp(DefaultConfiguration.STORM_GHTTPS_USE_HTTP);
-		MapperServlet mapperServlet = new MapperServlet(DefaultConfiguration.MAPPER_SERVLET_CONTEXT_PATH,
-				DefaultConfiguration.MAPPER_SERVLET_CONTEXT_SPEC);
+		MapperServlet mapperServlet = new MapperServlet();
 		this.setMapperServlet(mapperServlet);
 		this.setWebappsDirectory(DefaultConfiguration.STORM_GHTTPS_WEBAPPS_DIRECTORY);
 		SSLOptions sslOptions = new SSLOptions();

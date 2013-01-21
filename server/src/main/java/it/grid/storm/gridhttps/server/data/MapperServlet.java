@@ -19,16 +19,19 @@ import it.grid.storm.gridhttps.server.exceptions.InitException;
 public class MapperServlet {
 	private String contextPath;
 	private String contextSpec;
+	private int port;
 
-	public MapperServlet(String contextPath, String contextSpec) {
+	public MapperServlet(String contextPath, String contextSpec, int port) {
 		this();
 		this.setContextPath(contextPath);
 		this.setContextSpec(contextSpec);
+		this.setPort(port);
 	}
 
 	public MapperServlet() {
 		this.setContextPath(DefaultConfiguration.MAPPER_SERVLET_CONTEXT_PATH);
 		this.setContextSpec(DefaultConfiguration.MAPPER_SERVLET_CONTEXT_SPEC);
+		this.setPort(DefaultConfiguration.STORM_GHTTPS_MAPPER_SERVLET_PORT);
 	}
 
 	public String getContextPath() {
@@ -56,5 +59,13 @@ public class MapperServlet {
 			throw new InitException("contextPath is empty!");
 		if (contextSpec.isEmpty())
 			throw new InitException("contextSpec is empty!");
+	}
+
+	public int getPort() {
+		return port;
+	}
+
+	public void setPort(int port) {
+		this.port = port;
 	}
 }

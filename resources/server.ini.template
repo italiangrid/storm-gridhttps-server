@@ -49,6 +49,9 @@
 # Gridhttps http port.
 # Default: 8085
 #http.port = 8085
+# Mapping-service port
+# Default: 8086
+#mapper.servlet.port = 8086
 # ============================
 # Https connector settings 
 # ============================

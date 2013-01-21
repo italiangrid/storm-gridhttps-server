@@ -226,6 +226,8 @@ public class Main {
 			stormGridhttps.setHttpPort(configuration.get("connectors", "http.port", int.class));
 		if (configuration.get("connectors").containsKey("https.port"))
 			stormGridhttps.setHttpsPort(configuration.get("connectors", "https.port", int.class));
+		if (configuration.get("connectors").containsKey("mapper.servlet.port"))
+			stormGridhttps.getMapperServlet().setPort(configuration.get("connectors", "mapper.servlet.port", int.class));
 		if (configuration.get("connectors").containsKey("x509.host-certificate"))
 			stormGridhttps.getSsloptions().setCertificateFile(configuration.get("connectors", "x509.host-certificate"));
 		if (configuration.get("connectors").containsKey("x509.host-key"))

@@ -29,6 +29,7 @@ public class DefaultConfiguration {
 	public final static int STORM_GHTTPS_HTTP_PORT = 8085;
 	public final static boolean STORM_GHTTPS_USE_HTTP = false;	
 	public final static int STORM_GHTTPS_HTTPS_PORT = 8443;
+	public final static int STORM_GHTTPS_MAPPER_SERVLET_PORT = 8086;
 	public final static boolean STORM_GHTTPS_HTTPS_WANT_CLIENT_AUTH = true;
 	public final static boolean STORM_GHTTPS_HTTPS_NEED_CLIENT_AUTH = true;
 	public final static String STORM_GHTTPS_HTTPS_CERTIFICATE_FILE = "/etc/grid-security/gridhttps/hostcert.pem";
