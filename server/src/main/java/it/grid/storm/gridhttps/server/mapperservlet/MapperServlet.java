@@ -43,6 +43,7 @@ public class MapperServlet extends HttpServlet {
 	private static final String PATH_PARAMETER_KEY = "path";
 	private static final String MAPPER_SERVLET_ENCODING_SCHEME = "UTF-8";
 
+	@Override
 	public void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 		log.debug("Serving a mapping request");
 		String pathDecoded = getDecodedPath(request);
@@ -53,6 +54,15 @@ public class MapperServlet extends HttpServlet {
 		log.info("MAPPING: '" + pathDecoded + "' to '" + relativeUrl + "'");
 		sendResponse(response, relativeUrl);
 	}
+	
+	@Override
+	public void doHead(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+//		HttpServletResponseWrapper myResponse = new HttpServletResponseWrapper(response);
+//		
+//		NoBodyResponse myResponse = new NoBodyResponse(response);
+		log.debug("HEAD");
+	}
+	
 	
 	private String getDecodedPath(HttpServletRequest request) throws ServletException {
 		String path = request.getParameter(PATH_PARAMETER_KEY);
