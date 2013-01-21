@@ -47,7 +47,7 @@ public class PutMethodAuthorization extends AbstractMethodAuthorization {
 	}
 	
 	public AuthorizationStatus isUserAuthorized(UserCredentials user) {
-		String path = stripContext(getHTTPHelper().getRequestURI().getPath());
+		String path = stripContext(getHTTPHelper().getRequestURI().getRawPath());
 		if (SA != null) {
 			String reqPath = SA.getRealPath(path);
 			File resource = new File(reqPath);

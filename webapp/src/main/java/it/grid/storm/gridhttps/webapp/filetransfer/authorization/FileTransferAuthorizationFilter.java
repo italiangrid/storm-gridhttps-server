@@ -58,11 +58,13 @@ public class FileTransferAuthorizationFilter extends AuthorizationFilter {
 
 	public AuthorizationStatus isUserAuthorized(UserCredentials user) {
 		String method = getHTTPHelper().getRequestMethod();
+		String reqProtocol = getHTTPHelper().getRequestProtocol();
+		/* check method */
 		if (!isMethodAllowed(method)) {
 			log.warn("Received a request for a not allowed method : " + method);
 			return AuthorizationStatus.NOTAUTHORIZED(405, "Method " + method + " not allowed!");
 		}
-		String reqProtocol = getHTTPHelper().getRequestProtocol();
+		/* check protocol */
 		if (!isProtocolAllowed(reqProtocol)) {
 			log.warn("Received a request-uri with a not allowed protocol: " + reqProtocol);
 			return AuthorizationStatus.NOTAUTHORIZED(401, "Unauthorized request protocol: " + reqProtocol);

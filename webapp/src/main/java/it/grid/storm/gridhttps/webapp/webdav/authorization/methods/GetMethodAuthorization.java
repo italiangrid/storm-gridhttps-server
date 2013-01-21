@@ -29,7 +29,7 @@ public class GetMethodAuthorization extends AbstractMethodAuthorization {
 	}
 	
 	public AuthorizationStatus isUserAuthorized(UserCredentials user) {
-		String path = SA.getRealPath(getHTTPHelper().getRequestURI().getPath());
+		String path = SA.getRealPath(getHTTPHelper().getRequestURI().getRawPath());
 		String operation = Constants.PREPARE_TO_GET_OPERATION;
 		return askAuth(user, operation, path);
 	}

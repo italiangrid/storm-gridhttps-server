@@ -29,7 +29,7 @@ public class PutMethodAuthorization extends AbstractMethodAuthorization {
 	}
 	
 	public AuthorizationStatus isUserAuthorized(UserCredentials user) {
-		String path = SA.getRealPath(getHTTPHelper().getRequestURI().getPath());
+		String path = SA.getRealPath(getHTTPHelper().getRequestURI().getRawPath());
 		String operation = getHTTPHelper().isOverwriteRequest() ? Constants.PREPARE_TO_PUT_OVERWRITE_OPERATION : Constants.PREPARE_TO_PUT_OPERATION;
 		return askAuth(user, operation, path);
 	}

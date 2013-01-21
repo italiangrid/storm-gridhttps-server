@@ -29,7 +29,7 @@ public class DeleteMethodAuthorization extends AbstractMethodAuthorization {
 	}
 	
 	public AuthorizationStatus isUserAuthorized(UserCredentials user) {
-		String path = SA.getRealPath(getHTTPHelper().getRequestURI().getPath());
+		String path = SA.getRealPath(getHTTPHelper().getRequestURI().getRawPath());
 		String operation = Constants.RM_OPERATION;
 		return askAuth(user, operation, path);
 	}

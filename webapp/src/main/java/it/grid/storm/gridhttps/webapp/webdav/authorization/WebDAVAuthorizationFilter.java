@@ -98,26 +98,30 @@ public class WebDAVAuthorizationFilter extends AuthorizationFilter {
 
 	public AuthorizationStatus isUserAuthorized(UserCredentials user) {
 		String method = getHTTPHelper().getRequestMethod();
+		String reqProtocol = getHTTPHelper().getRequestProtocol();
+		String reqPath = getHTTPHelper().getRequestURI().getRawPath();
+		/* check method */
 		if (!isMethodAllowed(method)) {
 			log.warn("Received a request for a not allowed method : " + method);
 			return AuthorizationStatus.NOTAUTHORIZED(405, "Method " + method + " not allowed!");
 		}
-		log.debug(method + " " + getHTTPHelper().getRequestURI().getPath());
-		String reqProtocol = getHTTPHelper().getRequestProtocol();
+		/* check protocol */
 		if (!isRequestProtocolAllowed(reqProtocol)) {
 			log.warn("Received a request-uri with a not allowed protocol: " + reqProtocol);
 			return AuthorizationStatus.NOTAUTHORIZED(401, "Unauthorized request protocol: " + reqProtocol);
 		}
 		if (hasDestination(method)) {
+			/* check destination */
 			if (getHTTPHelper().hasDestinationHeader()) {
-				String destinationProtocol = getHTTPHelper().getDestinationProtocol();
-				if (isDestinationProtocolAllowed(destinationProtocol)) {
-					if (getHTTPHelper().getRequestURI().getPath().equals(getHTTPHelper().getDestinationURI().getPath())) {
+				String destProtocol = getHTTPHelper().getDestinationProtocol();
+				String destPath = getHTTPHelper().getDestinationURI().getRawPath();
+				if (isDestinationProtocolAllowed(destProtocol)) {
+					if (reqPath.equals(destPath)) {
 						return AuthorizationStatus.NOTAUTHORIZED(403, "The source and destination URIs are the same!");
 					} 
 				} else {
-					log.warn("Received a destination-uri with a not allowed protocol: " + destinationProtocol);
-					return AuthorizationStatus.NOTAUTHORIZED(401, "Unauthorized destination protocol: " + destinationProtocol);
+					log.warn("Received a destination-uri with a not allowed protocol: " + destProtocol);
+					return AuthorizationStatus.NOTAUTHORIZED(401, "Unauthorized destination protocol: " + destProtocol);
 				}
 			} else {
 				return AuthorizationStatus.NOTAUTHORIZED(400, "Missed necessary destination header!");

@@ -36,11 +36,11 @@ public class CopyMethodAuthorization extends AbstractMethodAuthorization {
 		if (getHTTPHelper().hasDestinationHeader()) { 
 			URI srcURI = getHTTPHelper().getRequestURI();
 			URI destURI = getHTTPHelper().getDestinationURI();
-			String path = srcSA.getRealPath(srcURI.getPath());
+			String path = srcSA.getRealPath(srcURI.getRawPath());
 			String operation = Constants.CP_FROM_OPERATION;
 			AuthorizationStatus srcResponse = askAuth(user, operation, path);
 			if (srcResponse.isAuthorized()) {
-				path = destSA.getRealPath(destURI.getPath());
+				path = destSA.getRealPath(destURI.getRawPath());
 				operation = getHTTPHelper().isOverwriteRequest() ? Constants.CP_TO_OVERWRITE_OPERATION : Constants.CP_TO_OPERATION;
 				return askAuth(user, operation, path);
 			} 

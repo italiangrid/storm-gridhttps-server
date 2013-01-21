@@ -86,7 +86,7 @@ public class StormAuthorizationFilter implements Filter {
 		HttpHelper httpHelper = HttpHelper.getHelper();
 		initSession();
 		
-		String requestedPath = httpHelper.getRequestURI().getPath();
+		String requestedPath = httpHelper.getRequestURI().getRawPath();
 		log.debug("Requested-URI: " + requestedPath);
 
 		if (requestedPath.contains(" ")) {

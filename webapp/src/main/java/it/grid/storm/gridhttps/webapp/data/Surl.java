@@ -56,7 +56,7 @@ public class Surl {
 	}
 	
 	public Surl(Surl baseSurl, String childName) {
-		buildURI(baseSurl.asURI().getHost(), baseSurl.asURI().getPort(), baseSurl.asURI().getPath() + File.separator + childName);
+		buildURI(baseSurl.asURI().getHost(), baseSurl.asURI().getPort(), baseSurl.asURI().getRawPath() + File.separator + childName);
 	}
 	
 	private void buildURI(String feHostname, int fePort, String path) {

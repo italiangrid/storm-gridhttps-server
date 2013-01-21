@@ -29,7 +29,7 @@ public class PropfindMethodAuthorization extends AbstractMethodAuthorization {
 	}
 	
 	public AuthorizationStatus isUserAuthorized(UserCredentials user) {
-		String path = SA.getRealPath(getHTTPHelper().getRequestURI().getPath());
+		String path = SA.getRealPath(getHTTPHelper().getRequestURI().getRawPath());
 		String operation = Constants.LS_OPERATION;
 		return askAuth(user, operation, path);
 	}
