@@ -29,6 +29,7 @@ import org.slf4j.LoggerFactory;
 
 import io.milton.http.exceptions.ConflictException;
 import io.milton.http.exceptions.NotAuthorizedException;
+import it.grid.storm.gridhttps.webapp.HttpHelper;
 import it.grid.storm.gridhttps.webapp.webdav.factory.exceptions.RuntimeApiException;
 import it.grid.storm.gridhttps.webapp.webdav.factory.exceptions.StormResourceException;
 
@@ -52,7 +53,7 @@ public class FileTransferStandardFilter implements Filter {
 				if (log.isTraceEnabled()) {
 					log.trace("delegate to method handler: " + handler.getClass().getCanonicalName());
 				}
-				printCommand(request);
+				printCommand();
 				handler.process(manager, request, response);
 				if (response.getEntity() != null) {
 					manager.sendResponseEntity(response);
@@ -90,10 +91,10 @@ public class FileTransferStandardFilter implements Filter {
 		}
 	}
 	
-	private void printCommand(Request request) {
+	private void printCommand() {
 		String msg = "";
-		msg += request.getMethod().name();
-		msg += " " + request.getAbsolutePath();
+		msg += HttpHelper.getHelper().getRequestMethod();
+		msg += " " + HttpHelper.getHelper().getRequestURI().getPath();
 		log.info(msg);
 	}
 	

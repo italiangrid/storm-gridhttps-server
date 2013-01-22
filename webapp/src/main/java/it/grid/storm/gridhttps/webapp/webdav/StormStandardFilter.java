@@ -29,6 +29,7 @@ import org.slf4j.LoggerFactory;
 
 import io.milton.http.exceptions.ConflictException;
 import io.milton.http.exceptions.NotAuthorizedException;
+import it.grid.storm.gridhttps.webapp.HttpHelper;
 import it.grid.storm.gridhttps.webapp.webdav.factory.exceptions.RuntimeApiException;
 import it.grid.storm.gridhttps.webapp.webdav.factory.exceptions.StormResourceException;
 
@@ -52,7 +53,7 @@ public class StormStandardFilter implements Filter {
 				if (log.isTraceEnabled()) {
 					log.trace("delegate to method handler: " + handler.getClass().getCanonicalName());
 				}
-				printCommand(request);
+				printCommand();
 				handler.process(manager, request, response);
 				if (response.getEntity() != null) {
 					manager.sendResponseEntity(response);
@@ -90,13 +91,12 @@ public class StormStandardFilter implements Filter {
 		}
 	}
 	
-	private void printCommand(Request request) {
-		// TODO Auto-generated method stub
+	private void printCommand() {
 		String msg = "";
-		msg += request.getMethod().name();
-		msg += " " + request.getAbsolutePath();
-		if (request.getMethod().equals(Request.Method.COPY) || request.getMethod().equals(Request.Method.MOVE)) {
-			msg += " to " + request.getHeaders().get("destination");
+		msg += HttpHelper.getHelper().getRequestMethod();
+		msg += " " + HttpHelper.getHelper().getRequestURI().getPath();
+		if (HttpHelper.getHelper().hasDestinationHeader()) {
+			msg += " to " + HttpHelper.getHelper().getDestinationURI().getPath();
 		}
 		log.info(msg);
 	}
