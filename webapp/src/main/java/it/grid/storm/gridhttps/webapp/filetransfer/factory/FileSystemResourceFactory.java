@@ -102,10 +102,14 @@ public final class FileSystemResourceFactory implements ResourceFactory {
 		return null;
 	}
 
-	public FileResource resolveFile(String host, File file, StorageArea storageArea) {
-		FileResource resource = null;
+	public FileSystemResource resolveFile(String host, File file, StorageArea storageArea) {
+		FileSystemResource resource = null;
 		if (file.exists()) {
-			resource = new FileResource(host, this, file, contentService, storageArea);
+			if (file.isDirectory()) {
+				resource = new DirectoryResource(host, this, file, contentService, storageArea);
+			} else {
+				resource = new FileResource(host, this, file, contentService, storageArea);
+			}
 			resource.ssoPrefix = ssoPrefix;
 		} else {
 			log.warn("file not found: " + file.getAbsolutePath());
