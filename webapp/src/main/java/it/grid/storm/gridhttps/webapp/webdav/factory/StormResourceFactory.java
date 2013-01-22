@@ -24,10 +24,12 @@ import it.grid.storm.gridhttps.webapp.Configuration;
 import it.grid.storm.gridhttps.webapp.contentservice.StormContentService;
 import it.grid.storm.gridhttps.webapp.webdav.factory.exceptions.RuntimeApiException;
 import it.grid.storm.gridhttps.webapp.webdav.factory.exceptions.StormResourceException;
+import it.grid.storm.srm.types.TFileType;
 import it.grid.storm.storagearea.StorageArea;
 import it.grid.storm.storagearea.StorageAreaManager;
 import it.grid.storm.xmlrpc.ApiException;
 import it.grid.storm.xmlrpc.BackendApi;
+import it.grid.storm.xmlrpc.outputdata.LsOutputData.SurlInfo;
 
 import java.io.File;
 import java.net.UnknownHostException;
@@ -119,6 +121,20 @@ public final class StormResourceFactory implements Initable, ResourceFactory {
 //		if (r != null) {
 //			r.ssoPrefix = ssoPrefix;
 //		}
+		return r;
+	}
+	
+	public StormResource resolveFile(SurlInfo surlInfo) {
+		StormResource r = null;
+		if (surlInfo != null) {
+			File file = new File(surlInfo.getStfn());
+			StorageArea storageArea = StorageAreaManager.getMatchingSA(file);
+			if (surlInfo.getType().equals(TFileType.DIRECTORY)) {
+				r = new StormDirectoryResource(this, file, storageArea);
+			} else {
+				r = new StormFileResource(this, file, storageArea);
+			}
+		}
 		return r;
 	}
 

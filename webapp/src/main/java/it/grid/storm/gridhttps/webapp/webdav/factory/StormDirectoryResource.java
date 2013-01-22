@@ -71,20 +71,27 @@ public class StormDirectoryResource extends StormResource implements MakeCollect
 
 	/* works like a find child : return null if not exists */
 	public Resource child(String name) {
-		File fchild = new File(getFile(), name);
-		return getFactory().resolveFile(getHost(), fchild, getStorageArea());
+		List<? extends Resource> children = getChildren();
+		for (Resource r : children) {
+			if (((StormResource) r).getFile().getName().equals(name)) {
+				return r;
+			}
+		}
+		return null;
+		// File fchild = new File(getFile(), name);
+		// return getFactory().resolveFile(getHost(), fchild, getStorageArea());
 	}
 
 	public List<? extends Resource> getChildren() {
 		ArrayList<StormResource> list = new ArrayList<StormResource>();
 		try {
-			for (SurlInfo entry : StormResourceHelper.doLs(this).get(0).getSubpathInfo()) {
-				File fchild = new File(getStorageArea().getRealPath(entry.getStfn()));
-				StormResource resource = getFactory().resolveFile(getHost(), fchild, getStorageArea());
+			Collection<SurlInfo> children = StormResourceHelper.doLs(this).get(0).getSubpathInfo();
+			for (SurlInfo entry : children) {
+				StormResource resource = getFactory().resolveFile(entry);
 				if (resource != null) {
 					list.add(resource);
 				} else {
-					log.error("Couldnt resolve file {}", fchild.getAbsolutePath());
+					log.error("Couldnt resolve file {}", entry.getStfn());
 				}
 			}
 		} catch (RuntimeApiException e) {
@@ -137,8 +144,7 @@ public class StormDirectoryResource extends StormResource implements MakeCollect
 		buildDirectoryPage(out, entries);
 	}
 
-	private void buildDirectoryPage(OutputStream out, Collection<SurlInfo> entries) throws RuntimeApiException,
-			StormResourceException {
+	private void buildDirectoryPage(OutputStream out, Collection<SurlInfo> entries) throws RuntimeApiException, StormResourceException {
 		String dirPath = HttpHelper.getHelper().getRequestURI().getPath();
 		StormHtmlFolderPage page = new StormHtmlFolderPage(out);
 		page.start();
@@ -147,7 +153,7 @@ public class StormDirectoryResource extends StormResource implements MakeCollect
 		page.addFolderList(dirPath, entries);
 		page.end();
 	}
-	
+
 	public Long getMaxAgeSeconds(Auth auth) {
 		return null;
 	}
@@ -160,13 +166,13 @@ public class StormDirectoryResource extends StormResource implements MakeCollect
 		return null;
 	}
 
-//	public static String insertSsoPrefix(String abUrl, String prefix) {
-//		// need to insert the ssoPrefix immediately after the host and port
-//		int pos = abUrl.indexOf("/", 8);
-//		String s = abUrl.substring(0, pos) + "/" + prefix;
-//		s += abUrl.substring(pos);
-//		return s;
-//	}
+	// public static String insertSsoPrefix(String abUrl, String prefix) {
+	// // need to insert the ssoPrefix immediately after the host and port
+	// int pos = abUrl.indexOf("/", 8);
+	// String s = abUrl.substring(0, pos) + "/" + prefix;
+	// s += abUrl.substring(pos);
+	// return s;
+	// }
 
 	public boolean hasChildren() {
 		try {
