@@ -21,6 +21,7 @@ import io.milton.resource.Resource;
 import io.milton.servlet.Config;
 import io.milton.servlet.Initable;
 import it.grid.storm.gridhttps.webapp.Configuration;
+import it.grid.storm.gridhttps.webapp.contentservice.StormContentService;
 import it.grid.storm.gridhttps.webapp.webdav.factory.exceptions.RuntimeApiException;
 import it.grid.storm.gridhttps.webapp.webdav.factory.exceptions.StormResourceException;
 import it.grid.storm.storagearea.StorageArea;

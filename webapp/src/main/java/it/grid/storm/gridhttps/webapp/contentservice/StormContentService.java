@@ -10,7 +10,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package it.grid.storm.gridhttps.webapp.webdav.factory;
+package it.grid.storm.gridhttps.webapp.contentservice;
 
 import io.milton.http.fs.FileContentService;
 import it.grid.storm.ea.remote.Constants;
@@ -49,7 +49,7 @@ import org.slf4j.LoggerFactory;
 
 public class StormContentService implements FileContentService {
 
-	private static final Logger log = LoggerFactory.getLogger(StormResourceFactory.class);
+	private static final Logger log = LoggerFactory.getLogger(StormContentService.class);
 	
 	public void setFileContent(File file, InputStream in) throws FileNotFoundException, IOException {
 		OutputStream out = new FileOutputStream(file);
