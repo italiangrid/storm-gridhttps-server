@@ -31,7 +31,18 @@ public class UserCredentials {
 	private String userDN;
 	private ArrayList<String> userFQANS;
 	private HttpHelper httpHelper;
+	private static VOMSSecurityContext currentContext;
+	
+//	private static VOMSSecurityContext getVOMSSecurityContext() {
+//		return currentContext;
+//	}
 
+	public static void initVomsSecurityContext() {
+		VOMSSecurityContext.clearCurrentContext();
+		currentContext = new VOMSSecurityContext();
+		VOMSSecurityContext.setCurrentContext(currentContext);
+	}
+	
 	private static UserCredentials instance;
 
 	public static void init(HttpHelper httpHelper) {
@@ -48,9 +59,9 @@ public class UserCredentials {
 		if (this.httpHelper.isHttp())
 			return;
 		/* It's an HTTPS request: */
-		VOMSSecurityContext.clearCurrentContext();
-		VOMSSecurityContext currentContext = new VOMSSecurityContext();
-		VOMSSecurityContext.setCurrentContext(currentContext);
+//		VOMSSecurityContext.clearCurrentContext();
+//		VOMSSecurityContext currentContext = new VOMSSecurityContext();
+//		VOMSSecurityContext.setCurrentContext(currentContext);
 		X509Certificate[] certChain = httpHelper.getX509Certificate();
 		if (certChain == null) {
 			log.warn("Failed to init VOMS Security Context! User initialized with empty DN and FQANs");

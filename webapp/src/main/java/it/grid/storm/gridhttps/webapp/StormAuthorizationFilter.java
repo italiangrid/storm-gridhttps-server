@@ -47,12 +47,22 @@ import org.slf4j.LoggerFactory;
 
 public class StormAuthorizationFilter implements Filter {
 
+	public class InitVOMSThread extends Thread  {
+		public void run() {
+			log.debug("init voms security context..");
+			UserCredentials.initVomsSecurityContext();
+			log.debug("voms security context initialized!");
+		}
+	}
+	
 	private static final Logger log = LoggerFactory.getLogger(StormAuthorizationFilter.class);
 
 	public void destroy() {
 	}
 	
 	public void init(FilterConfig fc) throws ServletException {
+		InitVOMSThread initVoms = new InitVOMSThread();
+		initVoms.start();
 		Configuration.loadDefaultConfiguration();
 		Configuration.initFromJSON(parse(fc.getInitParameter("params")));
 		Configuration.print();
@@ -66,6 +76,12 @@ public class StormAuthorizationFilter implements Filter {
 		} catch (Exception e) {
 			log.error(e.getMessage());
 			throw new ServletException(e.getMessage());
+		}
+		try {
+			log.debug("wait for initVoms thread to finish...");
+			initVoms.join();
+		} catch (InterruptedException e) {
+			log.error(e.getMessage());
 		}
 	}
 
