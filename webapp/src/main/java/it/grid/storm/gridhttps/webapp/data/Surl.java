@@ -71,6 +71,10 @@ public class Surl {
 		return this.surl.toASCIIString();
 	}
 	
+	public String toString() {
+		return this.surl.toASCIIString();
+	}
+	
 	public URI asURI() {
 		return this.surl;
 	}
