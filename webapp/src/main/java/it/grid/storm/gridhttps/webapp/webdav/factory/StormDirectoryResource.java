@@ -85,7 +85,7 @@ public class StormDirectoryResource extends StormResource implements MakeCollect
 	public List<? extends Resource> getChildren() {
 		ArrayList<StormResource> list = new ArrayList<StormResource>();
 		try {
-			Collection<SurlInfo> children = StormResourceHelper.doLs(this).get(0).getSubpathInfo();
+			Collection<SurlInfo> children = StormResourceHelper.doLsDetailed(this, Recursion.NONE).get(0).getSubpathInfo();
 			for (SurlInfo entry : children) {
 				StormResource resource = getFactory().resolveFile(entry);
 				if (resource != null) {
