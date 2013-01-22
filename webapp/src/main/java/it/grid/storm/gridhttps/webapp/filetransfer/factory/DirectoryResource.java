@@ -8,7 +8,10 @@ import io.milton.http.exceptions.ConflictException;
 import io.milton.http.exceptions.NotAuthorizedException;
 import io.milton.http.fs.FileContentService;
 import io.milton.resource.*;
+import it.grid.storm.gridhttps.webapp.webdav.factory.exceptions.RuntimeApiException;
+import it.grid.storm.gridhttps.webapp.webdav.factory.exceptions.StormResourceException;
 import it.grid.storm.storagearea.StorageArea;
+import it.grid.storm.xmlrpc.outputdata.LsOutputData.SurlInfo;
 
 import java.io.File;
 import java.io.IOException;
@@ -37,27 +40,32 @@ public class DirectoryResource extends FileSystemResource implements PutableReso
 		}
 	}
 
+	/* works like a find child : return null if not exists */
 	public Resource child(String name) {
-		File fchild = new File(this.file, name);
-		return factory.resolveFile(this.host, fchild, storageArea);
+		File fchild = new File(getFile(), name);
+		return getFactory().resolveFile(getHost(), fchild, getStorageArea());
 	}
 
 	public List<? extends Resource> getChildren() {
 		ArrayList<FileSystemResource> list = new ArrayList<FileSystemResource>();
-		File[] files = this.file.listFiles();
-		if (files != null) {
-			for (File fchild : files) {
-				FileSystemResource res = factory.resolveFile(this.host, fchild, storageArea);
-				if (res != null) {
-					list.add(res);
+		try {
+			for (SurlInfo entry : FileSystemResourceHelper.doLs(this).get(0).getSubpathInfo()) {
+				File fchild = new File(getStorageArea().getRealPath(entry.getStfn()));
+				FileSystemResource resource = getFactory().resolveFile(getHost(), fchild, getStorageArea());
+				if (resource != null) {
+					list.add(resource);
 				} else {
 					log.error("Couldnt resolve file {}", fchild.getAbsolutePath());
 				}
 			}
+		} catch (RuntimeApiException e) {
+			log.error(e.getMessage());
+		} catch (StormResourceException e) {
+			log.error(e.getMessage());
 		}
 		return list;
 	}
-
+	
 	/**
 	 * Will redirect if a default page has been specified on the factory
 	 * 
@@ -107,8 +115,16 @@ public class DirectoryResource extends FileSystemResource implements PutableReso
 	public Long getContentLength() {
 		return null;
 	}
-
+	
 	public boolean hasChildren() {
-		return (file.list() != null && file.list().length > 0);
+		try {
+			return !FileSystemResourceHelper.doLs(this).get(0).getSubpathInfo().isEmpty();
+		} catch (RuntimeApiException e) {
+			log.error(e.getMessage());
+			return false;
+		} catch (StormResourceException e) {
+			log.error(e.getMessage());
+			return false;
+		}
 	}
 }

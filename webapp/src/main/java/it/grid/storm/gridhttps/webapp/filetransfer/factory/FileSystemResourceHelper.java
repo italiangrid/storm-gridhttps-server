@@ -15,11 +15,20 @@ package it.grid.storm.gridhttps.webapp.filetransfer.factory;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
 
 import io.milton.http.exceptions.BadRequestException;
 import io.milton.http.exceptions.ConflictException;
 import io.milton.http.exceptions.NotAuthorizedException;
 import io.milton.http.exceptions.NotFoundException;
+import it.grid.storm.gridhttps.webapp.Configuration;
+import it.grid.storm.gridhttps.webapp.authorization.UserCredentials;
+import it.grid.storm.gridhttps.webapp.backendApi.StormBackendApi;
+import it.grid.storm.gridhttps.webapp.webdav.factory.exceptions.RuntimeApiException;
+import it.grid.storm.gridhttps.webapp.webdav.factory.exceptions.StormResourceException;
+import it.grid.storm.xmlrpc.BackendApi;
+import it.grid.storm.xmlrpc.outputdata.LsOutputData;
+import it.grid.storm.xmlrpc.outputdata.LsOutputData.SurlInfo;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -51,4 +60,16 @@ public class FileSystemResourceHelper {
 		} 
 		return true;
 	}	
+	
+	public static ArrayList<SurlInfo> doLs(FileSystemResource source) throws RuntimeApiException, StormResourceException {
+		UserCredentials user = UserCredentials.getUser();
+		return doLs(source, user);
+	}
+	
+	public static ArrayList<SurlInfo> doLs(FileSystemResource source, UserCredentials user) throws RuntimeApiException, StormResourceException {
+		log.debug("Called doLs()");
+		BackendApi backend = StormBackendApi.getBackend(Configuration.getBackendHostname(), Configuration.getBackendPort());
+		LsOutputData output = StormBackendApi.ls(backend, source.getSurl().asString(), user);
+		return (ArrayList<SurlInfo>) output.getInfos();
+	}
 }

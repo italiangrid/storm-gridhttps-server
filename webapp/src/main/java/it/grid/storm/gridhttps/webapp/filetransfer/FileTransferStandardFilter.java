@@ -52,6 +52,7 @@ public class FileTransferStandardFilter implements Filter {
 				if (log.isTraceEnabled()) {
 					log.trace("delegate to method handler: " + handler.getClass().getCanonicalName());
 				}
+				printCommand(request);
 				handler.process(manager, request, response);
 				if (response.getEntity() != null) {
 					manager.sendResponseEntity(response);
@@ -87,6 +88,13 @@ public class FileTransferStandardFilter implements Filter {
 		} finally {
 			// manager.closeResponse(response);
 		}
+	}
+	
+	private void printCommand(Request request) {
+		String msg = "";
+		msg += request.getMethod().name();
+		msg += " " + request.getAbsolutePath();
+		log.info(msg);
 	}
 	
 	private void sendResponse(Response response, Status status, final String htmlPage) {
