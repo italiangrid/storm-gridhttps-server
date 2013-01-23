@@ -62,10 +62,10 @@ public class StormStandardFilter implements Filter {
 				}
 			}
 		} catch (RuntimeApiException ex) {
-			log.error(ex.getMessage());
+			log.error(ex.getReason());
 			manager.getResponseHandler().respondServerError(request, response, ex.getMessage());
 		} catch (StormResourceException ex) {
-			log.error(ex.getMessage());
+			log.error(ex.getReason());
 			String serverError = "<html><body><h1>Service Unavailable</h1><p>"+ex.getMessage()+"</p></body></html>";
 			sendResponse(response, Status.SC_SERVICE_UNAVAILABLE, serverError);
 		} catch (BadRequestException ex) {

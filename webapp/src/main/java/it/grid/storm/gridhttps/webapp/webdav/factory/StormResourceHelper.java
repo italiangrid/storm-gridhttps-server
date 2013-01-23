@@ -64,7 +64,7 @@ public class StormResourceHelper {
 			throws NotAuthorizedException, ConflictException, BadRequestException {
 		log.debug("Called doMoveTo()");
 		String fromSurl = source.getSurl().asString();
-		String toSurl = (new Surl(newParent.getSurl(), newName)).asString();		
+		String toSurl = (new Surl(newParent.getSurl(), newName)).asString();
 		StormBackendApi.mv(source.getFactory().getBackendApi(), fromSurl, toSurl, user);
 	}
 
@@ -91,14 +91,16 @@ public class StormResourceHelper {
 
 	public static InputStream doGetFile(StormFileResource source) throws NotFoundException, RuntimeApiException, StormResourceException {
 		UserCredentials user = UserCredentials.getUser();
-		return doGetFile(source, user);
+		ArrayList<String> transferProtocols = new ArrayList<String>();
+		transferProtocols.add(HttpHelper.getHelper().getRequestProtocol());
+		return doGetFile(source, user, transferProtocols);
 	}
 
-	public static InputStream doGetFile(StormFileResource source, UserCredentials user) throws NotFoundException, RuntimeApiException,
-			StormResourceException {
+	public static InputStream doGetFile(StormFileResource source, UserCredentials user, ArrayList<String> transferProtocols)
+			throws NotFoundException, RuntimeApiException, StormResourceException {
 		log.debug("Called doGetFile()");
 		PtGOutputData outputPtG = StormBackendApi.prepareToGet(source.getFactory().getBackendApi(), source.getSurl().asString(), user,
-				source.getStorageArea().getProtocols());
+				transferProtocols);
 		InputStream in = null;
 		try {
 			in = source.getFactory().getContentService().getFileContent(source.getFile());
@@ -127,16 +129,18 @@ public class StormResourceHelper {
 	public static StormFileResource doPut(StormDirectoryResource sourceDir, String name, InputStream in) throws RuntimeApiException,
 			StormResourceException {
 		UserCredentials user = UserCredentials.getUser();
-		return doPut(sourceDir, name, in, user);
+		ArrayList<String> transferProtocols = new ArrayList<String>();
+		transferProtocols.add(HttpHelper.getHelper().getRequestProtocol());
+		return doPut(sourceDir, name, in, user, transferProtocols);
 	}
 
-	public static StormFileResource doPut(StormDirectoryResource sourceDir, String name, InputStream in, UserCredentials user)
+	public static StormFileResource doPut(StormDirectoryResource sourceDir, String name, InputStream in, UserCredentials user, ArrayList<String> transferProtocols)
 			throws RuntimeApiException, StormResourceException {
 		log.debug("Called doPut()");
 		File fsDest = new File(sourceDir.getFile(), name);
 		StormFileResource srmDest = new StormFileResource(sourceDir.getFactory(), fsDest, sourceDir.getStorageArea());
 		FileTransferOutputData outputPtp = StormBackendApi.prepareToPut(sourceDir.getFactory().getBackendApi(), srmDest.getSurl()
-				.asString(), user, sourceDir.getStorageArea().getProtocols());
+				.asString(), user, transferProtocols);
 		// put
 		try {
 			sourceDir.getFactory().getContentService().setFileContent(fsDest, in);
@@ -159,11 +163,13 @@ public class StormResourceHelper {
 		return doPutOverwrite(source, in, user);
 	}
 
-	public static StormFileResource doPutOverwrite(StormFileResource source, InputStream in, UserCredentials user) throws BadRequestException,
-			ConflictException, NotAuthorizedException {
-		log.debug("Called doPutOverewrite()");
+	public static StormFileResource doPutOverwrite(StormFileResource source, InputStream in, UserCredentials user)
+			throws BadRequestException, ConflictException, NotAuthorizedException {
+		log.debug("Called doPutOverwrite()");
+		ArrayList<String> transferProtocols = new ArrayList<String>();
+		transferProtocols.add(HttpHelper.getHelper().getRequestProtocol());
 		FileTransferOutputData outputPtp = StormBackendApi.prepareToPutOverwrite(source.getFactory().getBackendApi(), source.getSurl()
-				.asString(), user, source.getStorageArea().getProtocols());
+				.asString(), user, transferProtocols);
 		// overwrite
 		try {
 			source.getFactory().getContentService().setFileContent(source.getFile(), in);
@@ -251,12 +257,16 @@ public class StormResourceHelper {
 	public static void doCopyFile(StormFileResource source, StormDirectoryResource newParent, String newName, UserCredentials user)
 			throws RuntimeApiException, StormResourceException {
 		log.debug("Called doCopyFile()");
+		ArrayList<String> transferProtocols = new ArrayList<String>();
+		transferProtocols.add(HttpHelper.getHelper().getRequestProtocol());
 		/* prepareToGet on source file to lock the resource */
 		PtGOutputData outputPtG = StormBackendApi.prepareToGet(source.getFactory().getBackendApi(), source.getSurl().asString(), user,
-				source.getStorageArea().getProtocols());
+				transferProtocols);
 		try {
 			/* create destination */
-			StormResourceHelper.doPut(newParent, newName, source.getInputStream(), user);
+			transferProtocols.clear();
+			transferProtocols.add(HttpHelper.getHelper().getDestinationProtocol());
+			StormResourceHelper.doPut(newParent, newName, source.getInputStream(), user, transferProtocols);
 			/* release source resource */
 			StormBackendApi.releaseFile(source.getFactory().getBackendApi(), source.getSurl().asString(), outputPtG.getToken(), user);
 		} catch (RuntimeException e) {
@@ -294,6 +304,5 @@ public class StormResourceHelper {
 		log.debug("Called doPrepareToPutStatus()");
 		return StormBackendApi.prepareToPutStatus(source.getFactory().getBackendApi(), source.getSurl().asString(), user);
 	}
-
 
 }
