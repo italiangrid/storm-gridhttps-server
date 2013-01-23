@@ -35,6 +35,7 @@ import org.eclipse.jetty.server.nio.SelectChannelConnector;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
 import org.eclipse.jetty.util.ajax.JSON;
+import org.eclipse.jetty.util.thread.QueuedThreadPool;
 import org.eclipse.jetty.webapp.WebAppContext;
 import org.italiangrid.utils.https.ServerFactory;
 
@@ -68,13 +69,23 @@ public class StormGridhttpsServer {
 	}
 
 	private void createMapServer() {
-		mapServer = new Server(DefaultConfiguration.STORM_GHTTPS_MAPPER_SERVLET_PORT);		
+		mapServer = new Server(gridhttpsInfo.getMapperServlet().getPort());	
+	
+		QueuedThreadPool threadPool = new QueuedThreadPool();
+		threadPool.setMinThreads(gridhttpsInfo.getThreadPoolSizeMapMin());
+		threadPool.setMaxThreads(gridhttpsInfo.getThreadPoolSizeMapMax());
+		mapServer.setThreadPool(threadPool);
 	}
 
 	private void createDavServer() {
 		davServer = ServerFactory.newServer(gridhttpsInfo.getHostname(), gridhttpsInfo.getHttpsPort(), gridhttpsInfo.getSsloptions());
 		davServer.setStopAtShutdown(true);
 		davServer.setGracefulShutdown(1000);
+		
+		QueuedThreadPool threadPool = new QueuedThreadPool();
+		threadPool.setMaxThreads(gridhttpsInfo.getThreadPoolSizeDavMax());
+		davServer.setThreadPool(threadPool);
+		
 		HandlerCollection hc = new HandlerCollection();
 		contextHandlerCollection = new ContextHandlerCollection();
 		hc.setHandlers(new Handler[] { contextHandlerCollection });

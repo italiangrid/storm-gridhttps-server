@@ -38,6 +38,12 @@
 # GridHTTPs file-transfer service context-path
 # Default: fileTransfer
 #filetransfer.context-path = fileTransfer
+# Maximum number of threads for webdav-server's requests
+# Default: 150
+#webdav.max.threads = 150 
+# Maximum number of threads for mapping-servlet's requests
+# Default: 100
+#mapping.max.threads = 100
 
 [connectors]
 # ============================

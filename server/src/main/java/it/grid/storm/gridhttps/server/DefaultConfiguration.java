@@ -46,4 +46,10 @@ public class DefaultConfiguration {
 	public final static String ROOTDIRECTORY = "/";
 	public final static boolean COMPUTE_CHECKSUM = true;
 	public final static String CHECKSUM_TYPE = "adler32";
+
+	public final static int THREAD_POOL_SIZE_MAP_MIN = 100;
+	public final static int THREAD_POOL_SIZE_MAP_MAX = 100;
+	public final static int THREAD_POOL_SIZE_DAV_MAX = 150;
+	
+
 }

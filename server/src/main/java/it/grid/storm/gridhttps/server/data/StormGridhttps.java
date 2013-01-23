@@ -37,6 +37,10 @@ public class StormGridhttps {
 	
 	private boolean computeChecksum;
 	private String checksumType;
+	
+	private int threadPoolSizeMapMin;
+	private int threadPoolSizeMapMax;
+	private int threadPoolSizeDavMax;
 
 	public StormGridhttps() {
 		this.setHttpPort(DefaultConfiguration.STORM_GHTTPS_HTTP_PORT);
@@ -59,6 +63,9 @@ public class StormGridhttps {
 		this.setRootDirectory(new File(DefaultConfiguration.ROOTDIRECTORY));
 		this.setComputeChecksum(DefaultConfiguration.COMPUTE_CHECKSUM);
 		this.setChecksumType(DefaultConfiguration.CHECKSUM_TYPE);
+		this.setThreadPoolSizeDavMax(DefaultConfiguration.THREAD_POOL_SIZE_DAV_MAX);
+		this.setThreadPoolSizeMapMax(DefaultConfiguration.THREAD_POOL_SIZE_MAP_MAX);
+		this.setThreadPoolSizeMapMin(DefaultConfiguration.THREAD_POOL_SIZE_MAP_MIN);
 	}
 
 	public String getHostname() {
@@ -154,6 +161,10 @@ public class StormGridhttps {
 			throw new InitException("gridhttps ssloptions host key file is empty!");
 		if (ssloptions.getTrustStoreDirectory().isEmpty())
 			throw new InitException("gridhttps ssloptions trust store directory is empty!");
+		if (threadPoolSizeMapMax <= 0)
+			throw new InitException("maximum number of threads for mapping-servlet's requests is not valid!");
+		if (threadPoolSizeDavMax <= 0)
+			throw new InitException("maximum number of threads for webdav-server's requests is not valid!");
 	}
 
 	public File getWarFile() {
@@ -202,6 +213,30 @@ public class StormGridhttps {
 
 	public void setChecksumType(String checksumType) {
 		this.checksumType = checksumType;
+	}
+
+	public int getThreadPoolSizeMapMax() {
+		return threadPoolSizeMapMax;
+	}
+
+	public void setThreadPoolSizeMapMax(int threadPoolSizeMapMax) {
+		this.threadPoolSizeMapMax = threadPoolSizeMapMax;
+	}
+
+	public int getThreadPoolSizeDavMax() {
+		return threadPoolSizeDavMax;
+	}
+
+	public void setThreadPoolSizeDavMax(int threadPoolSizeDavMax) {
+		this.threadPoolSizeDavMax = threadPoolSizeDavMax;
+	}
+
+	public int getThreadPoolSizeMapMin() {
+		return threadPoolSizeMapMin;
+	}
+
+	public void setThreadPoolSizeMapMin(int threadPoolSizeMapMin) {
+		this.threadPoolSizeMapMin = threadPoolSizeMapMin;
 	}
 
 }
