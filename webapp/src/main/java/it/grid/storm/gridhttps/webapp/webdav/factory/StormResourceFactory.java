@@ -51,19 +51,15 @@ public final class StormResourceFactory implements Initable, ResourceFactory {
 //	private String ssoPrefix;
 	private String localhostname;
 	private BackendApi backendApi;
-	
-	public StormResourceFactory() throws UnknownHostException {
+
+
+	public StormResourceFactory() throws UnknownHostException, ApiException {
 		setRoot(new File(Configuration.getGpfsRootDirectory()));
 		setSecurityManager(new NullSecurityManager());
 		setContextPath(Configuration.getWebdavContextPath());
-        contentService = new StormContentService();
-        try {
-			this.backendApi = new BackendApi(Configuration.getBackendHostname(), new Long(Configuration.getBackendPort()));
-		} catch (ApiException e) {
-			log.error(e.getMessage());
-		}
-        java.net.InetAddress localMachine = java.net.InetAddress.getLocalHost();
-        setLocalhostname(localMachine.getHostName());
+        setContentService(new StormContentService());
+        setBackendApi(new BackendApi(Configuration.getBackendHostname(), new Long(Configuration.getBackendPort())));
+        setLocalhostname(java.net.InetAddress.getLocalHost().getHostName());
 	}
 
 	public File getRoot() {
@@ -73,11 +69,12 @@ public final class StormResourceFactory implements Initable, ResourceFactory {
 	public final void setRoot(File root) {
 		log.debug("root: " + root.getAbsolutePath());
 		this.root = root;
-		if (!root.exists()) {
+		if (root.exists()) {
+			if (!root.isDirectory()) {
+				log.warn("Root exists but is not a directory: " + root.getAbsolutePath());
+			}
+		} else {
 			log.warn("Root folder does not exist: " + root.getAbsolutePath());
-		}
-		if (!root.isDirectory()) {
-			log.warn("Root exists but is not a directory: " + root.getAbsolutePath());
 		}
 	}
 	
@@ -92,9 +89,8 @@ public final class StormResourceFactory implements Initable, ResourceFactory {
 	}
 
 	public Resource getResource(String host, String uriPath) throws RuntimeApiException, StormResourceException {
+		Resource r = null;
 		String hostNoPort = stripPortFromHost(host);
-//		if (Configuration.getRemoveSpaces())
-//			uriPath.replaceAll(" ", Configuration.getRemoveSpacesWith());
 		log.debug("getResource: host: " + hostNoPort + " - url:" + uriPath);
 		if (isLocalResource(hostNoPort)) {
 			StorageArea currentSA = StorageAreaManager.getMatchingSA(uriPath);
@@ -102,10 +98,12 @@ public final class StormResourceFactory implements Initable, ResourceFactory {
 				String fsPath = currentSA.getRealPath(uriPath);
 				log.debug("real path: " + fsPath);
 				File requested = new File(getRoot(), fsPath);
-				return resolveFile(host, requested, currentSA);
+				r = resolveFile(host, requested, currentSA);
 			}
+		} else {
+			log.warn("Unable to get a non-local resource!");
 		}
-		return null;
+		return r;
 	}
 
 	public StormResource resolveFile(String host, File file, StorageArea storageArea) {
@@ -127,8 +125,8 @@ public final class StormResourceFactory implements Initable, ResourceFactory {
 	public StormResource resolveFile(SurlInfo surlInfo) {
 		StormResource r = null;
 		if (surlInfo != null) {
-			File file = new File(surlInfo.getStfn());
-			StorageArea storageArea = StorageAreaManager.getMatchingSA(file);
+			StorageArea storageArea = StorageAreaManager.getMatchingSA(surlInfo.getStfn());
+			File file = new File(storageArea.getRealPath(surlInfo.getStfn()));
 			if (surlInfo.getType().equals(TFileType.DIRECTORY)) {
 				r = new StormDirectoryResource(this, file, storageArea);
 			} else {
@@ -248,6 +246,10 @@ public final class StormResourceFactory implements Initable, ResourceFactory {
 	
 	public BackendApi getBackendApi() {
 		return backendApi;
+	}
+	
+	private void setBackendApi(BackendApi backendApi) {
+		this.backendApi = backendApi;
 	}
 	
 	public String getLocalhostname() {
