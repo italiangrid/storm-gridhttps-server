@@ -23,76 +23,107 @@
 ## 
         
 [service]
+
 # ============================
 # General settings 
 # ============================
+
 # GridHTTPs context deploy folder
 # Default: /var/lib/storm
 #webapp-directory = /var/lib/storm
+
 # GridHTTPs logging configuration file
 # Default: /etc/storm/gridhttps-server/logback.xml
 #log.configuration-file = /etc/storm/gridhttps-server/logback.xml
+
 # GridHTTPs webdav service context-path
 # Default: 
 #webdav.context-path = 
+
 # GridHTTPs file-transfer service context-path
 # Default: fileTransfer
 #filetransfer.context-path = fileTransfer
-# Maximum number of threads for webdav-server's requests
+
+# Maximum number of active threads for webdav-server's requests
 # Default: 150
-#webdav.max.threads = 150 
-# Maximum number of threads for mapping-servlet's requests
+#webdav.max.active.threads = 150
+
+# Maximum number of queued threads for webdav-server's requests
+# Default: 300
+#webdav.max.queued.threads = 150
+
+# Maximum number of active threads for mapping-servlet's requests
 # Default: 100
-#mapping.max.threads = 100
+#mapping.max.active.threads = 100
+
+# Maximum number of queued threads for mapping-server's requests
+# Default: 200
+#mapping.max.queued.threads = 200
 
 [connectors]
+
 # ============================
 # Http connector settings 
 # ============================
+
 # Enable http connections
 # Default: false - Available values: [true|false]
 #http.enabled = false
+
 # Gridhttps http port.
 # Default: 8085
 #http.port = 8085
+
 # Mapping-service port
 # Default: 8086
 #mapper.servlet.port = 8086
+
 # ============================
 # Https connector settings 
 # ============================
+
 # Gridhttps https port.
 # Default: 8443
 #https.port = 8443
+
 # x509 host certificate for SSL connector.
 # Default: /etc/grid-security/gridhttps/hostcert.pem
 #x509.host-certificate = /etc/grid-security/gridhttps/hostcert.pem
+
 # x509 host key for SSL connector.
 # OPTIONAL - Default value: /etc/grid-security/gridhttps/hostkey.pem                                                                     
 #x509.host-key = /etc/grid-security/gridhttps/hostkey.pem
+
 # Truststore location
 # Default: /etc/grid-security/certificates
 #x509.truststore.directory = /etc/grid-security/certificates
+
 # Canl truststore update time interval expressed in milliseconds.
 # Default: 60000L (1 minute)
 #x509.truststore.refresh-interval = 600000L
 
 [backend]
+
 # ============================
 # StoRM settings 
 # ============================
+
 # StoRM BackEnd server full hostname
 backend.hostname = 
+
 # StoRM BackEnd server REST port
 # Default: 9998
 #backend.authorization-service.port = 9998
+
 # StoRM BackEnd server XMLRPC port
 # Default: 8080
 #backend.srm-service.port = 8080
+
 # StoRM SRM EndPoint
 # Default: STORM_BACKEND_HOSTNAME:8444
 #srm.endpoint = ${backend.hostname}:8444
-# StoRM storage-areas' fsRoot base directory
+
+# StoRM base directory for Storage-Areas' stfnRoot
 # Default: /
 #root-directory = /
 
@@ -103,5 +134,4 @@ backend.hostname =
 # Checksum-type specify the kind of algorithm has to be used to compute checksum, if compute-checksum is true.
 # Default: adler32 (other values: ...)
 #checksum-type = adler32
-
 

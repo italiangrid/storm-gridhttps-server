@@ -14,42 +14,48 @@ package it.grid.storm.gridhttps.server;
 
 public class DefaultConfiguration {
 
-	/* mapper servlet context path */
-	public final static String MAPPER_SERVLET_CONTEXT_PATH = "gridhttps_webapp";
-	public final static String MAPPER_SERVLET_CONTEXT_SPEC = "resourceMapping";
+	/* mapper servlet */
+	public final static String 		MAPPER_SERVLET_CONTEXT_PATH = "gridhttps_webapp";
+	public final static String 		MAPPER_SERVLET_CONTEXT_SPEC = "resourceMapping";
 
-	/* storm backend ports */
-	public final static int STORM_BE_PORT = 8080;
-	public final static int STORM_BE_SERVICE_PORT = 9998;
+	/* storm backend */
+	public final static int 		STORM_BE_PORT = 8080;
+	public final static int 		STORM_BE_SERVICE_PORT = 9998;
 
-	/* storm frontend port */
-	public final static int STORM_FE_PORT = 8444;
+	/* storm frontend */
+	public final static int 		STORM_FE_PORT = 8444;
 
-	/* storm gridhttps */
-	public final static int STORM_GHTTPS_HTTP_PORT = 8085;
-	public final static boolean STORM_GHTTPS_USE_HTTP = false;	
-	public final static int STORM_GHTTPS_HTTPS_PORT = 8443;
-	public final static int STORM_GHTTPS_MAPPER_SERVLET_PORT = 8086;
-	public final static boolean STORM_GHTTPS_HTTPS_WANT_CLIENT_AUTH = true;
-	public final static boolean STORM_GHTTPS_HTTPS_NEED_CLIENT_AUTH = true;
-	public final static String STORM_GHTTPS_HTTPS_CERTIFICATE_FILE = "/etc/grid-security/gridhttps/hostcert.pem";
-	public final static String STORM_GHTTPS_HTTPS_KEY_FILE = "/etc/grid-security/gridhttps/hostkey.pem";
-	public final static String STORM_GHTTPS_HTTPS_TRUST_STORE_DIRECTORY = "/etc/grid-security/certificates";
-	public final static long STORM_GHTTPS_DEFAULT_TRUST_STORE_REFRESH_INTERVAL_IN_MSECS = 600000L;
-	public final static String STORM_GHTTPS_WEBAPPS_DIRECTORY = "/var/lib/storm";	
-	public final static String STORM_GHTTPS_LOG_FILE = "/etc/storm/gridhttps-server/logback.xml";
-	public final static String WEBAPP_DIRECTORY_NAME = "gridhttps-server/webapp";
+	/* storm gridhttps-server configuration*/
+	public final static int 		SERVER_MAPPER_SERVLET_PORT = 8086;
+	public final static boolean 	SERVER_WEBAPP_USE_HTTP = false;
+	public final static int 		SERVER_WEBAPP_HTTP_PORT = 8085;
+	public final static int 		SERVER_WEBAPP_HTTPS_PORT = 8443;
+	public final static boolean 	SERVER_WEBAPP_HTTPS_WANT_CLIENT_AUTH = true;
+	public final static boolean 	SERVER_WEBAPP_HTTPS_NEED_CLIENT_AUTH = true;
+	public final static String 		SERVER_WEBAPP_HTTPS_CERTIFICATE_FILE = "/etc/grid-security/gridhttps/hostcert.pem";
+	public final static String 		SERVER_WEBAPP_HTTPS_KEY_FILE = "/etc/grid-security/gridhttps/hostkey.pem";
+	public final static String 		SERVER_WEBAPP_HTTPS_TRUST_STORE_DIRECTORY = "/etc/grid-security/certificates";
+	public final static long 		SERVER_WEBAPP_TRUST_STORE_REFRESH_INTERVAL = 600000L;
+	public final static String 		SERVER_WEBAPP_DIRECTORY = "/var/lib/storm";
+	public final static String 		SERVER_PATH_TO_WEBAPP = "gridhttps-server/webapp";
 	
-	public final static String WEBAPP_CONTEXTPATH = "";
-	public final static String FILETRANSFER_CONTEXTPATH = "fileTransfer";
+	public final static int 		MAP_ACTIVE_THREADS_MIN = 10;
+	public final static int 		MAP_ACTIVE_THREADS_MAX = 100;
+	public final static int 		MAP_QUEUED_THREADS_MAX = 200;
+		
+	public final static int 		DAV_ACTIVE_THREADS_MAX = 150;
+	public final static int 		DAV_QUEUED_THREADS_MAX = 300;
 	
-	public final static String ROOTDIRECTORY = "/";
-	public final static boolean COMPUTE_CHECKSUM = true;
-	public final static String CHECKSUM_TYPE = "adler32";
-
-	public final static int THREAD_POOL_SIZE_MAP_MIN = 100;
-	public final static int THREAD_POOL_SIZE_MAP_MAX = 100;
-	public final static int THREAD_POOL_SIZE_DAV_MAX = 150;
 	
+	/* webapp (webdav+filetransfer) */
+	
+	public final static String 		WEBAPP_WEBDAV_CONTEXTPATH = "";
+	public final static String 		WEBAPP_FILETRANSFER_CONTEXTPATH = "fileTransfer";
+	public final static String 		WEBAPP_GPFS_ROOTDIRECTORY = "/";
+	public final static boolean 	WEBAPP_COMPUTE_CHECKSUM = true;
+	public final static String 		WEBAPP_CHECKSUM_TYPE = "adler32";
+	
+	/* general */
+	public final static String 		LOG_FILE = "/etc/storm/gridhttps-server/logback.xml";
 
 }

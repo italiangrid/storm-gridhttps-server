@@ -72,8 +72,9 @@ public class StormGridhttpsServer {
 		mapServer = new Server(gridhttpsInfo.getMapperServlet().getPort());	
 	
 		QueuedThreadPool threadPool = new QueuedThreadPool();
-		threadPool.setMinThreads(gridhttpsInfo.getThreadPoolSizeMapMin());
-		threadPool.setMaxThreads(gridhttpsInfo.getThreadPoolSizeMapMax());
+		threadPool.setMinThreads(gridhttpsInfo.getMapActiveThreadsMin());
+		threadPool.setMaxThreads(gridhttpsInfo.getMapActiveThreadsMax());
+		threadPool.setMaxQueued(gridhttpsInfo.getMapQueuedThreadsMax());
 		mapServer.setThreadPool(threadPool);
 	}
 
@@ -83,7 +84,8 @@ public class StormGridhttpsServer {
 		davServer.setGracefulShutdown(1000);
 		
 		QueuedThreadPool threadPool = new QueuedThreadPool();
-		threadPool.setMaxThreads(gridhttpsInfo.getThreadPoolSizeDavMax());
+		threadPool.setMaxThreads(gridhttpsInfo.getDavActiveThreadsMax());
+		threadPool.setMaxQueued(gridhttpsInfo.getDavQueuedThreadsMax());
 		davServer.setThreadPool(threadPool);
 		
 		HandlerCollection hc = new HandlerCollection();
@@ -107,7 +109,7 @@ public class StormGridhttpsServer {
 	}
 	
 	private void initWebapp() throws ServerException {
-		webapp = new WebApp(new File(gridhttpsInfo.getWebappsDirectory(), DefaultConfiguration.WEBAPP_DIRECTORY_NAME));
+		webapp = new WebApp(new File(gridhttpsInfo.getWebappsDirectory(), DefaultConfiguration.SERVER_PATH_TO_WEBAPP));
 		if (webapp != null) {
 			if (!webapp.getResourceBase().exists()) {
 				if (webapp.getResourceBase().mkdirs()) {

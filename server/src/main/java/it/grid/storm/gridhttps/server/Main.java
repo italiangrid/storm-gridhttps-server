@@ -111,7 +111,7 @@ public class Main {
 	}
 
 	private static void deleteWebappDirectory() {
-		File toDelete = new File(stormGridhttps.getWebappsDirectory(), DefaultConfiguration.WEBAPP_DIRECTORY_NAME);
+		File toDelete = new File(stormGridhttps.getWebappsDirectory(), DefaultConfiguration.SERVER_PATH_TO_WEBAPP);
 		if (toDelete.exists()) {
 			try {
 				FileUtils.deleteDirectory(toDelete);
@@ -216,7 +216,16 @@ public class Main {
 			stormGridhttps.setWebdavContextPath(configuration.get("service", "webdav.context-path"));
 		if (configuration.get("service").containsKey("filetransfer.context-path"))
 			stormGridhttps.setFiletransferContextPath(configuration.get("service", "filetransfer.context-path"));
-
+		
+		if (configuration.get("service").containsKey("webdav.max.active.threads"))
+			stormGridhttps.setDavActiveThreadsMax(configuration.get("service", "webdav.max.active.threads", int.class));
+		if (configuration.get("service").containsKey("webdav.max.queued.threads"))
+			stormGridhttps.setDavQueuedThreadsMax(configuration.get("service", "webdav.max.queued.threads", int.class));
+		if (configuration.get("service").containsKey("webdav.max.active.threads"))
+			stormGridhttps.setDavActiveThreadsMax(configuration.get("service", "webdav.max.active.threads", int.class));
+		if (configuration.get("service").containsKey("webdav.max.queued.threads"))
+			stormGridhttps.setDavQueuedThreadsMax(configuration.get("service", "webdav.max.queued.threads", int.class));
+		
 		/* connectors */
 		if (!configuration.keySet().contains("connectors"))
 			throw new InitException("Configuration file 'connectors' section missed!");
@@ -256,7 +265,7 @@ public class Main {
 		if (configuration.get("backend").containsKey("compute-checksum"))
 			stormGridhttps.setComputeChecksum(configuration.get("backend", "compute-checksum", boolean.class));
 		if (configuration.get("backend").containsKey("checksum-type"))
-			if (!configuration.get("backend", "checksum-type").toLowerCase().equals(DefaultConfiguration.CHECKSUM_TYPE.toLowerCase())) {
+			if (!configuration.get("backend", "checksum-type").toLowerCase().equals(DefaultConfiguration.WEBAPP_CHECKSUM_TYPE.toLowerCase())) {
 				log.warn("Invalid checksum type: " + configuration.get("backend", "checksum-type"));
 			} else {
 				stormGridhttps.setChecksumType(configuration.get("backend", "checksum-type"));

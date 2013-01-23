@@ -38,34 +38,39 @@ public class StormGridhttps {
 	private boolean computeChecksum;
 	private String checksumType;
 	
-	private int threadPoolSizeMapMin;
-	private int threadPoolSizeMapMax;
-	private int threadPoolSizeDavMax;
+	private int mapActiveThreadsMin;
+	private int mapActiveThreadsMax;
+	private int mapQueuedThreadsMax;
+	
+	private int davActiveThreadsMax;
+	private int davQueuedThreadsMax;
 
 	public StormGridhttps() {
-		this.setHttpPort(DefaultConfiguration.STORM_GHTTPS_HTTP_PORT);
-		this.setHttpsPort(DefaultConfiguration.STORM_GHTTPS_HTTPS_PORT);
-		this.setEnabledHttp(DefaultConfiguration.STORM_GHTTPS_USE_HTTP);
+		this.setHttpPort(DefaultConfiguration.SERVER_WEBAPP_HTTP_PORT);
+		this.setHttpsPort(DefaultConfiguration.SERVER_WEBAPP_HTTPS_PORT);
+		this.setEnabledHttp(DefaultConfiguration.SERVER_WEBAPP_USE_HTTP);
 		MapperServlet mapperServlet = new MapperServlet();
 		this.setMapperServlet(mapperServlet);
-		this.setWebappsDirectory(DefaultConfiguration.STORM_GHTTPS_WEBAPPS_DIRECTORY);
+		this.setWebappsDirectory(DefaultConfiguration.SERVER_WEBAPP_DIRECTORY);
 		SSLOptions sslOptions = new SSLOptions();
-		sslOptions.setCertificateFile(DefaultConfiguration.STORM_GHTTPS_HTTPS_CERTIFICATE_FILE);
-		sslOptions.setKeyFile(DefaultConfiguration.STORM_GHTTPS_HTTPS_KEY_FILE);
-		sslOptions.setTrustStoreDirectory(DefaultConfiguration.STORM_GHTTPS_HTTPS_TRUST_STORE_DIRECTORY);
-		sslOptions.setNeedClientAuth(DefaultConfiguration.STORM_GHTTPS_HTTPS_NEED_CLIENT_AUTH);
-		sslOptions.setWantClientAuth(DefaultConfiguration.STORM_GHTTPS_HTTPS_WANT_CLIENT_AUTH);
+		sslOptions.setCertificateFile(DefaultConfiguration.SERVER_WEBAPP_HTTPS_CERTIFICATE_FILE);
+		sslOptions.setKeyFile(DefaultConfiguration.SERVER_WEBAPP_HTTPS_KEY_FILE);
+		sslOptions.setTrustStoreDirectory(DefaultConfiguration.SERVER_WEBAPP_HTTPS_TRUST_STORE_DIRECTORY);
+		sslOptions.setNeedClientAuth(DefaultConfiguration.SERVER_WEBAPP_HTTPS_NEED_CLIENT_AUTH);
+		sslOptions.setWantClientAuth(DefaultConfiguration.SERVER_WEBAPP_HTTPS_WANT_CLIENT_AUTH);
 		this.setSsloptions(sslOptions);
-		this.setLogFile(DefaultConfiguration.STORM_GHTTPS_LOG_FILE);
-		this.warFile = null;
-		this.setFiletransferContextPath(DefaultConfiguration.FILETRANSFER_CONTEXTPATH);
-		this.setWebdavContextPath(DefaultConfiguration.WEBAPP_CONTEXTPATH);
-		this.setRootDirectory(new File(DefaultConfiguration.ROOTDIRECTORY));
-		this.setComputeChecksum(DefaultConfiguration.COMPUTE_CHECKSUM);
-		this.setChecksumType(DefaultConfiguration.CHECKSUM_TYPE);
-		this.setThreadPoolSizeDavMax(DefaultConfiguration.THREAD_POOL_SIZE_DAV_MAX);
-		this.setThreadPoolSizeMapMax(DefaultConfiguration.THREAD_POOL_SIZE_MAP_MAX);
-		this.setThreadPoolSizeMapMin(DefaultConfiguration.THREAD_POOL_SIZE_MAP_MIN);
+		this.setLogFile(DefaultConfiguration.LOG_FILE);
+		this.setWarFile(null);
+		this.setFiletransferContextPath(DefaultConfiguration.WEBAPP_FILETRANSFER_CONTEXTPATH);
+		this.setWebdavContextPath(DefaultConfiguration.WEBAPP_WEBDAV_CONTEXTPATH);
+		this.setRootDirectory(new File(DefaultConfiguration.WEBAPP_GPFS_ROOTDIRECTORY));
+		this.setComputeChecksum(DefaultConfiguration.WEBAPP_COMPUTE_CHECKSUM);
+		this.setChecksumType(DefaultConfiguration.WEBAPP_CHECKSUM_TYPE);
+		this.setDavActiveThreadsMax(DefaultConfiguration.DAV_ACTIVE_THREADS_MAX);
+		this.setDavQueuedThreadsMax(DefaultConfiguration.DAV_QUEUED_THREADS_MAX);
+		this.setMapActiveThreadsMin(DefaultConfiguration.MAP_ACTIVE_THREADS_MIN);
+		this.setMapActiveThreadsMax(DefaultConfiguration.MAP_ACTIVE_THREADS_MAX);
+		this.setMapQueuedThreadsMax(DefaultConfiguration.MAP_QUEUED_THREADS_MAX);
 	}
 
 	public String getHostname() {
@@ -161,9 +166,9 @@ public class StormGridhttps {
 			throw new InitException("gridhttps ssloptions host key file is empty!");
 		if (ssloptions.getTrustStoreDirectory().isEmpty())
 			throw new InitException("gridhttps ssloptions trust store directory is empty!");
-		if (threadPoolSizeMapMax <= 0)
+		if (mapActiveThreadsMax <= 0)
 			throw new InitException("maximum number of threads for mapping-servlet's requests is not valid!");
-		if (threadPoolSizeDavMax <= 0)
+		if (davActiveThreadsMax <= 0)
 			throw new InitException("maximum number of threads for webdav-server's requests is not valid!");
 	}
 
@@ -215,28 +220,44 @@ public class StormGridhttps {
 		this.checksumType = checksumType;
 	}
 
-	public int getThreadPoolSizeMapMax() {
-		return threadPoolSizeMapMax;
+	public int getMapQueuedThreadsMax() {
+		return mapQueuedThreadsMax;
 	}
 
-	public void setThreadPoolSizeMapMax(int threadPoolSizeMapMax) {
-		this.threadPoolSizeMapMax = threadPoolSizeMapMax;
+	public void setMapQueuedThreadsMax(int mapQueuedThreadsMax) {
+		this.mapQueuedThreadsMax = mapQueuedThreadsMax;
 	}
 
-	public int getThreadPoolSizeDavMax() {
-		return threadPoolSizeDavMax;
+	public int getDavQueuedThreadsMax() {
+		return davQueuedThreadsMax;
 	}
 
-	public void setThreadPoolSizeDavMax(int threadPoolSizeDavMax) {
-		this.threadPoolSizeDavMax = threadPoolSizeDavMax;
+	public void setDavQueuedThreadsMax(int davQueuedThreadsMax) {
+		this.davQueuedThreadsMax = davQueuedThreadsMax;
 	}
 
-	public int getThreadPoolSizeMapMin() {
-		return threadPoolSizeMapMin;
+	public int getMapActiveThreadsMin() {
+		return mapActiveThreadsMin;
 	}
 
-	public void setThreadPoolSizeMapMin(int threadPoolSizeMapMin) {
-		this.threadPoolSizeMapMin = threadPoolSizeMapMin;
+	public void setMapActiveThreadsMin(int mapActiveThreadsMin) {
+		this.mapActiveThreadsMin = mapActiveThreadsMin;
+	}
+	
+	public int getMapActiveThreadsMax() {
+		return mapActiveThreadsMax;
+	}
+
+	public void setMapActiveThreadsMax(int mapActiveThreadsMax) {
+		this.mapActiveThreadsMax = mapActiveThreadsMax;
+	}
+
+	public int getDavActiveThreadsMax() {
+		return davActiveThreadsMax;
+	}
+
+	public void setDavActiveThreadsMax(int davActiveThreadsMax) {
+		this.davActiveThreadsMax = davActiveThreadsMax;
 	}
 
 }

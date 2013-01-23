@@ -31,7 +31,7 @@ public class MapperServlet {
 	public MapperServlet() {
 		this.setContextPath(DefaultConfiguration.MAPPER_SERVLET_CONTEXT_PATH);
 		this.setContextSpec(DefaultConfiguration.MAPPER_SERVLET_CONTEXT_SPEC);
-		this.setPort(DefaultConfiguration.STORM_GHTTPS_MAPPER_SERVLET_PORT);
+		this.setPort(DefaultConfiguration.SERVER_MAPPER_SERVLET_PORT);
 	}
 
 	public String getContextPath() {

@@ -50,7 +50,7 @@ public class MapperServlet extends HttpServlet {
 		log.debug("Decoded filePath = " + pathDecoded + " . Retrieving matching StorageArea");
 		StorageArea SA = getMatchingSA(pathDecoded);
 		log.debug("Storage-Area: " + SA);
-		String relativeUrl = File.separator + DefaultConfiguration.FILETRANSFER_CONTEXTPATH + SA.getStfn(pathDecoded);
+		String relativeUrl = File.separator + DefaultConfiguration.WEBAPP_FILETRANSFER_CONTEXTPATH + SA.getStfn(pathDecoded);
 		log.info("GET-MAPPING: '" + pathDecoded + "' to '" + relativeUrl + "'");
 		sendResponse(response, relativeUrl);
 	}
