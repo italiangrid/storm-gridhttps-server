@@ -62,14 +62,14 @@ public class StormStandardFilter implements Filter {
 				}
 			}
 		} catch (RuntimeApiException ex) {
-			log.error(ex.getReason());
-			manager.getResponseHandler().respondServerError(request, response, ex.getMessage());
+			log.error(ex.getReason().toString());
+			manager.getResponseHandler().respondServerError(request, response, ex.getReason().toString());
 		} catch (StormResourceException ex) {
-			log.error(ex.getReason());
-			String serverError = "<html><body><h1>Service Unavailable</h1><p>"+ex.getMessage()+"</p></body></html>";
+			log.error(ex.getReason().toString());
+			String serverError = "<html><body><h1>Service Unavailable</h1><p>"+ex.getReason().toString()+"</p></body></html>";
 			sendResponse(response, Status.SC_SERVICE_UNAVAILABLE, serverError);
 		} catch (BadRequestException ex) {
-			log.warn("BadRequestException: " + ex.getReason(), ex);
+			log.warn("BadRequestException: " + ex.getReason().toString(), ex);
 			manager.getResponseHandler().respondBadRequest(ex.getResource(), response, request);
 		} catch (ConflictException ex) {
 			log.warn("conflictException: ", ex);
