@@ -147,11 +147,11 @@ public class StormResourceHelper {
 		} catch (FileNotFoundException e) {
 			log.error(e.getMessage());
 			abortRequest(sourceDir.getFactory().getBackendApi(), outputPtp.getToken(), user);
-			throw new RuntimeException("FileNotFoundException!", e);
+			throw new StormResourceException("FileNotFoundException!", e);
 		} catch (IOException e) {
 			log.error(e.getMessage());
 			abortRequest(sourceDir.getFactory().getBackendApi(), outputPtp.getToken(), user);
-			throw new RuntimeException("IOException!", e);
+			throw new StormResourceException("IOException!", e);
 		}
 		StormBackendApi.putDone(sourceDir.getFactory().getBackendApi(), srmDest.getSurl().asString(), outputPtp.getToken(), user);
 		return srmDest;
@@ -176,7 +176,7 @@ public class StormResourceHelper {
 		} catch (IOException ex) {
 			log.error(ex.getMessage());
 			abortRequest(source.getFactory().getBackendApi(), outputPtp.getToken(), user);
-			throw new RuntimeException("Couldnt write to: " + source.getFile().getAbsolutePath(), ex);
+			throw new StormResourceException("Couldnt write to: " + source.getFile().getAbsolutePath(), ex);
 		}
 		StormBackendApi.putDone(source.getFactory().getBackendApi(), source.getSurl().asString(), outputPtp.getToken(), user);
 		return source;
