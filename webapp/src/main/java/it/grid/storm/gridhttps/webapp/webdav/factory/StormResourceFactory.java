@@ -48,18 +48,17 @@ public final class StormResourceFactory implements Initable, ResourceFactory {
 	boolean allowDirectoryBrowsing;
 	String defaultPage;
 	boolean digestAllowed = true;
-//	private String ssoPrefix;
+	// private String ssoPrefix;
 	private String localhostname;
 	private BackendApi backendApi;
-
 
 	public StormResourceFactory() throws UnknownHostException, ApiException {
 		setRoot(new File(Configuration.getGpfsRootDirectory()));
 		setSecurityManager(new NullSecurityManager());
 		setContextPath(Configuration.getWebdavContextPath());
-        setContentService(new StormContentService());
-        setBackendApi(new BackendApi(Configuration.getBackendHostname(), new Long(Configuration.getBackendPort())));
-        setLocalhostname(java.net.InetAddress.getLocalHost().getHostName());
+		setContentService(new StormContentService());
+		setBackendApi(new BackendApi(Configuration.getBackendHostname(), new Long(Configuration.getBackendPort())));
+		setLocalhostname(java.net.InetAddress.getLocalHost().getHostName());
 	}
 
 	public File getRoot() {
@@ -77,14 +76,16 @@ public final class StormResourceFactory implements Initable, ResourceFactory {
 			log.warn("Root folder does not exist: " + root.getAbsolutePath());
 		}
 	}
-	
+
 	private String stripPortFromHost(String host) {
-		if (host == null || host.isEmpty()) return "";
-		return host.indexOf(':') != -1 ? host.substring(0,host.indexOf(':')) : host;
+		if (host == null || host.isEmpty())
+			return "";
+		return host.indexOf(':') != -1 ? host.substring(0, host.indexOf(':')) : host;
 	}
-	
+
 	public boolean isLocalResource(String host) {
-		if (host == null || host.isEmpty()) return true;
+		if (host == null || host.isEmpty())
+			return true;
 		return host.equals(localhostname);
 	}
 
@@ -116,37 +117,41 @@ public final class StormResourceFactory implements Initable, ResourceFactory {
 		} else {
 			r = new StormFileResource(this, file, storageArea);
 		}
-//		if (r != null) {
-//			r.ssoPrefix = ssoPrefix;
-//		}
+		// if (r != null) {
+		// r.ssoPrefix = ssoPrefix;
+		// }
 		return r;
 	}
-	
+
 	public StormResource resolveFile(SurlInfo surlInfo) {
 		StormResource r = null;
 		if (surlInfo != null) {
 			StorageArea storageArea = StorageAreaManager.getMatchingSA(surlInfo.getStfn());
 			File file = new File(storageArea.getRealPath(surlInfo.getStfn()));
-			if (surlInfo.getType().equals(TFileType.DIRECTORY)) {
-				r = new StormDirectoryResource(this, file, storageArea);
+			if (surlInfo.getType() != null) {
+				if (surlInfo.getType().equals(TFileType.DIRECTORY)) {
+					r = new StormDirectoryResource(this, file, storageArea);
+				} else {
+					r = new StormFileResource(this, file, storageArea);
+				}
 			} else {
-				r = new StormFileResource(this, file, storageArea);
+				log.warn("resource type is null!");
 			}
 		}
 		return r;
 	}
 
-//	public File resolvePath(File root, String url) {
-//		log.debug("resolve path url: " + url);
-//		Path path = Path.path(url);
-//		File f = root;
-//		for (String s : path.getParts()) {
-//			f = new File(f, s);
-//		}
-//		log.debug("resolve path return file name: " + f.getName());
-//		log.debug("resolve path return file path: " + f.getPath());
-//		return f;
-//	}
+	// public File resolvePath(File root, String url) {
+	// log.debug("resolve path url: " + url);
+	// Path path = Path.path(url);
+	// File f = root;
+	// for (String s : path.getParts()) {
+	// f = new File(f, s);
+	// }
+	// log.debug("resolve path return file name: " + f.getName());
+	// log.debug("resolve path return file path: " + f.getPath());
+	// return f;
+	// }
 
 	public String getRealm(String host) {
 		return securityManager.getRealm(host);
@@ -228,13 +233,13 @@ public final class StormResourceFactory implements Initable, ResourceFactory {
 		this.digestAllowed = digestAllowed;
 	}
 
-//	public void setSsoPrefix(String ssoPrefix) {
-//		this.ssoPrefix = ssoPrefix;
-//	}
-//
-//	public String getSsoPrefix() {
-//		return ssoPrefix;
-//	}
+	// public void setSsoPrefix(String ssoPrefix) {
+	// this.ssoPrefix = ssoPrefix;
+	// }
+	//
+	// public String getSsoPrefix() {
+	// return ssoPrefix;
+	// }
 
 	public FileContentService getContentService() {
 		return contentService;
@@ -243,15 +248,15 @@ public final class StormResourceFactory implements Initable, ResourceFactory {
 	public void setContentService(FileContentService contentService) {
 		this.contentService = contentService;
 	}
-	
+
 	public BackendApi getBackendApi() {
 		return backendApi;
 	}
-	
+
 	private void setBackendApi(BackendApi backendApi) {
 		this.backendApi = backendApi;
 	}
-	
+
 	public String getLocalhostname() {
 		return localhostname;
 	}
@@ -262,7 +267,7 @@ public final class StormResourceFactory implements Initable, ResourceFactory {
 
 	@Override
 	public void init(Config config, HttpManager manager) {
-        manager.setEnableExpectContinue(false);		
+		manager.setEnableExpectContinue(false);
 	}
 
 	@Override
