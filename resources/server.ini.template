@@ -50,7 +50,7 @@
 
 # Maximum number of queued threads for webdav-server's requests
 # Default: 300
-#webdav.max.queued.threads = 150
+#webdav.max.queued.threads = 300
 
 # Maximum number of active threads for mapping-servlet's requests
 # Default: 100
