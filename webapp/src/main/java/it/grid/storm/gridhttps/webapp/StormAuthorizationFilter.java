@@ -98,7 +98,7 @@ public class StormAuthorizationFilter implements Filter {
 
 		HttpHelper.init((HttpServletRequest) request, (HttpServletResponse) response);
 		UserCredentials.init(HttpHelper.getHelper());		
-
+		
 		HttpHelper httpHelper = HttpHelper.getHelper();
 		initSession();
 		
@@ -134,9 +134,9 @@ public class StormAuthorizationFilter implements Filter {
 	}
 	
 	private void initSession() {
-		HttpHelper.getHelper().initSession();
-		HttpHelper.getHelper().getSession().setAttribute("forced", false);
-		HttpHelper.getHelper().getSession().setAttribute("user", UserCredentials.getUser());
+//		HttpHelper.getHelper().initSession();
+//		HttpHelper.getHelper().getSession().setAttribute("forced", false);
+//		HttpHelper.getHelper().getSession().setAttribute("user", UserCredentials.getUser());
 	}
 
 	private void processRootRequest(String method) throws IOException {

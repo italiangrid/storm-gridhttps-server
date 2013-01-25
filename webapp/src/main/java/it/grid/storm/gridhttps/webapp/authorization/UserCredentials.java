@@ -56,6 +56,7 @@ public class UserCredentials {
 	private UserCredentials(HttpHelper httpHelper) {
 		this.httpHelper = httpHelper;
 		initAsAnonymous();
+		initForcedAnonymous(false);
 		if (this.httpHelper.isHttp())
 			return;
 		/* It's an HTTPS request: */
@@ -87,17 +88,17 @@ public class UserCredentials {
 	public ArrayList<String> getUserFQANS() {
 		return isForcedAnonymous() ? getEmptyUserFQANS() : userFQANS;
 	}
-
+	
 	public boolean isAnonymous() {
 		return isForcedAnonymous() || (httpHelper.isHttp() && isUserDNEmpty() && isUserFQANSEmpty());
 	}
 
 	public void forceAnonymous() {
-		httpHelper.getSession().setAttribute("forced", true);
+		httpHelper.getRequest().setAttribute("forced", true);
 	}
 
 	public void unforceAnonymous() {
-		httpHelper.getSession().setAttribute("forced", false);
+		httpHelper.getRequest().setAttribute("forced", false);
 	}
 
 	/* private methods */
@@ -107,8 +108,12 @@ public class UserCredentials {
 		userFQANS = getEmptyUserFQANS();
 	}
 
+	private void initForcedAnonymous(boolean value) {
+		httpHelper.getRequest().setAttribute("forced", false);
+	}
+	
 	private boolean isForcedAnonymous() {
-		return (Boolean) httpHelper.getSession().getAttribute("forced");
+		return (Boolean) httpHelper.getRequest().getAttribute("forced");
 	}
 
 	private String getEmptyUserDN() {
