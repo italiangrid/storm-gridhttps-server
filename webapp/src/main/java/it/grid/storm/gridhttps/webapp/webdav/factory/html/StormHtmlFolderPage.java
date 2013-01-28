@@ -100,8 +100,11 @@ public class StormHtmlFolderPage extends HtmlPage {
 			openTableCol();
 			String name = entry.getStfn().split("/")[entry.getStfn().split("/").length - 1];
 			String path = buildHref(dirPath, name);
-			if (entry.getType().equals(TFileType.DIRECTORY))
+			if (entry.getType() == null) {
+				addImage(getUnknownIco());
+			} else if (entry.getType().equals(TFileType.DIRECTORY)) {
 				addImage(getFolderIco());
+			}
 			addLink(name, path);
 			closeTableCol();	
 			//size
@@ -236,6 +239,35 @@ public class StormHtmlFolderPage extends HtmlPage {
 				"IKEQRGoAMVyQCyJbAFAACGXFheAmAmIV1LRR+4AAQSyIBeIfwExHxDHUNFwEA4ACCCQBaBcPAWaXjdQ0fAfQMwC" +
 				"EEAgQxOB2AaIOYD4DxUtWAFyNEAAwSMDKBBJ5eAJAZkLEEDIFmgD8TcqGAxKqmUwcwECiOY5GSCAaG4BQIABAFb" +
 				"NMXYg1UnRAAAAAElFTkSuQmCC";
+		return out;
+	}
+	
+	private static String getUnknownIco() {
+		String out = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAGXRFWHRTb2Z0" +
+				"d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAyJpVFh0WE1MOmNvbS5hZG9iZS54bXAAAAAAADw/eHBhY2tldCB" +
+				"iZWdpbj0i77u/IiBpZD0iVzVNME1wQ2VoaUh6cmVTek5UY3prYzlkIj8+IDx4OnhtcG1ldGEgeG1sbnM6eD0iYW" +
+				"RvYmU6bnM6bWV0YS8iIHg6eG1wdGs9IkFkb2JlIFhNUCBDb3JlIDUuMC1jMDYxIDY0LjE0MDk0OSwgMjAxMC8xM" +
+				"i8wNy0xMDo1NzowMSAgICAgICAgIj4gPHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5" +
+				"LzAyLzIyLXJkZi1zeW50YXgtbnMjIj4gPHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9IiIgeG1sbnM6eG1wPSJ" +
+				"odHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvIiB4bWxuczp4bXBNTT0iaHR0cDovL25zLmFkb2JlLmNvbS94YX" +
+				"AvMS4wL21tLyIgeG1sbnM6c3RSZWY9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC9zVHlwZS9SZXNvdXJjZ" +
+				"VJlZiMiIHhtcDpDcmVhdG9yVG9vbD0iQWRvYmUgUGhvdG9zaG9wIENTNS4xIFdpbmRvd3MiIHhtcE1NOkluc3Rh" +
+				"bmNlSUQ9InhtcC5paWQ6RUVCMTcyNTE1NTc3MTFFMTk5MzNGMDZGQzY3RTI0Q0MiIHhtcE1NOkRvY3VtZW50SUQ" +
+				"9InhtcC5kaWQ6RUVCMTcyNTI1NTc3MTFFMTk5MzNGMDZGQzY3RTI0Q0MiPiA8eG1wTU06RGVyaXZlZEZyb20gc3" +
+				"RSZWY6aW5zdGFuY2VJRD0ieG1wLmlpZDpFRUIxNzI0RjU1NzcxMUUxOTkzM0YwNkZDNjdFMjRDQyIgc3RSZWY6Z" +
+				"G9jdW1lbnRJRD0ieG1wLmRpZDpFRUIxNzI1MDU1NzcxMUUxOTkzM0YwNkZDNjdFMjRDQyIvPiA8L3JkZjpEZXNj" +
+				"cmlwdGlvbj4gPC9yZGY6UkRGPiA8L3g6eG1wbWV0YT4gPD94cGFja2V0IGVuZD0iciI/Pu+kldkAAAKmSURBVHj" +
+				"aZFNNSFRRFP7enTfzZhQyrUSplKQGosK1uUiCjNwU4iaCFgUVpBSUuChLrBYtKo1qZW2KWmhmKynBRWRBEFSTKe" +
+				"g4WYzO6KgzOuO8eT9zO/e9eaPVgcN795zvO/c7594r4R8buYKHyOIUOLz5oAQVDE9qb+H8eiznnFIOsR31XMeb3" +
+				"UeOo6TmGOAuz7NhzmBxZABjgy8guXG49gbeOgVs8lWc+HiN1pEuHvzSyauqtvKCQg+vrCwWCO73b+cr4Tucz3bx" +
+				"D4QjfP1fBd61gWcmOznXWy1C9b5Syt0k7+AzgTNWDIxZeZVwAu8UYO+p58qaQ/AoQVL6zSr4NTCH/p5BIDGB8j0" +
+				"aCgtkIJsFjAkohBN4wRNYRvHTW3ZWw1jsg4ul0fvAj5aTpWjYrwOpn0iO/kBq1bClJpdgLvVB4AVPhGQSo8huGc" +
+				"ZKClkziKYDDE11CqVmYMxxVNRFLG5PRxEwH4SxmoJcLIumFLsAWTYTh6mSQjUMnYbOGODzAQ10aAZtHngO7PUvQ" +
+				"40laBMiFMTzRylLkiiQgKkBuZlSK3bpoU9AephOlP6TcW6TxcESXspdAJlL0NT4rIcZXupLtQEuIBoFSki1QsBk" +
+				"kpTkyIx5QXgInrWOJTEQm56gbbfBzAg1pIR8M7Ww8Ar5mJlzgRN4wbMKNN5HazQURnrZpDtXQlsBHkp095KSg/b" +
+				"XLXrTYeUFTuAFzypA/uvzNNpDoyFoGReYXITJ3y5cemxLvkxfV9aOa6oLAjc8jmbBcwrg4jM8GvqO5qmxecQiae" +
+				"woU3DvnD2lu2clZEwFsWgaU+PzELjrL/F07Z2t2QbyXf0X0Fa2EUd9HnjcNEydhpfWoEXieN3YjduEoYFh+b/Xu" +
+				"M4qyDc56nJG9xgLjuz1z/mPAAMASV1EgHfj3lYAAAAASUVORK5CYII=";
 		return out;
 	}
 	
