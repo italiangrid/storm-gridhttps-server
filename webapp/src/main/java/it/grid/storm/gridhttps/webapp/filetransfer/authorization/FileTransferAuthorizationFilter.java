@@ -53,7 +53,7 @@ public class FileTransferAuthorizationFilter extends AuthorizationFilter {
 	}
 
 	public String stripContext() {
-		return HttpHelper.getHelper().getRequestURI().getPath().replaceFirst(getContextPath(), "");
+		return this.getHTTPHelper().getRequestURI().getPath().replaceFirst(getContextPath(), "");
 	}
 
 	public AuthorizationStatus isUserAuthorized(UserCredentials user) {
@@ -101,7 +101,7 @@ public class FileTransferAuthorizationFilter extends AuthorizationFilter {
 	}
 		
 	public AbstractMethodAuthorization getAuthorizationHandler() {
-		return METHODS_MAP.get(HttpHelper.getHelper().getRequestMethod());
+		return METHODS_MAP.get(this.getHTTPHelper().getRequestMethod());
 	}
 	
 }

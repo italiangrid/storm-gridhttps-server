@@ -19,7 +19,7 @@ import io.milton.http.exceptions.BadRequestException;
 import io.milton.http.exceptions.ConflictException;
 import io.milton.http.exceptions.NotAuthorizedException;
 import io.milton.resource.*;
-import it.grid.storm.gridhttps.webapp.HttpHelper;
+import io.milton.servlet.MiltonServlet;
 import it.grid.storm.gridhttps.webapp.webdav.factory.exceptions.RuntimeApiException;
 import it.grid.storm.gridhttps.webapp.webdav.factory.exceptions.StormResourceException;
 import it.grid.storm.gridhttps.webapp.webdav.factory.html.StormHtmlFolderPage;
@@ -54,7 +54,7 @@ public class StormDirectoryResource extends StormResource implements MakeCollect
 
 	public CollectionResource createCollection(String name) throws NotAuthorizedException, ConflictException, BadRequestException {
 		log.debug("Called function for MKCOL DIRECTORY");
-		String methodName = HttpHelper.getHelper().getRequestMethod();
+		String methodName = MiltonServlet.request().getMethod();
 		if (methodName.equals("PUT")) {
 			/*
 			 * it is a PUT with a path that contains a directory that does not
@@ -63,8 +63,7 @@ public class StormDirectoryResource extends StormResource implements MakeCollect
 			 * be a problem!!!
 			 */
 			log.warn("Auto-creation of directory for " + methodName + " requests is disabled!");
-			HttpHelper.getHelper().sendError(409, "Conflict");
-			return null;
+			throw new ConflictException(this, "A resource cannot be created at the destination URI until one or more intermediate collections are created.");
 		}
 		return StormResourceHelper.doMkCol(this, name);
 	}
@@ -145,7 +144,7 @@ public class StormDirectoryResource extends StormResource implements MakeCollect
 	}
 
 	private void buildDirectoryPage(OutputStream out, Collection<SurlInfo> entries) throws RuntimeApiException, StormResourceException {
-		String dirPath = HttpHelper.getHelper().getRequestURI().getPath();
+		String dirPath = MiltonServlet.request().getRequestURI();
 		StormHtmlFolderPage page = new StormHtmlFolderPage(out);
 		page.start();
 		page.addTitle("StoRM Gridhttps-server WebDAV");

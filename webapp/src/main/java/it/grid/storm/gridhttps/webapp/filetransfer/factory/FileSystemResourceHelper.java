@@ -21,7 +21,9 @@ import io.milton.http.exceptions.BadRequestException;
 import io.milton.http.exceptions.ConflictException;
 import io.milton.http.exceptions.NotAuthorizedException;
 import io.milton.http.exceptions.NotFoundException;
+import io.milton.servlet.MiltonServlet;
 import it.grid.storm.gridhttps.webapp.Configuration;
+import it.grid.storm.gridhttps.webapp.HttpHelper;
 import it.grid.storm.gridhttps.webapp.authorization.UserCredentials;
 import it.grid.storm.gridhttps.webapp.backendApi.StormBackendApi;
 import it.grid.storm.gridhttps.webapp.webdav.factory.exceptions.RuntimeApiException;
@@ -62,7 +64,9 @@ public class FileSystemResourceHelper {
 	}	
 	
 	public static ArrayList<SurlInfo> doLs(FileSystemResource source) throws RuntimeApiException, StormResourceException {
-		UserCredentials user = UserCredentials.getUser();
+		HttpHelper httpHelper = new HttpHelper(MiltonServlet.request(), MiltonServlet.response());
+		UserCredentials user = httpHelper.getUser();
+		user.forceAnonymous();
 		return doLs(source, user);
 	}
 	

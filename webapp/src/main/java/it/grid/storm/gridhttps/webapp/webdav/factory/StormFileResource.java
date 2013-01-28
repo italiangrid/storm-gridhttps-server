@@ -22,6 +22,7 @@ import io.milton.http.exceptions.ConflictException;
 import io.milton.http.exceptions.NotAuthorizedException;
 import io.milton.http.exceptions.NotFoundException;
 import io.milton.resource.*;
+import io.milton.servlet.MiltonServlet;
 import it.grid.storm.gridhttps.webapp.HttpHelper;
 import it.grid.storm.gridhttps.webapp.webdav.factory.exceptions.RuntimeApiException;
 import it.grid.storm.gridhttps.webapp.webdav.factory.exceptions.StormResourceException;
@@ -142,7 +143,8 @@ public class StormFileResource extends StormResource implements CopyableResource
 
 	public void replaceContent(InputStream in, Long length) throws BadRequestException, ConflictException, NotAuthorizedException {
 		log.debug("Called function for PUT-OVERWRITE");
-		if (!HttpHelper.getHelper().isOverwriteRequest()) {
+		HttpHelper httpHelper = new HttpHelper(MiltonServlet.request(), MiltonServlet.response());
+		if (!httpHelper.isOverwriteRequest()) {
 			throw new NotAuthorizedException("Resource exists but this is not an overwrite request!", this);
 		}
 		StormResourceHelper.doPutOverwrite(this, in);

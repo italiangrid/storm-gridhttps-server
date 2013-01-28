@@ -12,6 +12,8 @@
  */
 package it.grid.storm.gridhttps.webapp;
 
+import it.grid.storm.gridhttps.webapp.authorization.UserCredentials;
+
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -32,20 +34,10 @@ public class HttpHelper {
 
 	private static final Logger log = LoggerFactory.getLogger(HttpHelper.class);
 
-	private static HttpHelper instance;
-	
-	public static void init(HttpServletRequest HTTPRequest, HttpServletResponse HTTPResponse) {
-		instance = new HttpHelper(HTTPRequest, HTTPResponse);
-	}
-	
-	public static HttpHelper getHelper() {
-		return instance;
-	}
-
 	private HttpServletRequest HTTPRequest = null;
 	private HttpServletResponse HTTPResponse = null;
 	
-	private HttpHelper(HttpServletRequest HTTPRequest, HttpServletResponse HTTPResponse) {
+	public HttpHelper(HttpServletRequest HTTPRequest, HttpServletResponse HTTPResponse) {
 		this.HTTPRequest = HTTPRequest;
 		this.HTTPResponse = HTTPResponse;
 	}
@@ -53,14 +45,6 @@ public class HttpHelper {
 	public HttpServletRequest getRequest() {
 		return this.HTTPRequest;
 	}
-	
-//	public HttpSession getSession() {
-//		return this.HTTPRequest.getSession();
-//	}
-	
-//	public void initSession() {
-//		this.HTTPRequest.getSession(true);
-//	}
 
 	public HttpServletResponse getResponse() {
 		return this.HTTPResponse;
@@ -180,6 +164,21 @@ public class HttpHelper {
 			log.error(e.getMessage());
 			e.printStackTrace();
 		}
+	}
+	
+	public boolean hasUser() {
+		return getRequest().getAttribute("User") != null;
+	}
+	
+	private void setUser(UserCredentials user) {
+		getRequest().setAttribute("User", user);
+	}
+	
+	public UserCredentials getUser() {
+		if (!hasUser()) {
+			setUser(new UserCredentials(this));
+		}
+		return (UserCredentials) getRequest().getAttribute("User");
 	}
 
 }

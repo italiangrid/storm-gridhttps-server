@@ -22,7 +22,7 @@ import org.italiangrid.voms.VOMSAttribute;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class UserCredentials {
+public class UserCredentials extends Object {
 
 	private static final Logger log = LoggerFactory.getLogger(UserCredentials.class);
 
@@ -43,17 +43,17 @@ public class UserCredentials {
 		VOMSSecurityContext.setCurrentContext(currentContext);
 	}
 	
-	private static UserCredentials instance;
+//	private static UserCredentials instance;
+//
+//	public static void init(HttpHelper httpHelper) {
+//		instance = new UserCredentials(httpHelper);
+//	}
 
-	public static void init(HttpHelper httpHelper) {
-		instance = new UserCredentials(httpHelper);
-	}
+//	public static UserCredentials getUser() {
+//		return instance;
+//	}
 
-	public static UserCredentials getUser() {
-		return instance;
-	}
-
-	private UserCredentials(HttpHelper httpHelper) {
+	public UserCredentials(HttpHelper httpHelper) {
 		this.httpHelper = httpHelper;
 		initAsAnonymous();
 		initForcedAnonymous(false);

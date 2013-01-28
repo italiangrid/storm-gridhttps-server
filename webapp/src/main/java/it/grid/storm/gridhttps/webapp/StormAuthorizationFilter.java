@@ -47,6 +47,8 @@ import org.slf4j.LoggerFactory;
 
 public class StormAuthorizationFilter implements Filter {
 
+	private HttpHelper httpHelper;
+	
 	public class InitVOMSThread extends Thread  {
 		public void run() {
 			log.debug("init voms security context..");
@@ -96,12 +98,8 @@ public class StormAuthorizationFilter implements Filter {
 	
 	public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
 
-		HttpHelper.init((HttpServletRequest) request, (HttpServletResponse) response);
-		UserCredentials.init(HttpHelper.getHelper());		
-		
-		HttpHelper httpHelper = HttpHelper.getHelper();
-		initSession();
-		
+		httpHelper = new HttpHelper((HttpServletRequest) request, (HttpServletResponse) response);
+				
 		String requestedPath = httpHelper.getRequestURI().getRawPath();
 		log.debug("Requested-URI: " + requestedPath);
 
@@ -117,7 +115,7 @@ public class StormAuthorizationFilter implements Filter {
 		} else {
 			AuthorizationFilter filter = getAuthorizationHandler(requestedPath);
 			if (filter != null) {
-				AuthorizationStatus status = filter.isUserAuthorized(UserCredentials.getUser());
+				AuthorizationStatus status = filter.isUserAuthorized(httpHelper.getUser());
 				if (status.isAuthorized()) {
 					log.debug("User is authorized to access the requested resource");
 					chain.doFilter(request, response);
@@ -131,12 +129,6 @@ public class StormAuthorizationFilter implements Filter {
 						+ requestedPath);
 			}
 		}
-	}
-	
-	private void initSession() {
-//		HttpHelper.getHelper().initSession();
-//		HttpHelper.getHelper().getSession().setAttribute("forced", false);
-//		HttpHelper.getHelper().getSession().setAttribute("user", UserCredentials.getUser());
 	}
 
 	private void processRootRequest(String method) throws IOException {
@@ -152,10 +144,10 @@ public class StormAuthorizationFilter implements Filter {
 		try {
 			if (isFileTransferRequest(path)) {
 				log.debug("Received a file-transfer request");
-				return new FileTransferAuthorizationFilter(HttpHelper.getHelper(), File.separator + Configuration.getFileTransferContextPath());
+				return new FileTransferAuthorizationFilter(httpHelper, File.separator + Configuration.getFileTransferContextPath());
 			} else {
 				log.debug("Received a webdav request");
-				return new WebDAVAuthorizationFilter(HttpHelper.getHelper());
+				return new WebDAVAuthorizationFilter(httpHelper);
 			}
 		} catch (Exception e) {
 			log.error(e.getMessage());
@@ -164,8 +156,8 @@ public class StormAuthorizationFilter implements Filter {
 	}
 
 	private void sendDavHeader() throws IOException {
-		HttpHelper.getHelper().getResponse().addHeader("DAV", "1");
-		HttpHelper.getHelper().getResponse().flushBuffer();
+		httpHelper.getResponse().addHeader("DAV", "1");
+		httpHelper.getResponse().flushBuffer();
 	}
 
 	private boolean isRootPath(String requestedPath) {
@@ -182,7 +174,7 @@ public class StormAuthorizationFilter implements Filter {
 
 	private void sendError(int errorCode, String errorMessage) {
 		try {
-			HttpHelper.getHelper().getResponse().sendError(errorCode, errorMessage);
+			httpHelper.getResponse().sendError(errorCode, errorMessage);
 		} catch (IOException e) {
 			log.error(e.getMessage());
 			e.printStackTrace();
@@ -203,21 +195,21 @@ public class StormAuthorizationFilter implements Filter {
 	}
 
 	private void sendRootPage() throws IOException {
-		HttpServletResponse response = HttpHelper.getHelper().getResponse();
+		HttpServletResponse response = httpHelper.getResponse();
 		response.addHeader("Content-Type", "text/html");
 		response.addHeader("DAV", "1");
 		StormHtmlRootPage page = new StormHtmlRootPage(response.getOutputStream());
 		page.start();
 		page.addTitle("StoRM Gridhttps-server WebDAV");
 		page.addNavigator("/");
-		page.addStorageAreaList(getUserAuthorizedStorageAreas(UserCredentials.getUser()));
+		page.addStorageAreaList(getUserAuthorizedStorageAreas(httpHelper.getUser()));
 		page.end();
 	}
 
 	private List<StorageArea> getUserAuthorizedStorageAreas(UserCredentials user) {
 		List<StorageArea> in = StorageAreaManager.getInstance().getStorageAreas();
 		List<StorageArea> out = new ArrayList<StorageArea>();
-		String reqProtocol = HttpHelper.getHelper().getRequestProtocol();
+		String reqProtocol = httpHelper.getRequestProtocol();
 		for (StorageArea current : in) {
 			if (current.getProtocols().contains(reqProtocol)) {
 				if (isUserAuthorized(user, current.getFSRoot())) {

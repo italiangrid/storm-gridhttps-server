@@ -164,7 +164,7 @@ public class WebDAVAuthorizationFilter extends AuthorizationFilter {
 	}
 		
 	public AbstractMethodAuthorization getAuthorizationHandler() {
-		return METHODS_MAP.get(HttpHelper.getHelper().getRequestMethod());
+		return METHODS_MAP.get(this.getHTTPHelper().getRequestMethod());
 	}
 		
 }

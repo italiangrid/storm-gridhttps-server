@@ -29,6 +29,7 @@ import org.slf4j.LoggerFactory;
 
 import io.milton.http.exceptions.ConflictException;
 import io.milton.http.exceptions.NotAuthorizedException;
+import io.milton.servlet.MiltonServlet;
 import it.grid.storm.gridhttps.webapp.HttpHelper;
 import it.grid.storm.gridhttps.webapp.webdav.factory.exceptions.RuntimeApiException;
 import it.grid.storm.gridhttps.webapp.webdav.factory.exceptions.StormResourceException;
@@ -92,11 +93,12 @@ public class StormStandardFilter implements Filter {
 	}
 	
 	private void printCommand() {
+		HttpHelper httpHelper = new HttpHelper(MiltonServlet.request(), MiltonServlet.response());
 		String msg = "";
-		msg += HttpHelper.getHelper().getRequestMethod();
-		msg += " " + HttpHelper.getHelper().getRequestURI().getPath();
-		if (HttpHelper.getHelper().hasDestinationHeader()) {
-			msg += " to " + HttpHelper.getHelper().getDestinationURI().getPath();
+		msg += httpHelper.getRequestMethod();
+		msg += " " + httpHelper.getRequestURI().getPath();
+		if (httpHelper.hasDestinationHeader()) {
+			msg += " to " + httpHelper.getDestinationURI().getPath();
 		}
 		log.info(msg);
 	}
