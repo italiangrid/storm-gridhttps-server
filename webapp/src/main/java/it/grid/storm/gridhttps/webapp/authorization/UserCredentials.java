@@ -109,7 +109,7 @@ public class UserCredentials {
 	}
 
 	private void initForcedAnonymous(boolean value) {
-		httpHelper.getRequest().setAttribute("forced", false);
+		httpHelper.getRequest().setAttribute("forced", value);
 	}
 	
 	private boolean isForcedAnonymous() {
