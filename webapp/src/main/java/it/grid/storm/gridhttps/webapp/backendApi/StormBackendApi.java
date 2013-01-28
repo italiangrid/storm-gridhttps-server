@@ -404,9 +404,9 @@ public class StormBackendApi {
 		}
 		log.debug(outputSPtp.getStatus().getStatusCode().getValue());
 		log.debug(outputSPtp.getStatus().getExplanation());
-//		if (!outputSPtp.getStatus().getStatusCode().getValue().equals("SRM_SUCCESS")) {
-//			throw new StormResourceException("prepare-to-put-status status is " + outputSPtp.getStatus().getStatusCode().getValue());
-//		}
+		if (!outputSPtp.getStatus().getStatusCode().getValue().equals("SRM_SUCCESS")) {
+			throw new StormResourceException("prepare-to-put-status status is " + outputSPtp.getStatus().getStatusCode().getValue());
+		}
 		return outputSPtp;
 	}
 	
@@ -429,9 +429,9 @@ public class StormBackendApi {
 		}
 		log.debug(outputSPtg.getStatus().getStatusCode().getValue());
 		log.debug(outputSPtg.getStatus().getExplanation());
-//		if (!outputSPtg.getStatus().getStatusCode().getValue().equals("SRM_SUCCESS")) {
-//			throw new StormResourceException("prepare-to-get-status status is " + outputSPtg.getStatus().getStatusCode().getValue());
-//		}
+		if (!outputSPtg.getStatus().getStatusCode().getValue().equals("SRM_SUCCESS")) {
+			throw new StormResourceException("prepare-to-get-status status is " + outputSPtg.getStatus().getStatusCode().getValue());
+		}
 		return outputSPtg;
 	}
 	

@@ -26,7 +26,6 @@ import it.grid.storm.gridhttps.webapp.webdav.factory.html.StormHtmlFolderPage;
 import it.grid.storm.srm.types.Recursion;
 import it.grid.storm.srm.types.TStatusCode;
 import it.grid.storm.storagearea.StorageArea;
-import it.grid.storm.xmlrpc.outputdata.LsOutputData;
 import it.grid.storm.xmlrpc.outputdata.LsOutputData.SurlInfo;
 
 import java.io.File;
@@ -75,20 +74,18 @@ public class StormDirectoryResource extends StormResource implements MakeCollect
 		File fsDest = new File(this.getFile(), name);
 		StormResource childResource = this.getFactory().resolveFile(this.getHost(), fsDest, this.getStorageArea());
 		if (childResource == null) {
-			LsOutputData info = StormResourceHelper.doLs(getFactory(), fsDest);
-			if (info != null) {
-				if (info.isSuccess()) {
-					SurlInfo detail = ((ArrayList<SurlInfo>) info.getInfos()).get(0);
-					if (detail.getStatus().getStatusCode().equals(TStatusCode.SRM_INVALID_PATH) && detail.getStatus().getStatusCode().equals(TStatusCode.SRM_FAILURE)) {
-						return getFactory().resolveFile(detail);
-					} else {
-						log.warn(detail.getStfn() + " status is " + detail.getStatus().getStatusCode().getValue());
-					}
+			SurlInfo detail;
+			try {
+				detail = StormResourceHelper.doLs(getFactory(), fsDest).get(0);
+				if (detail.getStatus().getStatusCode().equals(TStatusCode.SRM_INVALID_PATH) && detail.getStatus().getStatusCode().equals(TStatusCode.SRM_FAILURE)) {
+					return getFactory().resolveFile(detail);
 				} else {
-					log.warn("get-child '" + name + "' ls request status is " + info.getStatus().getStatusCode().getValue());
+					log.warn(detail.getStfn() + " status is " + detail.getStatus().getStatusCode().getValue());
 				}
-			} else {
-				log.warn("surl-info is null");
+			} catch (RuntimeApiException e) {
+				log.error(e.getMessage() + ": " + e.getReason());
+			} catch (StormResourceException e) {
+				log.error(e.getMessage() + ": " + e.getReason());
 			}
 		}
 		return childResource;
@@ -109,12 +106,15 @@ public class StormDirectoryResource extends StormResource implements MakeCollect
 		try {
 			Collection<SurlInfo> children = StormResourceHelper.doLsDetailed(this, Recursion.NONE).get(0).getSubpathInfo();
 			for (SurlInfo entry : children) {
-				
-				StormResource resource = getFactory().resolveFile(entry);
-				if (resource != null) {
-					list.add(resource);
+				if (entry.getStatus().getStatusCode().equals(TStatusCode.SRM_INVALID_PATH) && entry.getStatus().getStatusCode().equals(TStatusCode.SRM_FAILURE)) {
+					StormResource resource = getFactory().resolveFile(entry);
+					if (resource != null) {
+						list.add(resource);
+					} else {
+						log.error("Couldnt resolve file {}", entry.getStfn());
+					}
 				} else {
-					log.error("Couldnt resolve file {}", entry.getStfn());
+					log.warn(entry.getStfn() + " status is " + entry.getStatus().getStatusCode().getValue());
 				}
 			}
 		} catch (RuntimeApiException e) {

@@ -17,8 +17,6 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
-import java.util.Collection;
-import java.util.LinkedList;
 
 import io.milton.http.exceptions.BadRequestException;
 import io.milton.http.exceptions.ConflictException;
@@ -187,8 +185,8 @@ public class StormResourceHelper {
 		return source;
 	}
 
-	private static Collection<SurlInfo> filterLs(Collection<SurlInfo> collection) {
-		Collection<SurlInfo> filteredOutput = new LinkedList<SurlInfo>();
+	private static ArrayList<SurlInfo> filterLs(ArrayList<SurlInfo> collection) {
+		ArrayList<SurlInfo> filteredOutput = new ArrayList<SurlInfo>();
 		for (SurlInfo info : collection) {
 			if (!(info.getStatus().getStatusCode().equals(TStatusCode.SRM_INVALID_PATH) || (info.getStatus().getStatusCode().equals(TStatusCode.SRM_FAILURE)))) {
 				filteredOutput.add(info);
@@ -211,7 +209,7 @@ public class StormResourceHelper {
 		log.debug("Called doLsDetailed()");
 		LsOutputData output = StormBackendApi.lsDetailed(source.getFactory().getBackendApi(), source.getSurl().asString(), user,
 				new RecursionLevel(recursion));
-		return (ArrayList<SurlInfo>) filterLs(output.getInfos());
+		return filterLs((ArrayList<SurlInfo>) output.getInfos());
 	}
 
 	public static ArrayList<SurlInfo> doLs(StormResource source) throws RuntimeApiException, StormResourceException {
@@ -222,7 +220,7 @@ public class StormResourceHelper {
 	public static ArrayList<SurlInfo> doLs(StormResource source, UserCredentials user) throws RuntimeApiException, StormResourceException {
 		log.debug("Called doLs()");
 		LsOutputData output = StormBackendApi.ls(source.getFactory().getBackendApi(), source.getSurl().asString(), user);
-		return (ArrayList<SurlInfo>) filterLs(output.getInfos());
+		return filterLs((ArrayList<SurlInfo>) output.getInfos());
 	}
 
 	public static PingOutputData doPing(String stormBackendHostname, int stormBackendPort) throws RuntimeApiException {
@@ -324,20 +322,12 @@ public class StormResourceHelper {
 		return StormBackendApi.prepareToPutStatus(source.getFactory().getBackendApi(), source.getSurl().asString(), user);
 	}
 	
-	public static LsOutputData doLs(StormResourceFactory factory, File file) {
+	public static ArrayList<SurlInfo> doLs(StormResourceFactory factory, File file) throws RuntimeApiException, StormResourceException {
 		log.debug("Called doLs(factory,file)");
 		Surl surl = new Surl(file);
 		HttpHelper httpHelper = new HttpHelper(MiltonServlet.request(), MiltonServlet.response());
-		LsOutputData output = null;
-		try {
-			output = StormBackendApi.ls(factory.getBackendApi(), surl.asString(), httpHelper.getUser());
-		} catch (RuntimeApiException e) {
-			log.error(e.getMessage() + ": " + e.getReason());
-			return null;
-		} catch (StormResourceException e) {
-			log.debug(e.getMessage() + " " + e.getReason());
-		}
-		return new LsOutputData(output.getStatus(), (LinkedList<SurlInfo>) filterLs(output.getInfos()), output.getToken());
+		LsOutputData output = StormBackendApi.ls(factory.getBackendApi(), surl.asString(), httpHelper.getUser());
+		return filterLs((ArrayList<SurlInfo>) output.getInfos());
 	}
 
 }
