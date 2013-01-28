@@ -18,6 +18,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.LinkedList;
 
 import io.milton.http.exceptions.BadRequestException;
 import io.milton.http.exceptions.ConflictException;
@@ -187,7 +188,7 @@ public class StormResourceHelper {
 	}
 
 	private static Collection<SurlInfo> filterLs(Collection<SurlInfo> collection) {
-		ArrayList<SurlInfo> filteredOutput = new ArrayList<SurlInfo>();
+		Collection<SurlInfo> filteredOutput = new LinkedList<SurlInfo>();
 		for (SurlInfo info : collection) {
 			if (!(info.getStatus().getStatusCode().equals(TStatusCode.SRM_INVALID_PATH) || (info.getStatus().getStatusCode().equals(TStatusCode.SRM_FAILURE)))) {
 				filteredOutput.add(info);
@@ -336,7 +337,7 @@ public class StormResourceHelper {
 		} catch (StormResourceException e) {
 			log.debug(e.getMessage() + " " + e.getReason());
 		}
-		return new LsOutputData(output.getStatus(), filterLs(output.getInfos()));
+		return new LsOutputData(output.getStatus(), (LinkedList<SurlInfo>) filterLs(output.getInfos()), output.getToken());
 	}
 
 }
