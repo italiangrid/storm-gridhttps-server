@@ -100,6 +100,8 @@ public final class StormResourceFactory implements Initable, ResourceFactory {
 				log.debug("real path: " + fsPath);
 				File requested = new File(getRoot(), fsPath);
 				r = resolveFile(host, requested, currentSA);
+			} else {
+				log.warn("Unable to identify a StorageArea that matches: " + uriPath);
 			}
 		} else {
 			log.warn("Unable to get a non-local resource!");
@@ -140,19 +142,7 @@ public final class StormResourceFactory implements Initable, ResourceFactory {
 		}
 		return r;
 	}
-
-	// public File resolvePath(File root, String url) {
-	// log.debug("resolve path url: " + url);
-	// Path path = Path.path(url);
-	// File f = root;
-	// for (String s : path.getParts()) {
-	// f = new File(f, s);
-	// }
-	// log.debug("resolve path return file name: " + f.getName());
-	// log.debug("resolve path return file path: " + f.getPath());
-	// return f;
-	// }
-
+	
 	public String getRealm(String host) {
 		return securityManager.getRealm(host);
 	}

@@ -17,6 +17,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Collection;
 
 import io.milton.http.exceptions.BadRequestException;
 import io.milton.http.exceptions.ConflictException;
@@ -33,6 +34,7 @@ import it.grid.storm.gridhttps.webapp.webdav.factory.exceptions.StormResourceExc
 import it.grid.storm.srm.types.Recursion;
 import it.grid.storm.srm.types.RecursionLevel;
 import it.grid.storm.srm.types.TRequestToken;
+import it.grid.storm.srm.types.TStatusCode;
 import it.grid.storm.xmlrpc.BackendApi;
 import it.grid.storm.xmlrpc.outputdata.FileTransferOutputData;
 import it.grid.storm.xmlrpc.outputdata.LsOutputData;
@@ -184,10 +186,23 @@ public class StormResourceHelper {
 		return source;
 	}
 
+	private static Collection<SurlInfo> filterLs(Collection<SurlInfo> collection) {
+		ArrayList<SurlInfo> filteredOutput = new ArrayList<SurlInfo>();
+		for (SurlInfo info : collection) {
+			if (!(info.getStatus().getStatusCode().equals(TStatusCode.SRM_INVALID_PATH) || (info.getStatus().getStatusCode().equals(TStatusCode.SRM_FAILURE)))) {
+				filteredOutput.add(info);
+			} else {
+				log.warn(info.getStfn() + " status code is: " + info.getStatus().getStatusCode().getValue());
+			}
+		}
+		return filteredOutput;
+	}
+	
 	public static ArrayList<SurlInfo> doLsDetailed(StormResource source, Recursion recursion) throws RuntimeApiException,
 			StormResourceException {
 		HttpHelper httpHelper = new HttpHelper(MiltonServlet.request(), MiltonServlet.response());
 		return doLsDetailed(source, recursion, httpHelper.getUser());
+		
 	}
 
 	public static ArrayList<SurlInfo> doLsDetailed(StormResource source, Recursion recursion, UserCredentials user)
@@ -195,7 +210,7 @@ public class StormResourceHelper {
 		log.debug("Called doLsDetailed()");
 		LsOutputData output = StormBackendApi.lsDetailed(source.getFactory().getBackendApi(), source.getSurl().asString(), user,
 				new RecursionLevel(recursion));
-		return (ArrayList<SurlInfo>) output.getInfos();
+		return (ArrayList<SurlInfo>) filterLs(output.getInfos());
 	}
 
 	public static ArrayList<SurlInfo> doLs(StormResource source) throws RuntimeApiException, StormResourceException {
@@ -206,7 +221,7 @@ public class StormResourceHelper {
 	public static ArrayList<SurlInfo> doLs(StormResource source, UserCredentials user) throws RuntimeApiException, StormResourceException {
 		log.debug("Called doLs()");
 		LsOutputData output = StormBackendApi.ls(source.getFactory().getBackendApi(), source.getSurl().asString(), user);
-		return (ArrayList<SurlInfo>) output.getInfos();
+		return (ArrayList<SurlInfo>) filterLs(output.getInfos());
 	}
 
 	public static PingOutputData doPing(String stormBackendHostname, int stormBackendPort) throws RuntimeApiException {
@@ -308,22 +323,8 @@ public class StormResourceHelper {
 		return StormBackendApi.prepareToPutStatus(source.getFactory().getBackendApi(), source.getSurl().asString(), user);
 	}
 	
-	public static boolean exists(StormResource resource) {
-		log.debug("Called exists(StormResource)");
-		return exists(resource.getFactory(), resource.getFile());
-	}
-	
-	public static boolean exists(StormResourceFactory factory, File file) {
-		log.debug("Called exists(File)");
-		LsOutputData output = doLs(factory, file);
-		if (output != null) {
-			return output.isSuccess();
-		}
-		return false;
-	}
-	
 	public static LsOutputData doLs(StormResourceFactory factory, File file) {
-		log.debug("Called exists(File)");
+		log.debug("Called doLs(factory,file)");
 		Surl surl = new Surl(file);
 		HttpHelper httpHelper = new HttpHelper(MiltonServlet.request(), MiltonServlet.response());
 		LsOutputData output = null;
@@ -335,7 +336,7 @@ public class StormResourceHelper {
 		} catch (StormResourceException e) {
 			log.debug(e.getMessage() + " " + e.getReason());
 		}
-		return output;
+		return new LsOutputData(output.getStatus(), filterLs(output.getInfos()));
 	}
 
 }

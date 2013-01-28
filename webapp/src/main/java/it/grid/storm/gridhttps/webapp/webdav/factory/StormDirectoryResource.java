@@ -24,6 +24,7 @@ import it.grid.storm.gridhttps.webapp.webdav.factory.exceptions.RuntimeApiExcept
 import it.grid.storm.gridhttps.webapp.webdav.factory.exceptions.StormResourceException;
 import it.grid.storm.gridhttps.webapp.webdav.factory.html.StormHtmlFolderPage;
 import it.grid.storm.srm.types.Recursion;
+import it.grid.storm.srm.types.TStatusCode;
 import it.grid.storm.storagearea.StorageArea;
 import it.grid.storm.xmlrpc.outputdata.LsOutputData;
 import it.grid.storm.xmlrpc.outputdata.LsOutputData.SurlInfo;
@@ -75,8 +76,19 @@ public class StormDirectoryResource extends StormResource implements MakeCollect
 		StormResource childResource = this.getFactory().resolveFile(this.getHost(), fsDest, this.getStorageArea());
 		if (childResource == null) {
 			LsOutputData info = StormResourceHelper.doLs(getFactory(), fsDest);
-			if (info != null && info.isSuccess()) {
-				return getFactory().resolveFile(((ArrayList<SurlInfo>) info.getInfos()).get(0));
+			if (info != null) {
+				if (info.isSuccess()) {
+					SurlInfo detail = ((ArrayList<SurlInfo>) info.getInfos()).get(0);
+					if (detail.getStatus().getStatusCode().equals(TStatusCode.SRM_INVALID_PATH) && detail.getStatus().getStatusCode().equals(TStatusCode.SRM_FAILURE)) {
+						return getFactory().resolveFile(detail);
+					} else {
+						log.warn(detail.getStfn() + " status is " + detail.getStatus().getStatusCode().getValue());
+					}
+				} else {
+					log.warn("get-child '" + name + "' ls request status is " + info.getStatus().getStatusCode().getValue());
+				}
+			} else {
+				log.warn("surl-info is null");
 			}
 		}
 		return childResource;
@@ -97,6 +109,7 @@ public class StormDirectoryResource extends StormResource implements MakeCollect
 		try {
 			Collection<SurlInfo> children = StormResourceHelper.doLsDetailed(this, Recursion.NONE).get(0).getSubpathInfo();
 			for (SurlInfo entry : children) {
+				
 				StormResource resource = getFactory().resolveFile(entry);
 				if (resource != null) {
 					list.add(resource);
