@@ -77,7 +77,7 @@ public class StormDirectoryResource extends StormResource implements MakeCollect
 			SurlInfo detail;
 			try {
 				detail = StormResourceHelper.doLs(getFactory(), fsDest).get(0);
-				if (detail.getStatus().getStatusCode().equals(TStatusCode.SRM_INVALID_PATH) && detail.getStatus().getStatusCode().equals(TStatusCode.SRM_FAILURE)) {
+				if (!(detail.getStatus().getStatusCode().equals(TStatusCode.SRM_INVALID_PATH) && detail.getStatus().getStatusCode().equals(TStatusCode.SRM_FAILURE))) {
 					return getFactory().resolveFile(detail);
 				} else {
 					log.warn(detail.getStfn() + " status is " + detail.getStatus().getStatusCode().getValue());
@@ -106,7 +106,7 @@ public class StormDirectoryResource extends StormResource implements MakeCollect
 		try {
 			Collection<SurlInfo> children = StormResourceHelper.doLsDetailed(this, Recursion.NONE).get(0).getSubpathInfo();
 			for (SurlInfo entry : children) {
-				if (entry.getStatus().getStatusCode().equals(TStatusCode.SRM_INVALID_PATH) && entry.getStatus().getStatusCode().equals(TStatusCode.SRM_FAILURE)) {
+				if (!(entry.getStatus().getStatusCode().equals(TStatusCode.SRM_INVALID_PATH) && entry.getStatus().getStatusCode().equals(TStatusCode.SRM_FAILURE))) {
 					StormResource resource = getFactory().resolveFile(entry);
 					if (resource != null) {
 						list.add(resource);
