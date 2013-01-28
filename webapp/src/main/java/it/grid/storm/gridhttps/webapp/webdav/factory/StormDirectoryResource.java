@@ -25,6 +25,7 @@ import it.grid.storm.gridhttps.webapp.webdav.factory.exceptions.StormResourceExc
 import it.grid.storm.gridhttps.webapp.webdav.factory.html.StormHtmlFolderPage;
 import it.grid.storm.srm.types.Recursion;
 import it.grid.storm.storagearea.StorageArea;
+import it.grid.storm.xmlrpc.outputdata.LsOutputData;
 import it.grid.storm.xmlrpc.outputdata.LsOutputData.SurlInfo;
 
 import java.io.File;
@@ -70,13 +71,23 @@ public class StormDirectoryResource extends StormResource implements MakeCollect
 
 	/* works like a find child : return null if not exists */
 	public Resource child(String name) {
-		List<? extends Resource> children = getChildren();
-		for (Resource r : children) {
-			if (((StormResource) r).getFile().getName().equals(name)) {
-				return r;
+		File fsDest = new File(this.getFile(), name);
+		StormResource childResource = this.getFactory().resolveFile(this.getHost(), fsDest, this.getStorageArea());
+		if (childResource == null) {
+			LsOutputData info = StormResourceHelper.doLs(getFactory(), fsDest);
+			if (info != null && info.isSuccess()) {
+				return getFactory().resolveFile(((ArrayList<SurlInfo>) info.getInfos()).get(0));
 			}
 		}
-		return null;
+		return childResource;
+		
+//		List<? extends Resource> children = getChildren();
+//		for (Resource r : children) {
+//			if (((StormResource) r).getFile().getName().equals(name)) {
+//				return r;
+//			}
+//		}
+//		return null;
 		// File fchild = new File(getFile(), name);
 		// return getFactory().resolveFile(getHost(), fchild, getStorageArea());
 	}

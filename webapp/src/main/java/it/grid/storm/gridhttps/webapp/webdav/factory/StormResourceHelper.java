@@ -307,5 +307,36 @@ public class StormResourceHelper {
 		log.debug("Called doPrepareToPutStatus()");
 		return StormBackendApi.prepareToPutStatus(source.getFactory().getBackendApi(), source.getSurl().asString(), user);
 	}
+	
+	public static boolean exists(StormResource resource) {
+		log.debug("Called exists(StormResource)");
+		return exists(resource.getFactory(), resource.getFile());
+	}
+	
+	public static boolean exists(StormResourceFactory factory, File file) {
+		log.debug("Called exists(File)");
+		LsOutputData output = doLs(factory, file);
+		if (output != null) {
+			return output.isSuccess();
+		}
+		return false;
+	}
+	
+	public static LsOutputData doLs(StormResourceFactory factory, File file) {
+		log.debug("Called exists(File)");
+		Surl surl = new Surl(file);
+		HttpHelper httpHelper = new HttpHelper(MiltonServlet.request(), MiltonServlet.response());
+		LsOutputData output;
+		try {
+			output = StormBackendApi.ls(factory.getBackendApi(), surl.asString(), httpHelper.getUser());
+		} catch (RuntimeApiException e) {
+			log.error(e.getMessage() + ": " + e.getReason());
+			return null;
+		} catch (StormResourceException e) {
+			log.error(e.getMessage() + ": " + e.getReason());
+			return null;
+		}
+		return output;
+	}
 
 }
