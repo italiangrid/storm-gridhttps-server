@@ -118,9 +118,9 @@ public class StormDirectoryResource extends StormResource implements MakeCollect
 				}
 			}
 		} catch (RuntimeApiException e) {
-			log.error(e.getMessage());
+			log.error(e.getMessage() + ": " + e.getReason());
 		} catch (StormResourceException e) {
-			log.error(e.getMessage());
+			log.error(e.getMessage() + ": " + e.getReason());
 		}
 		return list;
 	}
