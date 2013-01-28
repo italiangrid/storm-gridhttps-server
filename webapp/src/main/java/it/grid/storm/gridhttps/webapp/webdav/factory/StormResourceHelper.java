@@ -326,15 +326,14 @@ public class StormResourceHelper {
 		log.debug("Called exists(File)");
 		Surl surl = new Surl(file);
 		HttpHelper httpHelper = new HttpHelper(MiltonServlet.request(), MiltonServlet.response());
-		LsOutputData output;
+		LsOutputData output = null;
 		try {
 			output = StormBackendApi.ls(factory.getBackendApi(), surl.asString(), httpHelper.getUser());
 		} catch (RuntimeApiException e) {
 			log.error(e.getMessage() + ": " + e.getReason());
 			return null;
 		} catch (StormResourceException e) {
-			log.error(e.getMessage() + ": " + e.getReason());
-			return null;
+			log.debug(e.getMessage() + " " + e.getReason());
 		}
 		return output;
 	}
