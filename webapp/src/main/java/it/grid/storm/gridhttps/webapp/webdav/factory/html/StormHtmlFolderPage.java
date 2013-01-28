@@ -95,11 +95,14 @@ public class StormHtmlFolderPage extends HtmlPage {
 		SimpleDateFormat dateFormat = new SimpleDateFormat("EEE, d MMM yyyy HH:mm:ss");
 		DecimalFormat decimalFormat = new DecimalFormat("#.##");
 		for (SurlInfo entry : entries) {
-			openTableRow();
-			//name
-			openTableCol();
 			String name = entry.getStfn().split("/")[entry.getStfn().split("/").length - 1];
 			String path = buildHref(dirPath, name);
+			String size = entry.getSize() != null ? decimalFormat.format(entry.getSize().getSizeIn(SizeUnit.KILOBYTES)) + " KB" : "";
+			String modTime = entry.getModificationTime() != null ? dateFormat.format(entry.getModificationTime()) : "";
+			String checksumType = entry.getCheckSumType() == null ? "" : entry.getCheckSumType().toString();
+			String checksumValue = entry.getCheckSumValue() == null ? "" : entry.getCheckSumValue().toString();
+			openTableRow();
+			openTableCol();
 			if (entry.getType() == null) {
 				addImage(getUnknownIco());
 			} else if (entry.getType().equals(TFileType.DIRECTORY)) {
@@ -107,15 +110,9 @@ public class StormHtmlFolderPage extends HtmlPage {
 			}
 			addLink(name, path);
 			closeTableCol();	
-			//size
-			addTableCol(decimalFormat.format(entry.getSize().getSizeIn(SizeUnit.KILOBYTES)) + " KB");
-			//modified date
-			addTableCol(dateFormat.format(entry.getModificationTime()));
-			// checksum type
-			String checksumType = entry.getCheckSumType() == null ? "" : entry.getCheckSumType().toString();
+			addTableCol(size);
+			addTableCol(modTime);
 			addTableCol(checksumType);
-			// checksum value
-			String checksumValue = entry.getCheckSumValue() == null ? "" : entry.getCheckSumValue().toString();
 			addTableCol(checksumValue);
 			closeTableRow();
 		}		
