@@ -22,6 +22,7 @@ import it.grid.storm.gridhttps.webapp.contentservice.StormContentService;
 import it.grid.storm.gridhttps.webapp.webdav.factory.exceptions.RuntimeApiException;
 import it.grid.storm.gridhttps.webapp.webdav.factory.exceptions.StormResourceException;
 import it.grid.storm.srm.types.TFileType;
+import it.grid.storm.srm.types.TStatusCode;
 import it.grid.storm.storagearea.StorageArea;
 import it.grid.storm.storagearea.StorageAreaManager;
 import it.grid.storm.xmlrpc.ApiException;
@@ -127,21 +128,24 @@ public final class StormResourceFactory implements ResourceFactory {
 		if (surlInfo != null) {
 			StorageArea storageArea = StorageAreaManager.getMatchingSA(surlInfo.getStfn());
 			File file = new File(storageArea.getRealPath(surlInfo.getStfn()));
-			if (surlInfo.getType() != null) {
-				if (surlInfo.getType().equals(TFileType.DIRECTORY)) {
-					r = new StormDirectoryResource(this, file, storageArea);
+			if (!(surlInfo.getStatus().getStatusCode().equals(TStatusCode.SRM_INVALID_PATH) && surlInfo.getStatus().getStatusCode()
+					.equals(TStatusCode.SRM_FAILURE))) {
+				if (surlInfo.getType() != null) {
+					if (surlInfo.getType().equals(TFileType.DIRECTORY)) {
+						r = new StormDirectoryResource(this, file, storageArea);
+					} else {
+						r = new StormFileResource(this, file, storageArea);
+					}
 				} else {
-					r = new StormFileResource(this, file, storageArea);
+					log.warn("resource type is null!");
 				}
-			} else {
-				log.warn("resource type is null!");
 			}
 		} else {
 			log.warn("surl-info is null");
 		}
 		return r;
 	}
-	
+
 	public String getRealm(String host) {
 		return securityManager.getRealm(host);
 	}
