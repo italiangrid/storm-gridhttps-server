@@ -18,6 +18,7 @@ import it.grid.storm.gridhttps.webapp.data.StormResource;
 import it.grid.storm.gridhttps.webapp.data.StormResourceHelper;
 import it.grid.storm.gridhttps.webapp.data.exceptions.RuntimeApiException;
 import it.grid.storm.gridhttps.webapp.data.exceptions.StormRequestFailureException;
+import it.grid.storm.srm.types.Recursion;
 import it.grid.storm.srm.types.TFileType;
 import it.grid.storm.srm.types.TStatusCode;
 import it.grid.storm.storagearea.StorageArea;
@@ -167,7 +168,7 @@ public abstract class StormFactory implements ResourceFactory {
 	public StormResource resolveFile(String host, File file, StorageArea storageArea) {
 		SurlInfo detail;
 		try {
-			detail = StormResourceHelper.doLs(this.getBackendApi(), file).get(0);
+			detail = StormResourceHelper.doLsDetailed(this.getBackendApi(), file, Recursion.NONE).get(0);
 			if (!(detail.getStatus().getStatusCode().equals(TStatusCode.SRM_INVALID_PATH) && detail.getStatus().getStatusCode().equals(TStatusCode.SRM_FAILURE))) {
 				return resolveFile(detail);
 			} else {
