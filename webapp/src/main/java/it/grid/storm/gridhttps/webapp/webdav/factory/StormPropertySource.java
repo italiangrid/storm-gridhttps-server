@@ -25,6 +25,8 @@ import io.milton.http.exceptions.NotAuthorizedException;
 import io.milton.http.webdav.WebDavProtocol;
 import io.milton.property.PropertySource;
 import io.milton.resource.Resource;
+import it.grid.storm.gridhttps.webapp.data.StormFileResource;
+import it.grid.storm.gridhttps.webapp.data.StormResource;
 
 class StormPropertySource implements PropertySource {
 

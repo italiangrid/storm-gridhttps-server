@@ -17,8 +17,9 @@ import it.grid.storm.gridhttps.webapp.HttpHelper;
 import it.grid.storm.gridhttps.webapp.authorization.AuthorizationStatus;
 import it.grid.storm.gridhttps.webapp.authorization.UserCredentials;
 import it.grid.storm.gridhttps.webapp.authorization.methods.AbstractMethodAuthorization;
-import it.grid.storm.gridhttps.webapp.webdav.factory.StormResourceHelper;
-import it.grid.storm.gridhttps.webapp.webdav.factory.exceptions.RuntimeApiException;
+import it.grid.storm.gridhttps.webapp.data.StormResourceHelper;
+import it.grid.storm.gridhttps.webapp.data.exceptions.RuntimeApiException;
+import it.grid.storm.gridhttps.webapp.data.exceptions.StormRequestFailureException;
 import it.grid.storm.xmlrpc.outputdata.PingOutputData;
 
 import org.slf4j.Logger;
@@ -42,7 +43,9 @@ public class OptionsMethodAuthorization extends AbstractMethodAuthorization {
 			log.debug(output.getBeVersion());
 			log.debug(output.getVersionInfo());
 		} catch (RuntimeApiException e) {
-			log.error(e.getMessage());
+			log.error(e.getMessage() + ": " + e.getReason());
+		} catch (StormRequestFailureException e) {
+			log.error(e.getMessage() + ": " + e.getReason());
 		}
 		return AuthorizationStatus.AUTHORIZED();
 	}

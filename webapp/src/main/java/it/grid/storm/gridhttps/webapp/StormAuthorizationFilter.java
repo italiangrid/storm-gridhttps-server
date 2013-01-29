@@ -19,8 +19,9 @@ import it.grid.storm.gridhttps.webapp.authorization.StormAuthorizationUtils;
 import it.grid.storm.gridhttps.webapp.authorization.UserCredentials;
 import it.grid.storm.gridhttps.webapp.filetransfer.authorization.FileTransferAuthorizationFilter;
 import it.grid.storm.gridhttps.webapp.webdav.authorization.WebDAVAuthorizationFilter;
-import it.grid.storm.gridhttps.webapp.webdav.factory.StormResourceHelper;
-import it.grid.storm.gridhttps.webapp.webdav.factory.exceptions.RuntimeApiException;
+import it.grid.storm.gridhttps.webapp.data.StormResourceHelper;
+import it.grid.storm.gridhttps.webapp.data.exceptions.RuntimeApiException;
+import it.grid.storm.gridhttps.webapp.data.exceptions.StormRequestFailureException;
 import it.grid.storm.gridhttps.webapp.webdav.factory.html.StormHtmlRootPage;
 import it.grid.storm.storagearea.StorageArea;
 import it.grid.storm.storagearea.StorageAreaManager;
@@ -190,6 +191,8 @@ public class StormAuthorizationFilter implements Filter {
 			log.debug(output.getBeVersion());
 			log.debug(output.getVersionInfo());
 		} catch (RuntimeApiException e) {
+			log.error(e.getMessage());
+		} catch (StormRequestFailureException e) {
 			log.error(e.getMessage());
 		}
 	}

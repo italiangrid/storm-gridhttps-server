@@ -31,8 +31,9 @@ import io.milton.http.exceptions.ConflictException;
 import io.milton.http.exceptions.NotAuthorizedException;
 import io.milton.servlet.MiltonServlet;
 import it.grid.storm.gridhttps.webapp.HttpHelper;
-import it.grid.storm.gridhttps.webapp.webdav.factory.exceptions.RuntimeApiException;
-import it.grid.storm.gridhttps.webapp.webdav.factory.exceptions.StormResourceException;
+import it.grid.storm.gridhttps.webapp.data.exceptions.RuntimeApiException;
+import it.grid.storm.gridhttps.webapp.data.exceptions.StormRequestFailureException;
+import it.grid.storm.gridhttps.webapp.data.exceptions.StormResourceException;
 
 public class StormStandardFilter implements Filter {
 
@@ -63,6 +64,9 @@ public class StormStandardFilter implements Filter {
 				}
 			}
 		} catch (RuntimeApiException ex) {
+			log.error(ex.getReason().toString());
+			manager.getResponseHandler().respondServerError(request, response, ex.getReason().toString());
+		} catch (StormRequestFailureException ex) {
 			log.error(ex.getReason().toString());
 			manager.getResponseHandler().respondServerError(request, response, ex.getReason().toString());
 		} catch (StormResourceException ex) {

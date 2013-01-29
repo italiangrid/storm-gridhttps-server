@@ -10,12 +10,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package it.grid.storm.gridhttps.webapp.webdav.factory;
+package it.grid.storm.gridhttps.webapp.data;
 
 import io.milton.http.*;
 import io.milton.http.Request.Method;
 import io.milton.http.http11.auth.DigestResponse;
 import io.milton.resource.*;
+import it.grid.storm.gridhttps.webapp.data.StormFactory;
 import it.grid.storm.gridhttps.webapp.data.Surl;
 import it.grid.storm.storagearea.StorageArea;
 
@@ -29,17 +30,16 @@ import java.util.Date;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public abstract class StormResource implements Resource, MoveableResource, CopyableResource, DeletableResource, DigestResource {
+public abstract class StormResource implements Resource, DigestResource {
 
 	private static final Logger log = LoggerFactory.getLogger(StormResource.class);
 	private File file;
-	private StormResourceFactory factory;
+	private StormFactory factory;
 	private String host;
 	private Surl surl;
 	private StorageArea storageArea;
-//	String ssoPrefix;
 
-	public StormResource(String host, StormResourceFactory factory, File file, StorageArea storageArea) {
+	public StormResource(String host, StormFactory factory, File file, StorageArea storageArea) {
 		setHost(host);
 		setFile(file);
 		setFactory(factory);
@@ -51,7 +51,7 @@ public abstract class StormResource implements Resource, MoveableResource, Copya
 		this.host = host;
 	}
 	
-	protected void setFactory(StormResourceFactory factory) {
+	protected void setFactory(StormFactory factory) {
 		this.factory = factory;
 	}
 
@@ -75,7 +75,7 @@ public abstract class StormResource implements Resource, MoveableResource, Copya
 		return file;
 	}
 
-	public StormResourceFactory getFactory() {
+	public StormFactory getFactory() {
 		return factory;
 	}
 	
