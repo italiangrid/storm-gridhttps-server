@@ -17,6 +17,7 @@ import io.milton.http.exceptions.BadRequestException;
 import io.milton.http.exceptions.ConflictException;
 import io.milton.http.exceptions.NotAuthorizedException;
 import io.milton.resource.CollectionResource;
+import io.milton.resource.MakeCollectionableResource;
 import io.milton.resource.Resource;
 import it.grid.storm.gridhttps.webapp.data.StormFactory;
 import it.grid.storm.gridhttps.webapp.data.StormResourceHelper;
@@ -37,7 +38,7 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class StormDirectoryResource extends StormResource implements CollectionResource {
+public class StormDirectoryResource extends StormResource implements MakeCollectionableResource, CollectionResource {
 
 	private static final Logger log = LoggerFactory.getLogger(StormDirectoryResource.class);
 
