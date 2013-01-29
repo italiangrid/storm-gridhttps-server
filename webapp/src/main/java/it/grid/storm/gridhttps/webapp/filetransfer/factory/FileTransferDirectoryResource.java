@@ -18,7 +18,7 @@ import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class FileTransferDirectoryResource extends StormDirectoryResource implements PutableResource, PropFindableResource, GetableResource {
+public class FileTransferDirectoryResource extends StormDirectoryResource {
 
 	private static final Logger log = LoggerFactory.getLogger(FileTransferDirectoryResource.class);
 	
@@ -54,6 +54,16 @@ public class FileTransferDirectoryResource extends StormDirectoryResource implem
 
 	public Long getContentLength() {
 		return null;
+	}
+
+	@Override
+	public void copyTo(CollectionResource toCollection, String name) throws NotAuthorizedException, BadRequestException, ConflictException {
+		log.debug("DirectoryResource CopyTo DIRECTORY disabled for fileTransfer");
+	}
+
+	@Override
+	public void moveTo(CollectionResource rDest, String name) throws ConflictException, NotAuthorizedException, BadRequestException {
+		log.debug("DirectoryResource MoveTo DIRECTORY disabled for fileTransfer");
 	}
 
 }

@@ -13,9 +13,7 @@
 package it.grid.storm.gridhttps.webapp.webdav.factory;
 
 import it.grid.storm.gridhttps.webapp.Configuration;
-import it.grid.storm.gridhttps.webapp.data.StormDirectoryResource;
 import it.grid.storm.gridhttps.webapp.data.StormFactory;
-import it.grid.storm.gridhttps.webapp.data.StormFileResource;
 import it.grid.storm.gridhttps.webapp.data.StormResource;
 import it.grid.storm.storagearea.StorageArea;
 import it.grid.storm.xmlrpc.ApiException;
@@ -38,12 +36,12 @@ public final class StormResourceFactory extends StormFactory {
 
 	@Override
 	public StormResource getDirectoryResource(File directory, StorageArea storageArea) {
-		return new StormDirectoryResource(this, directory, storageArea);
+		return new WebdavDirectoryResource(this, directory, storageArea);
 	}
 
 	@Override
 	public StormResource getFileResource(File file, StorageArea storageArea) {
-		return new StormFileResource(this, file, storageArea);
+		return new WebdavFileResource(this, file, storageArea);
 	}
 
 }

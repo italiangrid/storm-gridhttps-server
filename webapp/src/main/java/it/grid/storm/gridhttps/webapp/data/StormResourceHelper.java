@@ -121,9 +121,9 @@ public class StormResourceHelper {
 	public static StormDirectoryResource doMkCol(StormDirectoryResource sourceDir, String name, UserCredentials user)
 			throws RuntimeApiException, StormRequestFailureException {
 		log.debug("Called doMkCol()");
-		StormDirectoryResource newDir = new StormDirectoryResource(sourceDir, name);
-		StormBackendApi.mkdir(sourceDir.getFactory().getBackendApi(), newDir.getSurl().asString(), user);
-		return newDir;
+		Surl newDir = new Surl(sourceDir.getSurl(), name);
+		StormBackendApi.mkdir(sourceDir.getFactory().getBackendApi(), newDir.asString(), user);
+		return new StormDirectoryResource(sourceDir, name);
 	}
 
 	public static StormFileResource doPut(StormDirectoryResource sourceDir, String name, InputStream in) throws RuntimeApiException, StormRequestFailureException, StormResourceException {
@@ -137,9 +137,8 @@ public class StormResourceHelper {
 			ArrayList<String> transferProtocols) throws RuntimeApiException, StormRequestFailureException, StormResourceException {
 		log.debug("Called doPut()");
 		File fsDest = new File(sourceDir.getFile(), name);
-		StormFileResource srmDest = new StormFileResource(sourceDir.getFactory(), fsDest, sourceDir.getStorageArea());
-		FileTransferOutputData outputPtp = StormBackendApi.prepareToPut(sourceDir.getFactory().getBackendApi(), srmDest.getSurl()
-				.asString(), user, transferProtocols);
+		Surl newFile = new Surl(sourceDir.getSurl(), name);
+		FileTransferOutputData outputPtp = StormBackendApi.prepareToPut(sourceDir.getFactory().getBackendApi(), newFile.asString(), user, transferProtocols);
 		// put
 		try {
 			sourceDir.getFactory().getContentService().setFileContent(fsDest, in);
@@ -152,8 +151,8 @@ public class StormResourceHelper {
 			abortRequest(sourceDir.getFactory().getBackendApi(), outputPtp.getToken(), user);
 			throw new StormResourceException("IOException!", e);
 		}
-		StormBackendApi.putDone(sourceDir.getFactory().getBackendApi(), srmDest.getSurl().asString(), outputPtp.getToken(), user);
-		return srmDest;
+		StormBackendApi.putDone(sourceDir.getFactory().getBackendApi(), newFile.asString(), outputPtp.getToken(), user);
+		return new StormFileResource(sourceDir, name);
 	}
 
 	public static StormFileResource doPutOverwrite(StormFileResource source, InputStream in) throws RuntimeApiException, StormRequestFailureException, StormResourceException {

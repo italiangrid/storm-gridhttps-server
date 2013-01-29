@@ -137,18 +137,12 @@ public class WebdavDirectoryResource extends StormDirectoryResource implements M
 
 	public void moveTo(CollectionResource newParent, String newName) throws NotAuthorizedException, ConflictException, BadRequestException {
 		log.debug("Called function for MOVE DIRECTORY");
-		if (newParent instanceof StormDirectoryResource) {
-			super.moveTo((StormDirectoryResource) newParent, newName);
-		} else
-			log.error("Directory Resource class " + newParent.getClass().getName() + " not supported!");
+		super.moveTo(newParent, newName);
 	}
 
 	public void copyTo(CollectionResource newParent, String newName) throws NotAuthorizedException, ConflictException, BadRequestException {
 		log.debug("Called function for COPY DIRECTORY");
-		if (newParent instanceof StormDirectoryResource) {
-			super.copyTo((StormDirectoryResource) newParent, newName);
-		} else
-			log.error("Directory Resource class " + newParent.getClass().getName() + " not supported!");
+		super.copyTo(newParent, newName);
 	}
 
 }

@@ -41,6 +41,10 @@ public class StormFileResource extends StormResource {
 		super(factory.getLocalhostname(), factory, file, storageArea);
 	}
 	
+	public StormFileResource(StormDirectoryResource parentDir, String childFileName) {
+		this(parentDir.getFactory(), new File(parentDir.getFile(), childFileName), parentDir.getStorageArea());
+	}
+	
 	private void loadSurlInfo() {
 		ArrayList<SurlInfo> info = null;
 		try {
