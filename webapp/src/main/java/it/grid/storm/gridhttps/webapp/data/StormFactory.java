@@ -50,6 +50,14 @@ public abstract class StormFactory implements ResourceFactory {
 		setLocalhostname(java.net.InetAddress.getLocalHost().getHostName());
 	}
 	
+	private boolean isRoot(String path) {
+		return isRoot(new File(path));
+	}
+	
+	private boolean isRoot(File file) {
+		return file.getAbsolutePath().equals(getRoot().getAbsolutePath());
+	}
+	
 	public File getRoot() {
 		return root;
 	}
@@ -130,14 +138,18 @@ public abstract class StormFactory implements ResourceFactory {
 		path = stripContext(path);
 		log.debug("getResource: host: " + hostNoPort + " - url:" + path);
 		if (isLocalResource(hostNoPort)) {
-			StorageArea currentSA = StorageAreaManager.getMatchingSA(path);
-			if (currentSA != null) {
-				String fsPath = currentSA.getRealPath(path);
-				log.debug("real path: " + fsPath);
-				File requested = new File(getRoot(), fsPath);
-				r = resolveFile(host, requested, currentSA);
+			if (!isRoot(path)) {
+				StorageArea currentSA = StorageAreaManager.getMatchingSA(path);
+				if (currentSA != null) {
+					String fsPath = currentSA.getRealPath(path);
+					log.debug("real path: " + fsPath);
+					File requested = new File(getRoot(), fsPath);
+					r = resolveFile(host, requested, currentSA);
+				} else {
+					log.warn("Unable to identify a StorageArea that matches: " + path);
+				}
 			} else {
-				log.warn("Unable to identify a StorageArea that matches: " + path);
+				log.debug("get root resource!");
 			}
 		} else {
 			log.warn("Unable to get a non-local resource!");
