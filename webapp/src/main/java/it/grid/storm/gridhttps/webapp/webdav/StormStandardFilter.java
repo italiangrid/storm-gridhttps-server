@@ -55,32 +55,32 @@ public class StormStandardFilter implements Filter {
 				if (log.isTraceEnabled()) {
 					log.trace("delegate to method handler: " + handler.getClass().getCanonicalName());
 				}
-				printCommand();
 				handler.process(manager, request, response);
 				if (response.getEntity() != null) {
 					manager.sendResponseEntity(response);
 				} else {
 					log.debug("No response entity to send to client");
 				}
+				printSuccessCommand();
 			}
 		} catch (RuntimeApiException ex) {
-			log.error(ex.getReason().toString());
+			printErrorCommand(ex.getMessage(), ex.getReason());
 			manager.getResponseHandler().respondServerError(request, response, ex.getReason().toString());
 		} catch (StormRequestFailureException ex) {
-			log.error(ex.getReason().toString());
+			printErrorCommand(ex.getMessage(), ex.getReason());
 			manager.getResponseHandler().respondServerError(request, response, ex.getReason().toString());
 		} catch (StormResourceException ex) {
-			log.error(ex.getReason().toString());
+			printErrorCommand(ex.getMessage(), ex.getReason());
 			String serverError = "<html><body><h1>Service Unavailable</h1><p>"+ex.getReason().toString()+"</p></body></html>";
 			sendResponse(response, Status.SC_SERVICE_UNAVAILABLE, serverError);
 		} catch (BadRequestException ex) {
-			log.warn("BadRequestException: " + ex.getReason().toString(), ex);
+			printErrorCommand(ex.getMessage(), ex.getReason());
 			manager.getResponseHandler().respondBadRequest(ex.getResource(), response, request);
 		} catch (ConflictException ex) {
-			log.warn("conflictException: ", ex);
+			printErrorCommand(ex.getMessage(), "The requested operation could not be performed because of prior state.");
 			manager.getResponseHandler().respondConflict(ex.getResource(), response, request, INTERNAL_SERVER_ERROR_HTML);
 		} catch (NotAuthorizedException ex) {
-			log.warn("NotAuthorizedException", ex);
+			printErrorCommand(ex.getMessage(), "The current user is not able to perform the requested operation.");
 			manager.getResponseHandler().respondUnauthorised(ex.getResource(), response, request);
 		} catch (Throwable e) {
 			// Looks like in some cases we can be left with a connection in an
@@ -89,14 +89,14 @@ public class StormStandardFilter implements Filter {
 			// header, so
 			// fall back on the udnerlying connection provider to manage the
 			// error
-			log.error("exception sending content", e);
+			printErrorCommand(e.getMessage(), "exception sending content");
 			response.sendError(Response.Status.SC_INTERNAL_SERVER_ERROR, INTERNAL_SERVER_ERROR_HTML);
 		} finally {
 			// manager.closeResponse(response);
 		}
 	}
 	
-	private void printCommand() {
+	private String getCommand() {
 		HttpHelper httpHelper = new HttpHelper(MiltonServlet.request(), MiltonServlet.response());
 		String msg = "";
 		msg += httpHelper.getRequestMethod();
@@ -104,7 +104,20 @@ public class StormStandardFilter implements Filter {
 		if (httpHelper.hasDestinationHeader()) {
 			msg += " to " + httpHelper.getDestinationURI().getPath();
 		}
-		log.info(msg);
+		return msg;
+	}
+	
+	private void printSuccessCommand() {
+		log.info(getCommand());
+	}
+	
+	private void printErrorCommand(String message, String reason) {
+		String msg = "";
+		if (message != null)
+			msg += message + " ";
+		if (reason != null)
+			msg += reason;
+		log.error(getCommand() + " has failed: " + msg);
 	}
 
 	private void sendResponse(Response response, Status status, final String htmlPage) {
