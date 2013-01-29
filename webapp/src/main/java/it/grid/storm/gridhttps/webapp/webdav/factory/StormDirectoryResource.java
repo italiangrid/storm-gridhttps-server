@@ -76,7 +76,7 @@ public class StormDirectoryResource extends StormResource implements MakeCollect
 		if (childResource == null) {
 			SurlInfo detail;
 			try {
-				detail = StormResourceHelper.doLs(getFactory(), fsDest).get(0);
+				detail = StormResourceHelper.doLs(getFactory().getBackendApi(), fsDest).get(0);
 				if (!(detail.getStatus().getStatusCode().equals(TStatusCode.SRM_INVALID_PATH) && detail.getStatus().getStatusCode().equals(TStatusCode.SRM_FAILURE))) {
 					return getFactory().resolveFile(detail);
 				} else {

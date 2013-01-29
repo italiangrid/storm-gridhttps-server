@@ -44,15 +44,15 @@ public class FileTransferAuthorizationFilter extends AuthorizationFilter {
 		doInitMethodMap();
 	}
 
-	public boolean isMethodAllowed(String requestMethod) {
+	private boolean isMethodAllowed(String requestMethod) {
 		return Arrays.asList(allowedMethods).contains(requestMethod);
 	}
 	
-	public boolean isProtocolAllowed(String protocol) {
+	private boolean isProtocolAllowed(String protocol) {
 		return Arrays.asList(getStorageArea().getProtocolAsStrArray()).contains(protocol);
 	}
 
-	public String stripContext() {
+	private String stripContext() {
 		return this.getHTTPHelper().getRequestURI().getPath().replaceFirst(getContextPath(), "");
 	}
 
@@ -81,11 +81,11 @@ public class FileTransferAuthorizationFilter extends AuthorizationFilter {
 		}
 	}
 	
-	public StorageArea getStorageArea() {
+	private StorageArea getStorageArea() {
 		return storageArea;
 	}
 	
-	public String getContextPath() {
+	private String getContextPath() {
 		return contextPath;
 	}
 
@@ -100,7 +100,7 @@ public class FileTransferAuthorizationFilter extends AuthorizationFilter {
 		METHODS_MAP.put("PUT", new PutMethodAuthorization(getHTTPHelper(), getStorageArea()));
 	}
 		
-	public AbstractMethodAuthorization getAuthorizationHandler() {
+	private AbstractMethodAuthorization getAuthorizationHandler() {
 		return METHODS_MAP.get(this.getHTTPHelper().getRequestMethod());
 	}
 	

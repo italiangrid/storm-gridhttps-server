@@ -8,8 +8,11 @@ import io.milton.http.exceptions.ConflictException;
 import io.milton.http.exceptions.NotAuthorizedException;
 import io.milton.http.fs.FileContentService;
 import io.milton.resource.*;
+import it.grid.storm.gridhttps.webapp.webdav.factory.StormResourceHelper;
 import it.grid.storm.gridhttps.webapp.webdav.factory.exceptions.RuntimeApiException;
 import it.grid.storm.gridhttps.webapp.webdav.factory.exceptions.StormResourceException;
+import it.grid.storm.srm.types.Recursion;
+import it.grid.storm.srm.types.TStatusCode;
 import it.grid.storm.storagearea.StorageArea;
 import it.grid.storm.xmlrpc.outputdata.LsOutputData.SurlInfo;
 
@@ -18,6 +21,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import org.slf4j.Logger;
@@ -29,8 +33,8 @@ public class DirectoryResource extends FileSystemResource implements PutableReso
 
 	final FileContentService contentService;
 	
-	public DirectoryResource(String host, FileSystemResourceFactory factory, File dir, FileContentService contentService, StorageArea storageArea) {
-		super(host, factory, dir, storageArea);
+	public DirectoryResource(FileSystemResourceFactory factory, File dir, FileContentService contentService, StorageArea storageArea) {
+		super(factory.getLocalhostname(), factory, dir, storageArea);
 		this.contentService = contentService;
 		if (!dir.exists()) {
 			throw new IllegalArgumentException("Directory does not exist: " + dir.getAbsolutePath());
@@ -41,29 +45,66 @@ public class DirectoryResource extends FileSystemResource implements PutableReso
 	}
 
 	/* works like a find child : return null if not exists */
-	public Resource child(String name) {
-		File fchild = new File(getFile(), name);
-		return getFactory().resolveFile(getHost(), fchild, getStorageArea());
+	public Resource child(String name) {		
+		File fsDest = new File(this.getFile(), name);
+		FileSystemResource childResource = this.getFactory().resolveFile(this.getHost(), fsDest, this.getStorageArea());
+		if (childResource == null) {
+			SurlInfo detail;
+			try {
+				detail = StormResourceHelper.doLs(getFactory().getBackend(), fsDest).get(0);
+				if (!(detail.getStatus().getStatusCode().equals(TStatusCode.SRM_INVALID_PATH) && detail.getStatus().getStatusCode().equals(TStatusCode.SRM_FAILURE))) {
+					return getFactory().resolveFile(detail);
+				} else {
+					log.warn(detail.getStfn() + " status is " + detail.getStatus().getStatusCode().getValue());
+				}
+			} catch (RuntimeApiException e) {
+				log.error(e.getMessage() + ": " + e.getReason());
+			} catch (StormResourceException e) {
+				log.debug(e.getReason());
+			}
+		}
+		return childResource;
 	}
 
 	public List<? extends Resource> getChildren() {
 		ArrayList<FileSystemResource> list = new ArrayList<FileSystemResource>();
 		try {
-			for (SurlInfo entry : FileSystemResourceHelper.doLs(this).get(0).getSubpathInfo()) {
-				File fchild = new File(getStorageArea().getRealPath(entry.getStfn()));
-				FileSystemResource resource = getFactory().resolveFile(getHost(), fchild, getStorageArea());
-				if (resource != null) {
-					list.add(resource);
+			Collection<SurlInfo> children = StormResourceHelper.doLsDetailed(this.getFactory().getBackend(), this.getFile(), Recursion.NONE).get(0).getSubpathInfo();
+			for (SurlInfo entry : children) {
+				if (!(entry.getStatus().getStatusCode().equals(TStatusCode.SRM_INVALID_PATH) && entry.getStatus().getStatusCode().equals(TStatusCode.SRM_FAILURE))) {
+					FileSystemResource resource = getFactory().resolveFile(entry);
+					if (resource != null) {
+						list.add(resource);
+					} else {
+						log.error("Couldnt resolve file {}", entry.getStfn());
+					}
 				} else {
-					log.error("Couldnt resolve file {}", fchild.getAbsolutePath());
+					log.warn(entry.getStfn() + " status is " + entry.getStatus().getStatusCode().getValue());
 				}
 			}
 		} catch (RuntimeApiException e) {
-			log.error(e.getMessage());
+			log.error(e.getMessage() + ": " + e.getReason());
 		} catch (StormResourceException e) {
-			log.error(e.getMessage());
+			log.error(e.getMessage() + ": " + e.getReason());
 		}
-		return list;
+		return list;	
+//		ArrayList<FileSystemResource> list = new ArrayList<FileSystemResource>();
+//		try {
+//			for (SurlInfo entry : FileSystemResourceHelper.doLs(this).get(0).getSubpathInfo()) {
+//				File fchild = new File(getStorageArea().getRealPath(entry.getStfn()));
+//				FileSystemResource resource = getFactory().resolveFile(getHost(), fchild, getStorageArea());
+//				if (resource != null) {
+//					list.add(resource);
+//				} else {
+//					log.error("Couldnt resolve file {}", fchild.getAbsolutePath());
+//				}
+//			}
+//		} catch (RuntimeApiException e) {
+//			log.error(e.getMessage());
+//		} catch (StormResourceException e) {
+//			log.error(e.getMessage());
+//		}
+//		return list;
 	}
 	
 	/**

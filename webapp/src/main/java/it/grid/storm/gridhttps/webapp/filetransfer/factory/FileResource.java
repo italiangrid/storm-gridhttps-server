@@ -38,8 +38,8 @@ public class FileResource extends FileSystemResource implements GetableResource,
 
 	final FileContentService contentService;
 
-	public FileResource(String host, FileSystemResourceFactory fileSystemResourceFactory, File file, FileContentService contentService, StorageArea storageArea) {
-		super(host, fileSystemResourceFactory, file, storageArea);
+	public FileResource(FileSystemResourceFactory factory, File file, FileContentService contentService, StorageArea storageArea) {
+		super(factory.getLocalhostname(), factory, file, storageArea);
 		this.contentService = contentService;
 	}
 

@@ -22,9 +22,11 @@ import it.grid.storm.gridhttps.webapp.Configuration;
 import it.grid.storm.gridhttps.webapp.backendApi.StormBackendApi;
 import it.grid.storm.gridhttps.webapp.contentservice.StormContentService;
 import it.grid.storm.gridhttps.webapp.webdav.factory.exceptions.RuntimeApiException;
+import it.grid.storm.srm.types.TFileType;
 import it.grid.storm.storagearea.StorageArea;
 import it.grid.storm.storagearea.StorageAreaManager;
 import it.grid.storm.xmlrpc.BackendApi;
+import it.grid.storm.xmlrpc.outputdata.LsOutputData.SurlInfo;
 
 import java.io.File;
 import java.net.UnknownHostException;
@@ -97,6 +99,8 @@ public final class FileSystemResourceFactory implements ResourceFactory {
 				log.debug("real-path: " + realPath);
 				File requested = resolvePath(root, realPath);
 				return resolveFile(host, requested, currentSA);
+			} else {
+				log.warn("Unable to identify a StorageArea that matches: " + stripped);
 			}
 		}
 		return null;
@@ -106,9 +110,9 @@ public final class FileSystemResourceFactory implements ResourceFactory {
 		FileSystemResource resource = null;
 		if (file.exists()) {
 			if (file.isDirectory()) {
-				resource = new DirectoryResource(host, this, file, contentService, storageArea);
+				resource = new DirectoryResource(this, file, contentService, storageArea);
 			} else {
-				resource = new FileResource(host, this, file, contentService, storageArea);
+				resource = new FileResource(this, file, contentService, storageArea);
 			}
 			resource.ssoPrefix = ssoPrefix;
 		} else {
@@ -127,6 +131,26 @@ public final class FileSystemResourceFactory implements ResourceFactory {
 		log.debug("resolve path return file name: " + f.getName());
 		log.debug("resolve path return file path: " + f.getPath());
 		return f;
+	}
+	
+	public FileSystemResource resolveFile(SurlInfo surlInfo) {
+		FileSystemResource r = null;
+		if (surlInfo != null) {
+			StorageArea storageArea = StorageAreaManager.getMatchingSA(surlInfo.getStfn());
+			File file = new File(storageArea.getRealPath(surlInfo.getStfn()));
+			if (surlInfo.getType() != null) {
+				if (surlInfo.getType().equals(TFileType.DIRECTORY)) {
+					r = new DirectoryResource(this, file, contentService, storageArea);
+				} else {
+					r = new FileResource(this, file, contentService, storageArea);
+				}
+			} else {
+				log.warn("resource type is null!");
+			}
+		} else {
+			log.warn("surl-info is null");
+		}
+		return r;
 	}
 
 	public String getRealm(String host) {
