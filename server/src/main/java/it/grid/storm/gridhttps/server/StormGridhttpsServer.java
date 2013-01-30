@@ -23,6 +23,7 @@ import it.grid.storm.gridhttps.server.utils.Zip;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -108,6 +109,14 @@ public class StormGridhttpsServer {
 		initMapperServlet();
 	}
 	
+	private String getMappingContextPath() {
+		return File.separator + gridhttpsInfo.getMapperServlet().getContextPath() + File.separator + gridhttpsInfo.getMapperServlet().getContextSpec();
+	}
+	
+	private String getFileTransferContextPath() {
+		return File.separator + gridhttpsInfo.getFiletransferContextPath();
+	}
+	
 	private void initWebapp() throws ServerException {
 		webapp = new WebApp(new File(gridhttpsInfo.getWebappsDirectory(), DefaultConfiguration.SERVER_PATH_TO_WEBAPP));
 		if (webapp != null) {
@@ -118,7 +127,9 @@ public class StormGridhttpsServer {
 					} catch (IOException e) {
 						throw new ServerException(e);
 					}
-					configureDescriptor(webapp.getDescriptorFile(), generateParams());
+					String[] davExcluded = { "/index.jsp", getFileTransferContextPath(), getMappingContextPath() };
+					String[] ftExcluded = { "/index.jsp", getMappingContextPath() }; 
+					configureDescriptor(webapp.getDescriptorFile(), generateParams(), davExcluded, ftExcluded);
 					contextHandlerCollection.addHandler(getWebappContext());
 				} else {
 					log.error("Error on creation of '" + webapp.getResourceBase() + "' directory!");
@@ -203,12 +214,19 @@ public class StormGridhttpsServer {
 		contextHandlerCollection.removeHandler(getWebappContext());
 	}
 
-	private void configureDescriptor(File descriptorFile, Map<String, String> params) throws ServerException {
-		String query = "/j2ee:web-app/j2ee:filter[@id='stormAuthorizationFilter']/j2ee:init-param/j2ee:param-value";
+	private void configureDescriptor(File descriptorFile, Map<String, String> params, String[] davExcluded, String[] ftExcluded) throws ServerException {
+		String query1 = "/j2ee:web-app/j2ee:filter[@id='stormAuthorizationFilter']/j2ee:init-param/j2ee:param-value";
+		String query2 = "/j2ee:web-app/j2ee:filter[@id='webdavSpringMiltonFilter']/j2ee:init-param/j2ee:param-value";
+		String query3 = "/j2ee:web-app/j2ee:filter[@id='fileTransferSpringMiltonFilter']/j2ee:init-param/j2ee:param-value";
 		try {
 			XML doc = new XML(descriptorFile);
-			NodeList initParams = doc.getNodes(query, new WebNamespaceContext(null));
-			((Element) initParams.item(0)).setTextContent(JSON.toString(params));
+			NodeList nodes;
+			nodes = doc.getNodes(query1, new WebNamespaceContext(null));
+			((Element) nodes.item(0)).setTextContent(JSON.toString(params));
+			nodes = doc.getNodes(query2, new WebNamespaceContext(null));
+			((Element) nodes.item(0)).setTextContent(Arrays.toString(davExcluded));
+			nodes = doc.getNodes(query3, new WebNamespaceContext(null));
+			((Element) nodes.item(0)).setTextContent(Arrays.toString(ftExcluded));
 			doc.save();
 		} catch (Exception e) {
 			throw new ServerException(e);

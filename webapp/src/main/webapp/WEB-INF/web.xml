@@ -13,7 +13,7 @@
 		</init-param>
 	</filter>
 
-	<filter>
+	<filter id="webdavSpringMiltonFilter">
 		<filter-name>webdavSpringMiltonFilter</filter-name>
 		<filter-class>it.grid.storm.gridhttps.webapp.webdav.WebdavSpringMiltonFilter</filter-class>
 		<init-param>
@@ -26,7 +26,7 @@
 		</init-param>
 	</filter>
 
-	<filter>
+	<filter id="fileTransferSpringMiltonFilter">
 		<filter-name>fileTransferSpringMiltonFilter</filter-name>
 		<filter-class>it.grid.storm.gridhttps.webapp.filetransfer.FileTransferSpringMiltonFilter</filter-class>
 		<init-param>
