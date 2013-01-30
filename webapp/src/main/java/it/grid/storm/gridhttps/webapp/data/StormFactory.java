@@ -189,7 +189,7 @@ public abstract class StormFactory implements ResourceFactory {
 		if (surlInfo != null) {
 			StorageArea storageArea = StorageAreaManager.getMatchingSA(surlInfo.getStfn());
 			File file = new File(storageArea.getRealPath(surlInfo.getStfn()));
-			if (!(surlInfo.getStatus().getStatusCode().equals(TStatusCode.SRM_INVALID_PATH) && surlInfo.getStatus().getStatusCode()
+			if (!(surlInfo.getStatus().getStatusCode().equals(TStatusCode.SRM_INVALID_PATH) || surlInfo.getStatus().getStatusCode()
 					.equals(TStatusCode.SRM_FAILURE))) {
 				if (surlInfo.getType() != null) {
 					if (surlInfo.getType().equals(TFileType.DIRECTORY)) {
