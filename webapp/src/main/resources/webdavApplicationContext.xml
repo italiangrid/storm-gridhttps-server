@@ -7,7 +7,7 @@
 
 	<bean id="webdav-extra.property" class="it.grid.storm.gridhttps.webapp.webdav.factory.StormPropertySource" />
 
-	<bean id="webdav-mainfilter" class="it.grid.storm.gridhttps.webapp.webdav.StormStandardFilter" />
+	<bean id="webdav-mainfilter" class="it.grid.storm.gridhttps.webapp.StormStandardFilter" />
 
 	<bean id="milton.http.manager" class="io.milton.config.HttpManagerBuilder">
 		<property name="mainResourceFactory" ref="resource.factory" />

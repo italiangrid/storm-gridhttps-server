@@ -22,6 +22,7 @@ import io.milton.http.HttpManager;
 import io.milton.http.Request;
 import io.milton.http.Response;
 import io.milton.http.Response.Status;
+import io.milton.http.entity.ByteArrayEntity;
 import io.milton.http.exceptions.BadRequestException;
 
 import org.slf4j.Logger;
@@ -89,8 +90,15 @@ public class FileTransferStandardFilter implements Filter {
 			// header, so
 			// fall back on the udnerlying connection provider to manage the
 			// error
-			printErrorCommand(e.getMessage(), "exception sending content");
-			response.sendError(Response.Status.SC_INTERNAL_SERVER_ERROR, INTERNAL_SERVER_ERROR_HTML);
+			int contentLength = Integer.valueOf(response.getHeaders().get("Content-Length"));
+			int entityDimension = ((ByteArrayEntity) response.getEntity()).getArr().length;
+			if (contentLength != entityDimension) {
+				log.warn("Response header Content-Length (" + entityDimension + ") different from entity byte dimension (" + entityDimension + ")");
+				response.getHeaders().put("Content-Length", "" + entityDimension);
+			} else {
+				response.sendError(Response.Status.SC_INTERNAL_SERVER_ERROR, INTERNAL_SERVER_ERROR_HTML);
+				printErrorCommand(e.getMessage(), "exception sending content");
+			}
 		} finally {
 			// manager.closeResponse(response);
 			printExitStatus(request, response);
