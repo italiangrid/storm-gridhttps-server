@@ -22,6 +22,7 @@ import java.security.cert.X509Certificate;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.italiangrid.utils.voms.VOMSSecurityContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -166,11 +167,13 @@ public class HttpHelper {
 		}
 	}
 	
+	/* USER CREDENTIALS */
+	
 	public boolean hasUser() {
 		return getRequest().getAttribute("User") != null;
 	}
 	
-	private void setUser(UserCredentials user) {
+	public void setUser(UserCredentials user) {
 		getRequest().setAttribute("User", user);
 	}
 	
@@ -180,5 +183,26 @@ public class HttpHelper {
 		}
 		return (UserCredentials) getRequest().getAttribute("User");
 	}
+	
+	/* VOMS CONTEXT */
+	
+	public boolean hasVOMSSecurityContext() {
+		return getRequest().getAttribute("VOMSSecurityContext") != null;
+	}
+	
+	public void setVOMSSecurityContext(VOMSSecurityContext currentContext) {
+		getRequest().setAttribute("VOMSSecurityContext", currentContext);
+	}
+	
+	public VOMSSecurityContext getVOMSSecurityContext() {
+		if (!hasVOMSSecurityContext()) {
+			VOMSSecurityContext.clearCurrentContext();
+			VOMSSecurityContext currentContext = new VOMSSecurityContext();
+			VOMSSecurityContext.setCurrentContext(currentContext);
+			getRequest().setAttribute("VOMSSecurityContext", currentContext);
+		}
+		return (VOMSSecurityContext) getRequest().getAttribute("VOMSSecurityContext");
+	}
+	
 
 }

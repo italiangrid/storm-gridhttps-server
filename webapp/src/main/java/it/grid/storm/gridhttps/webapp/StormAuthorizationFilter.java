@@ -48,24 +48,12 @@ import org.slf4j.LoggerFactory;
 
 public class StormAuthorizationFilter implements Filter {
 
-	private HttpHelper httpHelper;
-	
-	public class InitVOMSThread extends Thread  {
-		public void run() {
-			log.debug("init voms security context..");
-			UserCredentials.initVomsSecurityContext();
-			log.debug("voms security context initialized!");
-		}
-	}
-	
 	private static final Logger log = LoggerFactory.getLogger(StormAuthorizationFilter.class);
 
 	public void destroy() {
 	}
-	
+
 	public void init(FilterConfig fc) throws ServletException {
-		InitVOMSThread initVoms = new InitVOMSThread();
-		initVoms.start();
 		Configuration.loadDefaultConfiguration();
 		Configuration.initFromJSON(parse(fc.getInitParameter("params")));
 		Configuration.print();
@@ -80,12 +68,6 @@ public class StormAuthorizationFilter implements Filter {
 			log.error(e.getMessage());
 			throw new ServletException(e.getMessage());
 		}
-		try {
-			log.debug("wait for initVoms thread to finish...");
-			initVoms.join();
-		} catch (InterruptedException e) {
-			log.error(e.getMessage());
-		}
 	}
 
 	@SuppressWarnings("unchecked")
@@ -96,52 +78,55 @@ public class StormAuthorizationFilter implements Filter {
 		}
 		throw new ServletException("Error on retrieving init parameters!");
 	}
-	
+
 	public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
 
-		httpHelper = new HttpHelper((HttpServletRequest) request, (HttpServletResponse) response);
-				
+		HttpHelper httpHelper = new HttpHelper((HttpServletRequest) request, (HttpServletResponse) response);
+		UserCredentials user = httpHelper.getUser();
+
 		String requestedPath = httpHelper.getRequestURI().getRawPath();
 		log.debug("Requested-URI: " + requestedPath);
 
 		if (requestedPath.contains("%20")) {
-			log.error("Request URI '" + requestedPath + "' contains not allowed spaces! Exiting..");
-			sendError(HttpServletResponse.SC_BAD_REQUEST, "Request URI '" + requestedPath + "' contains not allowed spaces");
+			String errorMsg =  "Request URI '" + requestedPath + "' contains not allowed spaces";
+			log.error(errorMsg + "Exiting..");
+			sendError(httpHelper.getResponse(), HttpServletResponse.SC_BAD_REQUEST, errorMsg);
 		} else if (isRootPath(requestedPath)) {
 			log.debug("Requested-URI is root");
-			processRootRequest(httpHelper.getRequestMethod());
+			processRootRequest(httpHelper, user);
 		} else if (isFavicon(requestedPath)) {
 			log.debug("Requested-URI is favicon");
 			// implement getFavicon()
 		} else {
-			AuthorizationFilter filter = getAuthorizationHandler(requestedPath);
+			AuthorizationFilter filter = getAuthorizationHandler(httpHelper, requestedPath);
 			if (filter != null) {
-				AuthorizationStatus status = filter.isUserAuthorized(httpHelper.getUser());
+				AuthorizationStatus status = filter.isUserAuthorized(user);
 				if (status.isAuthorized()) {
 					log.debug("User is authorized to access the requested resource");
 					chain.doFilter(request, response);
 				} else {
 					log.warn("User is not authorized to access the requested resource");
 					log.warn("Reason: " + status.getReason());
-					sendError(status.getErrorCode(), status.getReason());
+					sendError(httpHelper.getResponse(), status.getErrorCode(), status.getReason());
 				}
 			} else {
-				sendError(HttpServletResponse.SC_BAD_REQUEST, "Unable to identify the right handler to evaluate the requested path "
-						+ requestedPath);
+				String errorMsg = "Unable to identify the right handler to evaluate the requested path " + requestedPath;
+				sendError(httpHelper.getResponse(), HttpServletResponse.SC_BAD_REQUEST, errorMsg);
 			}
 		}
 	}
 
-	private void processRootRequest(String method) throws IOException {
+	private void processRootRequest(HttpHelper httpHelper, UserCredentials user) throws IOException {
+		String method = httpHelper.getRequestMethod();
 		if (method.equals("OPTIONS")) {
 			doPing();
-			sendDavHeader();
+			sendDavHeader(httpHelper.getResponse());
 		} else if (method.equals("GET")) {
-			sendRootPage();
+			sendRootPage(httpHelper, user);
 		}
 	}
 
-	private AuthorizationFilter getAuthorizationHandler(String path) {
+	private AuthorizationFilter getAuthorizationHandler(HttpHelper httpHelper, String path) {
 		try {
 			if (isFileTransferRequest(path)) {
 				log.debug("Received a file-transfer request");
@@ -156,9 +141,9 @@ public class StormAuthorizationFilter implements Filter {
 		return null;
 	}
 
-	private void sendDavHeader() throws IOException {
-		httpHelper.getResponse().addHeader("DAV", "1");
-		httpHelper.getResponse().flushBuffer();
+	private void sendDavHeader(HttpServletResponse response) throws IOException {
+		response.addHeader("DAV", "1");
+		response.flushBuffer();
 	}
 
 	private boolean isRootPath(String requestedPath) {
@@ -173,9 +158,9 @@ public class StormAuthorizationFilter implements Filter {
 		return requestedURI.startsWith(File.separator + Configuration.getFileTransferContextPath());
 	}
 
-	private void sendError(int errorCode, String errorMessage) {
+	private void sendError(HttpServletResponse response, int errorCode, String errorMessage) {
 		try {
-			httpHelper.getResponse().sendError(errorCode, errorMessage);
+			response.sendError(errorCode, errorMessage);
 		} catch (IOException e) {
 			log.error(e.getMessage());
 			e.printStackTrace();
@@ -197,22 +182,20 @@ public class StormAuthorizationFilter implements Filter {
 		}
 	}
 
-	private void sendRootPage() throws IOException {
-		HttpServletResponse response = httpHelper.getResponse();
-		response.addHeader("Content-Type", "text/html");
-		response.addHeader("DAV", "1");
-		StormHtmlRootPage page = new StormHtmlRootPage(response.getOutputStream());
+	private void sendRootPage(HttpHelper httpHelper, UserCredentials user) throws IOException {
+		httpHelper.getResponse().addHeader("Content-Type", "text/html");
+		httpHelper.getResponse().addHeader("DAV", "1");
+		StormHtmlRootPage page = new StormHtmlRootPage(httpHelper.getResponse().getOutputStream());
 		page.start();
 		page.addTitle("StoRM Gridhttps-server WebDAV");
 		page.addNavigator("/");
-		page.addStorageAreaList(getUserAuthorizedStorageAreas(httpHelper.getUser()));
+		page.addStorageAreaList(getUserAuthorizedStorageAreas(user, httpHelper.getRequestProtocol()));
 		page.end();
 	}
 
-	private List<StorageArea> getUserAuthorizedStorageAreas(UserCredentials user) {
+	private List<StorageArea> getUserAuthorizedStorageAreas(UserCredentials user, String reqProtocol) {
 		List<StorageArea> in = StorageAreaManager.getInstance().getStorageAreas();
 		List<StorageArea> out = new ArrayList<StorageArea>();
-		String reqProtocol = httpHelper.getRequestProtocol();
 		for (StorageArea current : in) {
 			if (current.getProtocols().contains(reqProtocol)) {
 				if (isUserAuthorized(user, current.getFSRoot())) {
@@ -222,7 +205,7 @@ public class StormAuthorizationFilter implements Filter {
 		}
 		return out;
 	}
-	
+
 	private boolean isUserAuthorized(UserCredentials user, String path) {
 		boolean response = false;
 		try {
@@ -232,7 +215,7 @@ public class StormAuthorizationFilter implements Filter {
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-		if (!response &&  !user.isAnonymous()) {
+		if (!response && !user.isAnonymous()) {
 			/* Re-try as anonymous user: */
 			user.forceAnonymous();
 			try {
