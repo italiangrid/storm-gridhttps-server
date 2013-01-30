@@ -224,9 +224,11 @@ public class StormGridhttpsServer {
 			nodes = doc.getNodes(query1, new WebNamespaceContext(null));
 			((Element) nodes.item(0)).setTextContent(JSON.toString(params));
 			nodes = doc.getNodes(query2, new WebNamespaceContext(null));
-			((Element) nodes.item(0)).setTextContent(Arrays.toString(davExcluded));
+			String result = Arrays.asList(davExcluded).toString().replaceAll("(^\\[|\\]$)", "").replace(", ", ",");
+			((Element) nodes.item(0)).setTextContent(result);
 			nodes = doc.getNodes(query3, new WebNamespaceContext(null));
-			((Element) nodes.item(0)).setTextContent(Arrays.toString(ftExcluded));
+			result = Arrays.asList(ftExcluded).toString().replaceAll("(^\\[|\\]$)", "").replace(", ", ",");
+			((Element) nodes.item(0)).setTextContent(result);
 			doc.save();
 		} catch (Exception e) {
 			throw new ServerException(e);
