@@ -55,13 +55,14 @@ public class FileTransferStandardFilter implements Filter {
 				if (log.isTraceEnabled()) {
 					log.trace("delegate to method handler: " + handler.getClass().getCanonicalName());
 				}
+				printCommand();
 				handler.process(manager, request, response);
 				if (response.getEntity() != null) {
 					manager.sendResponseEntity(response);
 				} else {
 					log.debug("No response entity to send to client");
 				}
-				printSuccessCommand();
+				printExitStatus(method.name().toUpperCase(), response);
 			}
 		} catch (RuntimeApiException ex) {
 			printErrorCommand(ex.getMessage(), ex.getReason());
@@ -96,6 +97,18 @@ public class FileTransferStandardFilter implements Filter {
 		}
 	}
 	
+	private void printExitStatus(String method, Response response) {
+		int code = response.getStatus().code;
+		String msg = method + " response: " + code + response.getStatus().text;
+		if (code >= 200 && code < 300) {
+			log.info(msg);
+		} else if (code >= 400 && code < 600) {
+			log.error(msg);
+		} else {
+			log.warn(msg);
+		}
+	}
+
 	private String getCommand() {
 		HttpHelper httpHelper = new HttpHelper(MiltonServlet.request(), MiltonServlet.response());
 		String msg = "";
@@ -107,7 +120,7 @@ public class FileTransferStandardFilter implements Filter {
 		return msg;
 	}
 	
-	private void printSuccessCommand() {
+	private void printCommand() {
 		log.info(getCommand());
 	}
 	
@@ -120,7 +133,6 @@ public class FileTransferStandardFilter implements Filter {
 		log.error(getCommand() + " has failed: " + msg);
 	}
 
-	
 	private void sendResponse(Response response, Status status, final String htmlPage) {
 		response.setStatus(status);
 		response.setEntity(new Response.Entity() {
