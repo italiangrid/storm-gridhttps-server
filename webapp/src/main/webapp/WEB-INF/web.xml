@@ -18,7 +18,7 @@
 		<filter-class>it.grid.storm.gridhttps.webapp.webdav.WebdavSpringMiltonFilter</filter-class>
 		<init-param>
 			<param-name>milton.exclude.paths</param-name>
-			<param-value>/index.jsp,/fileTransfer,/gridhttps_webapp/resourceMapping</param-value>
+			<param-value>_TO_DEFINE_</param-value>
 		</init-param>
 		<init-param>
 			<param-name>context.filename</param-name>
@@ -31,7 +31,7 @@
 		<filter-class>it.grid.storm.gridhttps.webapp.filetransfer.FileTransferSpringMiltonFilter</filter-class>
 		<init-param>
 			<param-name>milton.exclude.paths</param-name>
-			<param-value>/index.jsp,/gridhttps_webapp/resourceMapping</param-value>
+			<param-value>_TO_DEFINE_</param-value>
 		</init-param>
 		<init-param>
 			<param-name>context.filename</param-name>
