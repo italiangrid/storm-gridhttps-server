@@ -170,16 +170,15 @@ public abstract class StormFactory implements ResourceFactory {
 		SurlInfo detail;
 		try {
 			detail = StormResourceHelper.doLsDetailed(this.getBackendApi(), file, Recursion.NONE).get(0);
-			if (!(detail.getStatus().getStatusCode().equals(TStatusCode.SRM_INVALID_PATH) && detail.getStatus().getStatusCode().equals(TStatusCode.SRM_FAILURE))) {
+			if (!(detail.getStatus().getStatusCode().equals(TStatusCode.SRM_INVALID_PATH) || detail.getStatus().getStatusCode().equals(TStatusCode.SRM_FAILURE))) {
 				return resolveFile(detail);
 			} else {
 				log.warn(detail.getStfn() + " status is " + detail.getStatus().getStatusCode().getValue());
 			}
 		} catch (RuntimeApiException e) {
-			log.error(e.getMessage() + ": " + e.getReason());
+			log.error("retrieving detailed info for '" + file + "': " + e.getReason());
 		} catch (StormRequestFailureException e) {
-			log.debug(e.getReason());
-			log.debug(file + " does not exist!");
+			log.debug(file + " does not exist: " + e.getReason());
 		}
 		return null;
 	}
@@ -198,7 +197,7 @@ public abstract class StormFactory implements ResourceFactory {
 						r = getFileResource(file, storageArea, surlInfo);
 					}
 				} else {
-					log.warn("resource type is null!");
+					log.warn("resource type is null! " + surlInfo.getStfn() + " status is " + surlInfo.getStatus().toString());
 				}
 			} else {
 				log.warn(surlInfo.getStfn() + " status is: " + surlInfo.getStatus().getStatusCode().getValue());
