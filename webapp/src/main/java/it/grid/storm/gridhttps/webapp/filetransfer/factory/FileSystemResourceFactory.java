@@ -18,6 +18,7 @@ import it.grid.storm.gridhttps.webapp.data.StormResource;
 import it.grid.storm.gridhttps.webapp.webdav.factory.StormResourceFactory;
 import it.grid.storm.storagearea.StorageArea;
 import it.grid.storm.xmlrpc.ApiException;
+import it.grid.storm.xmlrpc.outputdata.LsOutputData.SurlInfo;
 
 import java.io.File;
 import java.net.UnknownHostException;
@@ -43,6 +44,11 @@ public final class FileSystemResourceFactory extends StormFactory {
 	@Override
 	public StormResource getFileResource(File file, StorageArea storageArea) {
 		return new FileTransferFileResource(this, file, storageArea);
+	}
+
+	@Override
+	public StormResource getFileResource(File file, StorageArea storageArea, SurlInfo surlinfo) {
+		return new FileTransferFileResource(this, file, storageArea, surlinfo);
 	}
 
 }

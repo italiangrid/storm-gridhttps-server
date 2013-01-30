@@ -23,6 +23,7 @@ import io.milton.resource.*;
 import it.grid.storm.gridhttps.webapp.data.StormFactory;
 import it.grid.storm.gridhttps.webapp.data.StormFileResource;
 import it.grid.storm.storagearea.StorageArea;
+import it.grid.storm.xmlrpc.outputdata.LsOutputData.SurlInfo;
 
 import java.io.*;
 import java.util.Map;
@@ -37,6 +38,10 @@ public class FileTransferFileResource extends StormFileResource implements Getab
 
 	public FileTransferFileResource(StormFactory factory, File file, StorageArea storageArea) {
 		super(factory, file, storageArea);
+	}
+	
+	public FileTransferFileResource(StormFactory factory, File file, StorageArea storageArea, SurlInfo surlInfo) {
+		super(factory, file, storageArea, surlInfo);
 	}
 
 	public Long getContentLength() {

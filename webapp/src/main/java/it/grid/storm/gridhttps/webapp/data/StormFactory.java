@@ -164,6 +164,7 @@ public abstract class StormFactory implements ResourceFactory {
 
 	public abstract StormResource getDirectoryResource(File directory, StorageArea storageArea);
 	public abstract StormResource getFileResource(File file, StorageArea storageArea);
+	public abstract StormResource getFileResource(File file, StorageArea storageArea, SurlInfo surlinfo);
 	
 	public StormResource resolveFile(String host, File file, StorageArea storageArea) {
 		SurlInfo detail;
@@ -194,7 +195,7 @@ public abstract class StormFactory implements ResourceFactory {
 					if (surlInfo.getType().equals(TFileType.DIRECTORY)) {
 						r = getDirectoryResource(file, storageArea);
 					} else {
-						r = getFileResource(file, storageArea);
+						r = getFileResource(file, storageArea, surlInfo);
 					}
 				} else {
 					log.warn("resource type is null!");
