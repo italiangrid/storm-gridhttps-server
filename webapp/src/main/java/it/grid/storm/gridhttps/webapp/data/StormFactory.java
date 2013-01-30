@@ -36,7 +36,8 @@ public abstract class StormFactory implements ResourceFactory {
 	SecurityManager securityManager;
 	Long maxAgeSeconds;
 	String contextPath;
-	boolean allowDirectoryBrowsing;
+	boolean allowDirectoryBrowsing = true;
+	
 	String defaultPage;
 	boolean digestAllowed = true;
 	private String localhostname;
@@ -218,6 +219,14 @@ public abstract class StormFactory implements ResourceFactory {
 			log.trace("isDigestAllowed: " + b);
 		}
 		return b;
+	}
+	
+	public boolean isAllowDirectoryBrowsing() {
+		return allowDirectoryBrowsing;
+	}
+
+	public void setAllowDirectoryBrowsing(boolean allowDirectoryBrowsing) {
+		this.allowDirectoryBrowsing = allowDirectoryBrowsing;
 	}
 	
 }

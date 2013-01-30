@@ -33,6 +33,7 @@ public final class FileSystemResourceFactory extends StormFactory {
 	public FileSystemResourceFactory() throws UnknownHostException, ApiException {
 		super(Configuration.getBackendHostname(), Configuration.getBackendPort(), new File(Configuration.getGpfsRootDirectory()),
 				Configuration.getFileTransferContextPath());
+		this.setAllowDirectoryBrowsing(false);
 		log.debug("FileSystemResourceFactory created");
 	}
 
