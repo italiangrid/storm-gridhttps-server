@@ -26,7 +26,7 @@ import io.milton.resource.Resource;
 import io.milton.servlet.MiltonServlet;
 import it.grid.storm.gridhttps.webapp.HttpHelper;
 import it.grid.storm.gridhttps.webapp.authorization.UserCredentials;
-import it.grid.storm.gridhttps.webapp.data.StormBackendApi;
+import it.grid.storm.gridhttps.webapp.backendApi.StormBackendApi;
 import it.grid.storm.gridhttps.webapp.data.Surl;
 import it.grid.storm.gridhttps.webapp.data.exceptions.RuntimeApiException;
 import it.grid.storm.gridhttps.webapp.data.exceptions.StormRequestFailureException;
