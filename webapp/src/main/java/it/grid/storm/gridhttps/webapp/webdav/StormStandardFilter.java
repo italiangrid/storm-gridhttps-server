@@ -62,7 +62,6 @@ public class StormStandardFilter implements Filter {
 				} else {
 					log.debug("No response entity to send to client");
 				}
-				printExitStatus(method.name().toUpperCase(), response);
 			}
 		} catch (RuntimeApiException ex) {
 			printErrorCommand(ex.getMessage(), ex.getReason());
@@ -94,12 +93,14 @@ public class StormStandardFilter implements Filter {
 			response.sendError(Response.Status.SC_INTERNAL_SERVER_ERROR, INTERNAL_SERVER_ERROR_HTML);
 		} finally {
 			// manager.closeResponse(response);
+			printExitStatus(request, response);
 		}
 	}
 	
-	private void printExitStatus(String method, Response response) {
+	private void printExitStatus(Request request, Response response) {
 		int code = response.getStatus().code;
-		String msg = method + " response: " + code + response.getStatus().text;
+		String text = response.getStatus().text != null ? response.getStatus().text : "";
+		String msg = request.getMethod().name().toUpperCase() + " " + code + " " + text;
 		if (code >= 200 && code < 300) {
 			log.info(msg);
 		} else if (code >= 400 && code < 600) {
