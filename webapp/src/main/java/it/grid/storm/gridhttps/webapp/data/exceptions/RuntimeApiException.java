@@ -17,7 +17,7 @@ import io.milton.http.exceptions.BadRequestException;
 public class RuntimeApiException extends BadRequestException {
 
 	private static final long serialVersionUID = 3065886408319057340L;
-
+	
 	public RuntimeApiException(String reason) {
 		super(reason);
 	}

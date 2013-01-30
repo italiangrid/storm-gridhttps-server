@@ -69,26 +69,8 @@ DeletableResource, MoveableResource, PropFindableResource, GetableResource {
 
 	@Override
 	public Resource child(String name) throws NotAuthorizedException, BadRequestException {
-		File fsDest = new File(this.getFile(), name);
-		StormResource childResource = this.getFactory().resolveFile(this.getHost(), fsDest, this.getStorageArea());
-		if (childResource == null) {
-			SurlInfo detail;
-			try {
-				detail = StormResourceHelper.doLs(getFactory().getBackendApi(), fsDest).get(0);
-				if (!(detail.getStatus().getStatusCode().equals(TStatusCode.SRM_INVALID_PATH) && detail.getStatus().getStatusCode().equals(TStatusCode.SRM_FAILURE))) {
-					return getFactory().resolveFile(detail);
-				} else {
-					log.warn(detail.getStfn() + " status is " + detail.getStatus().getStatusCode().getValue());
-				}
-			} catch (RuntimeApiException e) {
-				log.error("Error checking if '" + this.getFile() + "' has child '" + name + "'");
-				log.error(e.getMessage() + ": " + e.getReason());
-			} catch (StormRequestFailureException e) {
-				log.debug(e.getReason());
-				log.debug("child '" + name + "' for " + this.getFile().toString() + " not exists!");
-			}
-		}
-		return childResource;
+		File fsDest = new File(getFile(), name);
+		return getFactory().resolveFile(this.getHost(), fsDest, getStorageArea());
 	}
 
 	@Override
@@ -109,11 +91,9 @@ DeletableResource, MoveableResource, PropFindableResource, GetableResource {
 				}
 			}
 		} catch (RuntimeApiException e) {
-			log.error("Error retrieving children for '" + this.getFile() + "'");
-			log.error(e.getMessage() + ": " + e.getReason());
+			log.error("retrieving children for '" + this.getFile() + "': " + e.getReason());
 		} catch (StormRequestFailureException e) {
-			log.error("Error retrieving children for '" + this.getFile() + "'");
-			log.error(e.getMessage() + ": " + e.getReason());
+			log.error("retrieving children for '" + this.getFile() + "': " + e.getReason());
 		}
 		return list;
 	}
@@ -129,11 +109,9 @@ DeletableResource, MoveableResource, PropFindableResource, GetableResource {
 		try {
 			hasC = !StormResourceHelper.doLs(this).get(0).getSubpathInfo().isEmpty();
 		} catch (RuntimeApiException e) {
-			log.error("Error checking if '" + this.getFile() + "' has/hasn't children");
-			log.error(e.getMessage() + ": " + e.getReason());
+			log.error("checking if '" + this.getFile() + "' has children: " + e.getReason());
 		} catch (StormRequestFailureException e) {
-			log.error("Error checking if '" + this.getFile() + "' has/hasn't children");
-			log.error(e.getMessage() + ": " + e.getReason());
+			log.error("checking if '" + this.getFile() + "' has children: " + e.getReason());
 		}
 		return hasC;
 	}
