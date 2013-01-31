@@ -176,9 +176,9 @@ public abstract class StormResource implements Resource, DigestResource {
 		try {
 			info = StormResourceHelper.doLsDetailed(this, Recursion.NONE);
 		} catch (RuntimeApiException e) {
-			log.error("Error retrieving surl-info for " + getFile() + ": " + e.getReason());
+			log.error("Retrieving surl-info for " + getFile() + ": " + e.getReason());
 		} catch (StormRequestFailureException e) {
-			log.error("Error retrieving surl-info for " + getFile() + ": " + e.getReason());
+			log.error("Retrieving surl-info for " + getFile() + ": " + e.getReason());
 		}
 		if (info != null) {
 			setSurlInfo(info.get(0));
