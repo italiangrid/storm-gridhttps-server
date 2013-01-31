@@ -316,7 +316,7 @@ case "$1" in
     
    restart)
 	    stop; 
-	    sleep 1;  
+	    sleep 3;  
 		if [ $# -gt 1 ]; then
             if [ $2 = "debug" ]; then
                 STORM_DEBUG_OPTION="-Xdebug -Xrunjdwp:transport=dt_socket,address=1044,server=y,suspend=n";
