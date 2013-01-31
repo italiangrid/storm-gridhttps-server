@@ -103,6 +103,8 @@ start () {
         return 1
     fi
 
+	sleep 3;
+
     local pid
     local ppid
     getRunningPids "PIDS"
@@ -316,7 +318,7 @@ case "$1" in
     
    restart)
 	    stop; 
-	    sleep 3;  
+	    sleep 1;  
 		if [ $# -gt 1 ]; then
             if [ $2 = "debug" ]; then
                 STORM_DEBUG_OPTION="-Xdebug -Xrunjdwp:transport=dt_socket,address=1044,server=y,suspend=n";
