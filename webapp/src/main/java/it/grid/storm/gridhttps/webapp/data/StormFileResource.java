@@ -19,14 +19,10 @@ import io.milton.http.exceptions.BadRequestException;
 import io.milton.http.exceptions.ConflictException;
 import io.milton.http.exceptions.NotAuthorizedException;
 import it.grid.storm.gridhttps.webapp.data.StormFactory;
-import it.grid.storm.gridhttps.webapp.data.exceptions.RuntimeApiException;
-import it.grid.storm.gridhttps.webapp.data.exceptions.StormRequestFailureException;
-import it.grid.storm.srm.types.Recursion;
 import it.grid.storm.storagearea.StorageArea;
 import it.grid.storm.xmlrpc.outputdata.LsOutputData.SurlInfo;
 
 import java.io.*;
-import java.util.ArrayList;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -34,16 +30,13 @@ import org.slf4j.LoggerFactory;
 public class StormFileResource extends StormResource {
 
 	private static final Logger log = LoggerFactory.getLogger(StormFileResource.class);
-
-	private SurlInfo surlInfo;
 	
 	public StormFileResource(StormFactory factory, File file, StorageArea storageArea) {
 		super(factory.getLocalhostname(), factory, file, storageArea);
 	}
 	
 	public StormFileResource(StormFactory factory, File file, StorageArea storageArea, SurlInfo info) {
-		super(factory.getLocalhostname(), factory, file, storageArea);
-		setSurlInfo(info);
+		super(factory.getLocalhostname(), factory, file, storageArea, info);
 	}
 	
 	public StormFileResource(StormDirectoryResource parentDir, String childFileName) {
@@ -53,53 +46,6 @@ public class StormFileResource extends StormResource {
 	public StormFileResource(StormDirectoryResource parentDir, String childFileName, SurlInfo info) {
 		this(parentDir.getFactory(), new File(parentDir.getFile(), childFileName), parentDir.getStorageArea());
 		setSurlInfo(info);
-	}
-	
-	private void loadSurlInfo() {
-		ArrayList<SurlInfo> info = null;
-		try {
-			info = StormResourceHelper.doLsDetailed(this, Recursion.NONE);
-		} catch (RuntimeApiException e) {
-			log.error("Error retrieving surl-info for " + this.getFile());
-			log.error(e.getMessage() + ": " + e.getReason());
-		} catch (StormRequestFailureException e) {
-			log.error("Error retrieving surl-info for " + this.getFile());
-			log.error(e.getMessage() + ": " + e.getReason());
-		}
-		setSurlInfo(info != null ? info.get(0) : null);
-	}
-	
-	public String getCheckSumType() {
-		String checksumType = "";
-		if (getSurlInfo() == null) {
-			loadSurlInfo();
-			if (getSurlInfo() != null) {
-				checksumType = getSurlInfo().getCheckSumType() != null ? getSurlInfo().getCheckSumType().getValue() : "";
-			}
-		}
-		return checksumType;
-	}
-	
-	public String getCheckSumValue() {
-		String checksumValue = "";
-		if (getSurlInfo() == null) {
-			loadSurlInfo();
-			if (getSurlInfo() != null) {
-				checksumValue = getSurlInfo().getCheckSumValue() != null ? getSurlInfo().getCheckSumValue().getValue() : "";
-			}
-		}
-		return checksumValue;
-	}
-	
-	public String getStatus() {
-		String status = "";
-		if (getSurlInfo() == null) {
-			loadSurlInfo();
-			if (getSurlInfo() != null) {
-				status = getSurlInfo().getStatus().toString();
-			}
-		}
-		return status;	
 	}
 
 	public Long getContentLength() {
@@ -137,14 +83,6 @@ public class StormFileResource extends StormResource {
 
 	public void copyTo(StormDirectoryResource newParent, String newName) throws NotAuthorizedException, ConflictException, BadRequestException {
 		StormResourceHelper.doCopyFile(this, newParent, newName);
-	}
-
-	private SurlInfo getSurlInfo() {
-		return surlInfo;
-	}
-	
-	private void setSurlInfo(SurlInfo surlInfo) {
-		this.surlInfo = surlInfo;
 	}
 	
 	public void replaceContent(InputStream in, Long length) throws BadRequestException, ConflictException, NotAuthorizedException {		

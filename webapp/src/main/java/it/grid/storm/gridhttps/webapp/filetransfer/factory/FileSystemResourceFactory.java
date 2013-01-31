@@ -52,4 +52,9 @@ public final class FileSystemResourceFactory extends StormFactory {
 		return new FileTransferFileResource(this, file, storageArea, surlinfo);
 	}
 
+	@Override
+	public StormResource getDirectoryResource(File directory, StorageArea storageArea, SurlInfo surlinfo) {
+		return new FileTransferDirectoryResource(this, directory, storageArea, surlinfo);
+	}
+
 }

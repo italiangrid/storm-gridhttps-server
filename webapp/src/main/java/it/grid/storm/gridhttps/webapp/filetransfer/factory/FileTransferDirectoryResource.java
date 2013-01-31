@@ -9,6 +9,7 @@ import io.milton.resource.*;
 import it.grid.storm.gridhttps.webapp.data.StormDirectoryResource;
 import it.grid.storm.gridhttps.webapp.data.StormFactory;
 import it.grid.storm.storagearea.StorageArea;
+import it.grid.storm.xmlrpc.outputdata.LsOutputData.SurlInfo;
 
 import java.io.File;
 import java.io.IOException;
@@ -21,15 +22,13 @@ import org.slf4j.LoggerFactory;
 public class FileTransferDirectoryResource extends StormDirectoryResource {
 
 	private static final Logger log = LoggerFactory.getLogger(FileTransferDirectoryResource.class);
-	
+
 	public FileTransferDirectoryResource(StormFactory factory, File dir, StorageArea storageArea) {
 		super(factory, dir, storageArea);
-		if (!dir.exists()) {
-			throw new IllegalArgumentException("Directory does not exist: " + dir.getAbsolutePath());
-		}
-		if (!dir.isDirectory()) {
-			throw new IllegalArgumentException("Is not a directory: " + dir.getAbsolutePath());
-		}
+	}
+
+	public FileTransferDirectoryResource(FileSystemResourceFactory factory, File dir, StorageArea storageArea, SurlInfo surlinfo) {
+		super(factory, dir, storageArea, surlinfo);
 	}
 
 	@Override

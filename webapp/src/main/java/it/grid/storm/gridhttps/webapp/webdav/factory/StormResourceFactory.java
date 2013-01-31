@@ -50,4 +50,9 @@ public final class StormResourceFactory extends StormFactory {
 		return new WebdavFileResource(this, file, storageArea, surlinfo);
 	}
 
+	@Override
+	public StormResource getDirectoryResource(File directory, StorageArea storageArea, SurlInfo surlinfo) {
+		return new WebdavDirectoryResource(this, directory, storageArea, surlinfo);
+	}
+
 }

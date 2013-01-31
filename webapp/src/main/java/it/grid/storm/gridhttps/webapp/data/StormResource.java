@@ -18,7 +18,11 @@ import io.milton.http.http11.auth.DigestResponse;
 import io.milton.resource.*;
 import it.grid.storm.gridhttps.webapp.data.StormFactory;
 import it.grid.storm.gridhttps.webapp.data.Surl;
+import it.grid.storm.gridhttps.webapp.data.exceptions.RuntimeApiException;
+import it.grid.storm.gridhttps.webapp.data.exceptions.StormRequestFailureException;
+import it.grid.storm.srm.types.Recursion;
 import it.grid.storm.storagearea.StorageArea;
+import it.grid.storm.xmlrpc.outputdata.LsOutputData.SurlInfo;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -38,13 +42,20 @@ public abstract class StormResource implements Resource, DigestResource {
 	private String host;
 	private Surl surl;
 	private StorageArea storageArea;
-
+	private SurlInfo surlInfo;
+	
 	public StormResource(String host, StormFactory factory, File file, StorageArea storageArea) {
 		setHost(host);
 		setFile(file);
 		setFactory(factory);
 		setStorageArea(storageArea);
 		setSurl(new Surl(getFile(), getStorageArea()));
+		setSurlInfo(null);
+	}
+	
+	public StormResource(String host, StormFactory factory, File file, StorageArea storageArea, SurlInfo surlInfo) {
+		this(host, factory, file, storageArea);
+		setSurlInfo(surlInfo);
 	}
 
 	protected void setHost(String host) {
@@ -147,6 +158,60 @@ public abstract class StormResource implements Resource, DigestResource {
 	
 	public StorageArea getStorageArea() {
 		return storageArea;
+	}
+
+	public SurlInfo getSurlInfo() {
+		if (surlInfo == null) {
+			loadSurlInfo();
+		}
+		return surlInfo;
+	}
+	
+	public void setSurlInfo(SurlInfo surlInfo) {
+		this.surlInfo = surlInfo;
+	}
+	
+	protected SurlInfo loadSurlInfo() {
+		ArrayList<SurlInfo> info = null;
+		try {
+			info = StormResourceHelper.doLsDetailed(this, Recursion.NONE);
+		} catch (RuntimeApiException e) {
+			log.error("Error retrieving surl-info for " + getFile() + ": " + e.getReason());
+		} catch (StormRequestFailureException e) {
+			log.error("Error retrieving surl-info for " + getFile() + ": " + e.getReason());
+		}
+		if (info != null) {
+			setSurlInfo(info.get(0));
+			return info.get(0);
+		}
+		return null;
+	}
+	
+	public String getCheckSumType() {
+		SurlInfo info = getSurlInfo();
+		String checksumType = "";
+		if (info != null) {
+			checksumType = info.getCheckSumType() != null ? info.getCheckSumType().getValue() : "";
+		}
+		return checksumType;
+	}
+	
+	public String getCheckSumValue() {
+		SurlInfo info = getSurlInfo();
+		String checksumValue = "";
+		if (info != null) {
+			checksumValue = info.getCheckSumValue() != null ? info.getCheckSumValue().getValue() : "";
+		}
+		return checksumValue;
+	}
+	
+	public String getStatus() {
+		SurlInfo info = getSurlInfo();
+		String status = "";
+		if (info != null) {
+			status = info.getStatus().toString();
+		}
+		return status;	
 	}
 
 }

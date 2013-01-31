@@ -32,8 +32,6 @@ import it.grid.storm.gridhttps.webapp.data.StormFactory;
 import it.grid.storm.gridhttps.webapp.data.StormResourceHelper;
 import it.grid.storm.gridhttps.webapp.data.exceptions.RuntimeApiException;
 import it.grid.storm.gridhttps.webapp.data.exceptions.StormRequestFailureException;
-import it.grid.storm.srm.types.Recursion;
-import it.grid.storm.srm.types.TStatusCode;
 import it.grid.storm.storagearea.StorageArea;
 import it.grid.storm.xmlrpc.outputdata.LsOutputData.SurlInfo;
 
@@ -42,7 +40,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
@@ -58,8 +55,16 @@ DeletableResource, MoveableResource, PropFindableResource, GetableResource {
 		super(factory.getLocalhostname(), factory, dir, storageArea);
 	}
 
+	public StormDirectoryResource(StormFactory factory, File dir, StorageArea storageArea, SurlInfo surlInfo) {
+		super(factory.getLocalhostname(), factory, dir, storageArea, surlInfo);
+	}
+	
 	public StormDirectoryResource(StormDirectoryResource parentDir, String childDirName) {
 		this(parentDir.getFactory(), new File(parentDir.getFile(), childDirName), parentDir.getStorageArea());
+	}
+	
+	public StormDirectoryResource(StormDirectoryResource parentDir, String childDirName, SurlInfo surlInfo) {
+		this(parentDir.getFactory(), new File(parentDir.getFile(), childDirName), parentDir.getStorageArea(), surlInfo);
 	}
 	
 	@Override
@@ -76,24 +81,16 @@ DeletableResource, MoveableResource, PropFindableResource, GetableResource {
 	@Override
 	public List<? extends Resource> getChildren() {
 		ArrayList<StormResource> list = new ArrayList<StormResource>();
-		try {
-			Collection<SurlInfo> children = StormResourceHelper.doLsDetailed(this, Recursion.NONE).get(0).getSubpathInfo();
-			for (SurlInfo entry : children) {
-				if (!(entry.getStatus().getStatusCode().equals(TStatusCode.SRM_INVALID_PATH) && entry.getStatus().getStatusCode().equals(TStatusCode.SRM_FAILURE))) {
-					StormResource resource = getFactory().resolveFile(entry);
-					if (resource != null) {
-						list.add(resource);
-					} else {
-						log.error("Couldnt resolve file {}", entry.getStfn());
-					}
+		SurlInfo info = getSurlInfo();
+		if (info != null) {
+			for (SurlInfo entry : info.getSubpathInfo()) {
+				StormResource resource = getFactory().resolveFile(entry, getStorageArea());
+				if (resource != null) {
+					list.add(resource);
 				} else {
-					log.warn(entry.getStfn() + " status is " + entry.getStatus().getStatusCode().getValue());
+					log.warn("Couldn't add child '" + entry.getStfn() + "'!");
 				}
 			}
-		} catch (RuntimeApiException e) {
-			log.error("retrieving children for '" + this.getFile() + "': " + e.getReason());
-		} catch (StormRequestFailureException e) {
-			log.error("retrieving children for '" + this.getFile() + "': " + e.getReason());
 		}
 		return list;
 	}
@@ -105,15 +102,10 @@ DeletableResource, MoveableResource, PropFindableResource, GetableResource {
 	}
 
 	public boolean hasChildren() {
-		boolean hasC = false;
-		try {
-			hasC = !StormResourceHelper.doLs(this).get(0).getSubpathInfo().isEmpty();
-		} catch (RuntimeApiException e) {
-			log.error("checking if '" + this.getFile() + "' has children: " + e.getReason());
-		} catch (StormRequestFailureException e) {
-			log.error("checking if '" + this.getFile() + "' has children: " + e.getReason());
-		}
-		return hasC;
+		SurlInfo info = getSurlInfo();
+		if (info != null)
+			return !info.getSubpathInfo().isEmpty();
+		return false;
 	}
 
 	@Override
@@ -162,6 +154,11 @@ DeletableResource, MoveableResource, PropFindableResource, GetableResource {
 			StormResourceHelper.doCopyDirectory(this, (StormDirectoryResource) newParent, newName);
 		} else
 			log.error("Directory Resource class " + newParent.getClass().getName() + " not supported!");
+	}
+	
+	@Override
+	public SurlInfo getSurlInfo() {
+		return loadSurlInfo();
 	}
 
 }

@@ -53,6 +53,14 @@ public class WebdavDirectoryResource extends StormDirectoryResource implements M
 	public WebdavDirectoryResource(StormDirectoryResource parentDir, String childDirName) {
 		this(parentDir.getFactory(), new File(parentDir.getFile(), childDirName), parentDir.getStorageArea());
 	}
+	
+	public WebdavDirectoryResource(StormFactory factory, File dir, StorageArea storageArea, SurlInfo surlInfo) {
+		super(factory, dir, storageArea, surlInfo);
+	}
+
+	public WebdavDirectoryResource(StormDirectoryResource parentDir, String childDirName, SurlInfo surlInfo) {
+		this(parentDir.getFactory(), new File(parentDir.getFile(), childDirName), parentDir.getStorageArea(), surlInfo);
+	}
 
 	public CollectionResource createCollection(String name) throws NotAuthorizedException, ConflictException, BadRequestException {
 		log.debug("Called function for MKCOL DIRECTORY");
