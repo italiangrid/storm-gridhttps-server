@@ -46,7 +46,7 @@ public abstract class StormFactory implements ResourceFactory {
 
 	public StormFactory(String beHost, int bePort, File root, String contextPath) throws UnknownHostException, ApiException {
 		setRoot(root);
-		setContextPath(File.separator + contextPath);
+		setContextPath(contextPath);
 		setBackendApi(new BackendApi(beHost, new Long(bePort)));
 		setSecurityManager(new NullSecurityManager());
 		setContentService(new StormContentService());
@@ -161,7 +161,9 @@ public abstract class StormFactory implements ResourceFactory {
 	}
 
 	private String stripContext(String path) {
-		return path.replaceFirst(getContextPath(), "");
+		if (getContextPath().isEmpty())
+			return path;
+		return path.replaceFirst(File.separator + getContextPath(), "");
 	}
 
 	public abstract StormResource getDirectoryResource(File directory, StorageArea storageArea);
