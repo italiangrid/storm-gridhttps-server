@@ -64,6 +64,7 @@ public class StormStandardFilter implements Filter {
 					log.debug("No response entity to send to client");
 				}
 			}
+			printExitStatus(request, response);
 		} catch (RuntimeApiException ex) {
 			printErrorCommand(ex.getMessage(), ex.getReason());
 			manager.getResponseHandler().respondServerError(request, response, ex.getReason().toString());
@@ -88,7 +89,7 @@ public class StormStandardFilter implements Filter {
 			// indeterminate state
 			// due to the content length not being equal to the content length
 			// header, so
-			// fall back on the udnerlying connection provider to manage the
+			// fall back on the underlying connection provider to manage the
 			// error
 			int contentLength = Integer.valueOf(response.getHeaders().get("Content-Length"));
 			int entityDimension = ((ByteArrayEntity) response.getEntity()).getArr().length;
@@ -100,8 +101,7 @@ public class StormStandardFilter implements Filter {
 				printErrorCommand(e.getMessage(), "exception sending content");
 			}
 		} finally {
-			// manager.closeResponse(response);
-			printExitStatus(request, response);
+			
 		}
 	}
 	

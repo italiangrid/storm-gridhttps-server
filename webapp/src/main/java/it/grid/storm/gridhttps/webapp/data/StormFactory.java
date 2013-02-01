@@ -161,7 +161,7 @@ public abstract class StormFactory implements ResourceFactory {
 	}
 
 	private String stripContext(String path) {
-		return path.replaceFirst(this.getContextPath(), "");
+		return path.replaceFirst(File.separator + getContextPath(), "");
 	}
 
 	public abstract StormResource getDirectoryResource(File directory, StorageArea storageArea);
