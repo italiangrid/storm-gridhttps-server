@@ -12,7 +12,6 @@
  */
 package it.grid.storm.gridhttps.webapp.webdav.factory;
 
-import io.milton.http.Auth;
 import io.milton.http.Range;
 import io.milton.http.Request;
 import io.milton.http.exceptions.BadRequestException;
@@ -125,11 +124,8 @@ public class WebdavDirectoryResource extends StormDirectoryResource implements M
 		page.addFolderList(dirPath, entries);
 		page.end();
 	}
-
-	public Long getMaxAgeSeconds(Auth auth) {
-		return null;
-	}
-
+	
+	@Override
 	public String getContentType(String accepts) {
 		return "text/html";
 	}

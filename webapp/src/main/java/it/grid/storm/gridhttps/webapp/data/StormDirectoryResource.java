@@ -12,7 +12,6 @@
  */
 package it.grid.storm.gridhttps.webapp.data;
 
-import io.milton.http.Auth;
 import io.milton.http.Range;
 import io.milton.http.Request;
 import io.milton.http.exceptions.BadRequestException;
@@ -47,7 +46,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class StormDirectoryResource extends StormResource implements MakeCollectionableResource, PutableResource, CopyableResource,
-DeletableResource, MoveableResource, PropFindableResource, GetableResource {
+		DeletableResource, MoveableResource, PropFindableResource, GetableResource {
 
 	private static final Logger log = LoggerFactory.getLogger(StormDirectoryResource.class);
 
@@ -58,17 +57,18 @@ DeletableResource, MoveableResource, PropFindableResource, GetableResource {
 	public StormDirectoryResource(StormFactory factory, File dir, StorageArea storageArea, SurlInfo surlInfo) {
 		super(factory.getLocalhostname(), factory, dir, storageArea, surlInfo);
 	}
-	
+
 	public StormDirectoryResource(StormDirectoryResource parentDir, String childDirName) {
 		this(parentDir.getFactory(), new File(parentDir.getFile(), childDirName), parentDir.getStorageArea());
 	}
-	
+
 	public StormDirectoryResource(StormDirectoryResource parentDir, String childDirName, SurlInfo surlInfo) {
 		this(parentDir.getFactory(), new File(parentDir.getFile(), childDirName), parentDir.getStorageArea(), surlInfo);
 	}
-	
+
 	@Override
-	public CollectionResource createCollection(String name) throws RuntimeApiException, StormRequestFailureException, NotAuthorizedException, ConflictException, BadRequestException {
+	public CollectionResource createCollection(String name) throws RuntimeApiException, StormRequestFailureException,
+			NotAuthorizedException, ConflictException, BadRequestException {
 		return StormResourceHelper.doMkCol(this, name);
 	}
 
@@ -121,21 +121,32 @@ DeletableResource, MoveableResource, PropFindableResource, GetableResource {
 	@Override
 	public void sendContent(OutputStream out, Range range, Map<String, String> params, String contentType) throws IOException,
 			NotAuthorizedException, BadRequestException, NotFoundException {
-		
+
 	}
 
 	@Override
+	/*
+	 * Called with a list of content types which are acceptable by the client,
+	 * you should select the best one you support and return this. This will be
+	 * given to sendContent
+	 * 
+	 * @see io.milton.resource.GetableResource#getContentType(java.lang.String)
+	 */
 	public String getContentType(String accepts) {
 		return null;
 	}
 
 	@Override
+	/*
+	 * If you know the resource length return it, otherwise return null. If you
+	 * return null the framework will either buffer the content to find the
+	 * length, or send the content with a content length and drop the connection
+	 * to indicate EOF, both of which have performance impacts - so its best to
+	 * give a content length if you can
+	 * 
+	 * @see io.milton.resource.GetableResource#getContentLength()
+	 */
 	public Long getContentLength() {
-		return null;
-	}
-
-	@Override
-	public Long getMaxAgeSeconds(Auth auth) {
 		return null;
 	}
 
@@ -145,7 +156,7 @@ DeletableResource, MoveableResource, PropFindableResource, GetableResource {
 			StormResourceHelper.doMoveTo(this, (StormDirectoryResource) newParent, newName);
 			setFile(((StormDirectoryResource) newParent).getFile());
 		} else
-			log.error("Directory Resource class " + newParent.getClass().getName() + " not supported!");	
+			log.error("Directory Resource class " + newParent.getClass().getName() + " not supported!");
 	}
 
 	@Override
@@ -155,7 +166,7 @@ DeletableResource, MoveableResource, PropFindableResource, GetableResource {
 		} else
 			log.error("Directory Resource class " + newParent.getClass().getName() + " not supported!");
 	}
-	
+
 	@Override
 	public SurlInfo getSurlInfo() {
 		return loadSurlInfo();

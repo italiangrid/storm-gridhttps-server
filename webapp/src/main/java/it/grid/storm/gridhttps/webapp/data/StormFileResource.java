@@ -13,7 +13,6 @@
 package it.grid.storm.gridhttps.webapp.data;
 
 import io.milton.common.ContentTypeUtils;
-import io.milton.http.Auth;
 import io.milton.http.Request;
 import io.milton.http.exceptions.BadRequestException;
 import io.milton.http.exceptions.ConflictException;
@@ -62,13 +61,6 @@ public class StormFileResource extends StormResource {
 	}
 
 	public String checkRedirect(Request arg0) {
-		return null;
-	}
-
-	/**
-	 * @{@inheritDoc
-	 */
-	public Long getMaxAgeSeconds(Auth auth) {
 		return null;
 	}
 

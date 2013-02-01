@@ -43,7 +43,7 @@ public abstract class StormResource implements Resource, DigestResource {
 	private Surl surl;
 	private StorageArea storageArea;
 	private SurlInfo surlInfo;
-	
+
 	public StormResource(String host, StormFactory factory, File file, StorageArea storageArea) {
 		setHost(host);
 		setFile(file);
@@ -52,7 +52,7 @@ public abstract class StormResource implements Resource, DigestResource {
 		setSurl(new Surl(getFile(), getStorageArea()));
 		setSurlInfo(null);
 	}
-	
+
 	public StormResource(String host, StormFactory factory, File file, StorageArea storageArea, SurlInfo surlInfo) {
 		this(host, factory, file, storageArea);
 		setSurlInfo(surlInfo);
@@ -61,7 +61,7 @@ public abstract class StormResource implements Resource, DigestResource {
 	protected void setHost(String host) {
 		this.host = host;
 	}
-	
+
 	protected void setFactory(StormFactory factory) {
 		this.factory = factory;
 	}
@@ -77,11 +77,11 @@ public abstract class StormResource implements Resource, DigestResource {
 	protected void setFile(File newFile) {
 		this.file = newFile;
 	}
-		
+
 	public String getHost() {
 		return host;
 	}
-	
+
 	public File getFile() {
 		return file;
 	}
@@ -89,7 +89,7 @@ public abstract class StormResource implements Resource, DigestResource {
 	public StormFactory getFactory() {
 		return factory;
 	}
-	
+
 	public String getUniqueId() {
 		String s = file.lastModified() + "_" + file.length() + "_" + file.getAbsolutePath();
 		return s.hashCode() + "";
@@ -97,6 +97,17 @@ public abstract class StormResource implements Resource, DigestResource {
 
 	public String getName() {
 		return file.getName();
+	}
+
+	/*
+	 * If you want the resource to be cached return the number of seconds to
+	 * cache it for, otherwise return null to disable caching(non-Javadoc)
+	 * 
+	 * @see
+	 * io.milton.resource.GetableResource#getMaxAgeSeconds(io.milton.http.Auth)
+	 */
+	public Long getMaxAgeSeconds(Auth auth) {
+		return null;
 	}
 
 	public Object authenticate(String user, String password) {
@@ -138,13 +149,13 @@ public abstract class StormResource implements Resource, DigestResource {
 	public Surl getSurl() {
 		return surl;
 	}
-	
+
 	public ArrayList<String> getSurlAsList() {
 		ArrayList<String> surls = new ArrayList<String>();
 		surls.add(getSurl().asString());
 		return surls;
 	}
-	
+
 	public InputStream getInputStream() {
 		InputStream in;
 		try {
@@ -155,7 +166,7 @@ public abstract class StormResource implements Resource, DigestResource {
 		}
 		return in;
 	}
-	
+
 	public StorageArea getStorageArea() {
 		return storageArea;
 	}
@@ -166,11 +177,11 @@ public abstract class StormResource implements Resource, DigestResource {
 		}
 		return surlInfo;
 	}
-	
+
 	public void setSurlInfo(SurlInfo surlInfo) {
 		this.surlInfo = surlInfo;
 	}
-	
+
 	protected SurlInfo loadSurlInfo() {
 		ArrayList<SurlInfo> info = null;
 		try {
@@ -186,7 +197,7 @@ public abstract class StormResource implements Resource, DigestResource {
 		}
 		return null;
 	}
-	
+
 	public String getCheckSumType() {
 		SurlInfo info = getSurlInfo();
 		String checksumType = "";
@@ -195,7 +206,7 @@ public abstract class StormResource implements Resource, DigestResource {
 		}
 		return checksumType;
 	}
-	
+
 	public String getCheckSumValue() {
 		SurlInfo info = getSurlInfo();
 		String checksumValue = "";
@@ -204,14 +215,14 @@ public abstract class StormResource implements Resource, DigestResource {
 		}
 		return checksumValue;
 	}
-	
+
 	public String getStatus() {
 		SurlInfo info = getSurlInfo();
 		String status = "";
 		if (info != null) {
 			status = info.getStatus().toString();
 		}
-		return status;	
+		return status;
 	}
 
 }
