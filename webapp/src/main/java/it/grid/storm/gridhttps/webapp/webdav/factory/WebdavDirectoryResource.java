@@ -109,13 +109,21 @@ public class WebdavDirectoryResource extends StormDirectoryResource implements M
 	 * @throws RuntimeApiException
 	 */
 	public void sendContent(OutputStream out, Range range, Map<String, String> params, String contentType) throws IOException,
-			NotAuthorizedException, RuntimeApiException, StormRequestFailureException, StormResourceException {
+			NotAuthorizedException {
 		log.debug("Called function for GET DIRECTORY");
-		Collection<SurlInfo> entries = StormResourceHelper.doLsDetailed(this, Recursion.NONE).get(0).getSubpathInfo();
+		
+		Collection<SurlInfo> entries = null;
+		try {
+			entries = StormResourceHelper.doLsDetailed(this, Recursion.NONE).get(0).getSubpathInfo();
+		} catch (RuntimeApiException e) {
+			log.error(e.getMessage());
+		} catch (StormRequestFailureException e) {
+			log.error(e.getMessage());
+		}		
 		buildDirectoryPage(out, entries);
 	}
 
-	private void buildDirectoryPage(OutputStream out, Collection<SurlInfo> entries) throws RuntimeApiException, StormResourceException {
+	private void buildDirectoryPage(OutputStream out, Collection<SurlInfo> entries) {
 		String dirPath = MiltonServlet.request().getRequestURI();
 		StormHtmlFolderPage page = new StormHtmlFolderPage(out);
 		page.start();

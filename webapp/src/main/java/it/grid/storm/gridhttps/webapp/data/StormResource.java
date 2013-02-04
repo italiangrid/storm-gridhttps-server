@@ -173,7 +173,7 @@ public abstract class StormResource implements Resource, DigestResource {
 
 	public SurlInfo getSurlInfo() {
 		if (surlInfo == null) {
-			loadSurlInfo();
+			setSurlInfo(loadSurlInfo());
 		}
 		return surlInfo;
 	}
@@ -191,11 +191,7 @@ public abstract class StormResource implements Resource, DigestResource {
 		} catch (StormRequestFailureException e) {
 			log.error("Retrieving surl-info for " + getFile() + ": " + e.getReason());
 		}
-		if (info != null) {
-			setSurlInfo(info.get(0));
-			return info.get(0);
-		}
-		return null;
+		return info != null ? info.get(0) : null;
 	}
 
 	public String getCheckSumType() {
