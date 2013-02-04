@@ -209,7 +209,7 @@ public abstract class StormFactory implements ResourceFactory {
 		};
 		StormResource r = null;
 		if (surlInfo != null) {
-			if (!notSuccessful.contains(surlInfo.getStatus())) {
+			if (!notSuccessful.contains(surlInfo.getStatus().getStatusCode())) {
 				if (surlInfo.getType() != null) {
 					if (surlInfo.getStfn().startsWith(storageArea.getStfnRoot())) {
 						File file = new File(storageArea.getRealPath(surlInfo.getStfn()));
