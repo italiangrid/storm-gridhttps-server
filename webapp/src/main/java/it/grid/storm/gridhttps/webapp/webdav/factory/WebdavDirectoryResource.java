@@ -25,6 +25,7 @@ import it.grid.storm.gridhttps.webapp.data.StormResourceHelper;
 import it.grid.storm.gridhttps.webapp.data.exceptions.RuntimeApiException;
 import it.grid.storm.gridhttps.webapp.data.exceptions.StormRequestFailureException;
 import it.grid.storm.gridhttps.webapp.data.exceptions.StormResourceException;
+import it.grid.storm.gridhttps.webapp.data.exceptions.TooManyResultsException;
 import it.grid.storm.gridhttps.webapp.webdav.factory.html.StormHtmlFolderPage;
 import it.grid.storm.srm.types.Recursion;
 import it.grid.storm.storagearea.StorageArea;
@@ -119,6 +120,9 @@ public class WebdavDirectoryResource extends StormDirectoryResource implements M
 			log.error(e.getMessage());
 		} catch (StormRequestFailureException e) {
 			log.error(e.getMessage());
+		} catch (TooManyResultsException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}		
 		buildDirectoryPage(out, entries);
 	}

@@ -31,6 +31,7 @@ import it.grid.storm.gridhttps.webapp.data.Surl;
 import it.grid.storm.gridhttps.webapp.data.exceptions.RuntimeApiException;
 import it.grid.storm.gridhttps.webapp.data.exceptions.StormRequestFailureException;
 import it.grid.storm.gridhttps.webapp.data.exceptions.StormResourceException;
+import it.grid.storm.gridhttps.webapp.data.exceptions.TooManyResultsException;
 import it.grid.storm.srm.types.Recursion;
 import it.grid.storm.srm.types.RecursionLevel;
 import it.grid.storm.srm.types.TRequestToken;
@@ -57,24 +58,26 @@ public class StormResourceHelper {
 		StormBackendApi.abortRequest(backend, token, user);
 	}
 
-	public static void doMoveTo(StormResource source, StormResource newParent, String newName) throws RuntimeApiException, StormRequestFailureException {
+	public static void doMoveTo(StormResource source, StormResource newParent, String newName) throws RuntimeApiException,
+			StormRequestFailureException, TooManyResultsException {
 		HttpHelper httpHelper = new HttpHelper(MiltonServlet.request(), MiltonServlet.response());
 		doMoveTo(source, newParent, newName, httpHelper.getUser());
 	}
 
-	public static void doMoveTo(StormResource source, StormResource newParent, String newName, UserCredentials user) throws RuntimeApiException, StormRequestFailureException {
+	public static void doMoveTo(StormResource source, StormResource newParent, String newName, UserCredentials user)
+			throws RuntimeApiException, StormRequestFailureException, TooManyResultsException {
 		log.debug("Called doMoveTo()");
 		String fromSurl = source.getSurl().asString();
 		String toSurl = (new Surl(newParent.getSurl(), newName)).asString();
 		StormBackendApi.mv(source.getFactory().getBackendApi(), fromSurl, toSurl, user);
 	}
 
-	public static void doDelete(StormResource source) throws RuntimeApiException, StormRequestFailureException  {
+	public static void doDelete(StormResource source) throws RuntimeApiException, StormRequestFailureException, TooManyResultsException {
 		HttpHelper httpHelper = new HttpHelper(MiltonServlet.request(), MiltonServlet.response());
 		doDelete(source, httpHelper.getUser());
 	}
 
-	public static void doDelete(StormResource source, UserCredentials user) throws RuntimeApiException, StormRequestFailureException  {
+	public static void doDelete(StormResource source, UserCredentials user) throws RuntimeApiException, StormRequestFailureException, TooManyResultsException {
 		log.debug("Called doDelete()");
 		if (source instanceof StormDirectoryResource) { // DIRECTORY
 			StormDirectoryResource sourceDir = (StormDirectoryResource) source;
@@ -90,7 +93,7 @@ public class StormResourceHelper {
 	}
 
 	public static InputStream doGetFile(StormFileResource source) throws NotFoundException, RuntimeApiException,
-			StormRequestFailureException {
+			StormRequestFailureException, TooManyResultsException {
 		HttpHelper httpHelper = new HttpHelper(MiltonServlet.request(), MiltonServlet.response());
 		ArrayList<String> transferProtocols = new ArrayList<String>();
 		transferProtocols.add(httpHelper.getRequestProtocol());
@@ -98,7 +101,7 @@ public class StormResourceHelper {
 	}
 
 	public static InputStream doGetFile(StormFileResource source, UserCredentials user, ArrayList<String> transferProtocols)
-			throws NotFoundException, RuntimeApiException, StormRequestFailureException {
+			throws NotFoundException, RuntimeApiException, StormRequestFailureException, TooManyResultsException {
 		log.debug("Called doGetFile()");
 		PtGOutputData outputPtG = StormBackendApi.prepareToGet(source.getFactory().getBackendApi(), source.getSurl().asString(), user,
 				transferProtocols);
@@ -113,20 +116,22 @@ public class StormResourceHelper {
 		return in;
 	}
 
-	public static StormDirectoryResource doMkCol(StormDirectoryResource sourceDir, String name) throws RuntimeApiException, StormRequestFailureException {
+	public static StormDirectoryResource doMkCol(StormDirectoryResource sourceDir, String name) throws RuntimeApiException,
+			StormRequestFailureException, TooManyResultsException {
 		HttpHelper httpHelper = new HttpHelper(MiltonServlet.request(), MiltonServlet.response());
 		return doMkCol(sourceDir, name, httpHelper.getUser());
 	}
 
 	public static StormDirectoryResource doMkCol(StormDirectoryResource sourceDir, String name, UserCredentials user)
-			throws RuntimeApiException, StormRequestFailureException {
+			throws RuntimeApiException, StormRequestFailureException, TooManyResultsException {
 		log.debug("Called doMkCol()");
 		Surl newDir = new Surl(sourceDir.getSurl(), name);
 		StormBackendApi.mkdir(sourceDir.getFactory().getBackendApi(), newDir.asString(), user);
 		return new StormDirectoryResource(sourceDir, name);
 	}
 
-	public static StormFileResource doPut(StormDirectoryResource sourceDir, String name, InputStream in) throws RuntimeApiException, StormRequestFailureException, StormResourceException {
+	public static StormFileResource doPut(StormDirectoryResource sourceDir, String name, InputStream in) throws RuntimeApiException,
+			StormRequestFailureException, StormResourceException, TooManyResultsException {
 		HttpHelper httpHelper = new HttpHelper(MiltonServlet.request(), MiltonServlet.response());
 		ArrayList<String> transferProtocols = new ArrayList<String>();
 		transferProtocols.add(httpHelper.getRequestProtocol());
@@ -134,11 +139,12 @@ public class StormResourceHelper {
 	}
 
 	public static StormFileResource doPut(StormDirectoryResource sourceDir, String name, InputStream in, UserCredentials user,
-			ArrayList<String> transferProtocols) throws RuntimeApiException, StormRequestFailureException, StormResourceException {
+			ArrayList<String> transferProtocols) throws RuntimeApiException, StormRequestFailureException, StormResourceException, TooManyResultsException {
 		log.debug("Called doPut()");
 		File fsDest = new File(sourceDir.getFile(), name);
 		Surl newFile = new Surl(sourceDir.getSurl(), name);
-		FileTransferOutputData outputPtp = StormBackendApi.prepareToPut(sourceDir.getFactory().getBackendApi(), newFile.asString(), user, transferProtocols);
+		FileTransferOutputData outputPtp = StormBackendApi.prepareToPut(sourceDir.getFactory().getBackendApi(), newFile.asString(), user,
+				transferProtocols);
 		// put
 		try {
 			sourceDir.getFactory().getContentService().setFileContent(fsDest, in);
@@ -155,12 +161,14 @@ public class StormResourceHelper {
 		return new StormFileResource(sourceDir, name);
 	}
 
-	public static StormFileResource doPutOverwrite(StormFileResource source, InputStream in) throws RuntimeApiException, StormRequestFailureException, StormResourceException {
+	public static StormFileResource doPutOverwrite(StormFileResource source, InputStream in) throws RuntimeApiException,
+			StormRequestFailureException, StormResourceException, TooManyResultsException {
 		HttpHelper httpHelper = new HttpHelper(MiltonServlet.request(), MiltonServlet.response());
 		return doPutOverwrite(source, in, httpHelper.getUser());
 	}
 
-	public static StormFileResource doPutOverwrite(StormFileResource source, InputStream in, UserCredentials user) throws RuntimeApiException, StormRequestFailureException, StormResourceException {
+	public static StormFileResource doPutOverwrite(StormFileResource source, InputStream in, UserCredentials user)
+			throws RuntimeApiException, StormRequestFailureException, StormResourceException, TooManyResultsException {
 		log.debug("Called doPutOverwrite()");
 		HttpHelper httpHelper = new HttpHelper(MiltonServlet.request(), MiltonServlet.response());
 		ArrayList<String> transferProtocols = new ArrayList<String>();
@@ -192,25 +200,27 @@ public class StormResourceHelper {
 		return filteredOutput;
 	}
 
-	public static ArrayList<SurlInfo> doLsDetailed(StormResource source, Recursion recursion) throws RuntimeApiException, StormRequestFailureException {
+	public static ArrayList<SurlInfo> doLsDetailed(StormResource source, Recursion recursion) throws RuntimeApiException,
+			StormRequestFailureException, TooManyResultsException {
 		HttpHelper httpHelper = new HttpHelper(MiltonServlet.request(), MiltonServlet.response());
 		return doLsDetailed(source, recursion, httpHelper.getUser());
 	}
 
 	public static ArrayList<SurlInfo> doLsDetailed(StormResource source, Recursion recursion, UserCredentials user)
-			throws RuntimeApiException, StormRequestFailureException {
+			throws RuntimeApiException, StormRequestFailureException, TooManyResultsException {
 		log.debug("Called doLsDetailed()");
 		LsOutputData output = StormBackendApi.lsDetailed(source.getFactory().getBackendApi(), source.getSurl().asString(), user,
 				new RecursionLevel(recursion));
 		return filterLs((ArrayList<SurlInfo>) output.getInfos());
 	}
 
-	public static ArrayList<SurlInfo> doLs(StormResource source) throws RuntimeApiException, StormRequestFailureException {
+	public static ArrayList<SurlInfo> doLs(StormResource source) throws RuntimeApiException, StormRequestFailureException, TooManyResultsException {
 		HttpHelper httpHelper = new HttpHelper(MiltonServlet.request(), MiltonServlet.response());
 		return doLs(source, httpHelper.getUser());
 	}
 
-	public static ArrayList<SurlInfo> doLs(StormResource source, UserCredentials user) throws RuntimeApiException, StormRequestFailureException {
+	public static ArrayList<SurlInfo> doLs(StormResource source, UserCredentials user) throws RuntimeApiException,
+			StormRequestFailureException, TooManyResultsException {
 		log.debug("Called doLs()");
 		LsOutputData output = StormBackendApi.ls(source.getFactory().getBackendApi(), source.getSurl().asString(), user);
 		return filterLs((ArrayList<SurlInfo>) output.getInfos());
@@ -236,7 +246,7 @@ public class StormResourceHelper {
 	}
 
 	public static void doCopyDirectory(StormDirectoryResource sourceDir, StormDirectoryResource newParent, String newName,
-			boolean isDepthInfinity, UserCredentials user) throws RuntimeApiException, StormRequestFailureException, StormResourceException {
+			boolean isDepthInfinity, UserCredentials user) throws RuntimeApiException, StormRequestFailureException, StormResourceException, TooManyResultsException {
 		log.debug("Called doCopyDirectory()");
 		// create destination folder:
 		StormDirectoryResource destinationResource = doMkCol(newParent, newName, user);
@@ -259,12 +269,14 @@ public class StormResourceHelper {
 		}
 	}
 
-	public static void doCopyFile(StormFileResource source, StormDirectoryResource newParent, String newName) throws RuntimeApiException, StormRequestFailureException, StormResourceException {
+	public static void doCopyFile(StormFileResource source, StormDirectoryResource newParent, String newName) throws RuntimeApiException,
+			StormRequestFailureException, StormResourceException, TooManyResultsException {
 		HttpHelper httpHelper = new HttpHelper(MiltonServlet.request(), MiltonServlet.response());
 		doCopyFile(source, newParent, newName, httpHelper.getUser());
 	}
 
-	public static void doCopyFile(StormFileResource source, StormDirectoryResource newParent, String newName, UserCredentials user) throws RuntimeApiException, StormRequestFailureException, StormResourceException {
+	public static void doCopyFile(StormFileResource source, StormDirectoryResource newParent, String newName, UserCredentials user)
+			throws RuntimeApiException, StormRequestFailureException, StormResourceException, TooManyResultsException {
 		log.debug("Called doCopyFile()");
 		HttpHelper httpHelper = new HttpHelper(MiltonServlet.request(), MiltonServlet.response());
 		ArrayList<String> transferProtocols = new ArrayList<String>();
@@ -291,29 +303,31 @@ public class StormResourceHelper {
 		}
 	}
 
-	public static RequestOutputData doPrepareToGetStatus(StormFileResource source) throws NotFoundException, RuntimeApiException, StormRequestFailureException {
+	public static RequestOutputData doPrepareToGetStatus(StormFileResource source) throws NotFoundException, RuntimeApiException,
+			StormRequestFailureException, TooManyResultsException {
 		HttpHelper httpHelper = new HttpHelper(MiltonServlet.request(), MiltonServlet.response());
 		return doPrepareToGetStatus(source, httpHelper.getUser());
 	}
 
 	public static RequestOutputData doPrepareToGetStatus(StormFileResource source, UserCredentials user) throws NotFoundException,
-			RuntimeApiException, StormRequestFailureException {
+			RuntimeApiException, StormRequestFailureException, TooManyResultsException {
 		log.debug("Called doPrepareToGetStatus()");
 		return StormBackendApi.prepareToGetStatus(source.getFactory().getBackendApi(), source.getSurl().asString(), user);
 	}
 
-	public static RequestOutputData doPrepareToPutStatus(StormFileResource source) throws NotFoundException, RuntimeApiException, StormRequestFailureException {
+	public static RequestOutputData doPrepareToPutStatus(StormFileResource source) throws NotFoundException, RuntimeApiException,
+			StormRequestFailureException, TooManyResultsException {
 		HttpHelper httpHelper = new HttpHelper(MiltonServlet.request(), MiltonServlet.response());
 		return doPrepareToPutStatus(source, httpHelper.getUser());
 	}
 
 	public static RequestOutputData doPrepareToPutStatus(StormFileResource source, UserCredentials user) throws NotFoundException,
-			RuntimeApiException, StormRequestFailureException {
+			RuntimeApiException, StormRequestFailureException, TooManyResultsException {
 		log.debug("Called doPrepareToPutStatus()");
 		return StormBackendApi.prepareToPutStatus(source.getFactory().getBackendApi(), source.getSurl().asString(), user);
 	}
 
-	public static ArrayList<SurlInfo> doLs(BackendApi backend, File file) throws RuntimeApiException, StormRequestFailureException {
+	public static ArrayList<SurlInfo> doLs(BackendApi backend, File file) throws RuntimeApiException, StormRequestFailureException, TooManyResultsException {
 		log.debug("Called doLs(factory,file)");
 		Surl surl = new Surl(file);
 		HttpHelper httpHelper = new HttpHelper(MiltonServlet.request(), MiltonServlet.response());
@@ -321,7 +335,8 @@ public class StormResourceHelper {
 		return filterLs((ArrayList<SurlInfo>) output.getInfos());
 	}
 
-	public static ArrayList<SurlInfo> doLsDetailed(BackendApi backend, File file, Recursion recursion) throws RuntimeApiException, StormRequestFailureException {
+	public static ArrayList<SurlInfo> doLsDetailed(BackendApi backend, File file, Recursion recursion) throws RuntimeApiException,
+			StormRequestFailureException, TooManyResultsException {
 		log.debug("Called doLsDetailed(factory,file)");
 		Surl surl = new Surl(file);
 		HttpHelper httpHelper = new HttpHelper(MiltonServlet.request(), MiltonServlet.response());

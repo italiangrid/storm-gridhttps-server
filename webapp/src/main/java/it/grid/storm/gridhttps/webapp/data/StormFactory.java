@@ -19,6 +19,7 @@ import it.grid.storm.gridhttps.webapp.data.StormResource;
 import it.grid.storm.gridhttps.webapp.data.StormResourceHelper;
 import it.grid.storm.gridhttps.webapp.data.exceptions.RuntimeApiException;
 import it.grid.storm.gridhttps.webapp.data.exceptions.StormRequestFailureException;
+import it.grid.storm.gridhttps.webapp.data.exceptions.TooManyResultsException;
 import it.grid.storm.srm.types.Recursion;
 import it.grid.storm.srm.types.TFileType;
 import it.grid.storm.srm.types.TStatusCode;
@@ -181,7 +182,7 @@ public abstract class StormFactory implements ResourceFactory {
 		return false;
 	}
 		
-	public StormResource resolveFile(String host, File file, StorageArea storageArea) {
+	public StormResource resolveFile(String host, File file, StorageArea storageArea) throws TooManyResultsException {
 		SurlInfo detail = null;
 		try {
 			detail = StormResourceHelper.doLsDetailed(this.getBackendApi(), file, Recursion.NONE).get(0);

@@ -15,8 +15,10 @@ package it.grid.storm.gridhttps.webapp.backendApi;
 import it.grid.storm.gridhttps.webapp.authorization.UserCredentials;
 import it.grid.storm.gridhttps.webapp.data.exceptions.RuntimeApiException;
 import it.grid.storm.gridhttps.webapp.data.exceptions.StormRequestFailureException;
+import it.grid.storm.gridhttps.webapp.data.exceptions.TooManyResultsException;
 import it.grid.storm.srm.types.RecursionLevel;
 import it.grid.storm.srm.types.TRequestToken;
+import it.grid.storm.srm.types.TStatusCode;
 import it.grid.storm.xmlrpc.ApiException;
 import it.grid.storm.xmlrpc.BackendApi;
 import it.grid.storm.xmlrpc.outputdata.FileTransferOutputData;
@@ -79,11 +81,12 @@ public class StormBackendApi {
 		} catch (ApiException e) {
 			log.error(e.getMessage());
 			throw new RuntimeApiException(e.getMessage(), e);
-		} 
+		}
 		return output;
 	}
 
-	public static PtGOutputData prepareToGet(BackendApi backend, String surl, UserCredentials user, List<String> transferProtocols) throws RuntimeApiException, StormRequestFailureException {
+	public static PtGOutputData prepareToGet(BackendApi backend, String surl, UserCredentials user, List<String> transferProtocols)
+			throws RuntimeApiException, TooManyResultsException, StormRequestFailureException {
 		PtGOutputData outputPtG = null;
 		log.debug("prepare to get surl: " + surl);
 		try {
@@ -100,13 +103,17 @@ public class StormBackendApi {
 		}
 		log.debug(outputPtG.getStatus().getStatusCode().getValue());
 		log.debug(outputPtG.getStatus().getExplanation());
-		if (!outputPtG.getStatus().getStatusCode().getValue().equals("SRM_FILE_PINNED")) {
-			throw new StormRequestFailureException("prepare-to-get status is " + outputPtG.getStatus().getStatusCode().getValue());
+		if (outputPtG.getStatus().getStatusCode().getValue().equals("SRM_FILE_PINNED")) {
+			return outputPtG;
+		} else if (outputPtG.getStatus().getStatusCode().equals(TStatusCode.SRM_TOO_MANY_RESULTS)) {
+			throw new TooManyResultsException("prepare-to-get output status is " + outputPtG.getStatus().getStatusCode().getValue());
+		} else {
+			throw new StormRequestFailureException("prepare-to-get output status is " + outputPtG.getStatus().getStatusCode().getValue());
 		}
-		return outputPtG;
 	}
 
-	public static SurlArrayRequestOutputData releaseFile(BackendApi backend, String surl, TRequestToken token, UserCredentials user) throws RuntimeApiException, StormRequestFailureException {
+	public static SurlArrayRequestOutputData releaseFile(BackendApi backend, String surl, TRequestToken token, UserCredentials user)
+			throws RuntimeApiException, StormRequestFailureException, TooManyResultsException {
 		ArrayList<String> surlList = new ArrayList<String>();
 		surlList.add(surl);
 		SurlArrayRequestOutputData output = null;
@@ -130,14 +137,19 @@ public class StormBackendApi {
 		}
 		log.debug(output.getStatus().getStatusCode().getValue());
 		log.debug(output.getStatus().getExplanation());
-		if (!output.isSuccess()) {
+		if (output.isSuccess()) {
+			return output;
+		} else if (output.getStatus().getStatusCode().equals(TStatusCode.SRM_TOO_MANY_RESULTS)) {
 			abortRequest(backend, token, user);
-			throw new StormRequestFailureException("release-files status is " + output.getStatus().getStatusCode().getValue());
+			throw new TooManyResultsException("release-file output status is " + output.getStatus().getStatusCode().getValue());
+		} else {
+			abortRequest(backend, token, user);
+			throw new StormRequestFailureException("release-file output status is " + output.getStatus().getStatusCode().getValue());
 		}
-		return output;
 	}
 
-	public static FileTransferOutputData prepareToPut(BackendApi backend, String newFileSurl, UserCredentials user, List<String> transferProtocols) throws RuntimeApiException, StormRequestFailureException {
+	public static FileTransferOutputData prepareToPut(BackendApi backend, String newFileSurl, UserCredentials user,
+			List<String> transferProtocols) throws RuntimeApiException, StormRequestFailureException, TooManyResultsException {
 		ArrayList<String> newSurlList = new ArrayList<String>();
 		newSurlList.add(newFileSurl);
 		FileTransferOutputData outputPtp = null;
@@ -156,13 +168,17 @@ public class StormBackendApi {
 		}
 		log.debug(outputPtp.getStatus().getStatusCode().getValue());
 		log.debug(outputPtp.getStatus().getExplanation());
-		if (!outputPtp.getStatus().getStatusCode().getValue().equals("SRM_SPACE_AVAILABLE")) {
-			throw new StormRequestFailureException("prepare-to-put status is " + outputPtp.getStatus().getStatusCode().getValue());
+		if (outputPtp.getStatus().getStatusCode().getValue().equals("SRM_SPACE_AVAILABLE")) {
+			return outputPtp;
+		} else if (outputPtp.getStatus().getStatusCode().equals(TStatusCode.SRM_TOO_MANY_RESULTS)) {
+			throw new TooManyResultsException("prepare-to-put output status is " + outputPtp.getStatus().getStatusCode().getValue());
+		} else {
+			throw new StormRequestFailureException("prepare-to-put output status is " + outputPtp.getStatus().getStatusCode().getValue());
 		}
-		return outputPtp;
 	}
 
-	public static FileTransferOutputData prepareToPutOverwrite(BackendApi backend, String newFileSurl, UserCredentials user, List<String> transferProtocols) throws RuntimeApiException, StormRequestFailureException {
+	public static FileTransferOutputData prepareToPutOverwrite(BackendApi backend, String newFileSurl, UserCredentials user,
+			List<String> transferProtocols) throws RuntimeApiException, StormRequestFailureException, TooManyResultsException {
 		ArrayList<String> newSurlList = new ArrayList<String>();
 		newSurlList.add(newFileSurl);
 		FileTransferOutputData outputPtp = null;
@@ -181,13 +197,19 @@ public class StormBackendApi {
 		}
 		log.debug(outputPtp.getStatus().getStatusCode().getValue());
 		log.debug(outputPtp.getStatus().getExplanation());
-		if (!outputPtp.getStatus().getStatusCode().getValue().equals("SRM_SPACE_AVAILABLE")) {
-			throw new StormRequestFailureException("prepare-to-put-overwrite status is " + outputPtp.getStatus().getStatusCode().getValue());
+		if (outputPtp.getStatus().getStatusCode().getValue().equals("SRM_SPACE_AVAILABLE")) {
+			return outputPtp;
+		} else if (outputPtp.getStatus().getStatusCode().equals(TStatusCode.SRM_TOO_MANY_RESULTS)) {
+			throw new TooManyResultsException("prepare-to-put-overwrite output status is "
+					+ outputPtp.getStatus().getStatusCode().getValue());
+		} else {
+			throw new StormRequestFailureException("prepare-to-put-overwrite output status is "
+					+ outputPtp.getStatus().getStatusCode().getValue());
 		}
-		return outputPtp;
 	}
 
-	public static SurlArrayRequestOutputData putDone(BackendApi backend, String newFileSurl, TRequestToken token, UserCredentials user) throws RuntimeApiException, StormRequestFailureException {
+	public static SurlArrayRequestOutputData putDone(BackendApi backend, String newFileSurl, TRequestToken token, UserCredentials user)
+			throws RuntimeApiException, StormRequestFailureException, TooManyResultsException {
 		ArrayList<String> newSurlList = new ArrayList<String>();
 		newSurlList.add(newFileSurl);
 		SurlArrayRequestOutputData outputPd = null;
@@ -215,10 +237,19 @@ public class StormBackendApi {
 			abortRequest(backend, token, user);
 			throw new StormRequestFailureException("put-done status is " + outputPd.getStatus().getStatusCode().getValue());
 		}
-		return outputPd;
+		if (outputPd.isSuccess()) {
+			return outputPd;
+		} else if (outputPd.getStatus().getStatusCode().equals(TStatusCode.SRM_TOO_MANY_RESULTS)) {
+			abortRequest(backend, token, user);
+			throw new TooManyResultsException("put-done output status is " + outputPd.getStatus().getStatusCode().getValue());
+		} else {
+			abortRequest(backend, token, user);
+			throw new StormRequestFailureException("put-done output status is " + outputPd.getStatus().getStatusCode().getValue());
+		}
 	}
 
-	public static RequestOutputData mkdir(BackendApi backend, String newDirSurl, UserCredentials user) throws RuntimeApiException, StormRequestFailureException {
+	public static RequestOutputData mkdir(BackendApi backend, String newDirSurl, UserCredentials user) throws RuntimeApiException,
+			StormRequestFailureException, TooManyResultsException {
 		RequestOutputData output = null;
 		log.debug("mkdir surl: " + newDirSurl);
 		try {
@@ -235,13 +266,17 @@ public class StormBackendApi {
 		}
 		log.debug(output.getStatus().getStatusCode().getValue());
 		log.debug(output.getStatus().getExplanation());
-		if (!output.isSuccess()) {
-			throw new StormRequestFailureException("mkdir status is " + output.getStatus().getStatusCode().getValue());
+		if (output.isSuccess()) {
+			return output;
+		} else if (output.getStatus().getStatusCode().equals(TStatusCode.SRM_TOO_MANY_RESULTS)) {
+			throw new TooManyResultsException("mkdir output status is " + output.getStatus().getStatusCode().getValue());
+		} else {
+			throw new StormRequestFailureException("mkdir output status is " + output.getStatus().getStatusCode().getValue());
 		}
-		return output;
 	}
 
-	public static RequestOutputData rm(BackendApi backend, String surl, UserCredentials user) throws RuntimeApiException, StormRequestFailureException {
+	public static RequestOutputData rm(BackendApi backend, String surl, UserCredentials user) throws RuntimeApiException,
+			StormRequestFailureException, TooManyResultsException {
 		ArrayList<String> surlList = new ArrayList<String>();
 		surlList.add(surl);
 		RequestOutputData output = null;
@@ -260,13 +295,17 @@ public class StormBackendApi {
 		}
 		log.debug(output.getStatus().getStatusCode().getValue());
 		log.debug(output.getStatus().getExplanation());
-		if (!output.isSuccess()) {
-			throw new StormRequestFailureException("rm status is " + output.getStatus().getStatusCode().getValue());
+		if (output.isSuccess()) {
+			return output;
+		} else if (output.getStatus().getStatusCode().equals(TStatusCode.SRM_TOO_MANY_RESULTS)) {
+			throw new TooManyResultsException("rm output status is " + output.getStatus().getStatusCode().getValue());
+		} else {
+			throw new StormRequestFailureException("rm output status is " + output.getStatus().getStatusCode().getValue());
 		}
-		return output;
 	}
 
-	public static RequestOutputData rmdir(BackendApi backend, String surl, UserCredentials user) throws RuntimeApiException, StormRequestFailureException {
+	public static RequestOutputData rmdir(BackendApi backend, String surl, UserCredentials user) throws RuntimeApiException,
+			StormRequestFailureException, TooManyResultsException {
 		RequestOutputData output = null;
 		log.debug("rmdir surl : " + surl);
 		try {
@@ -283,13 +322,17 @@ public class StormBackendApi {
 		}
 		log.debug(output.getStatus().getStatusCode().getValue());
 		log.debug(output.getStatus().getExplanation());
-		if (!output.isSuccess()) {
-			throw new StormRequestFailureException("rm-dir status is " + output.getStatus().getStatusCode().getValue());
+		if (output.isSuccess()) {
+			return output;
+		} else if (output.getStatus().getStatusCode().equals(TStatusCode.SRM_TOO_MANY_RESULTS)) {
+			throw new TooManyResultsException("rmdir output status is " + output.getStatus().getStatusCode().getValue());
+		} else {
+			throw new StormRequestFailureException("rmdir output status is " + output.getStatus().getStatusCode().getValue());
 		}
-		return output;
 	}
 
-	public static RequestOutputData rmdirRecoursively(BackendApi backend, String surl, UserCredentials user) throws RuntimeApiException, StormRequestFailureException {
+	public static RequestOutputData rmdirRecoursively(BackendApi backend, String surl, UserCredentials user) throws RuntimeApiException,
+			StormRequestFailureException, TooManyResultsException {
 		RequestOutputData output = null;
 		log.debug("rmdir-recourively surl : " + surl);
 		try {
@@ -306,13 +349,17 @@ public class StormBackendApi {
 		}
 		log.debug(output.getStatus().getStatusCode().getValue());
 		log.debug(output.getStatus().getExplanation());
-		if (!output.isSuccess()) {
-			throw new StormRequestFailureException("rm-dir-recoursively status is " + output.getStatus().getStatusCode().getValue());
+		if (output.isSuccess()) {
+			return output;
+		} else if (output.getStatus().getStatusCode().equals(TStatusCode.SRM_TOO_MANY_RESULTS)) {
+			throw new TooManyResultsException("rmdir-recoursively output status is " + output.getStatus().getStatusCode().getValue());
+		} else {
+			throw new StormRequestFailureException("mkdir-recoursively output status is " + output.getStatus().getStatusCode().getValue());
 		}
-		return output;
 	}
 
-	public static RequestOutputData mv(BackendApi backend, String fromSurl, String toSurl, UserCredentials user) throws RuntimeApiException, StormRequestFailureException {
+	public static RequestOutputData mv(BackendApi backend, String fromSurl, String toSurl, UserCredentials user)
+			throws RuntimeApiException, StormRequestFailureException, TooManyResultsException {
 		RequestOutputData output = null;
 		log.debug("move surl: " + fromSurl + " to surl: " + toSurl);
 		try {
@@ -329,13 +376,17 @@ public class StormBackendApi {
 		}
 		log.debug(output.getStatus().getStatusCode().getValue());
 		log.debug(output.getStatus().getExplanation());
-		if (!output.isSuccess()) {
-			throw new StormRequestFailureException("mv status is " + output.getStatus().getStatusCode().getValue());
+		if (output.isSuccess()) {
+			return output;
+		} else if (output.getStatus().getStatusCode().equals(TStatusCode.SRM_TOO_MANY_RESULTS)) {
+			throw new TooManyResultsException("mv output status is " + output.getStatus().getStatusCode().getValue());
+		} else {
+			throw new StormRequestFailureException("mv output status is " + output.getStatus().getStatusCode().getValue());
 		}
-		return output;
 	}
 
-	public static LsOutputData lsDetailed(BackendApi backend, String surl, UserCredentials user, RecursionLevel recursion) throws RuntimeApiException, StormRequestFailureException {
+	public static LsOutputData lsDetailed(BackendApi backend, String surl, UserCredentials user, RecursionLevel recursion)
+			throws RuntimeApiException, StormRequestFailureException, TooManyResultsException {
 		ArrayList<String> surlList = new ArrayList<String>();
 		surlList.add(surl);
 		LsOutputData output = null;
@@ -354,13 +405,17 @@ public class StormBackendApi {
 		}
 		log.debug(output.getStatus().getStatusCode().getValue());
 		log.debug(output.getStatus().getExplanation());
-		if (!output.isSuccess()) {
-			throw new StormRequestFailureException("ls-detailed status is " + output.getStatus().getStatusCode().getValue());
+		if (output.isSuccess()) {
+			return output;
+		} else if (output.getStatus().getStatusCode().equals(TStatusCode.SRM_TOO_MANY_RESULTS)) {
+			throw new TooManyResultsException("ls-detailed output status is " + output.getStatus().getStatusCode().getValue());
+		} else {
+			throw new StormRequestFailureException("ls-detailed output status is " + output.getStatus().getStatusCode().getValue());
 		}
-		return output;
 	}
-	
-	public static LsOutputData ls(BackendApi backend, String surl, UserCredentials user) throws RuntimeApiException, StormRequestFailureException {
+
+	public static LsOutputData ls(BackendApi backend, String surl, UserCredentials user) throws RuntimeApiException,
+			StormRequestFailureException, TooManyResultsException {
 		ArrayList<String> surlList = new ArrayList<String>();
 		surlList.add(surl);
 		LsOutputData output = null;
@@ -379,13 +434,17 @@ public class StormBackendApi {
 		}
 		log.debug(output.getStatus().getStatusCode().getValue());
 		log.debug(output.getStatus().getExplanation());
-		if (!output.isSuccess()) {
-			throw new StormRequestFailureException("ls status is " + output.getStatus().getStatusCode().getValue());
+		if (output.isSuccess()) {
+			return output;
+		} else if (output.getStatus().getStatusCode().equals(TStatusCode.SRM_TOO_MANY_RESULTS)) {
+			throw new TooManyResultsException("ls output status is " + output.getStatus().getStatusCode().getValue());
+		} else {
+			throw new StormRequestFailureException("ls output status is " + output.getStatus().getStatusCode().getValue());
 		}
-		return output;
 	}
-	
-	public static SurlArrayRequestOutputData prepareToPutStatus(BackendApi backend, String newFileSurl, UserCredentials user) throws RuntimeApiException, StormRequestFailureException {
+
+	public static SurlArrayRequestOutputData prepareToPutStatus(BackendApi backend, String newFileSurl, UserCredentials user)
+			throws RuntimeApiException, StormRequestFailureException, TooManyResultsException {
 		ArrayList<String> newSurlList = new ArrayList<String>();
 		newSurlList.add(newFileSurl);
 		SurlArrayRequestOutputData outputSPtp = null;
@@ -404,13 +463,18 @@ public class StormBackendApi {
 		}
 		log.debug(outputSPtp.getStatus().getStatusCode().getValue());
 		log.debug(outputSPtp.getStatus().getExplanation());
-		if (!outputSPtp.getStatus().getStatusCode().getValue().equals("SRM_SUCCESS")) {
-			throw new StormRequestFailureException("prepare-to-put-status status is " + outputSPtp.getStatus().getStatusCode().getValue());
+		
+		if (outputSPtp.getStatus().getStatusCode().getValue().equals("SRM_SUCCESS")) {
+			return outputSPtp;
+		} else if (outputSPtp.getStatus().getStatusCode().equals(TStatusCode.SRM_TOO_MANY_RESULTS)) {
+			throw new TooManyResultsException("prepare-to-put-status output status is " + outputSPtp.getStatus().getStatusCode().getValue());
+		} else {
+			throw new StormRequestFailureException("prepare-to-put-status output status is " + outputSPtp.getStatus().getStatusCode().getValue());
 		}
-		return outputSPtp;
 	}
-	
-	public static SurlArrayRequestOutputData prepareToGetStatus(BackendApi backend, String newFileSurl, UserCredentials user) throws RuntimeApiException, StormRequestFailureException {
+
+	public static SurlArrayRequestOutputData prepareToGetStatus(BackendApi backend, String newFileSurl, UserCredentials user)
+			throws RuntimeApiException, StormRequestFailureException, TooManyResultsException {
 		ArrayList<String> newSurlList = new ArrayList<String>();
 		newSurlList.add(newFileSurl);
 		SurlArrayRequestOutputData outputSPtg = null;
@@ -429,10 +493,14 @@ public class StormBackendApi {
 		}
 		log.debug(outputSPtg.getStatus().getStatusCode().getValue());
 		log.debug(outputSPtg.getStatus().getExplanation());
-		if (!outputSPtg.getStatus().getStatusCode().getValue().equals("SRM_SUCCESS")) {
-			throw new StormRequestFailureException("prepare-to-get-status status is " + outputSPtg.getStatus().getStatusCode().getValue());
+		
+		if (outputSPtg.getStatus().getStatusCode().getValue().equals("SRM_SUCCESS")) {
+			return outputSPtg;
+		} else if (outputSPtg.getStatus().getStatusCode().equals(TStatusCode.SRM_TOO_MANY_RESULTS)) {
+			throw new TooManyResultsException("prepare-to-put-status output status is " + outputSPtg.getStatus().getStatusCode().getValue());
+		} else {
+			throw new StormRequestFailureException("prepare-to-put-status output status is " + outputSPtg.getStatus().getStatusCode().getValue());
 		}
-		return outputSPtg;
 	}
-	
+
 }

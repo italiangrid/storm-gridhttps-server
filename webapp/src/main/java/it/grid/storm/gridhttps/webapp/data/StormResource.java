@@ -20,6 +20,7 @@ import it.grid.storm.gridhttps.webapp.data.StormFactory;
 import it.grid.storm.gridhttps.webapp.data.Surl;
 import it.grid.storm.gridhttps.webapp.data.exceptions.RuntimeApiException;
 import it.grid.storm.gridhttps.webapp.data.exceptions.StormRequestFailureException;
+import it.grid.storm.gridhttps.webapp.data.exceptions.TooManyResultsException;
 import it.grid.storm.srm.types.Recursion;
 import it.grid.storm.storagearea.StorageArea;
 import it.grid.storm.xmlrpc.outputdata.LsOutputData.SurlInfo;
@@ -188,8 +189,13 @@ public abstract class StormResource implements Resource, DigestResource {
 			info = StormResourceHelper.doLsDetailed(this, Recursion.NONE);
 		} catch (RuntimeApiException e) {
 			log.error("Retrieving surl-info for " + getFile() + ": " + e.getReason());
+			throw new RuntimeException(e);
 		} catch (StormRequestFailureException e) {
 			log.error("Retrieving surl-info for " + getFile() + ": " + e.getReason());
+		} catch (TooManyResultsException e) {
+			log.error("Retrieving surl-info for " + getFile() + ": " + e.getReason());
+			throw new RuntimeException(e);
+			
 		}
 		return info != null ? info.get(0) : null;
 	}

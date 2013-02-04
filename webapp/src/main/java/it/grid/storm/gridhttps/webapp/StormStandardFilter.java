@@ -35,6 +35,7 @@ import it.grid.storm.gridhttps.webapp.HttpHelper;
 import it.grid.storm.gridhttps.webapp.data.exceptions.RuntimeApiException;
 import it.grid.storm.gridhttps.webapp.data.exceptions.StormRequestFailureException;
 import it.grid.storm.gridhttps.webapp.data.exceptions.StormResourceException;
+import it.grid.storm.gridhttps.webapp.data.exceptions.TooManyResultsException;
 
 public class StormStandardFilter implements Filter {
 
@@ -65,6 +66,9 @@ public class StormStandardFilter implements Filter {
 				}
 			}
 			printExitStatus(request, response);
+		} catch (TooManyResultsException ex) {
+			printErrorCommand(ex.getMessage(), ex.getReason());
+			manager.getResponseHandler().respondServerError(request, response, ex.getReason().toString());
 		} catch (RuntimeApiException ex) {
 			printErrorCommand(ex.getMessage(), ex.getReason());
 			manager.getResponseHandler().respondServerError(request, response, ex.getReason().toString());
