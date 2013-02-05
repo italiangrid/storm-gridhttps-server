@@ -66,6 +66,12 @@ public class StormStandardFilter implements Filter {
 				}
 			}
 			printExitStatus(request, response);
+		} catch (IllegalArgumentException ex) {
+			printErrorCommand("IllegalArgumentException", ex.getMessage());
+			manager.getResponseHandler().respondServerError(request, response, ex.getMessage());
+		} catch (RuntimeException ex) {
+			printErrorCommand("RuntimeException", ex.getMessage());
+			manager.getResponseHandler().respondServerError(request, response, ex.getMessage());
 		} catch (TooManyResultsException ex) {
 			printErrorCommand(ex.getMessage(), ex.getReason());
 			manager.getResponseHandler().respondServerError(request, response, ex.getReason().toString());
