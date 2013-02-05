@@ -31,6 +31,7 @@ import it.grid.storm.gridhttps.webapp.data.StormFactory;
 import it.grid.storm.gridhttps.webapp.data.StormResourceHelper;
 import it.grid.storm.gridhttps.webapp.data.exceptions.RuntimeApiException;
 import it.grid.storm.gridhttps.webapp.data.exceptions.StormRequestFailureException;
+import it.grid.storm.gridhttps.webapp.data.exceptions.TooManyResultsException;
 import it.grid.storm.storagearea.StorageArea;
 import it.grid.storm.xmlrpc.outputdata.LsOutputData.SurlInfo;
 
@@ -102,10 +103,20 @@ public class StormDirectoryResource extends StormResource implements MakeCollect
 	}
 
 	public boolean hasChildren() {
-		SurlInfo info = getSurlInfo();
-		if (info != null)
-			return !info.getSubpathInfo().isEmpty();
-		return false;
+		ArrayList<SurlInfo> info = null;
+		try {
+			info = StormResourceHelper.doLs(this);
+		} catch (RuntimeApiException e) {
+			log.error("Retrieving surl-info for " + getFile() + ": " + e.getReason());
+			throw new RuntimeException(e);
+		} catch (StormRequestFailureException e) {
+			log.error("Retrieving surl-info for " + getFile() + ": " + e.getReason());
+			return false;
+		} catch (TooManyResultsException e) {
+			log.error("Retrieving surl-info for " + getFile() + ": " + e.getReason());
+			throw new RuntimeException(e);	
+		}
+		return info != null ? !info.get(0).getSubpathInfo().isEmpty() : false;
 	}
 
 	@Override
