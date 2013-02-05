@@ -21,7 +21,6 @@ import it.grid.storm.gridhttps.webapp.data.Surl;
 import it.grid.storm.gridhttps.webapp.data.exceptions.RuntimeApiException;
 import it.grid.storm.gridhttps.webapp.data.exceptions.StormRequestFailureException;
 import it.grid.storm.gridhttps.webapp.data.exceptions.TooManyResultsException;
-import it.grid.storm.srm.types.Recursion;
 import it.grid.storm.storagearea.StorageArea;
 import it.grid.storm.xmlrpc.outputdata.LsOutputData.SurlInfo;
 
@@ -186,7 +185,7 @@ public abstract class StormResource implements Resource, DigestResource {
 	protected SurlInfo loadSurlInfo() {
 		ArrayList<SurlInfo> info = null;
 		try {
-			info = StormResourceHelper.doLsDetailed(this, Recursion.NONE);
+			info = StormResourceHelper.doLimitedLsDetailed(this);
 		} catch (RuntimeApiException e) {
 			log.error("Retrieving surl-info for " + getFile() + ": " + e.getReason());
 			throw new RuntimeException(e);
