@@ -73,6 +73,7 @@ public class StormGridhttpsServer {
 		mapServer = new Server(gridhttpsInfo.getMapperServlet().getPort());	
 	
 		QueuedThreadPool threadPool = new QueuedThreadPool();
+		threadPool.setMaxIdleTimeMs(20000);
 		threadPool.setMinThreads(gridhttpsInfo.getMapActiveThreadsMin());
 		threadPool.setMaxThreads(gridhttpsInfo.getMapActiveThreadsMax());
 		threadPool.setMaxQueued(gridhttpsInfo.getMapQueuedThreadsMax());
@@ -84,7 +85,8 @@ public class StormGridhttpsServer {
 		davServer.setStopAtShutdown(true);
 		davServer.setGracefulShutdown(1000);
 		
-		QueuedThreadPool threadPool = new QueuedThreadPool();
+		QueuedThreadPool threadPool = new QueuedThreadPool(null);
+		threadPool.setMaxIdleTimeMs(20000);
 		threadPool.setMaxThreads(gridhttpsInfo.getDavActiveThreadsMax());
 		threadPool.setMaxQueued(gridhttpsInfo.getDavQueuedThreadsMax());
 		davServer.setThreadPool(threadPool);
