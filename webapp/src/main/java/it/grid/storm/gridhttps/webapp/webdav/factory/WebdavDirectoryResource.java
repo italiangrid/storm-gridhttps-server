@@ -25,7 +25,6 @@ import it.grid.storm.gridhttps.webapp.data.StormResourceHelper;
 import it.grid.storm.gridhttps.webapp.data.exceptions.RuntimeApiException;
 import it.grid.storm.gridhttps.webapp.data.exceptions.StormRequestFailureException;
 import it.grid.storm.gridhttps.webapp.data.exceptions.StormResourceException;
-import it.grid.storm.gridhttps.webapp.data.exceptions.TooManyResultsException;
 import it.grid.storm.gridhttps.webapp.webdav.factory.html.StormHtmlFolderPage;
 import it.grid.storm.srm.types.Recursion;
 import it.grid.storm.storagearea.StorageArea;
@@ -111,22 +110,16 @@ public class WebdavDirectoryResource extends StormDirectoryResource implements M
 	 * @throws RuntimeApiException
 	 */
 	public void sendContent(OutputStream out, Range range, Map<String, String> params, String contentType) throws IOException,
-			NotAuthorizedException {
+			NotAuthorizedException, BadRequestException {
 		log.debug("Called function for GET DIRECTORY");
 		
 		Collection<SurlInfo> entries = null;
 		try {
 			entries = StormResourceHelper.doLsDetailed(this, Recursion.NONE).get(0).getSubpathInfo();
-		} catch (RuntimeApiException e) {
-			log.error(e.getMessage());
-			throw new RuntimeException(e.getMessage());
 		} catch (StormRequestFailureException e) {
 			log.warn(e.getMessage());
 			entries = new ArrayList<SurlInfo>(); //empty list
-		} catch (TooManyResultsException e) {
-			log.warn(e.getMessage());
-			entries = new ArrayList<SurlInfo>(); //empty list
-		}		
+		} 	
 		buildDirectoryPage(out, entries);
 	}
 
