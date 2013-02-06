@@ -35,6 +35,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Map;
 
@@ -118,11 +119,13 @@ public class WebdavDirectoryResource extends StormDirectoryResource implements M
 			entries = StormResourceHelper.doLsDetailed(this, Recursion.NONE).get(0).getSubpathInfo();
 		} catch (RuntimeApiException e) {
 			log.error(e.getMessage());
+			throw new RuntimeException(e.getMessage());
 		} catch (StormRequestFailureException e) {
-			log.error(e.getMessage());
+			log.warn(e.getMessage());
+			entries = new ArrayList<SurlInfo>(); //empty list
 		} catch (TooManyResultsException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			log.warn(e.getMessage());
+			entries = new ArrayList<SurlInfo>(); //empty list
 		}		
 		buildDirectoryPage(out, entries);
 	}

@@ -42,6 +42,10 @@ public class StormStandardFilter implements Filter {
 	private Logger log = LoggerFactory.getLogger(StormStandardFilter.class);
 	public static final String INTERNAL_SERVER_ERROR_HTML = "<html><body><h1>Internal Server Error (500)</h1></body></html>";
 
+	private String TEMPLATE = "<html><body><h1>ERROR#NAME</h1><p>ERROR#MESSAGE</p></body></html>";
+	private final String TEMPLATE_MESSAGE = "ERROR#MESSAGE";
+	private final String TEMPLATE_TITLE = "ERROR#NAME";
+	
 	public StormStandardFilter() {
 	}
 
@@ -65,34 +69,38 @@ public class StormStandardFilter implements Filter {
 					log.debug("No response entity to send to client");
 				}
 			}
-			printExitStatus(request, response);
 		} catch (IllegalArgumentException ex) {
-			printErrorCommand("IllegalArgumentException", ex.getMessage());
-			manager.getResponseHandler().respondServerError(request, response, ex.getMessage());
+			log.error(ex.getMessage());
+			String page = TEMPLATE.replaceFirst(TEMPLATE_MESSAGE, ex.getMessage()).replaceFirst(TEMPLATE_TITLE, "Internal server error");
+			setResponse(response, Status.SC_INTERNAL_SERVER_ERROR, page);
 		} catch (RuntimeException ex) {
-			printErrorCommand("RuntimeException", ex.getMessage());
-			manager.getResponseHandler().respondServerError(request, response, ex.getMessage());
+			log.error(ex.getMessage());
+			String page = TEMPLATE.replaceFirst(TEMPLATE_MESSAGE, ex.getMessage()).replaceFirst(TEMPLATE_TITLE, "Internal server error");
+			setResponse(response, Status.SC_INTERNAL_SERVER_ERROR, page);
 		} catch (TooManyResultsException ex) {
-			printErrorCommand(ex.getMessage(), ex.getReason());
-			manager.getResponseHandler().respondServerError(request, response, ex.getReason().toString());
+			log.error(ex.getMessage() + ": " + ex.getReason());
+			String page = TEMPLATE.replaceFirst(TEMPLATE_MESSAGE, ex.getMessage() + ": " + ex.getReason()).replaceFirst(TEMPLATE_TITLE, "Service unavailable");
+			setResponse(response, Status.SC_SERVICE_UNAVAILABLE, page);
 		} catch (RuntimeApiException ex) {
-			printErrorCommand(ex.getMessage(), ex.getReason());
-			manager.getResponseHandler().respondServerError(request, response, ex.getReason().toString());
+			log.error(ex.getMessage());
+			String page = TEMPLATE.replaceFirst(TEMPLATE_MESSAGE, ex.getMessage() + ": " + ex.getReason()).replaceFirst(TEMPLATE_TITLE, "Internal server error");
+			setResponse(response, Status.SC_INTERNAL_SERVER_ERROR, page);
 		} catch (StormRequestFailureException ex) {
-			printErrorCommand(ex.getMessage(), ex.getReason());
-			manager.getResponseHandler().respondServerError(request, response, ex.getReason().toString());
+			log.error(ex.getMessage() + ": " + ex.getReason());
+			String page = TEMPLATE.replaceFirst(TEMPLATE_MESSAGE, ex.getMessage() + ": " + ex.getReason()).replaceFirst(TEMPLATE_TITLE, "Service unavailable");
+			setResponse(response, Status.SC_SERVICE_UNAVAILABLE, page);
 		} catch (StormResourceException ex) {
-			printErrorCommand(ex.getMessage(), ex.getReason());
-			String serverError = "<html><body><h1>Service Unavailable</h1><p>"+ex.getReason().toString()+"</p></body></html>";
-			sendResponse(response, Status.SC_SERVICE_UNAVAILABLE, serverError);
+			log.error(ex.getMessage() + ": " + ex.getReason());
+			String page = TEMPLATE.replaceFirst(TEMPLATE_MESSAGE, ex.getMessage() + ": " + ex.getReason()).replaceFirst(TEMPLATE_TITLE, "Service unavailable");
+			setResponse(response, Status.SC_SERVICE_UNAVAILABLE, page);
 		} catch (BadRequestException ex) {
-			printErrorCommand(ex.getMessage(), ex.getReason());
+			log.error(ex.getMessage() + ": " + ex.getReason());
 			manager.getResponseHandler().respondBadRequest(ex.getResource(), response, request);
 		} catch (ConflictException ex) {
-			printErrorCommand(ex.getMessage(), "The requested operation could not be performed because of prior state.");
+			log.error(ex.getMessage() + ": The requested operation could not be performed because of prior state.");
 			manager.getResponseHandler().respondConflict(ex.getResource(), response, request, INTERNAL_SERVER_ERROR_HTML);
 		} catch (NotAuthorizedException ex) {
-			printErrorCommand(ex.getMessage(), "The current user is not able to perform the requested operation.");
+			log.error(ex.getMessage() + ": The current user is not able to perform the requested operation.");
 			manager.getResponseHandler().respondUnauthorised(ex.getResource(), response, request);
 		} catch (Throwable e) {
 			// Looks like in some cases we can be left with a connection in an
@@ -107,11 +115,12 @@ public class StormStandardFilter implements Filter {
 				log.warn("Response header Content-Length (" + entityDimension + ") different from entity byte dimension (" + entityDimension + ")");
 				response.getHeaders().put("Content-Length", "" + entityDimension);
 			} else {
-				response.sendError(Response.Status.SC_INTERNAL_SERVER_ERROR, INTERNAL_SERVER_ERROR_HTML);
-				printErrorCommand(e.getMessage(), "exception sending content");
+				log.error(e.getMessage() + ": exception sending content");
+				String page = TEMPLATE.replaceFirst(TEMPLATE_MESSAGE, e.getMessage() + ": exception sending content").replaceFirst(TEMPLATE_TITLE, "Internal server error");
+				setResponse(response, Status.SC_INTERNAL_SERVER_ERROR, page);
 			}
 		} finally {
-			
+			printExitStatus(request, response);
 		}
 	}
 	
@@ -121,7 +130,7 @@ public class StormStandardFilter implements Filter {
 		String msg = request.getMethod().name().toUpperCase() + " " + code + " " + text;
 		if (code >= 200 && code < 300) {
 			log.info(msg);
-		} else if (code >= 400 && code < 600) {
+		} else if (code >= 500 && code < 600) {
 			log.error(msg);
 		} else {
 			log.warn(msg);
@@ -142,17 +151,8 @@ public class StormStandardFilter implements Filter {
 	private void printCommand() {
 		log.info(getCommand());
 	}
-	
-	private void printErrorCommand(String message, String reason) {
-		String msg = "";
-		if (message != null)
-			msg += message + " ";
-		if (reason != null)
-			msg += reason;
-		log.error(getCommand() + " has failed: " + msg);
-	}
 
-	private void sendResponse(Response response, Status status, final String htmlPage) {
+	private void setResponse(Response response, Status status, final String htmlPage) {
 		response.setStatus(status);
 		response.setEntity(new Response.Entity() {
             public void write(Response response, OutputStream outputStream) throws Exception {
