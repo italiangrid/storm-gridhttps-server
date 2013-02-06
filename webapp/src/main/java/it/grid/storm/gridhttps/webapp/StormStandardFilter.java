@@ -12,16 +12,12 @@
  */
 package it.grid.storm.gridhttps.webapp;
 
-import java.io.OutputStream;
-import java.io.PrintWriter;
-
 import io.milton.http.Filter;
 import io.milton.http.FilterChain;
 import io.milton.http.Handler;
 import io.milton.http.HttpManager;
 import io.milton.http.Request;
 import io.milton.http.Response;
-import io.milton.http.Response.Status;
 import io.milton.http.entity.ByteArrayEntity;
 import io.milton.http.exceptions.BadRequestException;
 
@@ -42,10 +38,6 @@ public class StormStandardFilter implements Filter {
 	private Logger log = LoggerFactory.getLogger(StormStandardFilter.class);
 	public static final String INTERNAL_SERVER_ERROR_HTML = "<html><body><h1>Internal Server Error (500)</h1></body></html>";
 
-	private String TEMPLATE = "<html><body><h1>ERROR#NAME</h1><p>ERROR#MESSAGE</p></body></html>";
-	private final String TEMPLATE_MESSAGE = "ERROR#MESSAGE";
-	private final String TEMPLATE_TITLE = "ERROR#NAME";
-	
 	public StormStandardFilter() {
 	}
 
@@ -71,30 +63,24 @@ public class StormStandardFilter implements Filter {
 			}
 		} catch (IllegalArgumentException ex) {
 			log.error(ex.getMessage());
-			String page = TEMPLATE.replaceFirst(TEMPLATE_MESSAGE, ex.getMessage()).replaceFirst(TEMPLATE_TITLE, "Internal server error");
-			setResponse(response, Status.SC_INTERNAL_SERVER_ERROR, page);
+			manager.getResponseHandler().respondServerError(request, response, ex.getMessage());
 		} catch (RuntimeException ex) {
 			log.error(ex.getMessage());
-			String page = TEMPLATE.replaceFirst(TEMPLATE_MESSAGE, ex.getMessage()).replaceFirst(TEMPLATE_TITLE, "Internal server error");
-			setResponse(response, Status.SC_INTERNAL_SERVER_ERROR, page);
+			manager.getResponseHandler().respondServerError(request, response, ex.getMessage());
 		} catch (TooManyResultsException ex) {
-			log.error(ex.getMessage() + ": " + ex.getReason());
-			String page = TEMPLATE.replaceFirst(TEMPLATE_MESSAGE, ex.getMessage() + ": " + ex.getReason()).replaceFirst(TEMPLATE_TITLE, "Service unavailable");
-			setResponse(response, Status.SC_SERVICE_UNAVAILABLE, page);
+			log.error(ex.getReason());
+			manager.getResponseHandler().respondServerError(request, response, ex.getReason());
 		} catch (RuntimeApiException ex) {
 			log.error(ex.getMessage());
-			String page = TEMPLATE.replaceFirst(TEMPLATE_MESSAGE, ex.getMessage() + ": " + ex.getReason()).replaceFirst(TEMPLATE_TITLE, "Internal server error");
-			setResponse(response, Status.SC_INTERNAL_SERVER_ERROR, page);
+			manager.getResponseHandler().respondServerError(request, response, ex.getReason());
 		} catch (StormRequestFailureException ex) {
-			log.error(ex.getMessage() + ": " + ex.getReason());
-			String page = TEMPLATE.replaceFirst(TEMPLATE_MESSAGE, ex.getMessage() + ": " + ex.getReason()).replaceFirst(TEMPLATE_TITLE, "Service unavailable");
-			setResponse(response, Status.SC_SERVICE_UNAVAILABLE, page);
+			log.error(ex.getReason());
+			manager.getResponseHandler().respondServerError(request, response, ex.getReason());
 		} catch (StormResourceException ex) {
-			log.error(ex.getMessage() + ": " + ex.getReason());
-			String page = TEMPLATE.replaceFirst(TEMPLATE_MESSAGE, ex.getMessage() + ": " + ex.getReason()).replaceFirst(TEMPLATE_TITLE, "Service unavailable");
-			setResponse(response, Status.SC_SERVICE_UNAVAILABLE, page);
+			log.error(ex.getReason());
+			manager.getResponseHandler().respondServerError(request, response, ex.getReason());
 		} catch (BadRequestException ex) {
-			log.error(ex.getMessage() + ": " + ex.getReason());
+			log.error(ex.getReason());
 			manager.getResponseHandler().respondBadRequest(ex.getResource(), response, request);
 		} catch (ConflictException ex) {
 			log.error(ex.getMessage() + ": The requested operation could not be performed because of prior state.");
@@ -103,31 +89,31 @@ public class StormStandardFilter implements Filter {
 			log.error(ex.getMessage() + ": The current user is not able to perform the requested operation.");
 			manager.getResponseHandler().respondUnauthorised(ex.getResource(), response, request);
 		} catch (Throwable e) {
-			// Looks like in some cases we can be left with a connection in an
-			// indeterminate state
-			// due to the content length not being equal to the content length
-			// header, so
-			// fall back on the underlying connection provider to manage the
-			// error
+			/*
+			 * Looks like in some cases we can be left with a connection in an
+			 * indeterminate state due to the content length not being equal to
+			 * the content length header, so fall back on the underlying
+			 * connection provider to manage the error
+			 */
 			int contentLength = Integer.valueOf(response.getHeaders().get("Content-Length"));
 			int entityDimension = ((ByteArrayEntity) response.getEntity()).getArr().length;
 			if (contentLength != entityDimension) {
-				log.warn("Response header Content-Length (" + entityDimension + ") different from entity byte dimension (" + entityDimension + ")");
+				log.warn("Response header Content-Length (" + entityDimension + ") different from entity byte dimension ("
+						+ entityDimension + ")");
 				response.getHeaders().put("Content-Length", "" + entityDimension);
 			} else {
 				log.error(e.getMessage() + ": exception sending content");
-				String page = TEMPLATE.replaceFirst(TEMPLATE_MESSAGE, e.getMessage() + ": exception sending content").replaceFirst(TEMPLATE_TITLE, "Internal server error");
-				setResponse(response, Status.SC_INTERNAL_SERVER_ERROR, page);
+				manager.getResponseHandler().respondServerError(request, response, e.getMessage() + ": exception sending content");
 			}
 		} finally {
 			printExitStatus(request, response);
 		}
 	}
-	
+
 	private void printExitStatus(Request request, Response response) {
 		int code = response.getStatus().code;
 		String text = response.getStatus().text != null ? response.getStatus().text : "";
-		String msg = request.getMethod().name().toUpperCase() + " " + code + " " + text;
+		String msg = getCommand() + " exited with " + code + " " + text;
 		if (code >= 200 && code < 300) {
 			log.info(msg);
 		} else if (code >= 500 && code < 600) {
@@ -147,19 +133,21 @@ public class StormStandardFilter implements Filter {
 		}
 		return msg;
 	}
-	
+
 	private void printCommand() {
 		log.info(getCommand());
 	}
 
-	private void setResponse(Response response, Status status, final String htmlPage) {
-		response.setStatus(status);
-		response.setEntity(new Response.Entity() {
-            public void write(Response response, OutputStream outputStream) throws Exception {
-                PrintWriter pw = new PrintWriter(outputStream, true);
-                pw.print(htmlPage);
-                pw.flush();
-            }
-        });
-	}
+	// private void setResponse(Response response, Status status, final String
+	// htmlPage) {
+	// response.setStatus(status);
+	// response.setEntity(new Response.Entity() {
+	// public void write(Response response, OutputStream outputStream) throws
+	// Exception {
+	// PrintWriter pw = new PrintWriter(outputStream, true);
+	// pw.print(htmlPage);
+	// pw.flush();
+	// }
+	// });
+	// }
 }
