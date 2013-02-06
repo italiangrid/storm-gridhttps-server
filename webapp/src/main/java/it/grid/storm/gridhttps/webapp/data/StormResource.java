@@ -34,7 +34,7 @@ import java.util.Date;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public abstract class StormResource implements Resource, DigestResource {
+public abstract class StormResource implements Resource, DigestResource, PropFindableResource {
 
 	private static final Logger log = LoggerFactory.getLogger(StormResource.class);
 	private File file;
@@ -139,7 +139,7 @@ public abstract class StormResource implements Resource, DigestResource {
 	}
 
 	public Date getCreateDate() {
-		return null;
+		return getSurlInfo().getCreationTime();
 	}
 
 	public int compareTo(Resource o) {
