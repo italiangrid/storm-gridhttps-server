@@ -91,7 +91,7 @@ public abstract class StormResource implements Resource, DigestResource, PropFin
 	}
 
 	public String getUniqueId() {
-		String s = file.lastModified() + "_" + file.length() + "_" + file.getAbsolutePath();
+		String s = getSurlInfo().getModificationTime() + "_" + getSurlInfo().getSize() + "_" + getSurlInfo().getStfn();
 		return s.hashCode() + "";
 	}
 
@@ -135,7 +135,7 @@ public abstract class StormResource implements Resource, DigestResource, PropFin
 	}
 
 	public Date getModifiedDate() {
-		return new Date(file.lastModified());
+		return new Date(file                                                                                           .lastModified());
 	}
 
 	public Date getCreateDate() {
