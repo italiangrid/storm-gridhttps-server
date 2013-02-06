@@ -23,6 +23,8 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.italiangrid.utils.voms.VOMSSecurityContext;
+import org.italiangrid.voms.VOMSValidators;
+import org.italiangrid.voms.ac.VOMSACValidator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -32,6 +34,9 @@ public class HttpHelper {
 	public static final int DEPTH_0 = 0;
 	public static final int DEPTH_1 = 1;
 	public static final int DEPTH_INFINITY = 2;
+	
+	
+	private static final VOMSACValidator vomsValidator = VOMSValidators.newValidator();
 
 	private static final Logger log = LoggerFactory.getLogger(HttpHelper.class);
 
@@ -198,6 +203,7 @@ public class HttpHelper {
 		if (!hasVOMSSecurityContext()) {
 			VOMSSecurityContext.clearCurrentContext();
 			VOMSSecurityContext currentContext = new VOMSSecurityContext();
+			currentContext.setValidator(vomsValidator);
 			VOMSSecurityContext.setCurrentContext(currentContext);
 			getRequest().setAttribute("VOMSSecurityContext", currentContext);
 		}
