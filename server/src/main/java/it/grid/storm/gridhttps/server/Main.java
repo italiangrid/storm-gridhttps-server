@@ -217,10 +217,10 @@ public class Main {
 		if (configuration.get("service").containsKey("filetransfer.context-path"))
 			stormGridhttps.setFiletransferContextPath(configuration.get("service", "filetransfer.context-path"));
 		
-		if (configuration.get("service").containsKey("webdav.max.active.threads"))
-			stormGridhttps.setDavActiveThreadsMax(configuration.get("service", "webdav.max.active.threads", int.class));
-		if (configuration.get("service").containsKey("webdav.max.queued.threads"))
-			stormGridhttps.setDavQueuedThreadsMax(configuration.get("service", "webdav.max.queued.threads", int.class));
+		if (configuration.get("service").containsKey("mapping.max.active.threads"))
+			stormGridhttps.setMapActiveThreadsMax(configuration.get("service", "mapping.max.active.threads", int.class));
+		if (configuration.get("service").containsKey("mapping.max.queued.threads"))
+			stormGridhttps.setMapQueuedThreadsMax(configuration.get("service", "mapping.max.queued.threads", int.class));
 		if (configuration.get("service").containsKey("webdav.max.active.threads"))
 			stormGridhttps.setDavActiveThreadsMax(configuration.get("service", "webdav.max.active.threads", int.class));
 		if (configuration.get("service").containsKey("webdav.max.queued.threads"))
