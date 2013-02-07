@@ -12,12 +12,16 @@
  */
 package it.grid.storm.gridhttps.webapp;
 
+import java.io.OutputStream;
+import java.io.PrintWriter;
+
 import io.milton.http.Filter;
 import io.milton.http.FilterChain;
 import io.milton.http.Handler;
 import io.milton.http.HttpManager;
 import io.milton.http.Request;
 import io.milton.http.Response;
+import io.milton.http.Response.Status;
 import io.milton.http.entity.ByteArrayEntity;
 import io.milton.http.exceptions.BadRequestException;
 
@@ -37,7 +41,8 @@ public class StormStandardFilter implements Filter {
 
 	private Logger log = LoggerFactory.getLogger(StormStandardFilter.class);
 	public static final String INTERNAL_SERVER_ERROR_HTML = "<html><body><h1>Internal Server Error (500)</h1></body></html>";
-
+	public static String SERVER_ERROR_HTML = "<html><body><h1>TITLE</h1><p>MESSAGE</p></body></html>";
+	
 	public StormStandardFilter() {
 	}
 
@@ -74,8 +79,8 @@ public class StormStandardFilter implements Filter {
 			log.error(ex.getMessage());
 			manager.getResponseHandler().respondServerError(request, response, ex.getReason());
 		} catch (StormRequestFailureException ex) {
-			log.error(ex.getMessage());
-			manager.getResponseHandler().respondServerError(request, response, ex.getMessage());
+			log.error(ex.getReason());
+			setResponse(response, Status.SC_FORBIDDEN, SERVER_ERROR_HTML.replaceFirst("TITLE", Status.SC_FORBIDDEN.text).replaceFirst("MESSAGE",  ex.getReason()));
 		} catch (StormResourceException ex) {
 			log.error(ex.getReason());
 			manager.getResponseHandler().respondServerError(request, response, ex.getReason());
@@ -138,16 +143,15 @@ public class StormStandardFilter implements Filter {
 		log.info(getCommand());
 	}
 
-	// private void setResponse(Response response, Status status, final String
-	// htmlPage) {
-	// response.setStatus(status);
-	// response.setEntity(new Response.Entity() {
-	// public void write(Response response, OutputStream outputStream) throws
-	// Exception {
-	// PrintWriter pw = new PrintWriter(outputStream, true);
-	// pw.print(htmlPage);
-	// pw.flush();
-	// }
-	// });
-	// }
+	private void setResponse(Response response, Status status, final String htmlPage) {
+		response.setStatus(status);
+		response.setEntity(new Response.Entity() {
+			@Override
+			public void write(Response response, OutputStream outputStream) throws Exception {
+				PrintWriter pw = new PrintWriter(outputStream, true);
+				pw.print(htmlPage);
+				pw.flush();
+			}
+		});
+	}
 }
