@@ -12,9 +12,6 @@
  */
 package it.grid.storm.gridhttps.webapp;
 
-import java.io.OutputStream;
-import java.io.PrintWriter;
-
 import io.milton.http.Filter;
 import io.milton.http.FilterChain;
 import io.milton.http.Handler;
@@ -41,7 +38,7 @@ public class StormStandardFilter implements Filter {
 
 	private Logger log = LoggerFactory.getLogger(StormStandardFilter.class);
 	public static final String INTERNAL_SERVER_ERROR_HTML = "<html><body><h1>Internal Server Error (500)</h1></body></html>";
-	private String SERVER_ERROR_HTML = "<html><body><h1>TITLE</h1><p>MESSAGE</p></body></html>";
+//	private String SERVER_ERROR_HTML = "<html><body><h1>TITLE</h1><p>MESSAGE</p></body></html>";
 	
 	public StormStandardFilter() {
 	}
@@ -75,16 +72,18 @@ public class StormStandardFilter implements Filter {
 		} catch (TooManyResultsException ex) {
 			log.error(ex.getReason());
 			manager.getResponseHandler().respondServerError(request, response, ex.getReason());
+			response.setStatus(Status.SC_SERVICE_UNAVAILABLE);
 		} catch (RuntimeApiException ex) {
 			log.error(ex.getMessage());
 			manager.getResponseHandler().respondServerError(request, response, ex.getReason());
 		} catch (StormRequestFailureException ex) {
 			log.error(ex.getReason());
-			String s = SERVER_ERROR_HTML.replaceFirst("TITLE", Status.SC_FORBIDDEN.name()).replaceFirst("MESSAGE",  ex.getReason());
-			setResponse(response, Status.SC_FORBIDDEN, s);
+			manager.getResponseHandler().respondServerError(request, response, ex.getReason());
+			response.setStatus(Status.SC_SERVICE_UNAVAILABLE);
 		} catch (StormResourceException ex) {
 			log.error(ex.getReason());
 			manager.getResponseHandler().respondServerError(request, response, ex.getReason());
+			response.setStatus(Status.SC_SERVICE_UNAVAILABLE);
 		} catch (BadRequestException ex) {
 			log.error(ex.getReason());
 			manager.getResponseHandler().respondBadRequest(ex.getResource(), response, request);
@@ -144,16 +143,16 @@ public class StormStandardFilter implements Filter {
 		log.info(getCommand());
 	}
 
-	private void setResponse(Response response, Status status, final String htmlPage) {
-		response.setStatus(status);
-		response.setEntity(new Response.Entity() {
-			@Override
-			public void write(Response response, OutputStream outputStream) throws Exception {
-				PrintWriter pw = new PrintWriter(outputStream, true);
-				pw.print(htmlPage);
-				pw.flush();
-			}
-		});
-		response.setContentLengthHeader(new Long(htmlPage.getBytes().length));
-	}
+//	private void setResponse(Response response, Status status, final String htmlPage) {
+//		response.setStatus(status);
+//		response.setEntity(new Response.Entity() {
+//			@Override
+//			public void write(Response response, OutputStream outputStream) throws Exception {
+//				PrintWriter pw = new PrintWriter(outputStream, true);
+//				pw.print(htmlPage);
+//				pw.flush();
+//			}
+//		});
+//		response.setContentLengthHeader(new Long(htmlPage.getBytes().length));
+//	}
 }
