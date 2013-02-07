@@ -81,10 +81,10 @@ public class StormDirectoryResource extends StormResource implements MakeCollect
 	@Override
 	public List<? extends Resource> getChildren() {
 		ArrayList<StormResource> list = new ArrayList<StormResource>();
-		SurlInfo info = getSurlInfo(1);
+		SurlInfo info = getSurlInfo(StormResource.RECURSIVE_DETAILED);
 		if (info != null) {
 			for (SurlInfo entry : info.getSubpathInfo()) {
-				StormResource resource = getFactory().resolveFile(getHost(), new File(getStorageArea().getRealPath(entry.getStfn())), getStorageArea());
+				StormResource resource = getFactory().resolveFile(entry, getStorageArea());
 				if (resource != null) {
 					list.add(resource);
 				} else {
@@ -102,7 +102,7 @@ public class StormDirectoryResource extends StormResource implements MakeCollect
 	}
 
 	public boolean hasChildren() {
-		SurlInfo info = getSurlInfo(1);
+		SurlInfo info = getSurlInfo(RECURSIVE_UNDETAILED);
 		return info != null ? !info.getSubpathInfo().isEmpty() : false;
 	}
 

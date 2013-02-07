@@ -187,7 +187,7 @@ public class StormHtmlFolderPage extends HtmlPage {
 				String name = entry.getName();
 				String path = buildHref(dirPath, name);
 				String size = srm.getSize() != null ? decimalFormat.format(srm.getSize().getSizeIn(SizeUnit.KILOBYTES)) + " KB" : "";
-				String modTime = srm.getLastModified() != null ? dateFormat.format(srm.getLastModified()) : "";
+				String modTime = srm.getModifiedDate() != null ? dateFormat.format(srm.getModifiedDate()) : "";
 				String checksumType = srm.getCheckSumType() == null ? "" : srm.getCheckSumType().getValue();
 				String checksumValue = srm.getCheckSumValue() == null ? "" : srm.getCheckSumValue().getValue();
 				openTableRow();

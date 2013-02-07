@@ -42,6 +42,12 @@ import org.slf4j.LoggerFactory;
 public abstract class StormResource implements Resource, DigestResource, PropFindableResource {
 
 	private static final Logger log = LoggerFactory.getLogger(StormResource.class);
+
+	public static final int SINGLE_DETAILED = 0;
+	public static final int RECURSIVE_UNDETAILED = 1;
+	public static final int RECURSIVE_DETAILED = 2;
+	
+	
 	private File file;
 	private StormFactory factory;
 	private String host;
@@ -63,7 +69,7 @@ public abstract class StormResource implements Resource, DigestResource, PropFin
 		setFile(file);
 		setStorageArea(storageArea);
 		setSurl(new Surl(getFile(), getStorageArea()));
-		importInfo(StormResource.loadSurlInfo(this, 0));
+		importInfo(StormResource.loadSurlInfo(this, SINGLE_DETAILED));
 	}
 
 	public StormResource(String host, StormFactory factory, File file, StorageArea storageArea, SurlInfo info) {
@@ -119,7 +125,7 @@ public abstract class StormResource implements Resource, DigestResource, PropFin
 	}
 
 	public String getUniqueId() {
-		String id = getLastModified() + "_" + getSize() + "_" + getStfn();
+		String id = getModifiedDate() + "_" + getSize() + "_" + getStfn();
 		return id.hashCode() + "";
 	}
 
@@ -163,7 +169,7 @@ public abstract class StormResource implements Resource, DigestResource, PropFin
 	}
 
 	public Date getModifiedDate() {
-		return new Date(file.lastModified());
+		return lastModified;
 	}
 
 	public Date getCreateDate() {
@@ -203,21 +209,17 @@ public abstract class StormResource implements Resource, DigestResource, PropFin
 		return StormResource.loadSurlInfo(this, depth);
 	}
 
-//	protected void setSurlInfo(SurlInfo surlInfo) {
-//		this.surlInfo = surlInfo;
-//	}
-
 	protected static SurlInfo loadSurlInfo(StormResource resource, int depth) {
 		ArrayList<SurlInfo> info = null;
 		try {
 			switch (depth) {
-			case 0:
+			case SINGLE_DETAILED:
 				info = StormResourceHelper.doLimitedLsDetailed(resource);
 				break;
-			case 1:
+			case RECURSIVE_UNDETAILED:
 				info = StormResourceHelper.doLs(resource);
 				break;
-			case 2:
+			case RECURSIVE_DETAILED:
 				info = StormResourceHelper.doLsDetailed(resource, Recursion.NONE);
 				break;
 			}
@@ -279,18 +281,10 @@ public abstract class StormResource implements Resource, DigestResource, PropFin
 		this.stfn = stfn;
 	}
 
-	public Date getLastModified() {
-		return lastModified;
-	}
-
 	private void setLastModified(Date lastModified) {
 		log.debug("set-lastModified: " + lastModified);
 		this.lastModified = lastModified;
 	}
-
-//	public Date getCreationDate() {
-//		return creationDate;
-//	}
 
 	private void setCreationDate(Date creationDate) {
 		log.debug("set-creationDate: " + creationDate);

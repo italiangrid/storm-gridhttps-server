@@ -21,6 +21,7 @@ import io.milton.resource.*;
 import io.milton.servlet.MiltonServlet;
 import it.grid.storm.gridhttps.webapp.data.StormDirectoryResource;
 import it.grid.storm.gridhttps.webapp.data.StormFactory;
+import it.grid.storm.gridhttps.webapp.data.StormResource;
 import it.grid.storm.gridhttps.webapp.data.exceptions.RuntimeApiException;
 import it.grid.storm.gridhttps.webapp.data.exceptions.StormResourceException;
 import it.grid.storm.gridhttps.webapp.webdav.factory.html.StormHtmlFolderPage;
@@ -31,7 +32,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.util.List;
+import java.util.Collection;
 import java.util.Map;
 
 import org.slf4j.Logger;
@@ -106,20 +107,10 @@ public class WebdavDirectoryResource extends StormDirectoryResource implements M
 			NotAuthorizedException, BadRequestException {
 		log.debug("Called function for GET DIRECTORY");
 //		Collection<SurlInfo> entries = this.getSurlInfo(2).getSubpathInfo(); //StormResourceHelper.doLsDetailed(this, Recursion.NONE).get(0).getSubpathInfo(); 	
-		buildDirectoryPage(out, getChildren());
+		buildDirectoryPage(out, this.getSurlInfo(StormResource.RECURSIVE_DETAILED).getSubpathInfo());
 	}
 
-	private void buildDirectoryPage(OutputStream out, List<? extends Resource> entries) {
-		String dirPath = MiltonServlet.request().getRequestURI();
-		StormHtmlFolderPage page = new StormHtmlFolderPage(out);
-		page.start();
-		page.addTitle("StoRM Gridhttps-server WebDAV");
-		page.addNavigator(getStorageArea().getStfn(getFile().getPath()));
-		page.addFolderList(dirPath, entries);
-		page.end();
-	}
-	
-//	private void buildDirectoryPage(OutputStream out, Collection<SurlInfo> entries) {
+//	private void buildDirectoryPage(OutputStream out, List<? extends Resource> entries) {
 //		String dirPath = MiltonServlet.request().getRequestURI();
 //		StormHtmlFolderPage page = new StormHtmlFolderPage(out);
 //		page.start();
@@ -128,6 +119,16 @@ public class WebdavDirectoryResource extends StormDirectoryResource implements M
 //		page.addFolderList(dirPath, entries);
 //		page.end();
 //	}
+	
+	private void buildDirectoryPage(OutputStream out, Collection<SurlInfo> entries) {
+		String dirPath = MiltonServlet.request().getRequestURI();
+		StormHtmlFolderPage page = new StormHtmlFolderPage(out);
+		page.start();
+		page.addTitle("StoRM Gridhttps-server WebDAV");
+		page.addNavigator(getStorageArea().getStfn(getFile().getPath()));
+		page.addFolderList(dirPath, entries);
+		page.end();
+	}
 	
 	@Override
 	public String getContentType(String accepts) {
