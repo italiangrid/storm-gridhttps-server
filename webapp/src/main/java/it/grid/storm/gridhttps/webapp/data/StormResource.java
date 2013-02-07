@@ -54,8 +54,10 @@ public abstract class StormResource implements Resource, DigestResource, PropFin
 	private String stfn;
 	private Date lastModified;
 	private Date creationDate;
+	private String name;
 
 	public StormResource(String host, StormFactory factory, File file, StorageArea storageArea) {
+		setName(file.getName());
 		setHost(host);
 		setFactory(factory);
 		setFile(file);
@@ -65,6 +67,7 @@ public abstract class StormResource implements Resource, DigestResource, PropFin
 	}
 
 	public StormResource(String host, StormFactory factory, File file, StorageArea storageArea, SurlInfo info) {
+		setName(file.getName());
 		setHost(host);
 		setFactory(factory);
 		setFile(file);
@@ -121,7 +124,7 @@ public abstract class StormResource implements Resource, DigestResource, PropFin
 	}
 
 	public String getName() {
-		return getStfn().substring(getStfn().lastIndexOf("/")+1);
+		return name;
 	}
 
 	/*
@@ -292,6 +295,10 @@ public abstract class StormResource implements Resource, DigestResource, PropFin
 	private void setCreationDate(Date creationDate) {
 		log.debug("set-creationDate: " + creationDate);
 		this.creationDate = creationDate;
+	}
+
+	private void setName(String name) {
+		this.name = name;
 	}
 
 	
