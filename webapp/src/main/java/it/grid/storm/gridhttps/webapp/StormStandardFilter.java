@@ -74,8 +74,8 @@ public class StormStandardFilter implements Filter {
 			log.error(ex.getMessage());
 			manager.getResponseHandler().respondServerError(request, response, ex.getReason());
 		} catch (StormRequestFailureException ex) {
-			log.error(ex.getReason());
-			manager.getResponseHandler().respondServerError(request, response, ex.getReason());
+			log.error(ex.getMessage());
+			manager.getResponseHandler().respondServerError(request, response, ex.getMessage());
 		} catch (StormResourceException ex) {
 			log.error(ex.getReason());
 			manager.getResponseHandler().respondServerError(request, response, ex.getReason());

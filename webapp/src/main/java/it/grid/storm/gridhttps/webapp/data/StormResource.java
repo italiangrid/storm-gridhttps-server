@@ -21,6 +21,11 @@ import it.grid.storm.gridhttps.webapp.data.Surl;
 import it.grid.storm.gridhttps.webapp.data.exceptions.RuntimeApiException;
 import it.grid.storm.gridhttps.webapp.data.exceptions.StormRequestFailureException;
 import it.grid.storm.gridhttps.webapp.data.exceptions.TooManyResultsException;
+import it.grid.storm.srm.types.Recursion;
+import it.grid.storm.srm.types.TCheckSumType;
+import it.grid.storm.srm.types.TCheckSumValue;
+import it.grid.storm.srm.types.TReturnStatus;
+import it.grid.storm.srm.types.TSizeInBytes;
 import it.grid.storm.storagearea.StorageArea;
 import it.grid.storm.xmlrpc.outputdata.LsOutputData.SurlInfo;
 
@@ -42,22 +47,42 @@ public abstract class StormResource implements Resource, DigestResource, PropFin
 	private String host;
 	private Surl surl;
 	private StorageArea storageArea;
-	private SurlInfo surlInfo;
+	private TCheckSumType checkSumType;
+	private TCheckSumValue checkSumValue;
+	private TSizeInBytes size;
+	private TReturnStatus status;
+	private String stfn;
+	private Date lastModified;
+	private Date creationDate;
 
 	public StormResource(String host, StormFactory factory, File file, StorageArea storageArea) {
 		setHost(host);
-		setFile(file);
 		setFactory(factory);
+		setFile(file);
 		setStorageArea(storageArea);
 		setSurl(new Surl(getFile(), getStorageArea()));
-		setSurlInfo(null);
+		importInfo(StormResource.loadSurlInfo(this, 0));
 	}
 
-	public StormResource(String host, StormFactory factory, File file, StorageArea storageArea, SurlInfo surlInfo) {
-		this(host, factory, file, storageArea);
-		setSurlInfo(surlInfo);
+	public StormResource(String host, StormFactory factory, File file, StorageArea storageArea, SurlInfo info) {
+		setHost(host);
+		setFactory(factory);
+		setFile(file);
+		setStorageArea(storageArea);
+		setSurl(new Surl(getFile(), getStorageArea()));
+		importInfo(info);
 	}
 
+	public void importInfo(SurlInfo info) {
+		setCheckSumType(info.getCheckSumType());
+		setCheckSumValue(info.getCheckSumValue());
+		setStatus(info.getStatus());
+		setSize(info.getSize());
+		setStfn(info.getStfn());
+		setLastModified(info.getModificationTime());
+		setCreationDate(info.getCreationTime());
+	}
+	
 	protected void setHost(String host) {
 		this.host = host;
 	}
@@ -91,12 +116,12 @@ public abstract class StormResource implements Resource, DigestResource, PropFin
 	}
 
 	public String getUniqueId() {
-		String s = getSurlInfo().getModificationTime() + "_" + getSurlInfo().getSize() + "_" + getSurlInfo().getStfn();
-		return s.hashCode() + "";
+		String id = getLastModified() + "_" + getSize() + "_" + getStfn();
+		return id.hashCode() + "";
 	}
 
 	public String getName() {
-		return file.getName();
+		return getStfn().substring(getStfn().lastIndexOf("/")+1);
 	}
 
 	/*
@@ -135,11 +160,11 @@ public abstract class StormResource implements Resource, DigestResource, PropFin
 	}
 
 	public Date getModifiedDate() {
-		return new Date(file                                                                                           .lastModified());
+		return new Date(file.lastModified());
 	}
 
 	public Date getCreateDate() {
-		return getSurlInfo().getCreationTime();
+		return creationDate;
 	}
 
 	public int compareTo(Resource o) {
@@ -171,59 +196,103 @@ public abstract class StormResource implements Resource, DigestResource, PropFin
 		return storageArea;
 	}
 
-	public SurlInfo getSurlInfo() {
-		if (surlInfo == null) {
-			setSurlInfo(loadSurlInfo());
-		}
-		return surlInfo;
+	public SurlInfo getSurlInfo(int depth) {
+		return StormResource.loadSurlInfo(this, depth);
 	}
 
-	public void setSurlInfo(SurlInfo surlInfo) {
-		this.surlInfo = surlInfo;
-	}
+//	protected void setSurlInfo(SurlInfo surlInfo) {
+//		this.surlInfo = surlInfo;
+//	}
 
-	protected SurlInfo loadSurlInfo() {
+	protected static SurlInfo loadSurlInfo(StormResource resource, int depth) {
 		ArrayList<SurlInfo> info = null;
 		try {
-			info = StormResourceHelper.doLimitedLsDetailed(this);
+			switch (depth) {
+			case 0:
+				info = StormResourceHelper.doLimitedLsDetailed(resource);
+				break;
+			case 1:
+				info = StormResourceHelper.doLs(resource);
+				break;
+			case 2:
+				info = StormResourceHelper.doLsDetailed(resource, Recursion.NONE);
+				break;
+			}
 		} catch (RuntimeApiException e) {
-			log.error("Retrieving surl-info for " + getFile() + ": " + e.getReason());
+			log.error("Retrieving surl-info for " + resource.getFile() + ": " + e.getReason());
 			throw new RuntimeException(e);
 		} catch (StormRequestFailureException e) {
-			log.error("Retrieving surl-info for " + getFile() + ": " + e.getReason());
+			log.error("Retrieving surl-info for " + resource.getFile() + ": " + e.getReason());
 		} catch (TooManyResultsException e) {
-			log.error("Retrieving surl-info for " + getFile() + ": " + e.getReason());
+			log.error("Retrieving surl-info for " + resource.getFile() + ": " + e.getReason());
 			throw new RuntimeException(e);
-			
+
 		}
 		return info != null ? info.get(0) : null;
 	}
 
-	public String getCheckSumType() {
-		SurlInfo info = getSurlInfo();
-		String checksumType = "";
-		if (info != null) {
-			checksumType = info.getCheckSumType() != null ? info.getCheckSumType().getValue() : "";
-		}
-		return checksumType;
+	public TCheckSumType getCheckSumType() {
+		return checkSumType;
 	}
 
-	public String getCheckSumValue() {
-		SurlInfo info = getSurlInfo();
-		String checksumValue = "";
-		if (info != null) {
-			checksumValue = info.getCheckSumValue() != null ? info.getCheckSumValue().getValue() : "";
-		}
-		return checksumValue;
+	private void setCheckSumType(TCheckSumType checkSumType) {
+		log.debug("set-checkSumType: " + checkSumType);
+		this.checkSumType = checkSumType;
+	}
+	
+	public TCheckSumValue getCheckSumValue() {
+		return checkSumValue;
 	}
 
-	public String getStatus() {
-		SurlInfo info = getSurlInfo();
-		String status = "";
-		if (info != null) {
-			status = info.getStatus().toString();
-		}
+	private void setCheckSumValue(TCheckSumValue checkSumValue) {
+		log.debug("set-checkSumValue: " + checkSumValue);
+		this.checkSumValue = checkSumValue;
+	}
+
+	public TSizeInBytes getSize() {
+		return size;
+	}
+
+	private void setSize(TSizeInBytes size) {
+		log.debug("set-size: " + size);
+		this.size = size;
+	}
+
+	public TReturnStatus getStatus() {
 		return status;
 	}
+	
+	private void setStatus(TReturnStatus status) {
+		log.debug("set-status: " + status);
+		this.status = status;
+	}
 
+	public String getStfn() {
+		return stfn;
+	}
+
+	private void setStfn(String stfn) {
+		log.debug("set-stfn: " + stfn);
+		this.stfn = stfn;
+	}
+
+	public Date getLastModified() {
+		return lastModified;
+	}
+
+	private void setLastModified(Date lastModified) {
+		log.debug("set-lastModified: " + lastModified);
+		this.lastModified = lastModified;
+	}
+
+//	public Date getCreationDate() {
+//		return creationDate;
+//	}
+
+	private void setCreationDate(Date creationDate) {
+		log.debug("set-creationDate: " + creationDate);
+		this.creationDate = creationDate;
+	}
+
+	
 }

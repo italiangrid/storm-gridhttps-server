@@ -43,8 +43,7 @@ public class StormFileResource extends StormResource {
 	}
 	
 	public StormFileResource(StormDirectoryResource parentDir, String childFileName, SurlInfo info) {
-		this(parentDir.getFactory(), new File(parentDir.getFile(), childFileName), parentDir.getStorageArea());
-		setSurlInfo(info);
+		this(parentDir.getFactory(), new File(parentDir.getFile(), childFileName), parentDir.getStorageArea(), info);
 	}
 
 	public Long getContentLength() {

@@ -248,7 +248,6 @@ public class StormResourceHelper {
 
 	public static ArrayList<SurlInfo> doLimitedLsDetailed(BackendApi backend, File file) throws RuntimeApiException,
 			StormRequestFailureException, TooManyResultsException {
-		log.debug("Called doLimitedLsDetailed()");
 		HttpHelper httpHelper = new HttpHelper(MiltonServlet.request(), MiltonServlet.response());
 		return doLimitedLsDetailed(httpHelper.getUser(), backend, file);
 	}

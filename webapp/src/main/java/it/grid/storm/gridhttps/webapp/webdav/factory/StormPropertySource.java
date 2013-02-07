@@ -50,11 +50,11 @@ class StormPropertySource implements PropertySource {
 			if (r instanceof StormFileResource) {
 				StormFileResource srmFile = (StormFileResource) r;
 				if (property.equals("checksumType")) {
-					value = srmFile.getCheckSumType();
+					value = srmFile.getCheckSumType().getValue();
 				} else if (property.equals("checksumValue")) {
-					value = srmFile.getCheckSumValue();
+					value = srmFile.getCheckSumValue().getValue();
 				} else if (property.equals("status")) {
-					value = srmFile.getStatus();
+					value = srmFile.getStatus().toString();
 				}
 			}
 		}

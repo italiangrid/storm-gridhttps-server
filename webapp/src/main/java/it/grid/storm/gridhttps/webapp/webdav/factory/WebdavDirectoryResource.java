@@ -21,12 +21,9 @@ import io.milton.resource.*;
 import io.milton.servlet.MiltonServlet;
 import it.grid.storm.gridhttps.webapp.data.StormDirectoryResource;
 import it.grid.storm.gridhttps.webapp.data.StormFactory;
-import it.grid.storm.gridhttps.webapp.data.StormResourceHelper;
 import it.grid.storm.gridhttps.webapp.data.exceptions.RuntimeApiException;
-import it.grid.storm.gridhttps.webapp.data.exceptions.StormRequestFailureException;
 import it.grid.storm.gridhttps.webapp.data.exceptions.StormResourceException;
 import it.grid.storm.gridhttps.webapp.webdav.factory.html.StormHtmlFolderPage;
-import it.grid.storm.srm.types.Recursion;
 import it.grid.storm.storagearea.StorageArea;
 import it.grid.storm.xmlrpc.outputdata.LsOutputData.SurlInfo;
 
@@ -34,8 +31,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.util.ArrayList;
-import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 
 import org.slf4j.Logger;
@@ -67,12 +63,9 @@ public class WebdavDirectoryResource extends StormDirectoryResource implements M
 		String methodName = MiltonServlet.request().getMethod();
 		if (methodName.equals("PUT")) {
 			/*
-			 * it is a PUT with a path that contains a directory that does not
-			 * exist, so send a 409 error to the client method can't be COPY
-			 * because error 409 is handled by CopyHandler MOVE? Check if it can
-			 * be a problem!!!
+			 * it is a PUT with a path that contains a directory that does not exist, so send a 409 error to the client method 
 			 */
-			log.warn("Auto-creation of directory for " + methodName + " requests is disabled!");
+			log.warn(MiltonServlet.request().getRequestURI() + " path contains one or more intermediate collections that not exist!");
 			throw new ConflictException(this, "A resource cannot be created at the destination URI until one or more intermediate collections are created.");
 		}
 		return super.createCollection(name);
@@ -112,18 +105,11 @@ public class WebdavDirectoryResource extends StormDirectoryResource implements M
 	public void sendContent(OutputStream out, Range range, Map<String, String> params, String contentType) throws IOException,
 			NotAuthorizedException, BadRequestException {
 		log.debug("Called function for GET DIRECTORY");
-		
-		Collection<SurlInfo> entries = null;
-		try {
-			entries = StormResourceHelper.doLsDetailed(this, Recursion.NONE).get(0).getSubpathInfo();
-		} catch (StormRequestFailureException e) {
-			log.warn(e.getMessage());
-			entries = new ArrayList<SurlInfo>(); //empty list
-		} 	
-		buildDirectoryPage(out, entries);
+//		Collection<SurlInfo> entries = this.getSurlInfo(2).getSubpathInfo(); //StormResourceHelper.doLsDetailed(this, Recursion.NONE).get(0).getSubpathInfo(); 	
+		buildDirectoryPage(out, getChildren());
 	}
 
-	private void buildDirectoryPage(OutputStream out, Collection<SurlInfo> entries) {
+	private void buildDirectoryPage(OutputStream out, List<? extends Resource> entries) {
 		String dirPath = MiltonServlet.request().getRequestURI();
 		StormHtmlFolderPage page = new StormHtmlFolderPage(out);
 		page.start();
@@ -132,6 +118,16 @@ public class WebdavDirectoryResource extends StormDirectoryResource implements M
 		page.addFolderList(dirPath, entries);
 		page.end();
 	}
+	
+//	private void buildDirectoryPage(OutputStream out, Collection<SurlInfo> entries) {
+//		String dirPath = MiltonServlet.request().getRequestURI();
+//		StormHtmlFolderPage page = new StormHtmlFolderPage(out);
+//		page.start();
+//		page.addTitle("StoRM Gridhttps-server WebDAV");
+//		page.addNavigator(getStorageArea().getStfn(getFile().getPath()));
+//		page.addFolderList(dirPath, entries);
+//		page.end();
+//	}
 	
 	@Override
 	public String getContentType(String accepts) {

@@ -12,6 +12,9 @@
  */
 package it.grid.storm.gridhttps.webapp.webdav.factory.html;
 
+import io.milton.resource.Resource;
+import it.grid.storm.gridhttps.webapp.data.StormDirectoryResource;
+import it.grid.storm.gridhttps.webapp.data.StormResource;
 import it.grid.storm.srm.types.SizeUnit;
 import it.grid.storm.srm.types.TFileType;
 import it.grid.storm.xmlrpc.outputdata.LsOutputData.SurlInfo;
@@ -38,6 +41,17 @@ public class StormHtmlFolderPage extends HtmlPage {
 				return 1;
 			else
 				return s1.getStfn().compareTo(s2.getStfn());
+		}
+	}
+	
+	private class StormResourceComparator implements Comparator<Object> {
+		public int compare(Object o1, Object o2) {
+			if ((o1 instanceof StormDirectoryResource) && !(o2 instanceof StormDirectoryResource))
+				return -1;
+			else if (!(o1 instanceof StormDirectoryResource) && (o2 instanceof StormDirectoryResource))
+				return 1;
+			else
+				return ((StormResource) o1).compareTo((StormResource) o2);
 		}
 	}
 
@@ -138,6 +152,61 @@ public class StormHtmlFolderPage extends HtmlPage {
 		closeTable();
 	}
 
+	public void addFolderList(String dirPath, List<? extends Resource> entries) {
+		Map<String, String> attributes = new HashMap<String, String>();
+		openTable();
+		openTableRow();
+		addTableHeaderCol("name");
+		addTableHeaderCol("size");
+		addTableHeaderCol("modified");
+		addTableHeaderCol("checksum-type");
+		addTableHeaderCol("checksum-value");
+		closeTableRow();
+		// parent link:
+		openTableRow();
+		attributes.clear();
+		attributes.put("colspan", "5");
+		openTableCol(attributes);
+		attributes.clear();
+		attributes.put("href", buildParentHref(dirPath));
+		open("a", attributes);
+		addImage(getFolderIco());
+		writeText(".");
+		close("a");
+		closeTableCol();
+		closeTableRow();
+		// other entries:
+		SimpleDateFormat dateFormat = new SimpleDateFormat("EEE, d MMM yyyy HH:mm:ss");
+		DecimalFormat decimalFormat = new DecimalFormat("#.##");
+		if (entries != null) {
+			Collections.sort(entries, new StormResourceComparator());
+			for (Resource entry : entries) {
+				if (!(entry instanceof StormResource))
+					continue;
+				StormResource srm = (StormResource) entry;
+				String name = entry.getName();
+				String path = buildHref(dirPath, name);
+				String size = srm.getSize() != null ? decimalFormat.format(srm.getSize().getSizeIn(SizeUnit.KILOBYTES)) + " KB" : "";
+				String modTime = srm.getLastModified() != null ? dateFormat.format(srm.getLastModified()) : "";
+				String checksumType = srm.getCheckSumType() == null ? "" : srm.getCheckSumType().getValue();
+				String checksumValue = srm.getCheckSumValue() == null ? "" : srm.getCheckSumValue().getValue();
+				openTableRow();
+				openTableCol();
+				if (entry instanceof StormDirectoryResource) {
+					addImage(getFolderIco());
+				}
+				addLink(name, path);
+				closeTableCol();
+				addTableCol(size);
+				addTableCol(modTime);
+				addTableCol(checksumType);
+				addTableCol(checksumValue);
+				closeTableRow();
+			}
+		}
+		closeTable();
+	}
+	
 	private void addStyle(String cssStyle) {
 		Map<String, String> attributes = new HashMap<String, String>();
 		attributes.put("type", "text/css");

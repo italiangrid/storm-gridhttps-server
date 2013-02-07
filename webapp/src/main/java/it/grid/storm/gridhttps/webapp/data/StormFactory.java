@@ -181,7 +181,7 @@ public abstract class StormFactory implements ResourceFactory {
 		return false;
 	}
 		
-	public StormResource resolveFile(String host, File file, StorageArea storageArea) throws TooManyResultsException {
+	public StormResource resolveFile(String host, File file, StorageArea storageArea) {
 		SurlInfo detail = null;
 		try {
 			detail = StormResourceHelper.doLimitedLsDetailed(this.getBackendApi(), file).get(0);
@@ -190,6 +190,8 @@ public abstract class StormFactory implements ResourceFactory {
 			log.error("retrieving detailed info for '" + file + "': " + e.getReason());
 		} catch (StormRequestFailureException e) {
 			log.debug(file + " not exists! Got a SRM_FAILURE with reason: " + e.getReason());
+		} catch (TooManyResultsException e) {
+			log.warn(e.getReason());
 		}
 		return null;
 	}

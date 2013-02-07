@@ -31,7 +31,6 @@ import it.grid.storm.gridhttps.webapp.data.StormFactory;
 import it.grid.storm.gridhttps.webapp.data.StormResourceHelper;
 import it.grid.storm.gridhttps.webapp.data.exceptions.RuntimeApiException;
 import it.grid.storm.gridhttps.webapp.data.exceptions.StormRequestFailureException;
-import it.grid.storm.gridhttps.webapp.data.exceptions.TooManyResultsException;
 import it.grid.storm.storagearea.StorageArea;
 import it.grid.storm.xmlrpc.outputdata.LsOutputData.SurlInfo;
 
@@ -82,10 +81,10 @@ public class StormDirectoryResource extends StormResource implements MakeCollect
 	@Override
 	public List<? extends Resource> getChildren() {
 		ArrayList<StormResource> list = new ArrayList<StormResource>();
-		SurlInfo info = getSurlInfo();
+		SurlInfo info = getSurlInfo(1);
 		if (info != null) {
 			for (SurlInfo entry : info.getSubpathInfo()) {
-				StormResource resource = getFactory().resolveFile(entry, getStorageArea());
+				StormResource resource = getFactory().resolveFile(getHost(), new File(info.getStfn()), getStorageArea());
 				if (resource != null) {
 					list.add(resource);
 				} else {
@@ -103,20 +102,8 @@ public class StormDirectoryResource extends StormResource implements MakeCollect
 	}
 
 	public boolean hasChildren() {
-		ArrayList<SurlInfo> info = null;
-		try {
-			info = StormResourceHelper.doLs(this);
-		} catch (RuntimeApiException e) {
-			log.error("Retrieving surl-info for " + getFile() + ": " + e.getReason());
-			throw new RuntimeException(e);
-		} catch (StormRequestFailureException e) {
-			log.error("Retrieving surl-info for " + getFile() + ": " + e.getReason());
-			return false;
-		} catch (TooManyResultsException e) {
-			log.error("Retrieving surl-info for " + getFile() + ": " + e.getReason());
-			throw new RuntimeException(e);	
-		}
-		return info != null ? !info.get(0).getSubpathInfo().isEmpty() : false;
+		SurlInfo info = getSurlInfo(1);
+		return info != null ? !info.getSubpathInfo().isEmpty() : false;
 	}
 
 	@Override
@@ -176,11 +163,6 @@ public class StormDirectoryResource extends StormResource implements MakeCollect
 			StormResourceHelper.doCopyDirectory(this, (StormDirectoryResource) newParent, newName);
 		} else
 			log.error("Directory Resource class " + newParent.getClass().getName() + " not supported!");
-	}
-
-	@Override
-	public SurlInfo getSurlInfo() {
-		return loadSurlInfo();
 	}
 
 }
