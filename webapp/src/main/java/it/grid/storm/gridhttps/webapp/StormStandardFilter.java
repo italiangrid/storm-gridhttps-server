@@ -38,7 +38,6 @@ public class StormStandardFilter implements Filter {
 
 	private Logger log = LoggerFactory.getLogger(StormStandardFilter.class);
 	public static final String INTERNAL_SERVER_ERROR_HTML = "<html><body><h1>Internal Server Error (500)</h1></body></html>";
-//	private String SERVER_ERROR_HTML = "<html><body><h1>TITLE</h1><p>MESSAGE</p></body></html>";
 	
 	public StormStandardFilter() {
 	}
@@ -65,25 +64,22 @@ public class StormStandardFilter implements Filter {
 			}
 		} catch (IllegalArgumentException ex) {
 			log.error(ex.getMessage());
-			manager.getResponseHandler().respondServerError(request, response, ex.getMessage());
+			response.sendError(Status.SC_INTERNAL_SERVER_ERROR, ex.getMessage());
 		} catch (RuntimeException ex) {
 			log.error(ex.getMessage());
-			manager.getResponseHandler().respondServerError(request, response, ex.getMessage());
+			response.sendError(Status.SC_INTERNAL_SERVER_ERROR, ex.getMessage());
 		} catch (TooManyResultsException ex) {
 			log.error(ex.getReason());
-			manager.getResponseHandler().respondServerError(request, response, ex.getReason());
-			response.setStatus(Status.SC_SERVICE_UNAVAILABLE);
+			response.sendError(Status.SC_SERVICE_UNAVAILABLE, ex.getReason());
 		} catch (RuntimeApiException ex) {
 			log.error(ex.getMessage());
-			manager.getResponseHandler().respondServerError(request, response, ex.getReason());
+			response.sendError(Status.SC_INTERNAL_SERVER_ERROR, ex.getMessage());
 		} catch (StormRequestFailureException ex) {
 			log.error(ex.getReason());
-			manager.getResponseHandler().respondServerError(request, response, ex.getReason());
-			response.setStatus(Status.SC_SERVICE_UNAVAILABLE);
+			response.sendError(Status.SC_SERVICE_UNAVAILABLE, ex.getReason());
 		} catch (StormResourceException ex) {
 			log.error(ex.getReason());
-			manager.getResponseHandler().respondServerError(request, response, ex.getReason());
-			response.setStatus(Status.SC_SERVICE_UNAVAILABLE);
+			response.sendError(Status.SC_SERVICE_UNAVAILABLE, ex.getReason());
 		} catch (BadRequestException ex) {
 			log.error(ex.getReason());
 			manager.getResponseHandler().respondBadRequest(ex.getResource(), response, request);
@@ -108,7 +104,7 @@ public class StormStandardFilter implements Filter {
 				response.getHeaders().put("Content-Length", "" + entityDimension);
 			} else {
 				log.error(e.getMessage() + ": exception sending content");
-				manager.getResponseHandler().respondServerError(request, response, e.getMessage() + ": exception sending content");
+				response.sendError(Status.SC_INTERNAL_SERVER_ERROR, e.getMessage() + ": exception sending content");
 			}
 		} finally {
 			printExitStatus(request, response);
@@ -142,17 +138,5 @@ public class StormStandardFilter implements Filter {
 	private void printCommand() {
 		log.info(getCommand());
 	}
-
-//	private void setResponse(Response response, Status status, final String htmlPage) {
-//		response.setStatus(status);
-//		response.setEntity(new Response.Entity() {
-//			@Override
-//			public void write(Response response, OutputStream outputStream) throws Exception {
-//				PrintWriter pw = new PrintWriter(outputStream, true);
-//				pw.print(htmlPage);
-//				pw.flush();
-//			}
-//		});
-//		response.setContentLengthHeader(new Long(htmlPage.getBytes().length));
-//	}
+	
 }
