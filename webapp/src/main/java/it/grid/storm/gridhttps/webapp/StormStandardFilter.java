@@ -65,21 +65,27 @@ public class StormStandardFilter implements Filter {
 		} catch (IllegalArgumentException ex) {
 			log.error(ex.getMessage());
 			response.sendError(Status.SC_INTERNAL_SERVER_ERROR, ex.getMessage());
+			response.setStatus(Status.SC_INTERNAL_SERVER_ERROR);
 		} catch (RuntimeException ex) {
 			log.error(ex.getMessage());
 			response.sendError(Status.SC_INTERNAL_SERVER_ERROR, ex.getMessage());
+			response.setStatus(Status.SC_INTERNAL_SERVER_ERROR);
 		} catch (TooManyResultsException ex) {
-			log.error(ex.getReason());
+			log.warn(ex.getReason());
 			response.sendError(Status.SC_SERVICE_UNAVAILABLE, ex.getReason());
+			response.setStatus(Status.SC_SERVICE_UNAVAILABLE);
 		} catch (RuntimeApiException ex) {
 			log.error(ex.getMessage());
 			response.sendError(Status.SC_INTERNAL_SERVER_ERROR, ex.getMessage());
+			response.setStatus(Status.SC_INTERNAL_SERVER_ERROR);
 		} catch (StormRequestFailureException ex) {
-			log.error(ex.getReason());
+			log.warn(ex.getReason());
 			response.sendError(Status.SC_SERVICE_UNAVAILABLE, ex.getReason());
+			response.setStatus(Status.SC_SERVICE_UNAVAILABLE);
 		} catch (StormResourceException ex) {
 			log.error(ex.getReason());
 			response.sendError(Status.SC_SERVICE_UNAVAILABLE, ex.getReason());
+			response.setStatus(Status.SC_SERVICE_UNAVAILABLE);
 		} catch (BadRequestException ex) {
 			log.error(ex.getReason());
 			manager.getResponseHandler().respondBadRequest(ex.getResource(), response, request);
@@ -105,6 +111,7 @@ public class StormStandardFilter implements Filter {
 			} else {
 				log.error(e.getMessage() + ": exception sending content");
 				response.sendError(Status.SC_INTERNAL_SERVER_ERROR, e.getMessage() + ": exception sending content");
+				response.setStatus(Status.SC_INTERNAL_SERVER_ERROR);
 			}
 		} finally {
 			printExitStatus(request, response);
