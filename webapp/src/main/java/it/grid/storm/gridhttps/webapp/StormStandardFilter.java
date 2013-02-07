@@ -80,7 +80,7 @@ public class StormStandardFilter implements Filter {
 			manager.getResponseHandler().respondServerError(request, response, ex.getReason());
 		} catch (StormRequestFailureException ex) {
 			log.error(ex.getReason());
-			String s = SERVER_ERROR_HTML.replaceFirst("TITLE", Status.SC_FORBIDDEN.text).replaceFirst("MESSAGE",  ex.getReason());
+			String s = SERVER_ERROR_HTML.replaceFirst("TITLE", Status.SC_FORBIDDEN.name()).replaceFirst("MESSAGE",  ex.getReason());
 			setResponse(response, Status.SC_FORBIDDEN, s);
 		} catch (StormResourceException ex) {
 			log.error(ex.getReason());
@@ -154,5 +154,6 @@ public class StormStandardFilter implements Filter {
 				pw.flush();
 			}
 		});
+		response.setContentLengthHeader(new Long(htmlPage.getBytes().length));
 	}
 }
