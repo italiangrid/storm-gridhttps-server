@@ -41,7 +41,7 @@ public class StormStandardFilter implements Filter {
 
 	private Logger log = LoggerFactory.getLogger(StormStandardFilter.class);
 	public static final String INTERNAL_SERVER_ERROR_HTML = "<html><body><h1>Internal Server Error (500)</h1></body></html>";
-	public static String SERVER_ERROR_HTML = "<html><body><h1>TITLE</h1><p>MESSAGE</p></body></html>";
+	private String SERVER_ERROR_HTML = "<html><body><h1>TITLE</h1><p>MESSAGE</p></body></html>";
 	
 	public StormStandardFilter() {
 	}
@@ -80,7 +80,8 @@ public class StormStandardFilter implements Filter {
 			manager.getResponseHandler().respondServerError(request, response, ex.getReason());
 		} catch (StormRequestFailureException ex) {
 			log.error(ex.getReason());
-			setResponse(response, Status.SC_FORBIDDEN, SERVER_ERROR_HTML.replaceFirst("TITLE", Status.SC_FORBIDDEN.text).replaceFirst("MESSAGE",  ex.getReason()));
+			String s = SERVER_ERROR_HTML.replaceFirst("TITLE", Status.SC_FORBIDDEN.text).replaceFirst("MESSAGE",  ex.getReason());
+			setResponse(response, Status.SC_FORBIDDEN, s);
 		} catch (StormResourceException ex) {
 			log.error(ex.getReason());
 			manager.getResponseHandler().respondServerError(request, response, ex.getReason());
