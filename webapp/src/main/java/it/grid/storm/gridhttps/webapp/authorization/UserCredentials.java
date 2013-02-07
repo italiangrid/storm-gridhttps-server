@@ -17,6 +17,7 @@ import it.grid.storm.gridhttps.webapp.HttpHelper;
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 
+import org.apache.commons.lang.StringUtils;
 import org.italiangrid.voms.VOMSAttribute;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -99,7 +100,8 @@ public class UserCredentials extends Object {
 	}
 
 	private void setUserFQANS(ArrayList<String> userFQANS) {
-		log.debug("FQANS: " + userFQANS.toArray().toString());
+		String s = StringUtils.join(userFQANS, ",");
+		log.debug("FQANS: " + s);
 		this.userFQANS = userFQANS;
 	}
 	

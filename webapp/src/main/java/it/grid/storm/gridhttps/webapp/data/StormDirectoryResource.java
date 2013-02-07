@@ -84,7 +84,7 @@ public class StormDirectoryResource extends StormResource implements MakeCollect
 		SurlInfo info = getSurlInfo(1);
 		if (info != null) {
 			for (SurlInfo entry : info.getSubpathInfo()) {
-				StormResource resource = getFactory().resolveFile(getHost(), new File(info.getStfn()), getStorageArea());
+				StormResource resource = getFactory().resolveFile(getHost(), new File(getStorageArea().getRealPath(info.getStfn())), getStorageArea());
 				if (resource != null) {
 					list.add(resource);
 				} else {
