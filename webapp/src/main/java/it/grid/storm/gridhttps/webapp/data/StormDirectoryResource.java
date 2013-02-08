@@ -20,6 +20,7 @@ import io.milton.http.exceptions.NotAuthorizedException;
 import io.milton.http.exceptions.NotFoundException;
 import io.milton.resource.CollectionResource;
 import io.milton.resource.CopyableResource;
+import io.milton.resource.DeletableCollectionResource;
 import io.milton.resource.DeletableResource;
 import io.milton.resource.GetableResource;
 import io.milton.resource.MakeCollectionableResource;
@@ -46,7 +47,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class StormDirectoryResource extends StormResource implements MakeCollectionableResource, PutableResource, CopyableResource,
-		DeletableResource, MoveableResource, PropFindableResource, GetableResource {
+		DeletableResource, MoveableResource, PropFindableResource, GetableResource, DeletableCollectionResource {
 
 	private static final Logger log = LoggerFactory.getLogger(StormDirectoryResource.class);
 
@@ -163,6 +164,12 @@ public class StormDirectoryResource extends StormResource implements MakeCollect
 			StormResourceHelper.doCopyDirectory(this, (StormDirectoryResource) newParent, newName);
 		} else
 			log.error("Directory Resource class " + newParent.getClass().getName() + " not supported!");
+	}
+
+	@Override
+	public boolean isLockedOutRecursive(Request request) {
+		// TODO Auto-generated method stub
+		return false;
 	}
 
 }
