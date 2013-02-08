@@ -46,8 +46,7 @@ public abstract class StormResource implements Resource, DigestResource, PropFin
 	public static final int SINGLE_DETAILED = 0;
 	public static final int RECURSIVE_UNDETAILED = 1;
 	public static final int RECURSIVE_DETAILED = 2;
-	
-	
+
 	private File file;
 	private StormFactory factory;
 	private String host;
@@ -83,6 +82,10 @@ public abstract class StormResource implements Resource, DigestResource, PropFin
 	}
 
 	public void importInfo(SurlInfo info) {
+		if (info == null) {
+			log.warn("StormResource failed to initialize surl-info attributes! info is null! Maybe " + this.getStfn() + " doesn't exist!");
+			return;
+		}
 		setCheckSumType(info.getCheckSumType());
 		setCheckSumValue(info.getCheckSumValue());
 		setStatus(info.getStatus());
@@ -91,7 +94,7 @@ public abstract class StormResource implements Resource, DigestResource, PropFin
 		setLastModified(info.getModificationTime());
 		setCreationDate(info.getCreationTime());
 	}
-	
+
 	protected void setHost(String host) {
 		this.host = host;
 	}
@@ -227,11 +230,10 @@ public abstract class StormResource implements Resource, DigestResource, PropFin
 			log.error("Retrieving surl-info for " + resource.getFile() + ": " + e.getReason());
 			throw new RuntimeException(e);
 		} catch (StormRequestFailureException e) {
-			log.error("Retrieving surl-info for " + resource.getFile() + ": " + e.getReason());
+			log.warn("Retrieving surl-info for " + resource.getFile() + ": " + e.getReason());
 		} catch (TooManyResultsException e) {
 			log.error("Retrieving surl-info for " + resource.getFile() + ": " + e.getReason());
 			throw new RuntimeException(e);
-
 		}
 		return info != null ? info.get(0) : null;
 	}
@@ -244,7 +246,7 @@ public abstract class StormResource implements Resource, DigestResource, PropFin
 		log.debug("set-checkSumType: " + checkSumType);
 		this.checkSumType = checkSumType;
 	}
-	
+
 	public TCheckSumValue getCheckSumValue() {
 		return checkSumValue;
 	}
@@ -266,7 +268,7 @@ public abstract class StormResource implements Resource, DigestResource, PropFin
 	public TReturnStatus getStatus() {
 		return status;
 	}
-	
+
 	private void setStatus(TReturnStatus status) {
 		log.debug("set-status: " + status);
 		this.status = status;
@@ -295,5 +297,4 @@ public abstract class StormResource implements Resource, DigestResource, PropFin
 		this.name = name;
 	}
 
-	
 }
