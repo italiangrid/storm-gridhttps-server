@@ -147,7 +147,7 @@ public class StormStandardFilter implements Filter {
 		HttpHelper httpHelper = new HttpHelper(MiltonServlet.request(), MiltonServlet.response());
 		UserCredentials user = httpHelper.getUser();
 		String userStr = user.isAnonymous() ? "anonymous" : user.getUserDN();
-		log.info(getCommand() + " from '" + userStr + "'@" + MiltonServlet.request().getRemoteAddr());
+		log.info(getCommand() + " from: " + userStr + " ip: " + MiltonServlet.request().getRemoteAddr());
 	}
 	
 }
