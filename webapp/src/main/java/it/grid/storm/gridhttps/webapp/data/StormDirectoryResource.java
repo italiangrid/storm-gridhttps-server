@@ -101,10 +101,10 @@ public class StormDirectoryResource extends StormResource implements MakeCollect
 		return StormResourceHelper.doPut(this, name, in);
 	}
 
-	public boolean hasChildren() {
-		SurlInfo info = getSurlInfo(RECURSIVE_UNDETAILED);
-		return info != null ? !info.getSubpathInfo().isEmpty() : false;
-	}
+//	public boolean hasChildren() {
+//		SurlInfo info = getSurlInfo(RECURSIVE_UNDETAILED);
+//		return info != null ? !info.getSubpathInfo().isEmpty() : false;
+//	}
 
 	@Override
 	public void delete() throws NotAuthorizedException, ConflictException, BadRequestException {

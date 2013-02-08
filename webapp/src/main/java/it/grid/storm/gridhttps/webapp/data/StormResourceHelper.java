@@ -86,11 +86,11 @@ public class StormResourceHelper {
 		log.debug("Called doDelete()");
 		if (source instanceof StormDirectoryResource) { // DIRECTORY
 			StormDirectoryResource sourceDir = (StormDirectoryResource) source;
-			if (sourceDir.hasChildren()) {
+//			if (sourceDir.hasChildren()) {
 				StormBackendApi.rmdirRecoursively(sourceDir.getFactory().getBackendApi(), sourceDir.getSurl().asString(), user);
-			} else {
-				StormBackendApi.rmdir(sourceDir.getFactory().getBackendApi(), sourceDir.getSurl().asString(), user);
-			}
+//			} else {
+//				StormBackendApi.rmdir(sourceDir.getFactory().getBackendApi(), sourceDir.getSurl().asString(), user);
+//			}
 		} else { // FILE
 			StormFileResource sourceFile = (StormFileResource) source;
 			StormBackendApi.rm(sourceFile.getFactory().getBackendApi(), sourceFile.getSurl().asString(), user);
