@@ -29,6 +29,7 @@ import io.milton.http.exceptions.ConflictException;
 import io.milton.http.exceptions.NotAuthorizedException;
 import io.milton.servlet.MiltonServlet;
 import it.grid.storm.gridhttps.webapp.HttpHelper;
+import it.grid.storm.gridhttps.webapp.authorization.UserCredentials;
 import it.grid.storm.gridhttps.webapp.data.exceptions.RuntimeApiException;
 import it.grid.storm.gridhttps.webapp.data.exceptions.StormRequestFailureException;
 import it.grid.storm.gridhttps.webapp.data.exceptions.StormResourceException;
@@ -63,27 +64,27 @@ public class StormStandardFilter implements Filter {
 				}
 			}
 		} catch (IllegalArgumentException ex) {
-			log.error(ex.getMessage());
+			log.error("IllegalArgumentException: " + ex.getMessage());
 			response.sendError(Status.SC_INTERNAL_SERVER_ERROR, ex.getMessage());
 			response.setStatus(Status.SC_INTERNAL_SERVER_ERROR);
 		} catch (RuntimeException ex) {
-			log.error(ex.getMessage());
+			log.error("RuntimeException: " + ex.getMessage());
 			response.sendError(Status.SC_INTERNAL_SERVER_ERROR, ex.getMessage());
 			response.setStatus(Status.SC_INTERNAL_SERVER_ERROR);
 		} catch (TooManyResultsException ex) {
-			log.warn(ex.getReason());
+			log.warn("TooManyResultsException: " + ex.getReason());
 			response.sendError(Status.SC_SERVICE_UNAVAILABLE, ex.getReason());
 			response.setStatus(Status.SC_SERVICE_UNAVAILABLE);
 		} catch (RuntimeApiException ex) {
-			log.error(ex.getMessage());
-			response.sendError(Status.SC_INTERNAL_SERVER_ERROR, ex.getMessage());
+			log.error("RuntimeApiException: " + ex.getReason());
+			response.sendError(Status.SC_INTERNAL_SERVER_ERROR, ex.getReason());
 			response.setStatus(Status.SC_INTERNAL_SERVER_ERROR);
 		} catch (StormRequestFailureException ex) {
-			log.warn(ex.getReason());
+			log.warn("RequestFailureException: " + ex.getReason());
 			response.sendError(Status.SC_SERVICE_UNAVAILABLE, ex.getReason());
 			response.setStatus(Status.SC_SERVICE_UNAVAILABLE);
 		} catch (StormResourceException ex) {
-			log.error(ex.getReason());
+			log.error("ResourceException: " + ex.getReason());
 			response.sendError(Status.SC_SERVICE_UNAVAILABLE, ex.getReason());
 			response.setStatus(Status.SC_SERVICE_UNAVAILABLE);
 		} catch (BadRequestException ex) {
@@ -143,7 +144,10 @@ public class StormStandardFilter implements Filter {
 	}
 
 	private void printCommand() {
-		log.info(getCommand());
+		HttpHelper httpHelper = new HttpHelper(MiltonServlet.request(), MiltonServlet.response());
+		UserCredentials user = httpHelper.getUser();
+		String userStr = user.isAnonymous() ? "anonymous" : user.getUserDN();
+		log.info(getCommand() + " from '" + userStr + "'@" + MiltonServlet.request().getRemoteAddr());
 	}
 	
 }

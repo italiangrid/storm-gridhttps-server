@@ -10,20 +10,20 @@
         </rollingPolicy>
 
         <layout class="ch.qos.logback.classic.PatternLayout">
-            <Pattern>%date{HH:mm:ss.SSS} [%.-16thread] %highlight(%-5level) %msg%n</Pattern>
+            <Pattern>%date{ISO8601} [%.-16thread] %highlight(%-5level) %msg%n</Pattern>
         </layout>
 	</appender>
 
 	<appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
 		<layout class="ch.qos.logback.classic.PatternLayout">
-			<Pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</Pattern>
+			<Pattern>%d{ISO8601} [%thread] %highlight(%-5level) %logger{36} - %msg%n</Pattern>
 		</layout>
 	</appender>
 
 	<appender name="STDERR" class="ch.qos.logback.core.ConsoleAppender">
 		<target>System.err</target>
 		<layout class="ch.qos.logback.classic.PatternLayout">
-			<Pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</Pattern>
+			<Pattern>%d{ISO8601} [%thread] %highlight(%-5level) %logger{36} - %msg%n</Pattern>
 		</layout>
 	</appender>
 	
