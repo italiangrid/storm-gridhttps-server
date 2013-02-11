@@ -239,7 +239,7 @@ public class StormResourceHelper {
 			throws RuntimeApiException, StormRequestFailureException, TooManyResultsException {
 		log.debug("Called doLsDetailed()");
 		LsOutputData output = StormBackendApi.lsDetailed(source.getFactory().getBackendApi(), source.getSurl().asString(), user,
-				new RecursionLevel(recursion, count));
+				new RecursionLevel(recursion,1), count);
 		return filterLs((ArrayList<SurlInfo>) output.getInfos());
 	}
 
