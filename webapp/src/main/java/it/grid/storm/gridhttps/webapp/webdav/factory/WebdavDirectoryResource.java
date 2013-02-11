@@ -130,7 +130,7 @@ public class WebdavDirectoryResource extends StormDirectoryResource implements M
 						+ numberOfMaxEntriesString + " is not a valid integer!");
 			}
 			log.warn("Too many results with Ls, max entries is " + numberOfMaxEntries + ". Re-trying with counted Ls.");
-			entries = StormResourceHelper.doLsDetailed(this, Recursion.NONE, numberOfMaxEntries);
+			entries = StormResourceHelper.doLsDetailed(this, Recursion.LIMITED, numberOfMaxEntries);
 		}
 		if (entries != null)
 			buildDirectoryPage(out, entries, numberOfMaxEntries);
