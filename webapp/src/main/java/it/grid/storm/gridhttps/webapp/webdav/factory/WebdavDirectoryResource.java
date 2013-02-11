@@ -42,8 +42,8 @@ import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class WebdavDirectoryResource extends StormDirectoryResource implements MakeCollectionableResource, PutableResource, CopyableResource,
-		DeletableResource, MoveableResource, PropFindableResource, GetableResource {
+public class WebdavDirectoryResource extends StormDirectoryResource implements MakeCollectionableResource, PutableResource,
+		CopyableResource, DeletableResource, MoveableResource, PropFindableResource, GetableResource {
 
 	private static final Logger log = LoggerFactory.getLogger(WebdavDirectoryResource.class);
 
@@ -54,7 +54,7 @@ public class WebdavDirectoryResource extends StormDirectoryResource implements M
 	public WebdavDirectoryResource(StormDirectoryResource parentDir, String childDirName) {
 		this(parentDir.getFactory(), new File(parentDir.getFile(), childDirName), parentDir.getStorageArea());
 	}
-	
+
 	public WebdavDirectoryResource(StormFactory factory, File dir, StorageArea storageArea, SurlInfo surlInfo) {
 		super(factory, dir, storageArea, surlInfo);
 	}
@@ -68,10 +68,12 @@ public class WebdavDirectoryResource extends StormDirectoryResource implements M
 		String methodName = MiltonServlet.request().getMethod();
 		if (methodName.equals("PUT")) {
 			/*
-			 * it is a PUT with a path that contains a directory that does not exist, so send a 409 error to the client method 
+			 * it is a PUT with a path that contains a directory that does not
+			 * exist, so send a 409 error to the client method
 			 */
 			log.warn(MiltonServlet.request().getRequestURI() + " path contains one or more intermediate collections that not exist!");
-			throw new ConflictException(this, "A resource cannot be created at the destination URI until one or more intermediate collections are created.");
+			throw new ConflictException(this,
+					"A resource cannot be created at the destination URI until one or more intermediate collections are created.");
 		}
 		return super.createCollection(name);
 	}
@@ -110,38 +112,30 @@ public class WebdavDirectoryResource extends StormDirectoryResource implements M
 	public void sendContent(OutputStream out, Range range, Map<String, String> params, String contentType) throws IOException,
 			NotAuthorizedException, BadRequestException {
 		log.debug("Called function for GET DIRECTORY");
-//		Collection<SurlInfo> entries = this.getSurlInfo(2).getSubpathInfo(); //StormResourceHelper.doLsDetailed(this, Recursion.NONE).get(0).getSubpathInfo(); 	
-		
 		Collection<SurlInfo> entries = null;
 		int numberOfMaxEntries = 0;
 		try {
-			entries = this.getSurlInfo(StormResource.RECURSIVE_DETAILED).getSubpathInfo(); 
+			entries = this.getSurlInfo(StormResource.RECURSIVE_DETAILED).getSubpathInfo();
 		} catch (TooManyResultsException e) {
 			TReturnStatus status = e.getStatus();
 			String[] array = status.getExplanation().split(" ");
-			String numberOfMaxEntriesString = array[array.length-1]; //last element
+			String numberOfMaxEntriesString = array[array.length - 1]; // last
+																		// element
 			try {
-				numberOfMaxEntries = Integer.valueOf(numberOfMaxEntriesString);				
+				numberOfMaxEntries = Integer.valueOf(numberOfMaxEntriesString);
 			} catch (NumberFormatException e2) {
-				log.error("Error parsing explanation string to retrieve the max number of entries of a srmLs -l, " + numberOfMaxEntriesString + " is not a valid integer!");
-				throw new RuntimeException("Error parsing explanation string to retrieve the max number of entries of a srmLs -l, " + numberOfMaxEntriesString + " is not a valid integer!");
+				log.error("Error parsing explanation string to retrieve the max number of entries of a srmLs -l, "
+						+ numberOfMaxEntriesString + " is not a valid integer!");
+				throw new RuntimeException("Error parsing explanation string to retrieve the max number of entries of a srmLs -l, "
+						+ numberOfMaxEntriesString + " is not a valid integer!");
 			}
+			log.warn("Too many results with Ls, max entries is " + numberOfMaxEntries + ". Re-trying with counted Ls.");
 			entries = StormResourceHelper.doLsDetailed(this, Recursion.NONE, numberOfMaxEntries);
-		} 
+		}
 		if (entries != null)
 			buildDirectoryPage(out, entries, numberOfMaxEntries);
 	}
 
-//	private void buildDirectoryPage(OutputStream out, List<? extends Resource> entries) {
-//		String dirPath = MiltonServlet.request().getRequestURI();
-//		StormHtmlFolderPage page = new StormHtmlFolderPage(out);
-//		page.start();
-//		page.addTitle("StoRM Gridhttps-server WebDAV");
-//		page.addNavigator(getStorageArea().getStfn(getFile().getPath()));
-//		page.addFolderList(dirPath, entries);
-//		page.end();
-//	}
-	
 	private void buildDirectoryPage(OutputStream out, Collection<SurlInfo> entries, int nmax) {
 		String dirPath = MiltonServlet.request().getRequestURI();
 		StormHtmlFolderPage page = new StormHtmlFolderPage(out);
@@ -153,7 +147,7 @@ public class WebdavDirectoryResource extends StormDirectoryResource implements M
 		page.addFolderList(dirPath, entries);
 		page.end();
 	}
-	
+
 	@Override
 	public String getContentType(String accepts) {
 		return "text/html";

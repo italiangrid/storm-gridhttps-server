@@ -33,6 +33,7 @@ import it.grid.storm.gridhttps.webapp.data.StormResourceHelper;
 import it.grid.storm.gridhttps.webapp.data.exceptions.RuntimeApiException;
 import it.grid.storm.gridhttps.webapp.data.exceptions.StormRequestFailureException;
 import it.grid.storm.gridhttps.webapp.data.exceptions.TooManyResultsException;
+import it.grid.storm.srm.types.Recursion;
 import it.grid.storm.srm.types.TReturnStatus;
 import it.grid.storm.storagearea.StorageArea;
 import it.grid.storm.xmlrpc.outputdata.LsOutputData.SurlInfo;
@@ -42,6 +43,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
@@ -81,13 +83,10 @@ public class StormDirectoryResource extends StormResource implements MakeCollect
 		return getFactory().resolveFile(this.getHost(), fsDest, getStorageArea());
 	}
 
-	@Override
-	public List<? extends Resource> getChildren() throws NotAuthorizedException, BadRequestException{
+	private ArrayList<StormResource> resolveSurlArray(Collection<SurlInfo> entries) {
 		ArrayList<StormResource> list = new ArrayList<StormResource>();
-		SurlInfo info = null;
-		info = getSurlInfo(StormResource.RECURSIVE_DETAILED);
-		if (info != null) {
-			for (SurlInfo entry : info.getSubpathInfo()) {
+		if (entries != null) {
+			for (SurlInfo entry : entries) {
 				StormResource resource = getFactory().resolveFile(entry, getStorageArea());
 				if (resource != null) {
 					list.add(resource);
@@ -96,6 +95,45 @@ public class StormDirectoryResource extends StormResource implements MakeCollect
 				}
 			}
 		}
+		return list;
+	}
+	
+	@Override
+	public List<? extends Resource> getChildren() throws NotAuthorizedException, BadRequestException{
+		ArrayList<StormResource> list = new ArrayList<StormResource>();
+		SurlInfo info = null;
+		try {
+			info = getSurlInfo(StormResource.RECURSIVE_DETAILED);
+		} catch (TooManyResultsException e) {
+			TReturnStatus status = e.getStatus();
+			String[] array = status.getExplanation().split(" ");
+			String numberOfMaxEntriesString = array[array.length-1]; //last element
+			int numberOfMaxEntries = 0;
+			try {
+				numberOfMaxEntries = Integer.valueOf(numberOfMaxEntriesString);				
+			} catch (NumberFormatException e2) {
+				log.error("Error parsing explanation string to retrieve the max number of entries of a srmLs -l, " + numberOfMaxEntriesString + " is not a valid integer!");
+				throw new RuntimeException("Error parsing explanation string to retrieve the max number of entries of a srmLs -l, " + numberOfMaxEntriesString + " is not a valid integer!");
+			}
+			log.warn("Too many results with Ls, max entries is " + numberOfMaxEntries + ". Re-trying with counted Ls.");
+			return getNChildren(numberOfMaxEntries);
+		}
+		if (info != null)
+			list = resolveSurlArray(info.getSubpathInfo());
+		return list;
+	}
+	
+	public List<? extends Resource> getNChildren(int numberOfChildren) throws NotAuthorizedException, BadRequestException{
+		ArrayList<StormResource> list = new ArrayList<StormResource>();
+		Collection<SurlInfo> entries = null;
+		try {
+			entries = StormResourceHelper.doLsDetailed(this, Recursion.NONE, numberOfChildren);
+		} catch (TooManyResultsException e) {
+			log.error("The number of children requested for '" + this.getStfn() + "' is greater than the max number of results allowed: " + e.getStatus().getExplanation()); 
+			return list;
+		}
+		if (entries != null)
+			list = resolveSurlArray(entries);
 		return list;
 	}
 
