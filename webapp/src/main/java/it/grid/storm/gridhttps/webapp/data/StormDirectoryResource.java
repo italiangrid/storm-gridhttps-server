@@ -127,7 +127,7 @@ public class StormDirectoryResource extends StormResource implements MakeCollect
 		ArrayList<StormResource> list = new ArrayList<StormResource>();
 		Collection<SurlInfo> entries = null;
 		try {
-			entries = StormResourceHelper.doLsDetailed(this, Recursion.LIMITED, numberOfChildren);
+			entries = StormResourceHelper.doLsDetailed(this, Recursion.NONE, numberOfChildren);
 		} catch (TooManyResultsException e) {
 			log.error("The number of children requested for '" + this.getStfn() + "' is greater than the max number of results allowed: " + e.getStatus().getExplanation()); 
 			return list;
