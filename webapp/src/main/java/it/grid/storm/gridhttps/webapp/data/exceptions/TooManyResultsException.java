@@ -13,17 +13,29 @@
 package it.grid.storm.gridhttps.webapp.data.exceptions;
 
 import io.milton.http.exceptions.BadRequestException;
+import it.grid.storm.srm.types.TReturnStatus;
 
 public class TooManyResultsException extends BadRequestException {
 
 	private static final long serialVersionUID = -3624109442893115370L;
 
-	public TooManyResultsException(String reason) {
+	private TReturnStatus status;
+	
+	public TooManyResultsException(String reason, TReturnStatus status) {
 		super(reason);
+		this.setStatus(status);
 	}
 
 	public TooManyResultsException(String s, Throwable throwable) {
 		super(s, throwable);
+	}
+
+	public TReturnStatus getStatus() {
+		return status;
+	}
+
+	private void setStatus(TReturnStatus status) {
+		this.status = status;
 	}
 
 }

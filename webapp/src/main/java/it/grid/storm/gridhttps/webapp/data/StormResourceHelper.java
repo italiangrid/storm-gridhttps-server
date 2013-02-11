@@ -86,11 +86,12 @@ public class StormResourceHelper {
 		log.debug("Called doDelete()");
 		if (source instanceof StormDirectoryResource) { // DIRECTORY
 			StormDirectoryResource sourceDir = (StormDirectoryResource) source;
-//			if (sourceDir.hasChildren()) {
-				StormBackendApi.rmdirRecoursively(sourceDir.getFactory().getBackendApi(), sourceDir.getSurl().asString(), user);
-//			} else {
-//				StormBackendApi.rmdir(sourceDir.getFactory().getBackendApi(), sourceDir.getSurl().asString(), user);
-//			}
+			// if (sourceDir.hasChildren()) {
+			StormBackendApi.rmdirRecoursively(sourceDir.getFactory().getBackendApi(), sourceDir.getSurl().asString(), user);
+			// } else {
+			// StormBackendApi.rmdir(sourceDir.getFactory().getBackendApi(),
+			// sourceDir.getSurl().asString(), user);
+			// }
 		} else { // FILE
 			StormFileResource sourceFile = (StormFileResource) source;
 			StormBackendApi.rm(sourceFile.getFactory().getBackendApi(), sourceFile.getSurl().asString(), user);
@@ -228,6 +229,20 @@ public class StormResourceHelper {
 		return filterLs((ArrayList<SurlInfo>) output.getInfos());
 	}
 
+	public static ArrayList<SurlInfo> doLsDetailed(StormResource source, Recursion recursion, int count) throws RuntimeApiException,
+			StormRequestFailureException, TooManyResultsException {
+		HttpHelper httpHelper = new HttpHelper(MiltonServlet.request(), MiltonServlet.response());
+		return doLsDetailed(source, recursion, httpHelper.getUser(), count);
+	}
+
+	public static ArrayList<SurlInfo> doLsDetailed(StormResource source, Recursion recursion, UserCredentials user, int count)
+			throws RuntimeApiException, StormRequestFailureException, TooManyResultsException {
+		log.debug("Called doLsDetailed()");
+		LsOutputData output = StormBackendApi.lsDetailed(source.getFactory().getBackendApi(), source.getSurl().asString(), user,
+				new RecursionLevel(recursion), count);
+		return filterLs((ArrayList<SurlInfo>) output.getInfos());
+	}
+
 	public static ArrayList<SurlInfo> doLs(StormResource source) throws RuntimeApiException, StormRequestFailureException,
 			TooManyResultsException {
 		HttpHelper httpHelper = new HttpHelper(MiltonServlet.request(), MiltonServlet.response());
@@ -285,7 +300,7 @@ public class StormResourceHelper {
 
 	public static void doCopyDirectory(StormDirectoryResource sourceDir, StormDirectoryResource newParent, String newName,
 			boolean isDepthInfinity, UserCredentials user) throws RuntimeApiException, StormRequestFailureException,
-			StormResourceException, TooManyResultsException {
+			StormResourceException, TooManyResultsException, BadRequestException, NotAuthorizedException {
 		log.debug("Called doCopyDirectory()");
 		// create destination folder:
 		StormDirectoryResource destinationResource = doMkCol(newParent, newName, user);

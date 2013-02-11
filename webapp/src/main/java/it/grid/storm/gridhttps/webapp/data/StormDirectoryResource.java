@@ -32,6 +32,8 @@ import it.grid.storm.gridhttps.webapp.data.StormFactory;
 import it.grid.storm.gridhttps.webapp.data.StormResourceHelper;
 import it.grid.storm.gridhttps.webapp.data.exceptions.RuntimeApiException;
 import it.grid.storm.gridhttps.webapp.data.exceptions.StormRequestFailureException;
+import it.grid.storm.gridhttps.webapp.data.exceptions.TooManyResultsException;
+import it.grid.storm.srm.types.TReturnStatus;
 import it.grid.storm.storagearea.StorageArea;
 import it.grid.storm.xmlrpc.outputdata.LsOutputData.SurlInfo;
 
@@ -80,9 +82,10 @@ public class StormDirectoryResource extends StormResource implements MakeCollect
 	}
 
 	@Override
-	public List<? extends Resource> getChildren() {
+	public List<? extends Resource> getChildren() throws NotAuthorizedException, BadRequestException{
 		ArrayList<StormResource> list = new ArrayList<StormResource>();
-		SurlInfo info = getSurlInfo(StormResource.RECURSIVE_DETAILED);
+		SurlInfo info = null;
+		info = getSurlInfo(StormResource.RECURSIVE_DETAILED);
 		if (info != null) {
 			for (SurlInfo entry : info.getSubpathInfo()) {
 				StormResource resource = getFactory().resolveFile(entry, getStorageArea());
@@ -170,6 +173,16 @@ public class StormDirectoryResource extends StormResource implements MakeCollect
 	public boolean isLockedOutRecursive(Request request) {
 		// TODO Auto-generated method stub
 		return false;
+	}
+	
+	public TReturnStatus getStatus() {
+		SurlInfo info = null;
+		try {
+			info = StormResource.loadSurlInfo(this, RECURSIVE_UNDETAILED);
+		} catch (TooManyResultsException e) {
+			return e.getStatus();
+		}
+		return info.getStatus();
 	}
 
 }

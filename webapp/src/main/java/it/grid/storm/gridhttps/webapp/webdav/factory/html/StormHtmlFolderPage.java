@@ -43,7 +43,7 @@ public class StormHtmlFolderPage extends HtmlPage {
 				return s1.getStfn().compareTo(s2.getStfn());
 		}
 	}
-	
+
 	private class StormResourceComparator implements Comparator<Object> {
 		public int compare(Object o1, Object o2) {
 			if ((o1 instanceof StormDirectoryResource) && !(o2 instanceof StormDirectoryResource))
@@ -70,6 +70,7 @@ public class StormHtmlFolderPage extends HtmlPage {
 		addStyle(getH1Style());
 		addStyle(getNavigationTdStyle());
 		addStyle(getNavigationTableStyle());
+		addStyle(getTooManyResultsWarningStyle());
 		close("head");
 		open("body");
 	}
@@ -96,6 +97,15 @@ public class StormHtmlFolderPage extends HtmlPage {
 		addTableCol(whereami);
 		closeTableRow();
 		closeTable();
+	}
+
+	public void addTooManyResultsWarning(int nmax) {
+		Map<String, String> attributes = new HashMap<String, String>();
+		attributes.put("class", "toomanyresults");
+		open("div", attributes);
+		writeText("This directory contains too many entries, max number returned is " + nmax
+				+ ". To increase this value modify storm.properties or ask your system administrator");
+		close("div");
 	}
 
 	public void addFolderList(String dirPath, Collection<SurlInfo> entries) {
@@ -206,7 +216,7 @@ public class StormHtmlFolderPage extends HtmlPage {
 		}
 		closeTable();
 	}
-	
+
 	private void addStyle(String cssStyle) {
 		Map<String, String> attributes = new HashMap<String, String>();
 		attributes.put("type", "text/css");
@@ -388,6 +398,11 @@ public class StormHtmlFolderPage extends HtmlPage {
 
 	private static String getNavigationTdStyle() {
 		String out = "table.navigator td { font-size: 14pt; padding-bottom: 8px; }";
+		return out;
+	}
+
+	private static String getTooManyResultsWarningStyle() {
+		String out = "div.toomanyresults { background: #FFA18c; padding: 3px 10px; border: 1px solid red; font-weight: bold; color: #9a1f00; font-size: 11pt; font-style: italic; }";
 		return out;
 	}
 

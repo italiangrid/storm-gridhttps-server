@@ -68,7 +68,11 @@ public abstract class StormResource implements Resource, DigestResource, PropFin
 		setFile(file);
 		setStorageArea(storageArea);
 		setSurl(new Surl(getFile(), getStorageArea()));
-		importInfo(StormResource.loadSurlInfo(this, SINGLE_DETAILED));
+		try {
+			importInfo(StormResource.loadSurlInfo(this, SINGLE_DETAILED));
+		} catch (TooManyResultsException e) {
+			log.warn("TooManyResultsException with a ls -d is impossible! How did you arrive here??");
+		}
 	}
 
 	public StormResource(String host, StormFactory factory, File file, StorageArea storageArea, SurlInfo info) {
@@ -208,11 +212,11 @@ public abstract class StormResource implements Resource, DigestResource, PropFin
 		return storageArea;
 	}
 
-	public SurlInfo getSurlInfo(int depth) {
+	public SurlInfo getSurlInfo(int depth) throws TooManyResultsException {
 		return StormResource.loadSurlInfo(this, depth);
 	}
 
-	protected static SurlInfo loadSurlInfo(StormResource resource, int depth) {
+	protected static SurlInfo loadSurlInfo(StormResource resource, int depth) throws TooManyResultsException {
 		ArrayList<SurlInfo> info = null;
 		try {
 			switch (depth) {
@@ -231,9 +235,9 @@ public abstract class StormResource implements Resource, DigestResource, PropFin
 			throw new RuntimeException(e);
 		} catch (StormRequestFailureException e) {
 			log.warn("Retrieving surl-info for " + resource.getFile() + ": " + e.getReason());
-		} catch (TooManyResultsException e) {
-			log.error("Retrieving surl-info for " + resource.getFile() + ": " + e.getReason());
-			throw new RuntimeException(e);
+//		} catch (TooManyResultsException e) {
+//			log.error("Retrieving surl-info for " + resource.getFile() + ": " + e.getReason());
+//			throw new RuntimeException(e);
 		}
 		return info != null ? info.get(0) : null;
 	}

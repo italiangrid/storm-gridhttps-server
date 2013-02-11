@@ -22,9 +22,13 @@ import io.milton.servlet.MiltonServlet;
 import it.grid.storm.gridhttps.webapp.data.StormDirectoryResource;
 import it.grid.storm.gridhttps.webapp.data.StormFactory;
 import it.grid.storm.gridhttps.webapp.data.StormResource;
+import it.grid.storm.gridhttps.webapp.data.StormResourceHelper;
 import it.grid.storm.gridhttps.webapp.data.exceptions.RuntimeApiException;
 import it.grid.storm.gridhttps.webapp.data.exceptions.StormResourceException;
+import it.grid.storm.gridhttps.webapp.data.exceptions.TooManyResultsException;
 import it.grid.storm.gridhttps.webapp.webdav.factory.html.StormHtmlFolderPage;
+import it.grid.storm.srm.types.Recursion;
+import it.grid.storm.srm.types.TReturnStatus;
 import it.grid.storm.storagearea.StorageArea;
 import it.grid.storm.xmlrpc.outputdata.LsOutputData.SurlInfo;
 
@@ -107,7 +111,19 @@ public class WebdavDirectoryResource extends StormDirectoryResource implements M
 			NotAuthorizedException, BadRequestException {
 		log.debug("Called function for GET DIRECTORY");
 //		Collection<SurlInfo> entries = this.getSurlInfo(2).getSubpathInfo(); //StormResourceHelper.doLsDetailed(this, Recursion.NONE).get(0).getSubpathInfo(); 	
-		buildDirectoryPage(out, this.getSurlInfo(StormResource.RECURSIVE_DETAILED).getSubpathInfo());
+		
+		Collection<SurlInfo> entries = null;
+		int nmax = 0;
+		try {
+			entries = this.getSurlInfo(StormResource.RECURSIVE_DETAILED).getSubpathInfo(); 
+		} catch (TooManyResultsException e) {
+			TReturnStatus status = e.getStatus();
+			nmax = Integer.valueOf(status.getExplanation().replaceFirst("Max returned entries is: ", ""));
+			log.warn("Too many results with Ls, max entries is " + nmax + ". Re-trying with counted Ls.");
+			entries = StormResourceHelper.doLsDetailed(this, Recursion.NONE, nmax);
+		} 
+		if (entries != null)
+			buildDirectoryPage(out, this.getSurlInfo(StormResource.RECURSIVE_DETAILED).getSubpathInfo(), nmax);
 	}
 
 //	private void buildDirectoryPage(OutputStream out, List<? extends Resource> entries) {
@@ -120,12 +136,14 @@ public class WebdavDirectoryResource extends StormDirectoryResource implements M
 //		page.end();
 //	}
 	
-	private void buildDirectoryPage(OutputStream out, Collection<SurlInfo> entries) {
+	private void buildDirectoryPage(OutputStream out, Collection<SurlInfo> entries, int nmax) {
 		String dirPath = MiltonServlet.request().getRequestURI();
 		StormHtmlFolderPage page = new StormHtmlFolderPage(out);
 		page.start();
 		page.addTitle("StoRM Gridhttps-server WebDAV");
 		page.addNavigator(getStorageArea().getStfn(getFile().getPath()));
+		if (nmax > 0)
+			page.addTooManyResultsWarning(nmax);
 		page.addFolderList(dirPath, entries);
 		page.end();
 	}
