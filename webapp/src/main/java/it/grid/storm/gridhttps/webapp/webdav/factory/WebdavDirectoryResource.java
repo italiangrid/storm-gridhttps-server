@@ -113,17 +113,23 @@ public class WebdavDirectoryResource extends StormDirectoryResource implements M
 //		Collection<SurlInfo> entries = this.getSurlInfo(2).getSubpathInfo(); //StormResourceHelper.doLsDetailed(this, Recursion.NONE).get(0).getSubpathInfo(); 	
 		
 		Collection<SurlInfo> entries = null;
-		int nmax = 0;
+		int numberOfMaxEntries = 0;
 		try {
 			entries = this.getSurlInfo(StormResource.RECURSIVE_DETAILED).getSubpathInfo(); 
 		} catch (TooManyResultsException e) {
 			TReturnStatus status = e.getStatus();
-			nmax = Integer.valueOf(status.getExplanation().replaceFirst("Max returned entries is: ", ""));
-			log.warn("Too many results with Ls, max entries is " + nmax + ". Re-trying with counted Ls.");
-			entries = StormResourceHelper.doLsDetailed(this, Recursion.NONE, nmax);
+			String[] array = status.getExplanation().split(" ");
+			String numberOfMaxEntriesString = array[array.length-1]; //last element
+			try {
+				numberOfMaxEntries = Integer.valueOf(numberOfMaxEntriesString);				
+			} catch (NumberFormatException e2) {
+				log.error("Error parsing explanation string to retrieve the max number of entries of a srmLs -l, " + numberOfMaxEntriesString + " is not a valid integer!");
+				throw new RuntimeException("Error parsing explanation string to retrieve the max number of entries of a srmLs -l, " + numberOfMaxEntriesString + " is not a valid integer!");
+			}
+			entries = StormResourceHelper.doLsDetailed(this, Recursion.NONE, numberOfMaxEntries);
 		} 
 		if (entries != null)
-			buildDirectoryPage(out, this.getSurlInfo(StormResource.RECURSIVE_DETAILED).getSubpathInfo(), nmax);
+			buildDirectoryPage(out, entries, numberOfMaxEntries);
 	}
 
 //	private void buildDirectoryPage(OutputStream out, List<? extends Resource> entries) {
