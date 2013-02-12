@@ -17,6 +17,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Collection;
 
 import io.milton.http.exceptions.BadRequestException;
 import io.milton.http.exceptions.ConflictException;
@@ -202,7 +203,7 @@ public class StormResourceHelper {
 
 	/* LS */
 
-	private static ArrayList<SurlInfo> filterLs(ArrayList<SurlInfo> collection) {
+	private static ArrayList<SurlInfo> filterLs(Collection<SurlInfo> collection) {
 		ArrayList<SurlInfo> filteredOutput = new ArrayList<SurlInfo>();
 		for (SurlInfo info : collection) {
 			if (!(info.getStatus().getStatusCode().equals(TStatusCode.SRM_INVALID_PATH) || (info.getStatus().getStatusCode()
@@ -226,7 +227,7 @@ public class StormResourceHelper {
 		log.debug("Called doLsDetailed()");
 		LsOutputData output = StormBackendApi.lsDetailed(source.getFactory().getBackendApi(), source.getSurl().asString(), user,
 				new RecursionLevel(recursion));
-		return filterLs((ArrayList<SurlInfo>) output.getInfos());
+		return filterLs(output.getInfos());
 	}
 
 	public static ArrayList<SurlInfo> doLsDetailed(StormResource source, Recursion recursion, int count) throws RuntimeApiException,
@@ -240,7 +241,7 @@ public class StormResourceHelper {
 		log.debug("Called doLsDetailed()");
 		LsOutputData output = StormBackendApi.lsDetailed(source.getFactory().getBackendApi(), source.getSurl().asString(), user,
 				new RecursionLevel(recursion), count);
-		return filterLs((ArrayList<SurlInfo>) output.getInfos());
+		return filterLs(output.getInfos());
 	}
 
 	public static ArrayList<SurlInfo> doLs(StormResource source) throws RuntimeApiException, StormRequestFailureException,
@@ -253,7 +254,7 @@ public class StormResourceHelper {
 			StormRequestFailureException, TooManyResultsException {
 		log.debug("Called doLs()");
 		LsOutputData output = StormBackendApi.ls(source.getFactory().getBackendApi(), source.getSurl().asString(), user);
-		return filterLs((ArrayList<SurlInfo>) output.getInfos());
+		return filterLs(output.getInfos());
 	}
 
 	public static ArrayList<SurlInfo> doLimitedLsDetailed(StormResource resource) throws RuntimeApiException, StormRequestFailureException,
@@ -272,7 +273,7 @@ public class StormResourceHelper {
 		log.debug("Called doLimitedLsDetailed()");
 		Surl surl = new Surl(file);
 		LsOutputData output = StormBackendApi.lsDetailed(backend, surl.asString(), user, new RecursionLevel(Recursion.LIMITED, 0));
-		return filterLs((ArrayList<SurlInfo>) output.getInfos());
+		return filterLs(output.getInfos());
 	}
 
 	/* PING */
