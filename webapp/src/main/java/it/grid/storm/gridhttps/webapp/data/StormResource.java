@@ -96,7 +96,12 @@ public abstract class StormResource implements Resource, DigestResource, PropFin
 		setSize(info.getSize());
 		setStfn(info.getStfn());
 		setLastModified(info.getModificationTime());
-		setCreationDate(info.getCreationTime());
+		if (info.getCreationTime() != null) {
+			setCreationDate(info.getCreationTime());
+		} else {
+			log.debug("Creation date not found! set equals to ModificationTime.");
+			setCreationDate(info.getModificationTime());
+		}
 	}
 
 	protected void setHost(String host) {
