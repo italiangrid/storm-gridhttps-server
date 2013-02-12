@@ -25,6 +25,7 @@ import io.milton.http.exceptions.NotAuthorizedException;
 import io.milton.http.webdav.WebDavProtocol;
 import io.milton.property.PropertySource;
 import io.milton.resource.Resource;
+import it.grid.storm.gridhttps.webapp.data.StormDirectoryResource;
 import it.grid.storm.gridhttps.webapp.data.StormFileResource;
 import it.grid.storm.gridhttps.webapp.data.StormResource;
 
@@ -55,6 +56,11 @@ class StormPropertySource implements PropertySource {
 					value = srmFile.getCheckSumValue().getValue();
 				} else if (property.equals("status") && (srmFile.getStatus() != null)) {
 					value =  srmFile.getStatus().toString();
+				}
+			} else if (r instanceof StormDirectoryResource) {
+				StormDirectoryResource srmDir = (StormDirectoryResource) r;
+				if (property.equals("status")) {
+					value =  srmDir.getStatus().toString();
 				}
 			}
 		}
