@@ -97,39 +97,53 @@ public class StormDirectoryResource extends StormResource implements MakeCollect
 		}
 		return list;
 	}
-	
+
 	@Override
-	public List<? extends Resource> getChildren() throws NotAuthorizedException, BadRequestException{
-		ArrayList<StormResource> list = new ArrayList<StormResource>();
-		SurlInfo info = null;
+	public List<? extends Resource> getChildren() throws NotAuthorizedException, BadRequestException {
+		List<? extends Resource> list = null;
 		try {
-			info = getSurlInfo(StormResource.RECURSIVE_DETAILED);
+			list = getAllChildren();
 		} catch (TooManyResultsException e) {
-			TReturnStatus status = e.getStatus();
-			String[] array = status.getExplanation().split(" ");
-			String numberOfMaxEntriesString = array[array.length-1]; //last element
-			int numberOfMaxEntries = 0;
-			try {
-				numberOfMaxEntries = Integer.valueOf(numberOfMaxEntriesString);				
-			} catch (NumberFormatException e2) {
-				log.error("Error parsing explanation string to retrieve the max number of entries of a srmLs -l, " + numberOfMaxEntriesString + " is not a valid integer!");
-				throw new RuntimeException("Error parsing explanation string to retrieve the max number of entries of a srmLs -l, " + numberOfMaxEntriesString + " is not a valid integer!");
-			}
+			int numberOfMaxEntries = getMaxEntriesNumberFromExplanation(e.getStatus().getExplanation());
 			log.warn("Too many results with Ls, max entries is " + numberOfMaxEntries + ". Re-trying with counted Ls.");
-			return getNChildren(numberOfMaxEntries);
+			list = getNChildren(numberOfMaxEntries);
 		}
+		return list != null ? list : new ArrayList<StormResource>();
+	}
+
+	private int getMaxEntriesNumberFromExplanation(String explanation) {
+		String[] array = explanation.split(" ");
+		String numberOfMaxEntriesString = array[array.length - 1]; // last
+																	// element
+		log.debug("Extracted number of max entries from explanation '" + explanation + "': " + numberOfMaxEntriesString);
+		int numberOfMaxEntries = 0;
+		try {
+			numberOfMaxEntries = Integer.valueOf(numberOfMaxEntriesString);
+		} catch (NumberFormatException e2) {
+			log.error("Error parsing explanation string to retrieve the max number of entries of a srmLs -l, " + numberOfMaxEntriesString
+					+ " is not a valid integer!");
+			throw new RuntimeException("Error parsing explanation string to retrieve the max number of entries of a srmLs -l, "
+					+ numberOfMaxEntriesString + " is not a valid integer!");
+		}
+		return numberOfMaxEntries;
+	}
+
+	private List<? extends Resource> getAllChildren() throws NotAuthorizedException, BadRequestException, TooManyResultsException {
+		ArrayList<StormResource> list = new ArrayList<StormResource>();
+		SurlInfo info = getSurlInfo(StormResource.RECURSIVE_DETAILED);
 		if (info != null)
 			list = resolveSurlArray(info.getSubpathInfo());
 		return list;
 	}
-	
-	public List<? extends Resource> getNChildren(int numberOfChildren) throws NotAuthorizedException, BadRequestException{
+
+	private List<? extends Resource> getNChildren(int numberOfChildren) throws NotAuthorizedException, BadRequestException {
 		ArrayList<StormResource> list = new ArrayList<StormResource>();
 		Collection<SurlInfo> entries = null;
 		try {
 			entries = StormResourceHelper.doLsDetailed(this, Recursion.NONE, numberOfChildren);
 		} catch (TooManyResultsException e) {
-			log.error("The number of children requested for '" + this.getStfn() + "' is greater than the max number of results allowed: " + e.getStatus().getExplanation()); 
+			log.error("The number of children requested for '" + this.getStfn() + "' is greater than the max number of results allowed: "
+					+ e.getStatus().getExplanation());
 			return list;
 		}
 		if (entries != null)
@@ -142,11 +156,6 @@ public class StormDirectoryResource extends StormResource implements MakeCollect
 			ConflictException, BadRequestException {
 		return StormResourceHelper.doPut(this, name, in);
 	}
-
-//	public boolean hasChildren() {
-//		SurlInfo info = getSurlInfo(RECURSIVE_UNDETAILED);
-//		return info != null ? !info.getSubpathInfo().isEmpty() : false;
-//	}
 
 	@Override
 	public void delete() throws NotAuthorizedException, ConflictException, BadRequestException {
@@ -212,7 +221,8 @@ public class StormDirectoryResource extends StormResource implements MakeCollect
 		// TODO Auto-generated method stub
 		return false;
 	}
-	
+
+	@Override
 	public TReturnStatus getStatus() {
 		SurlInfo info = null;
 		try {
