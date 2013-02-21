@@ -28,6 +28,7 @@ import io.milton.resource.Resource;
 import it.grid.storm.gridhttps.webapp.data.StormDirectoryResource;
 import it.grid.storm.gridhttps.webapp.data.StormFileResource;
 import it.grid.storm.gridhttps.webapp.data.StormResource;
+import it.grid.storm.srm.types.TReturnStatus;
 
 class StormPropertySource implements PropertySource {
 
@@ -60,7 +61,9 @@ class StormPropertySource implements PropertySource {
 			} else if (r instanceof StormDirectoryResource) {
 				StormDirectoryResource srmDir = (StormDirectoryResource) r;
 				if (property.equals("status")) {
-					value =  srmDir.getStatus().toString();
+					TReturnStatus status = srmDir.getStatus();
+					if (status != null) 
+						value =  status.toString();
 				}
 			}
 		}

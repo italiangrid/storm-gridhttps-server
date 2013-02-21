@@ -230,7 +230,7 @@ public class StormDirectoryResource extends StormResource implements MakeCollect
 		} catch (TooManyResultsException e) {
 			return e.getStatus();
 		}
-		return info.getStatus();
+		return info!=null ? info.getStatus() : null;
 	}
 
 }
