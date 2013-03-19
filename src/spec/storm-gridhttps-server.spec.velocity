@@ -23,9 +23,9 @@ Packager: Michele Dibenedetto storm-support@lists.infn.it
 
 BuildArch: noarch
 BuildRequires: maven
-BuildRequires: java-devel
+BuildRequires: java-1.6.0-openjdk-devel
 
-Requires: java-devel
+Requires: java-1.6.0-openjdk
 
 BuildRoot: %{_builddir}/%{name}-root
 AutoReqProv: yes
@@ -205,7 +205,7 @@ fi
 %dir %{_docdir}/%{name}-%{version}
 %{_docdir}/%{name}-%{version}/LICENSE.txt
 
-%dir %{_javadir}/%{name}                                                
+%dir %{_javadir}/%{name}                             
 %{_javadir}/%{name}/server.jar
 %{_javadir}/%{name}/webapp.war
 %{_javadir}/%{name}/storagearea.jar
