@@ -1,17 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
+                      http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>it.grid.storm</groupId>
 	<artifactId>storm-gridhttps-server</artifactId>
 	<version>2.0.0</version>
-	<packaging>pom</packaging>
+	<packaging>war</packaging>
+	<name>storm-gridhttps-server</name>
 
 	<developers>
 		<developer>
 			<name>Enrico Vianello</name>
 			<organization>INFN CNAF</organization>
 			<roles>
-				<role>Software Engineer</role>
+				<role>Developer</role>
 			</roles>
 			<organizationUrl>http://www.cnaf.infn.it/</organizationUrl>
 			<email>enrico.vianello@cnaf.infn.it</email>
@@ -20,7 +23,7 @@
 			<name>Michele Dibenedetto</name>
 			<organization>INFN CNAF</organization>
 			<roles>
-				<role>Software Engineer</role>
+				<role>Developer</role>
 			</roles>
 			<organizationUrl>http://www.cnaf.infn.it/</organizationUrl>
 			<email>michele.dibenedetto@cnaf.infn.it</email>
@@ -44,171 +47,214 @@
 		<httpsutilsVersion>0.2.1</httpsutilsVersion>
 		<javaxServletVersion>3.0.0.v201112011016</javaxServletVersion>
 		<mavenCompilerVersion>2.5.1</mavenCompilerVersion>
-		<springcontextVersion>2.0.5</springcontextVersion>
+		<!-- <springcontextVersion>2.0.5</springcontextVersion> -->
 
-		<conf_installation_prefix>/etc/storm</conf_installation_prefix>
-		<module_name>gridhttps-server</module_name>
-		<log_installation_directory>/var/log/storm</log_installation_directory>
-		<jar_installation_prefix>/usr/share/java</jar_installation_prefix>
-		<work_installation_directory>/var/lib/storm</work_installation_directory>
-		<doc_installation_prefix>/usr/share/doc</doc_installation_prefix>
-		<local_repository_dir>/tmp/m2-repository</local_repository_dir>
+		<!-- <conf_installation_prefix>/etc/storm</conf_installation_prefix> <module_name>gridhttps-server</module_name> 
+			<log_installation_directory>/var/log/storm</log_installation_directory> <jar_installation_prefix>/usr/share/java</jar_installation_prefix> 
+			<work_installation_directory>/var/lib/storm</work_installation_directory> 
+			<doc_installation_prefix>/usr/share/doc</doc_installation_prefix> <local_repository_dir>/tmp/m2-repository</local_repository_dir> -->
+
+		<!-- from server -->
+		<!-- <bundle.name>${project.artifactId}</bundle.name> -->
+		<xmlapiVersion>1.0.b2</xmlapiVersion>
+		<ini4jVersion>0.5.2</ini4jVersion>
+		<jettyServerVersion>8.1.4.v20120524</jettyServerVersion>
+		<commonscliVersion>20040117.000000</commonscliVersion>
+
+		<vomsApiVersion>3.0.0-rc2</vomsApiVersion>
+
 	</properties>
 
-	<modules>
-		<module>server</module>
-		<module>webapp</module>
-		<module>storagearea</module>
-		<module>assembler</module>
-	</modules>
-
 	<build>
+		<!-- <plugins> <plugin> <inherited>false</inherited> <groupId>org.apache.maven.plugins</groupId> 
+			<artifactId>maven-assembly-plugin</artifactId> <version>2.3</version> <extensions>true</extensions> 
+			<executions> <execution> <id>make-assembly-source</id> <phase>process-sources</phase> 
+			<goals> <goal>single</goal> </goals> <configuration> <finalName>${project.artifactId}-${project.version}</finalName> 
+			<descriptors> <descriptor>assembly/build-source-tarball.xml</descriptor> 
+			</descriptors> <tarLongFileMode>gnu</tarLongFileMode> </configuration> </execution> 
+			</executions> </plugin> <plugin> <inherited>false</inherited> <groupId>net.rumati.maven.plugins</groupId> 
+			<artifactId>velocity-maven-plugin</artifactId> <version>0.1.2</version> <executions> 
+			<execution> <id>bin-spec</id> <phase>generate-sources</phase> <goals> <goal>velocity</goal> 
+			</goals> <configuration> <outputFile>${project.build.directory}/spec/storm-gridhttps-server.spec</outputFile> 
+			<template>src/spec/storm-gridhttps-server.spec.velocity</template> <properties> 
+			<ModuleName>${module_name}</ModuleName> <PackageName>${project.artifactId}</PackageName> 
+			<PackageVersion>${project.version}</PackageVersion> <PackageRelease>${release}</PackageRelease> 
+			<JavaHome>${java.home}</JavaHome> <MavenSettings>${maven_settings}</MavenSettings> 
+			<MavenLocalRepository>-Dmaven.repo.local=${local_repository_dir}</MavenLocalRepository> 
+			<MavenProfile>${project.activeProfiles[0].id}</MavenProfile> <ConfDir>${conf_installation_prefix}</ConfDir> 
+			<LogDir>${log_installation_directory}</LogDir> <WorkDir>${work_installation_directory}</WorkDir> 
+			</properties> </configuration> </execution> </executions> </plugin> </plugins> -->
+
+		<finalName>${project.artifactId}</finalName>
+
 		<plugins>
 			<plugin>
-				<inherited>false</inherited>
 				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-assembly-plugin</artifactId>
-				<version>2.3</version>
-				<extensions>true</extensions>
-				<executions>
-					<execution>
-						<id>make-assembly-source</id>
-						<phase>process-sources</phase>
-						<goals>
-							<goal>single</goal>
-						</goals>
-						<configuration>
-							<finalName>${project.artifactId}-${project.version}</finalName>
-							<descriptors>
-								<descriptor>assembly/build-source-tarball.xml</descriptor>
-							</descriptors>
-							<tarLongFileMode>gnu</tarLongFileMode>
-						</configuration>
-					</execution>
-				</executions>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<version>${mavenCompilerVersion}</version>
+				<configuration>
+					<source>1.6</source>
+					<target>1.6</target>
+				</configuration>
 			</plugin>
+
 			<plugin>
-				<inherited>false</inherited>
-				<groupId>net.rumati.maven.plugins</groupId>
-				<artifactId>velocity-maven-plugin</artifactId>
-				<version>0.1.2</version>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-jar-plugin</artifactId>
+				<version>2.4</version>
 				<executions>
 					<execution>
-						<id>bin-spec</id>
-						<phase>generate-sources</phase>
+						<phase>package</phase>
 						<goals>
-							<goal>velocity</goal>
+							<goal>jar</goal>
 						</goals>
-						<configuration>
-							<outputFile>${project.build.directory}/spec/storm-gridhttps-server.spec</outputFile>
-							<template>src/spec/storm-gridhttps-server.spec.velocity</template>
-							<properties>
-								<ModuleName>${module_name}</ModuleName>
-								<PackageName>${project.artifactId}</PackageName>
-								<PackageVersion>${project.version}</PackageVersion>
-								<PackageRelease>${release}</PackageRelease>
-								<JavaHome>${java.home}</JavaHome>
-								<MavenSettings>${maven_settings}</MavenSettings>
-								<MavenLocalRepository>-Dmaven.repo.local=${local_repository_dir}</MavenLocalRepository>
-								<MavenProfile>${project.activeProfiles[0].id}</MavenProfile>
-								<ConfDir>${conf_installation_prefix}</ConfDir>
-								<LogDir>${log_installation_directory}</LogDir>
-								<WorkDir>${work_installation_directory}</WorkDir>
-							</properties>
-						</configuration>
 					</execution>
 				</executions>
 			</plugin>
+
 		</plugins>
+
 	</build>
 
-	<dependencyManagement>
-		<dependencies>
-			<dependency>
-				<groupId>${project.groupId}</groupId>
-				<artifactId>storagearea</artifactId>
-				<version>${project.version}</version>
-				<type>jar</type>
-				<scope>compile</scope>
-			</dependency>
-			<dependency>
-				<groupId>${project.groupId}</groupId>
-				<artifactId>server</artifactId>
-				<version>${project.version}</version>
-				<type>jar</type>
-				<scope>compile</scope>
-			</dependency>
-			<dependency>
-				<groupId>${project.groupId}</groupId>
-				<artifactId>webapp</artifactId>
-				<version>${project.version}</version>
-				<type>war</type>
-				<scope>compile</scope>
-			</dependency>
-			<!-- logging libraries: logback -->
-			<dependency>
-				<groupId>org.slf4j</groupId>
-				<artifactId>slf4j-api</artifactId>
-				<version>${slf4jVersion}</version>
-			</dependency>
-			<dependency>
-				<groupId>ch.qos.logback</groupId>
-				<artifactId>logback-classic</artifactId>
-				<version>${logbackVersion}</version>
-			</dependency>
-			<dependency>
-				<groupId>ch.qos.logback</groupId>
-				<artifactId>logback-core</artifactId>
-				<version>${logbackVersion}</version>
-			</dependency>
-			<dependency>
-				<groupId>org.italiangrid</groupId>
-				<artifactId>https-utils</artifactId>
-				<version>${httpsutilsVersion}</version>
-			</dependency>
-			<dependency>
-				<groupId>org.apache.httpcomponents</groupId>
-				<artifactId>httpcore</artifactId>
-				<version>${httpcoreVersion}</version>
-			</dependency>
-			<dependency>
-				<groupId>org.apache.httpcomponents</groupId>
-				<artifactId>httpclient</artifactId>
-				<version>${httpclientVersion}</version>
-			</dependency>
-			<dependency>
-				<groupId>org.eclipse.jetty.orbit</groupId>
-				<artifactId>javax.servlet</artifactId>
-				<version>${javaxServletVersion}</version>
-			</dependency>
+	<dependencies>
+		<!-- logging libraries: logback -->
+		<dependency>
+			<groupId>org.slf4j</groupId>
+			<artifactId>slf4j-api</artifactId>
+			<version>${slf4jVersion}</version>
+		</dependency>
+		<dependency>
+			<groupId>ch.qos.logback</groupId>
+			<artifactId>logback-classic</artifactId>
+			<version>${logbackVersion}</version>
+		</dependency>
+		<dependency>
+			<groupId>ch.qos.logback</groupId>
+			<artifactId>logback-core</artifactId>
+			<version>${logbackVersion}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.italiangrid</groupId>
+			<artifactId>https-utils</artifactId>
+			<version>${httpsutilsVersion}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.httpcomponents</groupId>
+			<artifactId>httpcore</artifactId>
+			<version>${httpcoreVersion}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.httpcomponents</groupId>
+			<artifactId>httpclient</artifactId>
+			<version>${httpclientVersion}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.eclipse.jetty.orbit</groupId>
+			<artifactId>javax.servlet</artifactId>
+			<version>${javaxServletVersion}</version>
+		</dependency>
 
-		</dependencies>
-	</dependencyManagement>
+		<!-- from webapp -->
+		<dependency>
+			<groupId>commons-lang</groupId>
+			<artifactId>commons-lang</artifactId>
+			<version>${commonsLangVersion}</version>
+		</dependency>
+		<dependency>
+			<groupId>io.milton</groupId>
+			<artifactId>milton-server-ce</artifactId>
+			<version>${miltonVersion}</version>
+			<exclusions>
+				<exclusion>
+					<artifactId>mail</artifactId>
+					<groupId>javax.mail</groupId>
+				</exclusion>
+				<exclusion>
+					<artifactId>milton-mail-api</artifactId>
+					<groupId>io.milton</groupId>
+				</exclusion>
+				<exclusion>
+					<artifactId>milton-mail-server</artifactId>
+					<groupId>io.milton</groupId>
+				</exclusion>
+			</exclusions>
+		</dependency>
+		<dependency>
+			<groupId>io.milton</groupId>
+			<artifactId>milton-api</artifactId>
+			<version>${miltonVersion}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework</groupId>
+			<artifactId>spring-context</artifactId>
+			<version>${springVersion}</version>
+			<scope>runtime</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework</groupId>
+			<artifactId>spring-beans</artifactId>
+			<version>${springVersion}</version>
+			<scope>runtime</scope>
+		</dependency>
+		<dependency>
+			<groupId>commons-io</groupId>
+			<artifactId>commons-io</artifactId>
+			<version>${commonsIOVersion}</version>
+		</dependency>
+		<!-- <dependency> -->
+		<!-- <groupId>emi</groupId> -->
+		<!-- <artifactId>trustmanager</artifactId> -->
+		<!-- <version>${trustmanagerVersion}</version> -->
+		<!-- </dependency> -->
+		<dependency>
+			<groupId>igi.storm.backend</groupId>
+			<artifactId>xmlrpc-api</artifactId>
+			<version>${apibackendVersion}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.italiangrid</groupId>
+			<artifactId>voms-api-java</artifactId>
+			<version>${vomsApiVersion}</version>
+		</dependency>
 
-	<profiles>
-		<profile>
-			<id>sl5</id>
-			<activation>
-				<activeByDefault>true</activeByDefault>
-				<property>
-					<name>!maven_settings</name>
-				</property>
-			</activation>
-			<properties>
-				<maven_settings>-s settings.xml</maven_settings>
-			</properties>
-		</profile>
-		<profile>
-			<id>sl6</id>
-			<activation>
-				<property>
-					<name>!maven_settings</name>
-				</property>
-			</activation>
-			<properties>
-				<maven_settings>-s settings.xml</maven_settings>
-			</properties>
-		</profile>
-	</profiles>
+		<!-- <dependency> <groupId>org.springframework</groupId> <artifactId>spring-context</artifactId> 
+			<version>${springcontextVersion}</version> </dependency> -->
 
+		<!-- from server -->
+		<!-- <dependency> -->
+		<!-- <groupId>org.eclipse.jetty</groupId> -->
+		<!-- <artifactId>jetty-server</artifactId> -->
+		<!-- <version>${jettyServerVersion}</version> -->
+		<!-- </dependency> -->
+		<dependency>
+			<groupId>org.eclipse.jetty.aggregate</groupId>
+			<artifactId>jetty-all-server</artifactId>
+			<version>${jettyServerVersion}</version>
+			<scope>compile</scope>
+		</dependency>
+		<dependency>
+			<groupId>xml-apis</groupId>
+			<artifactId>xml-apis</artifactId>
+			<version>${xmlapiVersion}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.ini4j</groupId>
+			<artifactId>ini4j</artifactId>
+			<version>${ini4jVersion}</version>
+		</dependency>
+		<dependency>
+			<groupId>commons-cli</groupId>
+			<artifactId>commons-cli</artifactId>
+			<version>${commonscliVersion}</version>
+		</dependency>
+
+	</dependencies>
+
+
+	<!-- <profiles> <profile> <id>sl5</id> <activation> <activeByDefault>true</activeByDefault> 
+		<property> <name>!maven_settings</name> </property> </activation> <properties> 
+		<maven_settings>-s settings.xml</maven_settings> </properties> </profile> 
+		<profile> <id>sl6</id> <activation> <property> <name>!maven_settings</name> 
+		</property> </activation> <properties> <maven_settings>-s settings.xml</maven_settings> 
+		</properties> </profile> </profiles> -->
 </project>
