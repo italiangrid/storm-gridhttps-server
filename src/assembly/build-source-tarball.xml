@@ -40,5 +40,25 @@
 				<include>storm-gridhttps-webapp.war</include>
 			</includes>
 		</fileSet>
+		
+		<!-- Empty fileset to create empty log directory -->
+		<fileSet>
+			<directory>src</directory>
+			<outputDirectory>${log_installation_directory}</outputDirectory>
+			<excludes>
+				<exclude>**/*</exclude>
+			</excludes>
+			<directoryMode>0774</directoryMode>
+		</fileSet>
+		<!-- Empty fileset to create empty work directory (where webapp.war is exploded)-->
+		<fileSet>
+			<directory>src</directory>
+			<outputDirectory>${work_installation_directory}</outputDirectory>
+			<excludes>
+				<exclude>**/*</exclude>
+			</excludes>
+			<directoryMode>0770</directoryMode>
+		</fileSet>
+		
 	</fileSets>
 </assembly>
