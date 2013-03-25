@@ -1,0 +1,95 @@
+<assembly
+	xmlns="http://maven.apache.org/plugins/maven-assembly-plugin/assembly/1.1.2"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/xsd/assembly-1.1.2.xsd">
+	<formats>
+		<format>tar.gz</format>
+	</formats>
+	<fileSets>
+		<fileSet>
+			<directory>src/main/resources</directory>
+			<outputDirectory>${conf_installation_prefix}/${module_name}
+			</outputDirectory>
+			<includes>
+				<include>logback.xml</include>
+				<include>server.ini.template</include>
+			</includes>
+		</fileSet>
+		<fileSet>
+			<directory>.</directory>
+			<outputDirectory>${doc_installation_prefix}/${project.artifactId}-${project.version}
+			</outputDirectory>
+			<includes>
+				<include>LICENSE.txt</include>
+			</includes>
+		</fileSet>
+		<fileSet>
+			<directory>src/main/resources</directory>
+			<outputDirectory>/etc/init.d</outputDirectory>
+			<includes>
+				<include>storm-gridhttps-server</include>
+			</includes>
+		</fileSet>
+		
+		<fileSet>
+			<directory>target</directory>
+			<outputDirectory>${jar_installation_prefix}/${project.artifactId}</outputDirectory>
+			<includes>
+				<include>storm-gridhttps-server.jar</include>
+				<include>storm-gridhttps-webapp.war</include>
+			</includes>
+		</fileSet>
+		
+		<!-- Empty fileset to create empty log directory -->
+		<fileSet>
+			<directory>src</directory>
+			<outputDirectory>${log_installation_directory}</outputDirectory>
+			<excludes>
+				<exclude>**/*</exclude>
+			</excludes>
+			<directoryMode>0774</directoryMode>
+		</fileSet>
+		<!-- Empty fileset to create empty work directory (where webapp.war is exploded)-->
+		<fileSet>
+			<directory>src</directory>
+			<outputDirectory>${work_installation_directory}</outputDirectory>
+			<excludes>
+				<exclude>**/*</exclude>
+			</excludes>
+			<directoryMode>0770</directoryMode>
+		</fileSet>
+
+
+<!-- 		<fileset> -->
+<!-- 			<includes> -->
+<!-- 				<include>README*</include> -->
+<!-- 				<include>LICENSE*</include> -->
+<!-- 				<include>NOTICE*</include> -->
+<!-- 			</includes> -->
+<!-- 		</fileset> -->
+<!-- 		<fileset> -->
+<!-- 			<directory>target</directory> -->
+<!-- 			<outputDirectory></outputDirectory> -->
+<!-- 			<includes> -->
+<!-- 				<include>storm-gridhttps-server.jar</include> -->
+<!-- 				<include>storm-gridhttps-webapp.war</include> -->
+<!-- 			</includes> -->
+<!-- 		</fileset> -->
+<!-- 		<fileset> -->
+<!-- 			<directory>target/classes</directory> -->
+<!-- 			<outputDirectory></outputDirectory> -->
+<!-- 			<includes> -->
+<!-- 				<include>logback.xml</include> -->
+<!-- 				<include>server.ini.template</include> -->
+<!-- 			</includes> -->
+<!-- 		</fileset> -->
+
+<!-- 		<fileset> -->
+<!-- 			<directory>target/libs</directory> -->
+<!-- 			<outputDirectory>libs</outputDirectory> -->
+<!-- 			<includes> -->
+<!-- 				<include>*.jar</include> -->
+<!-- 			</includes> -->
+<!-- 		</fileset> -->
+	</fileSets>
+</assembly>

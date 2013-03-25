@@ -49,10 +49,13 @@
 		<mavenCompilerVersion>2.5.1</mavenCompilerVersion>
 		<!-- <springcontextVersion>2.0.5</springcontextVersion> -->
 
-		<!-- <conf_installation_prefix>/etc/storm</conf_installation_prefix> <module_name>gridhttps-server</module_name> 
-			<log_installation_directory>/var/log/storm</log_installation_directory> <jar_installation_prefix>/usr/share/java</jar_installation_prefix> 
-			<work_installation_directory>/var/lib/storm</work_installation_directory> 
-			<doc_installation_prefix>/usr/share/doc</doc_installation_prefix> <local_repository_dir>/tmp/m2-repository</local_repository_dir> -->
+		<conf_installation_prefix>/etc/storm</conf_installation_prefix>
+		<module_name>gridhttps-server</module_name>
+		<log_installation_directory>/var/log/storm</log_installation_directory>
+		<jar_installation_prefix>/usr/share/java</jar_installation_prefix>
+		<work_installation_directory>/var/lib/storm</work_installation_directory>
+		<doc_installation_prefix>/usr/share/doc</doc_installation_prefix>
+		<local_repository_dir>/tmp/m2-repository</local_repository_dir>
 
 		<!-- from server -->
 		<!-- <bundle.name>${project.artifactId}</bundle.name> -->
@@ -201,6 +204,26 @@
 					</execution>
 				</executions>
 			</plugin>
+
+			<plugin>
+				<artifactId>maven-assembly-plugin</artifactId>
+				<configuration>
+					<descriptors>
+						<descriptor>src/assembly/build-source-tarball.xml</descriptor>
+					</descriptors>
+					<finalName>storm-gridhttps-server</finalName>
+				</configuration>
+				<executions>
+					<execution>
+						<phase>package</phase>
+						<goals>
+							<goal>single</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+
+
 
 		</plugins>
 
