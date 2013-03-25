@@ -85,16 +85,60 @@
 			<LogDir>${log_installation_directory}</LogDir> <WorkDir>${work_installation_directory}</WorkDir> 
 			</properties> </configuration> </execution> </executions> </plugin> </plugins> -->
 
-		<finalName>${project.artifactId}</finalName>
+		<finalName>storm-gridhttps-webapp</finalName>
+
+		<pluginManagement>
+			<plugins>
+				<!-- Ignore/Execute plugin execution -->
+				<plugin>
+					<groupId>org.eclipse.m2e</groupId>
+					<artifactId>lifecycle-mapping</artifactId>
+					<version>1.0.0</version>
+					<configuration>
+						<lifecycleMappingMetadata>
+							<pluginExecutions>
+								<!-- copy-dependency plugin -->
+								<pluginExecution>
+									<pluginExecutionFilter>
+										<groupId>org.apache.maven.plugins</groupId>
+										<artifactId>maven-dependency-plugin</artifactId>
+										<versionRange>[1.0.0,)</versionRange>
+										<goals>
+											<goal>copy-dependencies</goal>
+										</goals>
+									</pluginExecutionFilter>
+									<action>
+										<ignore />
+									</action>
+								</pluginExecution>
+							</pluginExecutions>
+						</lifecycleMappingMetadata>
+					</configuration>
+				</plugin>
+			</plugins>
+		</pluginManagement>
 
 		<plugins>
+			<!-- Enable maven compiler plugin -->
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-compiler-plugin</artifactId>
-				<version>${mavenCompilerVersion}</version>
+				<version>2.3.2</version>
 				<configuration>
 					<source>1.6</source>
 					<target>1.6</target>
+				</configuration>
+			</plugin>
+
+			<!-- Enable maven surefire plugin -->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-surefire-plugin</artifactId>
+				<version>2.13</version>
+				<configuration>
+					<!-- skips tests by default, until we have not reviewed them and make 
+						sure they work -->
+					<skipTests>true</skipTests>
 				</configuration>
 			</plugin>
 
@@ -107,6 +151,52 @@
 						<phase>package</phase>
 						<goals>
 							<goal>jar</goal>
+						</goals>
+					</execution>
+				</executions>
+				<configuration>
+					<finalName>storm-gridhttps-server</finalName>
+					<archive>
+						<manifest>
+							<addClasspath>true</addClasspath>
+							<classpathPrefix>lib/</classpathPrefix>
+							<mainClass>it.grid.storm.gridhttps.server.Main</mainClass>
+						</manifest>
+					</archive>
+				</configuration>
+			</plugin>
+
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-shade-plugin</artifactId>
+				<version>2.0</version>
+
+				<configuration>
+					<transformers>
+						<transformer
+							implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+							<mainClass>it.grid.storm.gridhttps.server.Main</mainClass>
+							<!-- <X-Compile-Source-JDK>${maven.compile.source}</X-Compile-Source-JDK> -->
+							<!-- <X-Compile-Target-JDK>${maven.compile.target}</X-Compile-Target-JDK> -->
+						</transformer>
+					</transformers>
+					<filters>
+						<filter>
+							<artifact>*:*</artifact>
+							<excludes>
+								<exclude>META-INF/*.SF</exclude>
+								<exclude>META-INF/*.DSA</exclude>
+								<exclude>META-INF/*.RSA</exclude>
+							</excludes>
+						</filter>
+					</filters>
+				</configuration>
+
+				<executions>
+					<execution>
+						<phase>package</phase>
+						<goals>
+							<goal>shade</goal>
 						</goals>
 					</execution>
 				</executions>
@@ -188,24 +278,19 @@
 			<groupId>org.springframework</groupId>
 			<artifactId>spring-context</artifactId>
 			<version>${springVersion}</version>
-			<scope>runtime</scope>
+			<!-- <scope>runtime</scope> -->
 		</dependency>
 		<dependency>
 			<groupId>org.springframework</groupId>
 			<artifactId>spring-beans</artifactId>
 			<version>${springVersion}</version>
-			<scope>runtime</scope>
+			<!-- <scope>runtime</scope> -->
 		</dependency>
 		<dependency>
 			<groupId>commons-io</groupId>
 			<artifactId>commons-io</artifactId>
 			<version>${commonsIOVersion}</version>
 		</dependency>
-		<!-- <dependency> -->
-		<!-- <groupId>emi</groupId> -->
-		<!-- <artifactId>trustmanager</artifactId> -->
-		<!-- <version>${trustmanagerVersion}</version> -->
-		<!-- </dependency> -->
 		<dependency>
 			<groupId>igi.storm.backend</groupId>
 			<artifactId>xmlrpc-api</artifactId>
@@ -217,15 +302,7 @@
 			<version>${vomsApiVersion}</version>
 		</dependency>
 
-		<!-- <dependency> <groupId>org.springframework</groupId> <artifactId>spring-context</artifactId> 
-			<version>${springcontextVersion}</version> </dependency> -->
-
 		<!-- from server -->
-		<!-- <dependency> -->
-		<!-- <groupId>org.eclipse.jetty</groupId> -->
-		<!-- <artifactId>jetty-server</artifactId> -->
-		<!-- <version>${jettyServerVersion}</version> -->
-		<!-- </dependency> -->
 		<dependency>
 			<groupId>org.eclipse.jetty.aggregate</groupId>
 			<artifactId>jetty-all-server</artifactId>
