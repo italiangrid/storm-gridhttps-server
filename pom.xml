@@ -69,24 +69,6 @@
 	</properties>
 
 	<build>
-		<!-- <plugins> <plugin> <inherited>false</inherited> <groupId>org.apache.maven.plugins</groupId> 
-			<artifactId>maven-assembly-plugin</artifactId> <version>2.3</version> <extensions>true</extensions> 
-			<executions> <execution> <id>make-assembly-source</id> <phase>process-sources</phase> 
-			<goals> <goal>single</goal> </goals> <configuration> <finalName>${project.artifactId}-${project.version}</finalName> 
-			<descriptors> <descriptor>assembly/build-source-tarball.xml</descriptor> 
-			</descriptors> <tarLongFileMode>gnu</tarLongFileMode> </configuration> </execution> 
-			</executions> </plugin> <plugin> <inherited>false</inherited> <groupId>net.rumati.maven.plugins</groupId> 
-			<artifactId>velocity-maven-plugin</artifactId> <version>0.1.2</version> <executions> 
-			<execution> <id>bin-spec</id> <phase>generate-sources</phase> <goals> <goal>velocity</goal> 
-			</goals> <configuration> <outputFile>${project.build.directory}/spec/storm-gridhttps-server.spec</outputFile> 
-			<template>src/spec/storm-gridhttps-server.spec.velocity</template> <properties> 
-			<ModuleName>${module_name}</ModuleName> <PackageName>${project.artifactId}</PackageName> 
-			<PackageVersion>${project.version}</PackageVersion> <PackageRelease>${release}</PackageRelease> 
-			<JavaHome>${java.home}</JavaHome> <MavenSettings>${maven_settings}</MavenSettings> 
-			<MavenLocalRepository>-Dmaven.repo.local=${local_repository_dir}</MavenLocalRepository> 
-			<MavenProfile>${project.activeProfiles[0].id}</MavenProfile> <ConfDir>${conf_installation_prefix}</ConfDir> 
-			<LogDir>${log_installation_directory}</LogDir> <WorkDir>${work_installation_directory}</WorkDir> 
-			</properties> </configuration> </execution> </executions> </plugin> </plugins> -->
 
 		<finalName>storm-gridhttps-webapp</finalName>
 
@@ -350,11 +332,4 @@
 
 	</dependencies>
 
-
-	<!-- <profiles> <profile> <id>sl5</id> <activation> <activeByDefault>true</activeByDefault> 
-		<property> <name>!maven_settings</name> </property> </activation> <properties> 
-		<maven_settings>-s settings.xml</maven_settings> </properties> </profile> 
-		<profile> <id>sl6</id> <activation> <property> <name>!maven_settings</name> 
-		</property> </activation> <properties> <maven_settings>-s settings.xml</maven_settings> 
-		</properties> </profile> </profiles> -->
 </project>
