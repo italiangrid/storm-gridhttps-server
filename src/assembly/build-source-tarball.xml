@@ -40,57 +40,5 @@
 				<include>storm-gridhttps-webapp.war</include>
 			</includes>
 		</fileSet>
-		
-		<!-- Empty fileset to create empty log directory -->
-		<fileSet>
-			<directory>src</directory>
-			<outputDirectory>${log_installation_directory}</outputDirectory>
-			<excludes>
-				<exclude>**/*</exclude>
-			</excludes>
-			<directoryMode>0774</directoryMode>
-		</fileSet>
-		<!-- Empty fileset to create empty work directory (where webapp.war is exploded)-->
-		<fileSet>
-			<directory>src</directory>
-			<outputDirectory>${work_installation_directory}</outputDirectory>
-			<excludes>
-				<exclude>**/*</exclude>
-			</excludes>
-			<directoryMode>0770</directoryMode>
-		</fileSet>
-
-
-<!-- 		<fileset> -->
-<!-- 			<includes> -->
-<!-- 				<include>README*</include> -->
-<!-- 				<include>LICENSE*</include> -->
-<!-- 				<include>NOTICE*</include> -->
-<!-- 			</includes> -->
-<!-- 		</fileset> -->
-<!-- 		<fileset> -->
-<!-- 			<directory>target</directory> -->
-<!-- 			<outputDirectory></outputDirectory> -->
-<!-- 			<includes> -->
-<!-- 				<include>storm-gridhttps-server.jar</include> -->
-<!-- 				<include>storm-gridhttps-webapp.war</include> -->
-<!-- 			</includes> -->
-<!-- 		</fileset> -->
-<!-- 		<fileset> -->
-<!-- 			<directory>target/classes</directory> -->
-<!-- 			<outputDirectory></outputDirectory> -->
-<!-- 			<includes> -->
-<!-- 				<include>logback.xml</include> -->
-<!-- 				<include>server.ini.template</include> -->
-<!-- 			</includes> -->
-<!-- 		</fileset> -->
-
-<!-- 		<fileset> -->
-<!-- 			<directory>target/libs</directory> -->
-<!-- 			<outputDirectory>libs</outputDirectory> -->
-<!-- 			<includes> -->
-<!-- 				<include>*.jar</include> -->
-<!-- 			</includes> -->
-<!-- 		</fileset> -->
 	</fileSets>
 </assembly>
