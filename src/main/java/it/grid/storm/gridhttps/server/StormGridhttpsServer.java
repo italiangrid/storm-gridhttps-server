@@ -27,11 +27,12 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
+//import org.eclipse.jetty.server.AbstractConnector;
 import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.Handler;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.handler.ContextHandlerCollection;
-import org.eclipse.jetty.server.handler.HandlerCollection;
+//import org.eclipse.jetty.server.handler.HandlerCollection;
 import org.eclipse.jetty.server.nio.SelectChannelConnector;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
@@ -56,7 +57,7 @@ public class StormGridhttpsServer {
 	// private Server davServer;
 	// private Server mapServer;
 	private Server oneServer;
-	private ContextHandlerCollection contextHandlerCollection;
+//	private ContextHandlerCollection contextHandlerCollection;
 	private WebApp webapp;
 	private MapperServlet mapperServlet;
 
@@ -67,12 +68,12 @@ public class StormGridhttpsServer {
 		// createDavServer();
 		// createMapServer();
 		createServer();
-		initDavServer();
-		initMapServer();
+//		initDavServer();
+//		initMapServer();
 		// initServer();
 	}
 
-	private void createServer() {
+	private void createServer() throws ServerException {
 		oneServer = ServerFactory.newServer(getGridhttpsInfo().getHostname(), getGridhttpsInfo().getHttpsPort(), getGridhttpsInfo()
 				.getSsloptions());
 		oneServer.setStopAtShutdown(true);
@@ -83,11 +84,6 @@ public class StormGridhttpsServer {
 		threadPool.setMaxThreads(getGridhttpsInfo().getDavActiveThreadsMax());
 		threadPool.setMaxQueued(getGridhttpsInfo().getDavQueuedThreadsMax());
 		oneServer.setThreadPool(threadPool);
-
-		HandlerCollection hc = new HandlerCollection();
-		contextHandlerCollection = new ContextHandlerCollection();
-		hc.setHandlers(new Handler[] { contextHandlerCollection });
-		oneServer.setHandler(hc);
 
 		/* add plain HTTP connector if enabled */
 		if (getGridhttpsInfo().isEnabledHttp()) {
@@ -107,6 +103,37 @@ public class StormGridhttpsServer {
 		
 		for (Connector conn : oneServer.getConnectors())
 			log.info("connector-name: " + conn.getName());
+		
+//		HandlerCollection hc = new HandlerCollection();
+//		contextHandlerCollection = new ContextHandlerCollection();
+//		hc.setHandlers(new Handler[] { contextHandlerCollection });
+//		oneServer.setHandler(hc);
+		
+		String[] mappingConnectors = { getGridhttpsInfo().getHostname() + ":" + getGridhttpsInfo().getMapperServlet().getPort() };
+		mapperServlet = new MapperServlet();
+		ServletContextHandler context = new ServletContextHandler(ServletContextHandler.SESSIONS);
+		context.setContextPath(File.separator + gridhttpsInfo.getMapperServlet().getContextPath());
+		context.addServlet(new ServletHolder(mapperServlet), File.separator + gridhttpsInfo.getMapperServlet().getContextSpec());
+		context.setConnectorNames(mappingConnectors);
+		
+		initWebapp();
+		
+		String[] webappConnectors = { getGridhttpsInfo().getHostname() + ":" + getGridhttpsInfo().getHttpPort(),
+				getGridhttpsInfo().getHostname() + ":" + getGridhttpsInfo().getHttpsPort() };
+		log.info("webapp-connectors: " + webappConnectors[0] + ", " + webappConnectors[1]);
+		WebAppContext waContext = new WebAppContext();
+		waContext.setDescriptor(webapp.getDescriptorFile().toString());
+		waContext.setResourceBase(webapp.getResourceBase().getAbsolutePath());
+		waContext.setConnectorNames(webappConnectors);
+		waContext.setParentLoaderPriority(true);
+		waContext.setContextPath("/");
+		
+		ContextHandlerCollection contexts = new ContextHandlerCollection();
+		contexts.setHandlers(new Handler[] { context, waContext });
+ 
+        oneServer.setHandler(contexts);
+		
+		
 	}
 
 	// private void createMapServer() {
@@ -166,13 +193,13 @@ public class StormGridhttpsServer {
 //		contextHandlerCollection.addHandler(msContext);
 //	}
 
-	private void initDavServer() throws ServerException {
-		initWebapp();
-	}
-
-	private void initMapServer() throws ServerException {
-		initMapperServlet();
-	}
+//	private void initDavServer() throws ServerException {
+//		initWebapp();
+//	}
+//
+//	private void initMapServer() throws ServerException {
+//		initMapperServlet();
+//	}
 
 	private String getMappingContextPath() {
 		return File.separator + gridhttpsInfo.getMapperServlet().getContextPath() + File.separator
@@ -184,19 +211,19 @@ public class StormGridhttpsServer {
 	}
 
 	private void initWebapp() throws ServerException {
-		webapp = new WebApp(new File(gridhttpsInfo.getWebappsDirectory(), DefaultConfiguration.SERVER_PATH_TO_WEBAPP));
+		webapp = new WebApp(new File(getGridhttpsInfo().getWebappsDirectory(), DefaultConfiguration.SERVER_PATH_TO_WEBAPP));
 		if (webapp != null) {
 			if (!webapp.getResourceBase().exists()) {
 				if (webapp.getResourceBase().mkdirs()) {
 					try {
-						Zip.unzip(gridhttpsInfo.getWarFile().toString(), webapp.getResourceBase().toString());
+						Zip.unzip(getGridhttpsInfo().getWarFile().toString(), webapp.getResourceBase().toString());
 					} catch (IOException e) {
 						throw new ServerException(e);
 					}
 					String[] davExcluded = { "/index.jsp", getFileTransferContextPath(), getMappingContextPath() };
 					String[] ftExcluded = { "/index.jsp", getMappingContextPath() };
 					configureDescriptor(webapp.getDescriptorFile(), generateParams(), davExcluded, ftExcluded);
-					contextHandlerCollection.addHandler(getWebappContext());
+//					contextHandlerCollection.addHandler(getWebappContext());
 				} else {
 					log.error("Error on creation of '" + webapp.getResourceBase() + "' directory!");
 					throw new ServerException("Error on creation of '" + webapp.getResourceBase() + "' directory!");
@@ -211,39 +238,47 @@ public class StormGridhttpsServer {
 		}
 	}
 
-	private WebAppContext getWebappContext() {
-		String[] webappConnectors = { getGridhttpsInfo().getHostname() + ":" + getGridhttpsInfo().getHttpPort(),
-				getGridhttpsInfo().getHostname() + ":" + getGridhttpsInfo().getHttpsPort() };
-		log.info("webapp-connectors: " + webappConnectors[0] + ", " + webappConnectors[1]);
-		WebAppContext waContext = new WebAppContext();
-		// waContext.setDescriptor(waContext + "/WEB-INF/web.xml");
-		// waContext.setResourceBase(".");
-		waContext.setDescriptor(webapp.getDescriptorFile().toString());
-		waContext.setResourceBase(webapp.getResourceBase().getAbsolutePath());
-		waContext.setConnectorNames(webappConnectors);
-		waContext.setParentLoaderPriority(true);
-		waContext.setContextPath("/");
-		return waContext;
-	}
+//	private WebAppContext getWebappContext() {
+//		String[] webappConnectors = { getGridhttpsInfo().getHostname() + ":" + getGridhttpsInfo().getHttpPort(),
+//				getGridhttpsInfo().getHostname() + ":" + getGridhttpsInfo().getHttpsPort() };
+//		log.info("webapp-connectors: " + webappConnectors[0] + ", " + webappConnectors[1]);
+//		WebAppContext waContext = new WebAppContext();
+//		// waContext.setDescriptor(waContext + "/WEB-INF/web.xml");
+//		// waContext.setResourceBase(".");
+//		waContext.setDescriptor(webapp.getDescriptorFile().toString());
+//		waContext.setResourceBase(webapp.getResourceBase().getAbsolutePath());
+//		waContext.setConnectorNames(webappConnectors);
+//		for (Connector conn : oneServer.getConnectors()) {
+//			if (conn.getName().equals(webappConnectors[0])) {
+//				log.debug("found connector '" + webappConnectors[0] +"'");
+//			}
+//			if (conn.getName().equals(webappConnectors[1])) {
+//				log.debug("found connector '" + webappConnectors[1] +"'");
+//			}
+//		}
+//		waContext.setParentLoaderPriority(true);
+//		waContext.setContextPath("/");
+//		return waContext;
+//	}
 
-	private void initMapperServlet() throws ServerException {
-		mapperServlet = new MapperServlet();
-		if (mapperServlet != null) {
-			oneServer.setHandler(getMapperServletContext());
-		} else {
-			log.error("Error on mapper-servlet creation - mapper-servlet is null!");
-			throw new ServerException("Error on mapper-servlet creation - mapper-servlet is null!");
-		}
-	}
+//	private void initMapperServlet() throws ServerException {
+//		mapperServlet = new MapperServlet();
+//		if (mapperServlet != null) {
+//			oneServer.setHandler(getMapperServletContext());
+//		} else {
+//			log.error("Error on mapper-servlet creation - mapper-servlet is null!");
+//			throw new ServerException("Error on mapper-servlet creation - mapper-servlet is null!");
+//		}
+//	}
 
-	private ServletContextHandler getMapperServletContext() {
-		String[] mappingConnectors = { getGridhttpsInfo().getHostname() + ":" + getGridhttpsInfo().getMapperServlet().getPort() };
-		ServletContextHandler context = new ServletContextHandler(ServletContextHandler.SESSIONS);
-		context.setContextPath(File.separator + gridhttpsInfo.getMapperServlet().getContextPath());
-		context.addServlet(new ServletHolder(mapperServlet), File.separator + gridhttpsInfo.getMapperServlet().getContextSpec());
-		context.setConnectorNames(mappingConnectors);
-		return context;
-	}
+//	private ServletContextHandler getMapperServletContext() {
+//		String[] mappingConnectors = { getGridhttpsInfo().getHostname() + ":" + getGridhttpsInfo().getMapperServlet().getPort() };
+//		ServletContextHandler context = new ServletContextHandler(ServletContextHandler.SESSIONS);
+//		context.setContextPath(File.separator + gridhttpsInfo.getMapperServlet().getContextPath());
+//		context.addServlet(new ServletHolder(mapperServlet), File.separator + gridhttpsInfo.getMapperServlet().getContextSpec());
+//		context.setConnectorNames(mappingConnectors);
+//		return context;
+//	}
 
 	public void start() throws ServerException {
 		try {
@@ -263,7 +298,7 @@ public class StormGridhttpsServer {
 
 	public void stop() throws ServerException {
 		if (isRunning()) {
-			undeploy();
+//			undeploy();
 			try {
 				// davServer.stop();
 				// mapServer.stop();
@@ -287,15 +322,15 @@ public class StormGridhttpsServer {
 		}
 	}
 
-	private void undeploy() throws ServerException {
-		log.debug(" - undeploying webapp...");
-		// WebAppContext waContext = new WebAppContext();
-		// waContext.setDescriptor(waContext + "/WEB-INF/web.xml");
-		// waContext.setResourceBase(".");
-		// waContext.setParentLoaderPriority(true);
-		// contextHandlerCollection.removeHandler(waContext);
-		contextHandlerCollection.removeHandler(getWebappContext());
-	}
+//	private void undeploy() throws ServerException {
+//		log.debug(" - undeploying webapp...");
+//		// WebAppContext waContext = new WebAppContext();
+//		// waContext.setDescriptor(waContext + "/WEB-INF/web.xml");
+//		// waContext.setResourceBase(".");
+//		// waContext.setParentLoaderPriority(true);
+//		// contextHandlerCollection.removeHandler(waContext);
+//		contextHandlerCollection.removeHandler(getWebappContext());
+//	}
 
 	private void configureDescriptor(File descriptorFile, Map<String, String> params, String[] davExcluded, String[] ftExcluded)
 			throws ServerException {
