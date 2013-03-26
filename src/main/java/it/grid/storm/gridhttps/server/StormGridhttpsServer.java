@@ -214,6 +214,7 @@ public class StormGridhttpsServer {
 	private WebAppContext getWebappContext() {
 		String[] webappConnectors = { getGridhttpsInfo().getHostname() + ":" + getGridhttpsInfo().getHttpPort(),
 				getGridhttpsInfo().getHostname() + ":" + getGridhttpsInfo().getHttpsPort() };
+		log.info("webapp-connectors: " + webappConnectors[0] + ", " + webappConnectors[1]);
 		WebAppContext waContext = new WebAppContext();
 		// waContext.setDescriptor(waContext + "/WEB-INF/web.xml");
 		// waContext.setResourceBase(".");
