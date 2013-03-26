@@ -94,6 +94,7 @@ public class StormGridhttpsServer {
 			Connector connector = new SelectChannelConnector();
 			connector.setPort(getGridhttpsInfo().getHttpPort());
 			connector.setMaxIdleTime(MAX_IDLE_TIME);
+			connector.setHost(getGridhttpsInfo().getHostname());
 			oneServer.addConnector(connector);
 		}
 
@@ -101,6 +102,7 @@ public class StormGridhttpsServer {
 		Connector connector2 = new SelectChannelConnector();
 		connector2.setPort(getGridhttpsInfo().getMapperServlet().getPort());
 		connector2.setMaxIdleTime(MAX_IDLE_TIME);
+		connector2.setHost(getGridhttpsInfo().getHostname());
 		oneServer.addConnector(connector2);
 		
 		for (Connector conn : oneServer.getConnectors())
