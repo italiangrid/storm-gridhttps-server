@@ -102,6 +102,9 @@ public class StormGridhttpsServer {
 		connector2.setPort(getGridhttpsInfo().getMapperServlet().getPort());
 		connector2.setMaxIdleTime(MAX_IDLE_TIME);
 		oneServer.addConnector(connector2);
+		
+		for (Connector conn : oneServer.getConnectors())
+			log.info("connector-name: " + conn.getName());
 	}
 
 	// private void createMapServer() {
