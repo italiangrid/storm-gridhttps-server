@@ -222,6 +222,7 @@ public class StormGridhttpsServer {
 		waContext.setResourceBase(webapp.getResourceBase().getAbsolutePath());
 		waContext.setConnectorNames(webappConnectors);
 		waContext.setParentLoaderPriority(true);
+		waContext.setContextPath("/");
 		return waContext;
 	}
 
