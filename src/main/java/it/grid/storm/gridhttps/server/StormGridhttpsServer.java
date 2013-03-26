@@ -53,8 +53,9 @@ public class StormGridhttpsServer {
 	private StormBackend backendInfo;
 	private StormFrontend frontendInfo;
 	private StormGridhttps gridhttpsInfo;
-	private Server davServer;
-	private Server mapServer;
+	// private Server davServer;
+	// private Server mapServer;
+	private Server oneServer;
 	private ContextHandlerCollection contextHandlerCollection;
 	private WebApp webapp;
 	private MapperServlet mapperServlet;
@@ -63,47 +64,102 @@ public class StormGridhttpsServer {
 		setGridhttpsInfo(gridhttpsInfo);
 		setBackendInfo(backendInfo);
 		setFrontendInfo(frontendInfo);
-		createDavServer();
-		createMapServer();
+		// createDavServer();
+		// createMapServer();
+		createServer();
 		initDavServer();
 		initMapServer();
+		// initServer();
 	}
 
-	private void createMapServer() {
-		mapServer = new Server(gridhttpsInfo.getMapperServlet().getPort());	
-		mapServer.setStopAtShutdown(true);
-		mapServer.setGracefulShutdown(1000);
-		
-		QueuedThreadPool threadPool = new QueuedThreadPool();
-		threadPool.setMaxIdleTimeMs(20000);
-		threadPool.setMinThreads(gridhttpsInfo.getMapActiveThreadsMin());
-		threadPool.setMaxThreads(gridhttpsInfo.getMapActiveThreadsMax());
-		threadPool.setMaxQueued(gridhttpsInfo.getMapQueuedThreadsMax());
-		mapServer.setThreadPool(threadPool);
-	}
+	private void createServer() {
+		oneServer = ServerFactory.newServer(getGridhttpsInfo().getHostname(), getGridhttpsInfo().getHttpsPort(), getGridhttpsInfo()
+				.getSsloptions());
+		oneServer.setStopAtShutdown(true);
+		oneServer.setGracefulShutdown(1000);
 
-	private void createDavServer() {
-		davServer = ServerFactory.newServer(gridhttpsInfo.getHostname(), gridhttpsInfo.getHttpsPort(), gridhttpsInfo.getSsloptions());
-		davServer.setStopAtShutdown(true);
-		davServer.setGracefulShutdown(1000);
-		
 		QueuedThreadPool threadPool = new QueuedThreadPool();
 		threadPool.setMaxIdleTimeMs(20000);
-		threadPool.setMaxThreads(gridhttpsInfo.getDavActiveThreadsMax());
-		threadPool.setMaxQueued(gridhttpsInfo.getDavQueuedThreadsMax());
-		davServer.setThreadPool(threadPool);
-		
+		threadPool.setMaxThreads(getGridhttpsInfo().getDavActiveThreadsMax());
+		threadPool.setMaxQueued(getGridhttpsInfo().getDavQueuedThreadsMax());
+		oneServer.setThreadPool(threadPool);
+
 		HandlerCollection hc = new HandlerCollection();
 		contextHandlerCollection = new ContextHandlerCollection();
 		hc.setHandlers(new Handler[] { contextHandlerCollection });
-		davServer.setHandler(hc);
-		if (gridhttpsInfo.isEnabledHttp()) {
+		oneServer.setHandler(hc);
+
+		/* add plain HTTP connector if enabled */
+		if (getGridhttpsInfo().isEnabledHttp()) {
 			Connector connector = new SelectChannelConnector();
-			connector.setPort(gridhttpsInfo.getHttpPort());
+			connector.setPort(getGridhttpsInfo().getHttpPort());
 			connector.setMaxIdleTime(MAX_IDLE_TIME);
-			davServer.addConnector(connector);
+			oneServer.addConnector(connector);
 		}
+
+		/* add MapperServlet connector */
+		Connector connector2 = new SelectChannelConnector();
+		connector2.setPort(getGridhttpsInfo().getMapperServlet().getPort());
+		connector2.setMaxIdleTime(MAX_IDLE_TIME);
+		oneServer.addConnector(connector2);
 	}
+
+	// private void createMapServer() {
+	// mapServer = new Server(gridhttpsInfo.getMapperServlet().getPort());
+	// mapServer.setStopAtShutdown(true);
+	// mapServer.setGracefulShutdown(1000);
+	//
+	// QueuedThreadPool threadPool = new QueuedThreadPool();
+	// threadPool.setMaxIdleTimeMs(20000);
+	// threadPool.setMinThreads(gridhttpsInfo.getMapActiveThreadsMin());
+	// threadPool.setMaxThreads(gridhttpsInfo.getMapActiveThreadsMax());
+	// threadPool.setMaxQueued(gridhttpsInfo.getMapQueuedThreadsMax());
+	// mapServer.setThreadPool(threadPool);
+	// }
+
+	// private void createDavServer() {
+	// davServer = ServerFactory.newServer(gridhttpsInfo.getHostname(),
+	// gridhttpsInfo.getHttpsPort(), gridhttpsInfo.getSsloptions());
+	// davServer.setStopAtShutdown(true);
+	// davServer.setGracefulShutdown(1000);
+	//
+	// QueuedThreadPool threadPool = new QueuedThreadPool();
+	// threadPool.setMaxIdleTimeMs(20000);
+	// threadPool.setMaxThreads(gridhttpsInfo.getDavActiveThreadsMax());
+	// threadPool.setMaxQueued(gridhttpsInfo.getDavQueuedThreadsMax());
+	// davServer.setThreadPool(threadPool);
+	//
+	// HandlerCollection hc = new HandlerCollection();
+	// contextHandlerCollection = new ContextHandlerCollection();
+	// hc.setHandlers(new Handler[] { contextHandlerCollection });
+	// davServer.setHandler(hc);
+	// if (gridhttpsInfo.isEnabledHttp()) {
+	// Connector connector = new SelectChannelConnector();
+	// connector.setPort(gridhttpsInfo.getHttpPort());
+	// connector.setMaxIdleTime(MAX_IDLE_TIME);
+	// davServer.addConnector(connector);
+	// }
+	// }
+
+//	private void initServer() throws ServerException {
+//		String[] webappConnectors = { getGridhttpsInfo().getHostname() + ":" + getGridhttpsInfo().getHttpPort(),
+//				getGridhttpsInfo().getHostname() + ":" + getGridhttpsInfo().getHttpsPort() };
+//		String[] mappingConnectors = { getGridhttpsInfo().getHostname() + ":" + getGridhttpsInfo().getMapperServlet().getPort() };
+//		/* init WebDAV webapp */
+//		WebAppContext waContext = new WebAppContext();
+//		waContext.setDescriptor(waContext + "/WEB-INF/web.xml");
+//		waContext.setResourceBase(".");
+//		waContext.setParentLoaderPriority(true);
+//		waContext.setConnectorNames(webappConnectors);
+//		contextHandlerCollection.addHandler(waContext);
+//		/* init Mapper Servlet */
+//		mapperServlet = new MapperServlet();
+//		ServletContextHandler msContext = new ServletContextHandler(ServletContextHandler.SESSIONS);
+//		msContext.setContextPath(File.separator + getGridhttpsInfo().getMapperServlet().getContextPath());
+//		msContext.addServlet(new ServletHolder(mapperServlet), File.separator + getGridhttpsInfo().getMapperServlet().getContextSpec());
+//		msContext.setConnectorNames(mappingConnectors);
+//		contextHandlerCollection.addHandler(msContext);
+//	}
 
 	private void initDavServer() throws ServerException {
 		initWebapp();
@@ -112,15 +168,16 @@ public class StormGridhttpsServer {
 	private void initMapServer() throws ServerException {
 		initMapperServlet();
 	}
-	
+
 	private String getMappingContextPath() {
-		return File.separator + gridhttpsInfo.getMapperServlet().getContextPath() + File.separator + gridhttpsInfo.getMapperServlet().getContextSpec();
+		return File.separator + gridhttpsInfo.getMapperServlet().getContextPath() + File.separator
+				+ gridhttpsInfo.getMapperServlet().getContextSpec();
 	}
-	
+
 	private String getFileTransferContextPath() {
 		return File.separator + gridhttpsInfo.getFiletransferContextPath();
 	}
-	
+
 	private void initWebapp() throws ServerException {
 		webapp = new WebApp(new File(gridhttpsInfo.getWebappsDirectory(), DefaultConfiguration.SERVER_PATH_TO_WEBAPP));
 		if (webapp != null) {
@@ -132,7 +189,7 @@ public class StormGridhttpsServer {
 						throw new ServerException(e);
 					}
 					String[] davExcluded = { "/index.jsp", getFileTransferContextPath(), getMappingContextPath() };
-					String[] ftExcluded = { "/index.jsp", getMappingContextPath() }; 
+					String[] ftExcluded = { "/index.jsp", getMappingContextPath() };
 					configureDescriptor(webapp.getDescriptorFile(), generateParams(), davExcluded, ftExcluded);
 					contextHandlerCollection.addHandler(getWebappContext());
 				} else {
@@ -150,17 +207,22 @@ public class StormGridhttpsServer {
 	}
 
 	private WebAppContext getWebappContext() {
-		WebAppContext context = new WebAppContext();
-		context.setDescriptor(webapp.getDescriptorFile().toString());
-		context.setResourceBase(webapp.getResourceBase().getAbsolutePath());
-		context.setParentLoaderPriority(true);
-		return context;
+		String[] webappConnectors = { getGridhttpsInfo().getHostname() + ":" + getGridhttpsInfo().getHttpPort(),
+				getGridhttpsInfo().getHostname() + ":" + getGridhttpsInfo().getHttpsPort() };
+		WebAppContext waContext = new WebAppContext();
+		// waContext.setDescriptor(waContext + "/WEB-INF/web.xml");
+		// waContext.setResourceBase(".");
+		waContext.setDescriptor(webapp.getDescriptorFile().toString());
+		waContext.setResourceBase(webapp.getResourceBase().getAbsolutePath());
+		waContext.setConnectorNames(webappConnectors);
+		waContext.setParentLoaderPriority(true);
+		return waContext;
 	}
 
 	private void initMapperServlet() throws ServerException {
 		mapperServlet = new MapperServlet();
 		if (mapperServlet != null) {
-			mapServer.setHandler(getMapperServletContext());
+			oneServer.setHandler(getMapperServletContext());
 		} else {
 			log.error("Error on mapper-servlet creation - mapper-servlet is null!");
 			throw new ServerException("Error on mapper-servlet creation - mapper-servlet is null!");
@@ -168,16 +230,19 @@ public class StormGridhttpsServer {
 	}
 
 	private ServletContextHandler getMapperServletContext() {
+		String[] mappingConnectors = { getGridhttpsInfo().getHostname() + ":" + getGridhttpsInfo().getMapperServlet().getPort() };
 		ServletContextHandler context = new ServletContextHandler(ServletContextHandler.SESSIONS);
 		context.setContextPath(File.separator + gridhttpsInfo.getMapperServlet().getContextPath());
 		context.addServlet(new ServletHolder(mapperServlet), File.separator + gridhttpsInfo.getMapperServlet().getContextSpec());
+		context.setConnectorNames(mappingConnectors);
 		return context;
 	}
-	
+
 	public void start() throws ServerException {
 		try {
-			davServer.start();
-			mapServer.start();
+			// davServer.start();
+			// mapServer.start();
+			oneServer.start();
 		} catch (Exception e) {
 			throw new ServerException(e);
 		}
@@ -185,15 +250,17 @@ public class StormGridhttpsServer {
 	}
 
 	public boolean isRunning() {
-		return (davServer.isRunning() && mapServer.isRunning());
+		// return (davServer.isRunning() && mapServer.isRunning());
+		return (oneServer.isRunning() && oneServer.isRunning());
 	}
 
 	public void stop() throws ServerException {
 		if (isRunning()) {
 			undeploy();
 			try {
-				davServer.stop();
-				mapServer.stop();
+				// davServer.stop();
+				// mapServer.stop();
+				oneServer.stop();
 			} catch (Exception e) {
 				throw new ServerException(e);
 			}
@@ -203,10 +270,10 @@ public class StormGridhttpsServer {
 
 	public void status() {
 		if (isRunning()) {
-			log.info("gridhttps-server is listening on port " + gridhttpsInfo.getHttpsPort() + " (secure connection)");
-			if (gridhttpsInfo.isEnabledHttp())
-				log.info("gridhttps-server is listening on port " + gridhttpsInfo.getHttpPort() + " (anonymous connection)");
-			log.info("mapping-service is listening on port " + gridhttpsInfo.getMapperServlet().getPort());
+			log.info("gridhttps-server is listening on port " + getGridhttpsInfo().getHttpsPort() + " (secure connection)");
+			if (getGridhttpsInfo().isEnabledHttp())
+				log.info("gridhttps-server is listening on port " + getGridhttpsInfo().getHttpPort() + " (anonymous connection)");
+			log.info("mapping-service is listening on port " + getGridhttpsInfo().getMapperServlet().getPort());
 		} else {
 			log.info("gridhttps-server is not running ");
 			log.info("mapping-service is not running ");
@@ -215,10 +282,16 @@ public class StormGridhttpsServer {
 
 	private void undeploy() throws ServerException {
 		log.debug(" - undeploying webapp...");
+		// WebAppContext waContext = new WebAppContext();
+		// waContext.setDescriptor(waContext + "/WEB-INF/web.xml");
+		// waContext.setResourceBase(".");
+		// waContext.setParentLoaderPriority(true);
+		// contextHandlerCollection.removeHandler(waContext);
 		contextHandlerCollection.removeHandler(getWebappContext());
 	}
 
-	private void configureDescriptor(File descriptorFile, Map<String, String> params, String[] davExcluded, String[] ftExcluded) throws ServerException {
+	private void configureDescriptor(File descriptorFile, Map<String, String> params, String[] davExcluded, String[] ftExcluded)
+			throws ServerException {
 		String query1 = "/j2ee:web-app/j2ee:filter[@id='stormAuthorizationFilter']/j2ee:init-param/j2ee:param-value";
 		String query2 = "/j2ee:web-app/j2ee:filter[@id='webdavSpringMiltonFilter']/j2ee:init-param/j2ee:param-value";
 		String query3 = "/j2ee:web-app/j2ee:filter[@id='fileTransferSpringMiltonFilter']/j2ee:init-param/j2ee:param-value";
