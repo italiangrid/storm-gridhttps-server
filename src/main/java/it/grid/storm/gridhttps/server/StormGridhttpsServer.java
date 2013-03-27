@@ -106,18 +106,18 @@ public class StormGridhttpsServer {
 		String[] davExcluded = { "/index.jsp", fileTransferContextPath, mappingContextPath };
 		String[] ftExcluded = { "/index.jsp", mappingContextPath };
 		configureDescriptor(webapp.getDescriptorFile(), generateParams(), davExcluded, ftExcluded);
-		return getWebAppContext(webapp.getDescriptorFile().toString(), webapp.getResourceBase().getAbsolutePath(),
-				(String[]) webappConnectors.toArray());
+		String[] connectors = webappConnectors.toArray(new String[webappConnectors.size()]);
+		return getWebAppContext(webapp.getDescriptorFile().toString(), webapp.getResourceBase().getAbsolutePath(), connectors);
 	}
 
 	private ServletContextHandler deployServlet() {
 		String contextPath = File.separator + getGridhttpsInfo().getMapperServlet().getContextPath();
 		String contextSpec = File.separator + getGridhttpsInfo().getMapperServlet().getContextSpec();
-		ServletContextHandler context = getMapperServletContext(new MapperServlet(), contextPath, contextSpec,
-				(String[]) servletConnectors.toArray());
+		String[] connectors = servletConnectors.toArray(new String[servletConnectors.size()]);
+		ServletContextHandler context = getMapperServletContext(new MapperServlet(), contextPath, contextSpec, connectors);
 		return context;
 	}
-	
+
 	private WebAppContext getWebAppContext(String descriptorPath, String resourceBase, String[] webappConnectors) {
 		WebAppContext waContext = new WebAppContext();
 		waContext.setDescriptor(descriptorPath);
