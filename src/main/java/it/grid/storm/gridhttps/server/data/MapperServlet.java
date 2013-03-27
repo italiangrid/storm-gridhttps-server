@@ -15,7 +15,6 @@ package it.grid.storm.gridhttps.server.data;
 import it.grid.storm.gridhttps.server.DefaultConfiguration;
 import it.grid.storm.gridhttps.server.exceptions.InitException;
 
-
 public class MapperServlet {
 	private String contextPath;
 	private String contextSpec;
@@ -68,4 +67,5 @@ public class MapperServlet {
 	public void setPort(int port) {
 		this.port = port;
 	}
+
 }

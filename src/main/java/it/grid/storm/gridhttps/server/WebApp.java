@@ -12,18 +12,21 @@
  */
 package it.grid.storm.gridhttps.server;
 
+import it.grid.storm.gridhttps.server.utils.Zip;
+
 import java.io.File;
+import java.io.IOException;
 
 public class WebApp {
 
 	private File resourceBase;
 	private File descriptorFile;
-	
+
 	public WebApp(File resourceBase) {
 		this.setResourceBase(resourceBase);
 		this.setDescriptorFile(new File(resourceBase, "/WEB-INF/web.xml"));
 	}
-	
+
 	public File getDescriptorFile() {
 		return descriptorFile;
 	}
@@ -39,5 +42,17 @@ public class WebApp {
 	private void setResourceBase(File resourceBase) {
 		this.resourceBase = resourceBase;
 	}
-	
+
+	public void init(File warFile) throws IOException {
+		if (!getResourceBase().exists()) {
+			if (getResourceBase().mkdirs()) {
+				Zip.unzip(warFile.toString(), getResourceBase().toString());
+			} else {
+				throw new IOException("Error on creation of '" + getResourceBase() + "' directory!");
+			}
+		} else {
+			throw new IOException("'" + getResourceBase() + "' already exists!");
+		}
+	}
+
 }
