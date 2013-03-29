@@ -140,7 +140,6 @@ start () {
                 ${STORM_DEBUG_OPTION} \
                 -Dstorm.log.dir='$STORM_LOGDIR' \
                 -jar /usr/share/java/storm-gridhttps-server/storm-gridhttps-server.jar \
-	        -w /usr/share/java/storm-gridhttps-server/storm-gridhttps-webapp.war \
 	        -conf /etc/storm/gridhttps-server/server.ini \
 	        1>$STORM_LOGDIR/storm-gridhttps-server.stdout \
         	2>$STORM_LOGDIR/storm-gridhttps-server.stderr "
