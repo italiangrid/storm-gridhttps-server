@@ -12,6 +12,7 @@
  */
 package it.grid.storm.gridhttps.webapp;
 
+import it.grid.storm.gridhttps.configuration.Configuration;
 import it.grid.storm.gridhttps.webapp.authorization.AuthorizationFilter;
 import it.grid.storm.gridhttps.webapp.authorization.AuthorizationStatus;
 import it.grid.storm.gridhttps.webapp.authorization.Constants;
@@ -31,7 +32,6 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;
@@ -42,7 +42,6 @@ import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.eclipse.jetty.util.ajax.JSON;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -54,29 +53,7 @@ public class StormAuthorizationFilter implements Filter {
 	}
 
 	public void init(FilterConfig fc) throws ServletException {
-		Configuration.loadDefaultConfiguration();
-		Configuration.initFromJSON(parse(fc.getInitParameter("params")));
-		Configuration.print();
-		if (!Configuration.isValid()) {
-			log.error("Not a valid configuration!");
-			throw new ServletException("Not a valid Configuration!");
-		}
-		/* Load Storage Area List */
-		try {
-			StorageAreaManager.init(Configuration.getBackendHostname(), Configuration.getBackendServicePort());
-		} catch (Exception e) {
-			log.error(e.getMessage());
-			throw new ServletException(e.getMessage());
-		}
-	}
-
-	@SuppressWarnings("unchecked")
-	private Map<String, String> parse(String jsonText) throws ServletException {
-		Object decoded = JSON.parse(jsonText);
-		if (decoded != null) {
-			return (Map<String, String>) decoded;
-		}
-		throw new ServletException("Error on retrieving init parameters!");
+		log.info("StormAuthorizationFilter - Init");
 	}
 
 	public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
@@ -130,7 +107,7 @@ public class StormAuthorizationFilter implements Filter {
 		try {
 			if (isFileTransferRequest(path)) {
 				log.debug("Received a file-transfer request");
-				return new FileTransferAuthorizationFilter(httpHelper, File.separator + Configuration.getFileTransferContextPath());
+				return new FileTransferAuthorizationFilter(httpHelper, File.separator + Configuration.getGridhttpsInfo().getFiletransferContextPath());
 			} else {
 				log.debug("Received a webdav request");
 				return new WebDAVAuthorizationFilter(httpHelper);
@@ -155,7 +132,7 @@ public class StormAuthorizationFilter implements Filter {
 	}
 
 	private boolean isFileTransferRequest(String requestedURI) {
-		return requestedURI.startsWith(File.separator + Configuration.getFileTransferContextPath());
+		return requestedURI.startsWith(File.separator + Configuration.getGridhttpsInfo().getFiletransferContextPath());
 	}
 
 	private void sendError(HttpServletResponse response, int errorCode, String errorMessage) {
@@ -168,10 +145,11 @@ public class StormAuthorizationFilter implements Filter {
 	}
 
 	private void doPing() {
-		// doPing
-		log.debug("ping " + Configuration.getBackendHostname() + ":" + Configuration.getBackendPort());
+		String hostnameBE = Configuration.getBackendInfo().getHostname();
+		int portBE = Configuration.getBackendInfo().getPort();
+		log.debug("ping " + hostnameBE + ":" + portBE);
 		try {
-			PingOutputData output = StormResourceHelper.doPing(Configuration.getBackendHostname(), Configuration.getBackendPort());
+			PingOutputData output = StormResourceHelper.doPing(hostnameBE, portBE);
 			log.debug(output.getBeOs());
 			log.debug(output.getBeVersion());
 			log.debug(output.getVersionInfo());

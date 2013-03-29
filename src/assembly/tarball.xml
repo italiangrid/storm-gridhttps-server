@@ -31,16 +31,17 @@
 				<include>storm-gridhttps-server</include>
 			</includes>
 		</fileSet>
-		
+
 		<fileSet>
 			<directory>target</directory>
-			<outputDirectory>${jar_installation_prefix}/${project.artifactId}</outputDirectory>
+			<outputDirectory>${jar_installation_prefix}/${project.artifactId}
+			</outputDirectory>
 			<includes>
 				<include>storm-gridhttps-server.jar</include>
-				<include>storm-gridhttps-webapp.war</include>
+				<!-- <include>storm-gridhttps-webapp.war</include> -->
 			</includes>
 		</fileSet>
-		
+
 		<!-- Empty fileset to create empty log directory -->
 		<fileSet>
 			<directory>src</directory>
@@ -50,15 +51,16 @@
 			</excludes>
 			<directoryMode>0774</directoryMode>
 		</fileSet>
-		<!-- Empty fileset to create empty work directory (where webapp.war is exploded)-->
-		<fileSet>
-			<directory>src</directory>
-			<outputDirectory>${work_installation_directory}</outputDirectory>
-			<excludes>
-				<exclude>**/*</exclude>
-			</excludes>
-			<directoryMode>0770</directoryMode>
-		</fileSet>
-		
+
 	</fileSets>
+
+	<dependencySets>
+		<dependencySet>
+			<scope>runtime</scope>
+			<outputDirectory>${jar_installation_prefix}/${project.artifactId}/lib</outputDirectory>
+			<useProjectArtifact>false</useProjectArtifact>
+			<unpack>false</unpack>
+		</dependencySet>
+	</dependencySets>
+
 </assembly>

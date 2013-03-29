@@ -36,14 +36,6 @@
 # Default: /etc/storm/gridhttps-server/logback.xml
 #log.configuration-file = /etc/storm/gridhttps-server/logback.xml
 
-# GridHTTPs webdav service context-path
-# Default: 
-#webdav.context-path = 
-
-# GridHTTPs file-transfer service context-path
-# Default: fileTransfer
-#filetransfer.context-path = fileTransfer
-
 # Maximum number of active threads for webdav-server's requests
 # Default: 150
 #webdav.max.active.threads = 150
@@ -135,3 +127,8 @@ backend.hostname =
 # Default: adler32 (other values: ...)
 #checksum-type = adler32
 
+
+
+
+#Change-log
+#28-03-2013 Removed service>webdav.context-path and service>filetransfer.context-path

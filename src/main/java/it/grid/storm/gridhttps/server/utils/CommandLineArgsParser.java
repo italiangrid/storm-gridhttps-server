@@ -24,14 +24,14 @@ import org.apache.commons.cli.MissingOptionException;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.cli.Options;
 
-public class MyCommandLineParser {
+public class CommandLineArgsParser {
 
 	private Options options = new Options();
 	private String[] cmdlineArgs = null;
 	private CommandLine cmdLine = null;
 	private boolean isParsed = false;
 
-	public MyCommandLineParser(String cmdLineArgs[]) {
+	public CommandLineArgsParser(String cmdLineArgs[]) {
 		this.cmdlineArgs = cmdLineArgs;
 		this.addOption("help", "", false, false);
 	}

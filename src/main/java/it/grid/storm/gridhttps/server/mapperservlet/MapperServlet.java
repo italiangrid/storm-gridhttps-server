@@ -12,7 +12,7 @@
  */
 package it.grid.storm.gridhttps.server.mapperservlet;
 
-import it.grid.storm.gridhttps.server.DefaultConfiguration;
+import it.grid.storm.gridhttps.configuration.DefaultConfiguration;
 import it.grid.storm.storagearea.StorageArea;
 import it.grid.storm.storagearea.StorageAreaManager;
 

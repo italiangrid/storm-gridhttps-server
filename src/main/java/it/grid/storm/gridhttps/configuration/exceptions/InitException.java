@@ -10,7 +10,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package it.grid.storm.gridhttps.server.exceptions;
+package it.grid.storm.gridhttps.configuration.exceptions;
 
 public class InitException extends Exception {
 

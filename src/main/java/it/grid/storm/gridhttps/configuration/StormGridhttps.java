@@ -10,10 +10,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package it.grid.storm.gridhttps.server.data;
+package it.grid.storm.gridhttps.configuration;
 
-import it.grid.storm.gridhttps.server.DefaultConfiguration;
-import it.grid.storm.gridhttps.server.exceptions.InitException;
+import it.grid.storm.gridhttps.configuration.exceptions.InitException;
 
 import java.io.File;
 
@@ -26,10 +25,8 @@ public class StormGridhttps {
 	private int httpsPort;
 	private boolean enabledHttp;
 	private MapperServlet mapperServlet;
-	private String webappsDirectory;
 	private SSLOptions ssloptions;
 	private String logFile;
-	private File warFile;
 	
 	private File rootDirectory;
 	private String webdavContextPath;
@@ -49,9 +46,7 @@ public class StormGridhttps {
 		this.setHttpPort(DefaultConfiguration.SERVER_WEBAPP_HTTP_PORT);
 		this.setHttpsPort(DefaultConfiguration.SERVER_WEBAPP_HTTPS_PORT);
 		this.setEnabledHttp(DefaultConfiguration.SERVER_WEBAPP_USE_HTTP);
-		MapperServlet mapperServlet = new MapperServlet();
-		this.setMapperServlet(mapperServlet);
-		this.setWebappsDirectory(DefaultConfiguration.SERVER_WEBAPP_DIRECTORY);
+		this.setMapperServlet(new MapperServlet());
 		SSLOptions sslOptions = new SSLOptions();
 		sslOptions.setCertificateFile(DefaultConfiguration.SERVER_WEBAPP_HTTPS_CERTIFICATE_FILE);
 		sslOptions.setKeyFile(DefaultConfiguration.SERVER_WEBAPP_HTTPS_KEY_FILE);
@@ -60,7 +55,6 @@ public class StormGridhttps {
 		sslOptions.setWantClientAuth(DefaultConfiguration.SERVER_WEBAPP_HTTPS_WANT_CLIENT_AUTH);
 		this.setSsloptions(sslOptions);
 		this.setLogFile(DefaultConfiguration.LOG_FILE);
-		this.setWarFile(null);
 		this.setFiletransferContextPath(DefaultConfiguration.WEBAPP_FILETRANSFER_CONTEXTPATH);
 		this.setWebdavContextPath(DefaultConfiguration.WEBAPP_WEBDAV_CONTEXTPATH);
 		this.setRootDirectory(new File(DefaultConfiguration.WEBAPP_GPFS_ROOTDIRECTORY));
@@ -97,7 +91,7 @@ public class StormGridhttps {
 		this.httpsPort = httpsPort;
 	}
 
-	public boolean isEnabledHttp() {
+	public boolean isHTTPEnabled() {
 		return enabledHttp;
 	}
 
@@ -111,14 +105,6 @@ public class StormGridhttps {
 
 	public void setMapperServlet(MapperServlet mapperServlet) {
 		this.mapperServlet = mapperServlet;
-	}
-
-	public String getWebappsDirectory() {
-		return webappsDirectory;
-	}
-
-	public void setWebappsDirectory(String webappsDirectory) {
-		this.webappsDirectory = webappsDirectory;
 	}
 
 	public SSLOptions getSsloptions() {
@@ -137,23 +123,17 @@ public class StormGridhttps {
 		this.logFile = logFile;
 	}
 
-	public String toString() {
-		return "{'" + hostname + "', " + httpPort + ", " + httpsPort + ", " + enabledHttp + ", " + mapperServlet + ", '" + webappsDirectory
-				+ "', " + ssloptions + ", '" + logFile + "', '" + warFile + "'}";
-	}
+//	public String toString() {
+//		return "{'" + hostname + "', " + httpPort + ", " + httpsPort + ", " + enabledHttp + ", " + mapperServlet + ", '" + webappsDirectory
+//				+ "', " + ssloptions + ", '" + logFile + "', '" + warFile + "'}";
+//	}
 
 	public void checkConfiguration() throws InitException {
 		mapperServlet.checkConfiguration();
-		if (warFile == null)
-			throw new InitException("war file is null!");
-		if (!warFile.exists())
-			throw new InitException("war file does not exist!");
 		if (hostname.isEmpty())
 			throw new InitException("gridhttps hostname is empty!");
 		if (logFile.isEmpty())
 			throw new InitException("gridhttps log filename is empty!");
-		if (webappsDirectory.isEmpty())
-			throw new InitException("gridhttps webapps directory is empty!");
 		if (httpPort <= 0)
 			throw new InitException("gridhttps http port is " + httpPort + "!");
 		if (httpsPort == 0)
@@ -170,14 +150,6 @@ public class StormGridhttps {
 			throw new InitException("maximum number of threads for mapping-servlet's requests is not valid!");
 		if (davActiveThreadsMax <= 0)
 			throw new InitException("maximum number of threads for webdav-server's requests is not valid!");
-	}
-
-	public File getWarFile() {
-		return warFile;
-	}
-
-	public void setWarFile(File warFile) {
-		this.warFile = warFile;
 	}
 	
 	public File getRootDirectory() {

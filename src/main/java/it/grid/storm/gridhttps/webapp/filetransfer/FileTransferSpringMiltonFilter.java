@@ -16,8 +16,8 @@ import io.milton.config.HttpManagerBuilder;
 import io.milton.http.HttpManager;
 import io.milton.http.Request;
 import io.milton.http.Response;
-import io.milton.servlet.FilterConfigWrapper;
 import io.milton.servlet.MiltonServlet;
+import it.grid.storm.gridhttps.configuration.Configuration;
 
 import java.io.File;
 import java.io.IOException;
@@ -31,8 +31,9 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.BeansException;
+import org.springframework.context.ApplicationContext;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
-import org.springframework.context.support.StaticApplicationContext;
 
 /**
  * Loads the spring context from classpath at applicationContext.xml
@@ -71,17 +72,16 @@ public class FileTransferSpringMiltonFilter implements javax.servlet.Filter {
 	private String[] excludeMiltonPaths;
 
 	public void init(FilterConfig fc) throws ServletException {
-		log.debug("FileTransfer-SpringMiltonFilter init");
+		log.info("FileTransfer-filter init");
 		this.filterConfig = fc;
-		StaticApplicationContext parent = new StaticApplicationContext();
-		FilterConfigWrapper configWrapper = new FilterConfigWrapper(this.filterConfig);
-		parent.getBeanFactory().registerSingleton("config", configWrapper);
-		parent.getBeanFactory().registerSingleton("servletContext", fc.getServletContext());
-		File webRoot = new File(fc.getServletContext().getRealPath("/"));
-		parent.getBeanFactory().registerSingleton("webRoot", webRoot);
-		log.debug("Registered root webapp path in: webroot=" + webRoot.getAbsolutePath());
-		parent.refresh();
-		context = new ClassPathXmlApplicationContext(new String[]{fc.getInitParameter("context.filename")}, parent);
+		ApplicationContext context;
+		try {
+			context = new ClassPathXmlApplicationContext(new String[]{filterConfig.getInitParameter("contextConfigLocation")});
+		} catch (BeansException e) {
+			log.error(e.getMessage());
+			e.printStackTrace();
+			return;
+		}
 		Object milton = context.getBean("milton.http.ftmanager");
 		if (milton instanceof HttpManager) {
 			this.httpManager = (HttpManager) milton;
@@ -89,11 +89,13 @@ public class FileTransferSpringMiltonFilter implements javax.servlet.Filter {
 			HttpManagerBuilder builder = (HttpManagerBuilder) milton;
 			this.httpManager = builder.buildHttpManager();
 		}
-		servletContext = fc.getServletContext();
+		servletContext = filterConfig.getServletContext();
 		log.debug("servletContext: " + servletContext.getClass());
-		String sExcludePaths = fc.getInitParameter("milton.exclude.paths");
-		log.debug("init: exclude paths: " + sExcludePaths);
-		excludeMiltonPaths = sExcludePaths.split(",");
+		
+		String mappingContextPath = File.separator + Configuration.getGridhttpsInfo().getMapperServlet().getContextPath() + File.separator
+				+ Configuration.getGridhttpsInfo().getMapperServlet().getContextSpec();
+		String[] ftExcluded = { "/index.jsp", mappingContextPath };
+		excludeMiltonPaths = ftExcluded;	
 	}
 
 	public void doFilter(ServletRequest req, ServletResponse resp, FilterChain fc) throws IOException, ServletException {

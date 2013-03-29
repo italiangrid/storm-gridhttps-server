@@ -17,7 +17,7 @@ import java.io.File;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import it.grid.storm.gridhttps.webapp.Configuration;
+import it.grid.storm.gridhttps.configuration.Configuration;
 import it.grid.storm.gridhttps.webapp.HttpHelper;
 import it.grid.storm.gridhttps.webapp.authorization.AuthorizationStatus;
 import it.grid.storm.gridhttps.webapp.authorization.Constants;
@@ -43,7 +43,7 @@ public class PutMethodAuthorization extends AbstractMethodAuthorization {
 	}
 
 	private String stripContext(String url) {
-		return url.replaceFirst(File.separator + Configuration.getFileTransferContextPath(), "");
+		return url.replaceFirst(File.separator + Configuration.getGridhttpsInfo().getFiletransferContextPath(), "");
 	}
 	
 	public AuthorizationStatus isUserAuthorized(UserCredentials user) {
@@ -77,7 +77,7 @@ public class PutMethodAuthorization extends AbstractMethodAuthorization {
 		BackendApi backend;
 		SurlArrayRequestOutputData outputSPtP;
 		try {
-			backend = StormBackendApi.getBackend(Configuration.getBackendHostname(), Configuration.getBackendPort());
+			backend = StormBackendApi.getBackend(Configuration.getBackendInfo().getHostname(), Configuration.getBackendInfo().getPort());
 			outputSPtP = StormBackendApi.prepareToPutStatus(backend, surl.asString(), user);
 		} catch (RuntimeApiException e) {
 			log.error(e.getMessage());

@@ -12,7 +12,7 @@
  */
 package it.grid.storm.gridhttps.webapp.filetransfer.factory;
 
-import it.grid.storm.gridhttps.webapp.Configuration;
+import it.grid.storm.gridhttps.configuration.Configuration;
 import it.grid.storm.gridhttps.webapp.data.StormFactory;
 import it.grid.storm.gridhttps.webapp.data.StormResource;
 import it.grid.storm.gridhttps.webapp.webdav.factory.StormResourceFactory;
@@ -31,8 +31,8 @@ public final class FileSystemResourceFactory extends StormFactory {
 	private static final Logger log = LoggerFactory.getLogger(StormResourceFactory.class);
 
 	public FileSystemResourceFactory() throws UnknownHostException, ApiException {
-		super(Configuration.getBackendHostname(), Configuration.getBackendPort(), new File(Configuration.getGpfsRootDirectory()),
-				Configuration.getFileTransferContextPath());
+		super(Configuration.getBackendInfo().getHostname(), Configuration.getBackendInfo().getPort(), Configuration.getGridhttpsInfo().getRootDirectory(),
+				Configuration.getGridhttpsInfo().getFiletransferContextPath());
 		this.setAllowDirectoryBrowsing(false);
 		log.debug("FileSystemResourceFactory created");
 	}

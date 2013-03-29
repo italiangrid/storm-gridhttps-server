@@ -12,7 +12,7 @@
  */
 package it.grid.storm.gridhttps.webapp.data;
 
-import it.grid.storm.gridhttps.webapp.Configuration;
+import it.grid.storm.gridhttps.configuration.Configuration;
 import it.grid.storm.storagearea.StorageArea;
 import it.grid.storm.storagearea.StorageAreaManager;
 
@@ -31,7 +31,7 @@ public class Surl {
 	private final String scheme = "srm";
 	
 	public Surl(String path) {
-		this(Configuration.getFrontendHostname(), Configuration.getFrontendPort(), path);
+		this(Configuration.getFrontendInfo().getHostname(), Configuration.getFrontendInfo().getPort(), path);
 	}
 	
 	public Surl(String feHostname, int fePort, String path) {
@@ -44,7 +44,7 @@ public class Surl {
 	}
 	
 	public Surl(File resource) {
-		this(Configuration.getFrontendHostname(), Configuration.getFrontendPort(), resource);
+		this(Configuration.getFrontendInfo().getHostname(), Configuration.getFrontendInfo().getPort(), resource);
 	}
 	
 	public Surl(String feHostname, int fePort, File resource, StorageArea storageArea) {
@@ -52,7 +52,7 @@ public class Surl {
 	}
 	
 	public Surl(File resource, StorageArea storageArea) {
-		this(Configuration.getFrontendHostname(), Configuration.getFrontendPort(), resource, storageArea);
+		this(Configuration.getFrontendInfo().getHostname(), Configuration.getFrontendInfo().getPort(), resource, storageArea);
 	}
 	
 	public Surl(Surl baseSurl, String childName) {

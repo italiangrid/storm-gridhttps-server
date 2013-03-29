@@ -14,7 +14,7 @@ package it.grid.storm.gridhttps.webapp.contentservice;
 
 import io.milton.http.fs.FileContentService;
 import it.grid.storm.ea.remote.Constants;
-import it.grid.storm.gridhttps.webapp.Configuration;
+import it.grid.storm.gridhttps.configuration.Configuration;
 import it.grid.storm.gridhttps.webapp.checksum.ChecksumReadException;
 import it.grid.storm.gridhttps.webapp.checksum.ChecksumType;
 import it.grid.storm.gridhttps.webapp.checksum.algorithm.Adler32ChecksumAlgorithm;
@@ -54,11 +54,11 @@ public class StormContentService implements FileContentService {
 	public void setFileContent(File file, InputStream in) throws FileNotFoundException, IOException {
 		OutputStream out = new FileOutputStream(file);
 		Chronometer chrono = new Chronometer();
-		if (Configuration.getComputeChecksum()) {
+		if (Configuration.getGridhttpsInfo().isComputeChecksum()) {
 			String checksum = null;
 			ChecksumAlgorithm algorithm = null;
 			try {
-				algorithm = getChecksumAlgorithm(Configuration.getChecksumType());
+				algorithm = getChecksumAlgorithm(Configuration.getGridhttpsInfo().getChecksumType());
 				chrono.start();
 				checksum = algorithm.compute(in, out);
 				chrono.stop();
@@ -67,7 +67,7 @@ public class StormContentService implements FileContentService {
 				sendChecksum(file, algorithm.getType(), checksum);
 			} catch (NoSuchAlgorithmException e) {
 				log.error(e.getMessage());
-				log.warn("Checksum algorithm '" + Configuration.getChecksumType() + "' not supported!");
+				log.warn("Checksum algorithm '" + Configuration.getGridhttpsInfo().getChecksumType() + "' not supported!");
 				log.debug("Proceeding with nochecksum file transfer...");
 				chrono.start();
 				doSimpleSetFileContent(in, out);
@@ -140,7 +140,7 @@ public class StormContentService implements FileContentService {
 		String encodedFilename = URLEncoder.encode(target.getAbsolutePath(), "UTF-8");
 		String path = "/" + Constants.RESOURCE + "/" + Constants.VERSION + "/" + encodedFilename + "/" + type.toString();
 		String query = Constants.CHECKSUM_VALUE_KEY + "=" + checksum;
-		URI uri = new URI("http", null, Configuration.getBackendHostname(), Configuration.getBackendServicePort(), path, query, null);
+		URI uri = new URI("http", null, Configuration.getBackendInfo().getHostname(), Configuration.getBackendInfo().getServicePort(), path, query, null);
 		log.debug("Built checksum service URI: " + uri);
 		return uri;
 	}

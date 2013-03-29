@@ -10,28 +10,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package it.grid.storm.gridhttps.server.data;
+package it.grid.storm.gridhttps.configuration;
 
-import it.grid.storm.gridhttps.server.DefaultConfiguration;
-import it.grid.storm.gridhttps.server.exceptions.InitException;
+import it.grid.storm.gridhttps.configuration.exceptions.InitException;
 
-public class StormBackend {
+
+public class StormFrontend {
 	private String hostname;
 	private int port;
-	private int servicePort;
 
-	public StormBackend(String hostname, int port, int servicePort) {
+	public StormFrontend(String hostname, int port, int servicePort) {
 		this();
 		this.setHostname(hostname);
 		this.setPort(port);
-		this.setServicePort(servicePort);
 	}
-	
-	public StormBackend() {
-		this.setPort(DefaultConfiguration.STORM_BE_PORT);
-		this.setServicePort(DefaultConfiguration.STORM_BE_SERVICE_PORT);
+
+	public StormFrontend() {
+		this.setPort(DefaultConfiguration.STORM_FE_PORT);
 	}
-	
+
 	public String getHostname() {
 		return hostname;
 	}
@@ -48,27 +45,14 @@ public class StormBackend {
 		this.port = port;
 	}
 
-	public int getServicePort() {
-		return servicePort;
+	public String toString() {
+		return "{'" + hostname + "', " + port + "}";
 	}
 
-	public void setServicePort(int servicePort) {
-		this.servicePort = servicePort;
-	}
-	
-	public String toString() {
-		return "{'"+hostname+"', "+port+", "+servicePort+"}";	
-	}
-	
 	public void checkConfiguration() throws InitException {
 		if (hostname.isEmpty())
 			throw new InitException("backend hostname is empty!");
 		if (port <= 0)
-			throw new InitException("backend port is "+port+"!");
-		if (servicePort <= 0)
-			throw new InitException("backend service port is "+servicePort+"!");
-		if (servicePort == port)
-			throw new InitException("backend port is equal to service port!");
+			throw new InitException("backend port is " + port + "!");
 	}
-
 }

@@ -10,7 +10,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package it.grid.storm.gridhttps.server;
+package it.grid.storm.gridhttps.configuration;
 
 public class DefaultConfiguration {
 
@@ -49,7 +49,7 @@ public class DefaultConfiguration {
 	
 	/* webapp (webdav+filetransfer) */
 	
-	public final static String 		WEBAPP_WEBDAV_CONTEXTPATH = "";
+	public final static String 		WEBAPP_WEBDAV_CONTEXTPATH = "/";
 	public final static String 		WEBAPP_FILETRANSFER_CONTEXTPATH = "fileTransfer";
 	public final static String 		WEBAPP_GPFS_ROOTDIRECTORY = "/";
 	public final static boolean 	WEBAPP_COMPUTE_CHECKSUM = true;

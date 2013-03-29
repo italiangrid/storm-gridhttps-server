@@ -10,10 +10,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package it.grid.storm.gridhttps.server.data;
+package it.grid.storm.gridhttps.configuration;
 
-import it.grid.storm.gridhttps.server.DefaultConfiguration;
-import it.grid.storm.gridhttps.server.exceptions.InitException;
+import it.grid.storm.gridhttps.configuration.exceptions.InitException;
 
 public class MapperServlet {
 	private String contextPath;

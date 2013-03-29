@@ -12,7 +12,7 @@
  */
 package it.grid.storm.gridhttps.webapp.webdav.factory;
 
-import it.grid.storm.gridhttps.webapp.Configuration;
+import it.grid.storm.gridhttps.configuration.Configuration;
 import it.grid.storm.gridhttps.webapp.data.StormFactory;
 import it.grid.storm.gridhttps.webapp.data.StormResource;
 import it.grid.storm.storagearea.StorageArea;
@@ -30,8 +30,8 @@ public final class StormResourceFactory extends StormFactory {
 	private static final Logger log = LoggerFactory.getLogger(StormResourceFactory.class);
 
 	public StormResourceFactory() throws UnknownHostException, ApiException {
-		super(Configuration.getBackendHostname(), Configuration.getBackendPort(), new File(Configuration.getGpfsRootDirectory()),
-				Configuration.getWebdavContextPath());
+		super(Configuration.getBackendInfo().getHostname(), Configuration.getBackendInfo().getPort(), Configuration.getGridhttpsInfo().getRootDirectory(),
+				Configuration.getGridhttpsInfo().getWebdavContextPath());
 		log.debug("StormResourceFactory created");
 	}
 

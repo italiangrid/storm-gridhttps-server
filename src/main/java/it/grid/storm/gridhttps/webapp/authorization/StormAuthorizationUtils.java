@@ -12,7 +12,7 @@
  */
 package it.grid.storm.gridhttps.webapp.authorization;
 
-import it.grid.storm.gridhttps.webapp.Configuration;
+import it.grid.storm.gridhttps.configuration.Configuration;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -140,7 +140,7 @@ public class StormAuthorizationUtils {
 		}
 		URI uri;
 		try {
-			uri = new URI("http", null, Configuration.getBackendHostname(), Configuration.getBackendServicePort(), path,
+			uri = new URI("http", null, Configuration.getBackendInfo().getHostname(), Configuration.getBackendInfo().getServicePort(), path,
 					qparams.isEmpty() ? null : URLEncodedUtils.format(qparams, "UTF-8"), null);
 		} catch (URISyntaxException e) {
 			log.error("Unable to build Authorization Service URI. URISyntaxException " + e.getLocalizedMessage());

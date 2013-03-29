@@ -16,8 +16,8 @@ import io.milton.config.HttpManagerBuilder;
 import io.milton.http.HttpManager;
 import io.milton.http.Request;
 import io.milton.http.Response;
-import io.milton.servlet.FilterConfigWrapper;
 import io.milton.servlet.MiltonServlet;
+import it.grid.storm.gridhttps.configuration.Configuration;
 
 import java.io.File;
 import java.io.IOException;
@@ -33,8 +33,8 @@ import javax.servlet.http.HttpServletResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeansException;
+import org.springframework.context.ApplicationContext;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
-import org.springframework.context.support.StaticApplicationContext;
 
 /**
  * Loads the spring context from classpath at applicationContext.xml
@@ -73,18 +73,11 @@ public class WebdavSpringMiltonFilter implements javax.servlet.Filter {
 	private String[] excludeMiltonPaths;
 
 	public void init(FilterConfig fc) throws ServletException {
-		log.debug("WebDAV-SpringMiltonFilter init");
+		log.info("WebDAV-filter init");
 		filterConfig = fc;
-		StaticApplicationContext parent = new StaticApplicationContext();
-		FilterConfigWrapper configWrapper = new FilterConfigWrapper(filterConfig);
-		parent.getBeanFactory().registerSingleton("config", configWrapper);
-		parent.getBeanFactory().registerSingleton("servletContext", filterConfig.getServletContext());
-		File webRoot = new File(filterConfig.getServletContext().getRealPath("/"));
-		parent.getBeanFactory().registerSingleton("webRoot", webRoot);
-		log.debug("Registered root webapp path in: webroot=" + webRoot.getAbsolutePath());
-		parent.refresh();
+		ApplicationContext context;
 		try {
-			context = new ClassPathXmlApplicationContext(new String[]{filterConfig.getInitParameter("context.filename")}, parent);
+			context = new ClassPathXmlApplicationContext(new String[]{filterConfig.getInitParameter("contextConfigLocation")});
 		} catch (BeansException e) {
 			log.error(e.getMessage());
 			e.printStackTrace();
@@ -99,9 +92,12 @@ public class WebdavSpringMiltonFilter implements javax.servlet.Filter {
 		}
 		servletContext = filterConfig.getServletContext();
 		log.debug("servletContext: " + servletContext.getClass());
-		String sExcludePaths = filterConfig.getInitParameter("milton.exclude.paths");
-		log.debug("init: exclude paths: " + sExcludePaths);
-		excludeMiltonPaths = sExcludePaths.split(",");
+		
+		String mappingContextPath = File.separator + Configuration.getGridhttpsInfo().getMapperServlet().getContextPath() + File.separator
+				+ Configuration.getGridhttpsInfo().getMapperServlet().getContextSpec();
+		String fileTransferContextPath = File.separator + Configuration.getGridhttpsInfo().getFiletransferContextPath();
+		String[] davExcluded = { "/index.jsp", fileTransferContextPath, mappingContextPath };
+		excludeMiltonPaths = davExcluded;
 	}
 
 	public void doFilter(ServletRequest req, ServletResponse resp, FilterChain fc) throws IOException, ServletException {

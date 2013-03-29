@@ -4,53 +4,41 @@
 	xsi:schemaLocation="http://java.sun.com/xml/ns/j2ee http://java.sun.com/xml/ns/j2ee/web-app_2_4.xsd"
 	version="2.4">
 
-	<filter id="stormAuthorizationFilter">
-		<filter-name>stormAuthorizationFilter</filter-name>
+	<filter>
+		<filter-name>StormAuthorizationFilter</filter-name>
 		<filter-class>it.grid.storm.gridhttps.webapp.StormAuthorizationFilter</filter-class>
-		<init-param>
-			<param-name>params</param-name>
-			<param-value>_JSON_ENCODED_STRING_VALUE_</param-value>
-		</init-param>
 	</filter>
-
-	<filter id="webdavSpringMiltonFilter">
-		<filter-name>webdavSpringMiltonFilter</filter-name>
+	
+	<filter>
+		<filter-name>WebdavSpringMiltonFilter</filter-name>
 		<filter-class>it.grid.storm.gridhttps.webapp.webdav.WebdavSpringMiltonFilter</filter-class>
 		<init-param>
-			<param-name>milton.exclude.paths</param-name>
-			<param-value>_TO_DEFINE_</param-value>
-		</init-param>
-		<init-param>
-			<param-name>context.filename</param-name>
+			<param-name>contextConfigLocation</param-name>
 			<param-value>webdavApplicationContext.xml</param-value>
 		</init-param>
 	</filter>
-
-	<filter id="fileTransferSpringMiltonFilter">
-		<filter-name>fileTransferSpringMiltonFilter</filter-name>
+	
+	<filter>
+		<filter-name>FileTransferSpringMiltonFilter</filter-name>
 		<filter-class>it.grid.storm.gridhttps.webapp.filetransfer.FileTransferSpringMiltonFilter</filter-class>
 		<init-param>
-			<param-name>milton.exclude.paths</param-name>
-			<param-value>_TO_DEFINE_</param-value>
-		</init-param>
-		<init-param>
-			<param-name>context.filename</param-name>
+			<param-name>contextConfigLocation</param-name>
 			<param-value>fileTransferApplicationContext.xml</param-value>
 		</init-param>
 	</filter>
 
 	<filter-mapping>
-		<filter-name>stormAuthorizationFilter</filter-name>
+		<filter-name>StormAuthorizationFilter</filter-name>
 		<url-pattern>/*</url-pattern>
 	</filter-mapping>
 
 	<filter-mapping>
-		<filter-name>webdavSpringMiltonFilter</filter-name>
+		<filter-name>WebdavSpringMiltonFilter</filter-name>
 		<url-pattern>/*</url-pattern>
 	</filter-mapping>
 
 	<filter-mapping>
-		<filter-name>fileTransferSpringMiltonFilter</filter-name>
+		<filter-name>FileTransferSpringMiltonFilter</filter-name>
 		<url-pattern>/fileTransfer/*</url-pattern>
 	</filter-mapping>
 
