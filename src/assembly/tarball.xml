@@ -2,6 +2,7 @@
 	xmlns="http://maven.apache.org/plugins/maven-assembly-plugin/assembly/1.1.2"
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/xsd/assembly-1.1.2.xsd">
+	<id>server</id>
 	<formats>
 		<format>tar.gz</format>
 	</formats>
@@ -18,7 +19,7 @@
 		</fileSet>
 		<fileSet>
 			<directory>.</directory>
-			<outputDirectory>${doc_installation_prefix}/${project.artifactId}-${project.version}
+			<outputDirectory>${doc_installation_prefix}/${artifactId}-${version}
 			</outputDirectory>
 			<includes>
 				<include>LICENSE.txt</include>
@@ -34,7 +35,7 @@
 
 		<fileSet>
 			<directory>target</directory>
-			<outputDirectory>${jar_installation_prefix}/${project.artifactId}
+			<outputDirectory>${jar_installation_prefix}/${artifactId}
 			</outputDirectory>
 			<includes>
 				<include>storm-gridhttps-server.jar</include>
@@ -57,7 +58,7 @@
 	<dependencySets>
 		<dependencySet>
 			<scope>runtime</scope>
-			<outputDirectory>${jar_installation_prefix}/${project.artifactId}/lib</outputDirectory>
+			<outputDirectory>${jar_installation_prefix}/${artifactId}/lib</outputDirectory>
 			<useProjectArtifact>false</useProjectArtifact>
 			<unpack>false</unpack>
 		</dependencySet>

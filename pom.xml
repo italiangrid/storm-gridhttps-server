@@ -36,6 +36,7 @@
 
 		<mavenCompilerVersion>3.0</mavenCompilerVersion>
 		<mavenJarVersion>2.4</mavenJarVersion>
+		<mavenAssemblyVersion>2.4</mavenAssemblyVersion>
 
 		<vomsApiVersion>3.0.0-rc2</vomsApiVersion>
 		<httpsutilsVersion>0.2.1</httpsutilsVersion>
@@ -78,6 +79,7 @@
 			</plugin>
 
 			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-jar-plugin</artifactId>
 				<version>${mavenJarVersion}</version>
 				<configuration>
@@ -92,12 +94,14 @@
 			</plugin>
 
 			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-assembly-plugin</artifactId>
+				<version>${mavenAssemblyVersion}</version>
 				<configuration>
 					<descriptors>
 						<descriptor>src/assembly/tarball.xml</descriptor>
 					</descriptors>
-					<finalName>storm-gridhttps-server</finalName>
+					<finalName>storm-gridhttps</finalName>
 				</configuration>
 				<executions>
 					<execution>
