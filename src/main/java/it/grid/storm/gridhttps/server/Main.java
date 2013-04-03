@@ -41,7 +41,7 @@ public class Main {
 		System.out.println("StoRM Gridhttps-server");
 		System.out.println("bootstrapping...");
 
-		waitfor(5000);
+//		waitfor(5000);
 
 		try {
 			parseCommandLine(args);
