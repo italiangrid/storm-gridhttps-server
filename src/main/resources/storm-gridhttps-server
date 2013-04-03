@@ -1,4 +1,6 @@
 #!/bin/sh
+# chkconfig: 345 99 01
+# description: storm-gridhttps-server startup script
 
 NAME=storm-gridhttps-server
 prog="java"
