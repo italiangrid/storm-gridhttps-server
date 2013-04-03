@@ -73,6 +73,10 @@ public class UserCredentials extends Object {
 	public String getUserDN() {
 		return isForcedAnonymous() ? getEmptyUserDN() : userDN;
 	}
+	
+	public String getRealUserDN() {
+		return userDN;
+	}
 
 	public ArrayList<String> getUserFQANS() {
 		return isForcedAnonymous() ? getEmptyUserFQANS() : userFQANS;

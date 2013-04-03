@@ -134,7 +134,7 @@ public class StormStandardFilter implements Filter {
 	}
 
 	private String getCommand(HttpHelper httpHelper, UserCredentials user) {
-		String userStr = user.isAnonymous() ? "anonymous" : user.getUserDN();
+		String userStr = user.getRealUserDN().isEmpty() ? "anonymous" : user.getRealUserDN();
 		String method = httpHelper.getRequestMethod();
 		String path = httpHelper.getRequestURI().getPath();
 		String destination = httpHelper.hasDestinationHeader() ? " to " + httpHelper.getDestinationURI().getPath() : "";

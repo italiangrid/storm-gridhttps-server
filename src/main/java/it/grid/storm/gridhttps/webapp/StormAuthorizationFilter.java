@@ -97,21 +97,21 @@ public class StormAuthorizationFilter implements Filter {
 	}
 
 	private String getAuthorizedMsg(HttpHelper httpHelper, UserCredentials user) {
-		String userStr = user.isAnonymous() ? "anonymous" : user.getUserDN();
+		String userStr = user.getRealUserDN().isEmpty() ? "anonymous" : user.getRealUserDN();
 		String method = httpHelper.getRequestMethod();
 		String path = httpHelper.getRequestURI().getPath();
 		return "User '" + userStr + "' is authorized to " + method + " " + path;
 	}
 	
 	private String getUnAuthorizedMsg(HttpHelper httpHelper, UserCredentials user, String reason) {
-		String userStr = user.isAnonymous() ? "anonymous" : user.getUserDN();
+		String userStr = user.getRealUserDN().isEmpty() ? "anonymous" : user.getRealUserDN();
 		String method = httpHelper.getRequestMethod();
 		String path = httpHelper.getRequestURI().getPath();
 		return "User '" + userStr + "' is NOT authorized to " + method + " " + path + ": " + reason;
 	}
 	
 	private String getCommand(HttpHelper httpHelper, UserCredentials user) {
-		String userStr = user.isAnonymous() ? "anonymous" : user.getUserDN();
+		String userStr = user.getRealUserDN().isEmpty() ? "anonymous" : user.getRealUserDN();
 		String method = httpHelper.getRequestMethod();
 		String path = httpHelper.getRequestURI().getPath();
 		String destination = httpHelper.hasDestinationHeader() ? " to " + httpHelper.getDestinationURI().getPath() : "";
