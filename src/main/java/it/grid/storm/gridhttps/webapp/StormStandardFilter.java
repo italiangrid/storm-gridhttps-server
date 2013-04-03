@@ -55,7 +55,6 @@ public class StormStandardFilter implements Filter {
 				if (log.isTraceEnabled()) {
 					log.trace("delegate to method handler: " + handler.getClass().getCanonicalName());
 				}
-				printCommand();
 				handler.process(manager, request, response);
 				if (response.getEntity() != null) {
 					manager.sendResponseEntity(response);
@@ -115,14 +114,16 @@ public class StormStandardFilter implements Filter {
 				response.setStatus(Status.SC_INTERNAL_SERVER_ERROR);
 			}
 		} finally {
-			printExitStatus(request, response);
+			printExitStatus(response);
 		}
 	}
 
-	private void printExitStatus(Request request, Response response) {
+	private void printExitStatus(Response response) {
+		HttpHelper httpHelper = new HttpHelper(MiltonServlet.request(), MiltonServlet.response());
+		UserCredentials user = httpHelper.getUser();
 		int code = response.getStatus().code;
 		String text = response.getStatus().text != null ? response.getStatus().text : "";
-		String msg = getCommand() + " exited with " + code + " " + text;
+		String msg = getCommand(httpHelper, user) + " exited with " + code + " " + text;
 		if (code >= 200 && code < 300) {
 			log.info(msg);
 		} else if (code >= 500 && code < 600) {
@@ -132,22 +133,13 @@ public class StormStandardFilter implements Filter {
 		}
 	}
 
-	private String getCommand() {
-		HttpHelper httpHelper = new HttpHelper(MiltonServlet.request(), MiltonServlet.response());
-		String msg = "";
-		msg += httpHelper.getRequestMethod();
-		msg += " " + httpHelper.getRequestURI().getPath();
-		if (httpHelper.hasDestinationHeader()) {
-			msg += " to " + httpHelper.getDestinationURI().getPath();
-		}
-		return msg;
-	}
-
-	private void printCommand() {
-		HttpHelper httpHelper = new HttpHelper(MiltonServlet.request(), MiltonServlet.response());
-		UserCredentials user = httpHelper.getUser();
+	private String getCommand(HttpHelper httpHelper, UserCredentials user) {
 		String userStr = user.isAnonymous() ? "anonymous" : user.getUserDN();
-		log.info(getCommand() + " from: " + userStr + " ip: " + MiltonServlet.request().getRemoteAddr());
+		String method = httpHelper.getRequestMethod();
+		String path = httpHelper.getRequestURI().getPath();
+		String destination = httpHelper.hasDestinationHeader() ? " to " + httpHelper.getDestinationURI().getPath() : "";
+		String ipSender = httpHelper.getRequest().getRemoteAddr();
+		return method + " " + path + destination + " from " + userStr + " ip " + ipSender;
 	}
 	
 }

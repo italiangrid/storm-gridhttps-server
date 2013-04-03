@@ -61,11 +61,14 @@ public class StormAuthorizationFilter implements Filter {
 		HttpHelper httpHelper = new HttpHelper((HttpServletRequest) request, (HttpServletResponse) response);
 		UserCredentials user = httpHelper.getUser();
 
+		String requestStr = getCommand(httpHelper, user);
+		log.info("Received: " + requestStr);
+		
 		String requestedPath = httpHelper.getRequestURI().getRawPath();
 		log.debug("Requested-URI: " + requestedPath);
 
 		if (requestedPath.contains("%20")) {
-			String errorMsg =  "Request URI '" + requestedPath + "' contains not allowed spaces";
+			String errorMsg =  "Request URI '" + requestedPath + "' contains not allowed spaces! ";
 			log.error(errorMsg + "Exiting..");
 			sendError(httpHelper.getResponse(), HttpServletResponse.SC_BAD_REQUEST, errorMsg);
 		} else if (isRootPath(requestedPath)) {
@@ -79,20 +82,43 @@ public class StormAuthorizationFilter implements Filter {
 			if (filter != null) {
 				AuthorizationStatus status = filter.isUserAuthorized(user);
 				if (status.isAuthorized()) {
-					log.debug("User is authorized to access the requested resource");
+					log.debug(getAuthorizedMsg(httpHelper, user));
 					chain.doFilter(request, response);
 				} else {
-					log.warn("User is not authorized to access the requested resource");
-					log.warn("Reason: " + status.getReason());
+					log.warn(getUnAuthorizedMsg(httpHelper, user, status.getReason()));
 					sendError(httpHelper.getResponse(), status.getErrorCode(), status.getReason());
 				}
 			} else {
 				String errorMsg = "Unable to identify the right handler to evaluate the requested path " + requestedPath;
+				log.error(errorMsg);
 				sendError(httpHelper.getResponse(), HttpServletResponse.SC_BAD_REQUEST, errorMsg);
 			}
 		}
 	}
 
+	private String getAuthorizedMsg(HttpHelper httpHelper, UserCredentials user) {
+		String userStr = user.isAnonymous() ? "anonymous" : user.getUserDN();
+		String method = httpHelper.getRequestMethod();
+		String path = httpHelper.getRequestURI().getPath();
+		return "User '" + userStr + "' is authorized to " + method + " " + path;
+	}
+	
+	private String getUnAuthorizedMsg(HttpHelper httpHelper, UserCredentials user, String reason) {
+		String userStr = user.isAnonymous() ? "anonymous" : user.getUserDN();
+		String method = httpHelper.getRequestMethod();
+		String path = httpHelper.getRequestURI().getPath();
+		return "User '" + userStr + "' is NOT authorized to " + method + " " + path + ": " + reason;
+	}
+	
+	private String getCommand(HttpHelper httpHelper, UserCredentials user) {
+		String userStr = user.isAnonymous() ? "anonymous" : user.getUserDN();
+		String method = httpHelper.getRequestMethod();
+		String path = httpHelper.getRequestURI().getPath();
+		String destination = httpHelper.hasDestinationHeader() ? " to " + httpHelper.getDestinationURI().getPath() : "";
+		String ipSender = httpHelper.getRequest().getRemoteAddr();
+		return method + " " + path + destination + " from " + userStr + " ip " + ipSender;
+	}
+	
 	private void processRootRequest(HttpHelper httpHelper, UserCredentials user) throws IOException {
 		String method = httpHelper.getRequestMethod();
 		if (method.equals("OPTIONS")) {
