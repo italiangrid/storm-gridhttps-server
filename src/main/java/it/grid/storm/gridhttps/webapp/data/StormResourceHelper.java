@@ -335,27 +335,8 @@ public class StormResourceHelper {
 		log.debug("Called doCopyFile()");
 		HttpHelper httpHelper = new HttpHelper(MiltonServlet.request(), MiltonServlet.response());
 		ArrayList<String> transferProtocols = new ArrayList<String>();
-		transferProtocols.add(httpHelper.getRequestProtocol());
-		/* prepareToGet on source file to lock the resource */
-		PtGOutputData outputPtG = StormBackendApi.prepareToGet(source.getFactory().getBackendApi(), source.getSurl().asString(), user,
-				transferProtocols);
-		try {
-			/* create destination */
-			transferProtocols.clear();
-			transferProtocols.add(httpHelper.getDestinationProtocol());
-			StormResourceHelper.doPut(newParent, newName, source.getInputStream(), user, transferProtocols);
-			/* release source resource */
-			StormBackendApi.releaseFile(source.getFactory().getBackendApi(), source.getSurl().asString(), outputPtG.getToken(), user);
-		} catch (RuntimeException e) {
-			StormBackendApi.abortRequest(source.getFactory().getBackendApi(), outputPtG.getToken(), user);
-			throw e;
-		} catch (RuntimeApiException e) {
-			StormBackendApi.abortRequest(source.getFactory().getBackendApi(), outputPtG.getToken(), user);
-			throw e;
-		} catch (StormResourceException e) {
-			StormBackendApi.abortRequest(source.getFactory().getBackendApi(), outputPtG.getToken(), user);
-			throw e;
-		}
+		transferProtocols.add(httpHelper.getDestinationProtocol());
+		StormResourceHelper.doPut(newParent, newName, source.getInputStream(), user, transferProtocols);
 	}
 
 	/* STATUS OF PTG */
