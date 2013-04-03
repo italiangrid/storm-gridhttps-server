@@ -28,29 +28,17 @@
 # General settings 
 # ============================
 
-# GridHTTPs context deploy folder
-# Default: /var/lib/storm
-#webapp-directory = /var/lib/storm
-
 # GridHTTPs logging configuration file
 # Default: /etc/storm/gridhttps-server/logback.xml
 #log.configuration-file = /etc/storm/gridhttps-server/logback.xml
 
-# Maximum number of active threads for webdav-server's requests
+# Maximum number of active threads for server's requests
 # Default: 150
-#webdav.max.active.threads = 150
+#max.active.threads = 150
 
-# Maximum number of queued threads for webdav-server's requests
+# Maximum number of queued threads for server's requests
 # Default: 300
-#webdav.max.queued.threads = 300
-
-# Maximum number of active threads for mapping-servlet's requests
-# Default: 100
-#mapping.max.active.threads = 100
-
-# Maximum number of queued threads for mapping-server's requests
-# Default: 200
-#mapping.max.queued.threads = 200
+#max.queued.threads = 300
 
 [connectors]
 
@@ -131,4 +119,8 @@ backend.hostname =
 
 
 #Change-log
+#02-04-2013 Removed webapp-directory
+#02-04-2013 Unified webdav.max.active.threads, webdav.max.queued.threads, mapping.max.active.threads and mapping.max.queued.threads into max.active.threads and max.queued.threads for the single server running 
 #28-03-2013 Removed service>webdav.context-path and service>filetransfer.context-path
+
+

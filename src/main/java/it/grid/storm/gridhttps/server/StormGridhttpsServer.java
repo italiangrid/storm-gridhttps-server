@@ -113,8 +113,8 @@ public class StormGridhttpsServer {
 	private QueuedThreadPool getThreadPool() {
 		QueuedThreadPool threadPool = new QueuedThreadPool();
 		threadPool.setMaxIdleTimeMs(20000);
-		threadPool.setMaxThreads(gridhttpsInfo.getDavActiveThreadsMax());
-		threadPool.setMaxQueued(gridhttpsInfo.getDavQueuedThreadsMax());
+		threadPool.setMaxThreads(gridhttpsInfo.getServerActiveThreadsMax());
+		threadPool.setMaxQueued(gridhttpsInfo.getServerQueuedThreadsMax());
 		return threadPool;
 	}
 

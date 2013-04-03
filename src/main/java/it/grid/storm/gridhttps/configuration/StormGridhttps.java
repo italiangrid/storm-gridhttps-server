@@ -35,12 +35,8 @@ public class StormGridhttps {
 	private boolean computeChecksum;
 	private String checksumType;
 	
-	private int mapActiveThreadsMin;
-	private int mapActiveThreadsMax;
-	private int mapQueuedThreadsMax;
-	
-	private int davActiveThreadsMax;
-	private int davQueuedThreadsMax;
+	private int serverActiveThreadsMax;
+	private int serverQueuedThreadsMax;
 
 	public StormGridhttps() {
 		this.setHttpPort(DefaultConfiguration.SERVER_WEBAPP_HTTP_PORT);
@@ -60,11 +56,8 @@ public class StormGridhttps {
 		this.setRootDirectory(new File(DefaultConfiguration.WEBAPP_GPFS_ROOTDIRECTORY));
 		this.setComputeChecksum(DefaultConfiguration.WEBAPP_COMPUTE_CHECKSUM);
 		this.setChecksumType(DefaultConfiguration.WEBAPP_CHECKSUM_TYPE);
-		this.setDavActiveThreadsMax(DefaultConfiguration.DAV_ACTIVE_THREADS_MAX);
-		this.setDavQueuedThreadsMax(DefaultConfiguration.DAV_QUEUED_THREADS_MAX);
-		this.setMapActiveThreadsMin(DefaultConfiguration.MAP_ACTIVE_THREADS_MIN);
-		this.setMapActiveThreadsMax(DefaultConfiguration.MAP_ACTIVE_THREADS_MAX);
-		this.setMapQueuedThreadsMax(DefaultConfiguration.MAP_QUEUED_THREADS_MAX);
+		this.setServerActiveThreadsMax(DefaultConfiguration.SERVER_ACTIVE_THREADS_MAX);
+		this.setServerQueuedThreadsMax(DefaultConfiguration.SERVER_QUEUED_THREADS_MAX);
 	}
 
 	public String getHostname() {
@@ -146,9 +139,7 @@ public class StormGridhttps {
 			throw new InitException("gridhttps ssloptions host key file is empty!");
 		if (ssloptions.getTrustStoreDirectory().isEmpty())
 			throw new InitException("gridhttps ssloptions trust store directory is empty!");
-		if (mapActiveThreadsMax <= 0)
-			throw new InitException("maximum number of threads for mapping-servlet's requests is not valid!");
-		if (davActiveThreadsMax <= 0)
+		if (serverActiveThreadsMax <= 0)
 			throw new InitException("maximum number of threads for webdav-server's requests is not valid!");
 	}
 	
@@ -191,45 +182,21 @@ public class StormGridhttps {
 	public void setChecksumType(String checksumType) {
 		this.checksumType = checksumType;
 	}
-
-	public int getMapQueuedThreadsMax() {
-		return mapQueuedThreadsMax;
-	}
-
-	public void setMapQueuedThreadsMax(int mapQueuedThreadsMax) {
-		this.mapQueuedThreadsMax = mapQueuedThreadsMax;
-	}
-
-	public int getDavQueuedThreadsMax() {
-		return davQueuedThreadsMax;
-	}
-
-	public void setDavQueuedThreadsMax(int davQueuedThreadsMax) {
-		this.davQueuedThreadsMax = davQueuedThreadsMax;
-	}
-
-	public int getMapActiveThreadsMin() {
-		return mapActiveThreadsMin;
-	}
-
-	public void setMapActiveThreadsMin(int mapActiveThreadsMin) {
-		this.mapActiveThreadsMin = mapActiveThreadsMin;
-	}
 	
-	public int getMapActiveThreadsMax() {
-		return mapActiveThreadsMax;
+	public int getServerQueuedThreadsMax() {
+		return serverQueuedThreadsMax;
 	}
 
-	public void setMapActiveThreadsMax(int mapActiveThreadsMax) {
-		this.mapActiveThreadsMax = mapActiveThreadsMax;
+	public void setServerQueuedThreadsMax(int serverQueuedThreadsMax) {
+		this.serverQueuedThreadsMax = serverQueuedThreadsMax;
 	}
 
-	public int getDavActiveThreadsMax() {
-		return davActiveThreadsMax;
+	public int getServerActiveThreadsMax() {
+		return serverActiveThreadsMax;
 	}
 
-	public void setDavActiveThreadsMax(int davActiveThreadsMax) {
-		this.davActiveThreadsMax = davActiveThreadsMax;
+	public void setServerActiveThreadsMax(int serverActiveThreadsMax) {
+		this.serverActiveThreadsMax = serverActiveThreadsMax;
 	}
 
 }

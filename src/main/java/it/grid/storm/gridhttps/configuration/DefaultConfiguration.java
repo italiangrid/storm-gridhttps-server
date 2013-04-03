@@ -36,15 +36,9 @@ public class DefaultConfiguration {
 	public final static String 		SERVER_WEBAPP_HTTPS_KEY_FILE = "/etc/grid-security/gridhttps/hostkey.pem";
 	public final static String 		SERVER_WEBAPP_HTTPS_TRUST_STORE_DIRECTORY = "/etc/grid-security/certificates";
 	public final static long 		SERVER_WEBAPP_TRUST_STORE_REFRESH_INTERVAL = 600000L;
-	public final static String 		SERVER_WEBAPP_DIRECTORY = "/var/lib/storm";
-	public final static String 		SERVER_PATH_TO_WEBAPP = "gridhttps-server/webapp";
-	
-	public final static int 		MAP_ACTIVE_THREADS_MIN = 10;
-	public final static int 		MAP_ACTIVE_THREADS_MAX = 100;
-	public final static int 		MAP_QUEUED_THREADS_MAX = 200;
 		
-	public final static int 		DAV_ACTIVE_THREADS_MAX = 150;
-	public final static int 		DAV_QUEUED_THREADS_MAX = 300;
+	public final static int 		SERVER_ACTIVE_THREADS_MAX = 150;
+	public final static int 		SERVER_QUEUED_THREADS_MAX = 300;
 	
 	
 	/* webapp (webdav+filetransfer) */

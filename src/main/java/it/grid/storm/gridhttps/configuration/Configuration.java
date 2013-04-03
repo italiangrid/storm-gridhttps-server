@@ -46,14 +46,10 @@ public class Configuration {
 		if (configuration.get("service").containsKey("log.configuration-file"))
 			getGridhttpsInfo().setLogFile(configuration.get("service", "log.configuration-file"));
 		
-		if (configuration.get("service").containsKey("mapping.max.active.threads"))
-			getGridhttpsInfo().setMapActiveThreadsMax(configuration.get("service", "mapping.max.active.threads", int.class));
-		if (configuration.get("service").containsKey("mapping.max.queued.threads"))
-			getGridhttpsInfo().setMapQueuedThreadsMax(configuration.get("service", "mapping.max.queued.threads", int.class));
-		if (configuration.get("service").containsKey("webdav.max.active.threads"))
-			getGridhttpsInfo().setDavActiveThreadsMax(configuration.get("service", "webdav.max.active.threads", int.class));
-		if (configuration.get("service").containsKey("webdav.max.queued.threads"))
-			getGridhttpsInfo().setDavQueuedThreadsMax(configuration.get("service", "webdav.max.queued.threads", int.class));
+		if (configuration.get("service").containsKey("max.active.threads"))
+			getGridhttpsInfo().setServerActiveThreadsMax(configuration.get("service", "max.active.threads", int.class));
+		if (configuration.get("service").containsKey("max.queued.threads"))
+			getGridhttpsInfo().setServerQueuedThreadsMax(configuration.get("service", "max.queued.threads", int.class));
 		
 		/* connectors */
 		if (!configuration.keySet().contains("connectors"))
