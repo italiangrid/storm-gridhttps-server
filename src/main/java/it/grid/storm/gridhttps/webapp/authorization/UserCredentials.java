@@ -81,6 +81,16 @@ public class UserCredentials extends Object {
 	public ArrayList<String> getUserFQANS() {
 		return isForcedAnonymous() ? getEmptyUserFQANS() : userFQANS;
 	}
+	
+	public String getUserFQANSAsStr() {
+		if ((isForcedAnonymous()) || (userFQANS.isEmpty()))
+			return "";
+		String out = userFQANS.get(0);
+		for (int i=1; i<userFQANS.size(); i++) {
+			out += userFQANS.get(i);
+		}
+		return out;
+	}
 
 	public boolean isAnonymous() {
 		return isForcedAnonymous() || (getHttpHelper().isHttp() && isUserDNEmpty() && isUserFQANSEmpty());

@@ -111,7 +111,9 @@ public class StormAuthorizationFilter implements Filter {
 	}
 	
 	private String getCommand(HttpHelper httpHelper, UserCredentials user) {
+		String fqans = user.getUserFQANSAsStr();
 		String userStr = user.getRealUserDN().isEmpty() ? "anonymous" : user.getRealUserDN();
+		userStr += fqans.isEmpty() ? "" : " with fqans '" + fqans + "'";
 		String method = httpHelper.getRequestMethod();
 		String path = httpHelper.getRequestURI().getPath();
 		String destination = httpHelper.hasDestinationHeader() ? " to " + httpHelper.getDestinationURI().getPath() : "";
