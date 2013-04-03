@@ -64,10 +64,12 @@ public class StormStandardFilter implements Filter {
 			}
 		} catch (IllegalArgumentException ex) {
 			log.error("IllegalArgumentException: " + ex.getMessage());
+			System.err.println(ex.getStackTrace());
 			response.sendError(Status.SC_INTERNAL_SERVER_ERROR, ex.getMessage());
 			response.setStatus(Status.SC_INTERNAL_SERVER_ERROR);
 		} catch (RuntimeException ex) {
 			log.error("RuntimeException: " + ex.getMessage());
+			System.err.println(ex.getStackTrace());
 			response.sendError(Status.SC_INTERNAL_SERVER_ERROR, ex.getMessage());
 			response.setStatus(Status.SC_INTERNAL_SERVER_ERROR);
 		} catch (TooManyResultsException ex) {
@@ -76,6 +78,7 @@ public class StormStandardFilter implements Filter {
 			response.setStatus(Status.SC_SERVICE_UNAVAILABLE);
 		} catch (RuntimeApiException ex) {
 			log.error("RuntimeApiException: " + ex.getReason());
+			System.err.println(ex.getStackTrace());
 			response.sendError(Status.SC_INTERNAL_SERVER_ERROR, ex.getReason());
 			response.setStatus(Status.SC_INTERNAL_SERVER_ERROR);
 		} catch (StormRequestFailureException ex) {
