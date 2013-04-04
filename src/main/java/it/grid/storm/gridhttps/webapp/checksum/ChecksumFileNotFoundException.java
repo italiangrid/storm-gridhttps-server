@@ -18,22 +18,18 @@ public class ChecksumFileNotFoundException extends RuntimeException {
     private static final long serialVersionUID = 9148740822736185248L;
 
     public ChecksumFileNotFoundException() {
-        // TODO Auto-generated constructor stub
     }
 
     public ChecksumFileNotFoundException(String message) {
         super(message);
-        // TODO Auto-generated constructor stub
     }
 
     public ChecksumFileNotFoundException(Throwable cause) {
         super(cause);
-        // TODO Auto-generated constructor stub
     }
 
     public ChecksumFileNotFoundException(String message, Throwable cause) {
         super(message, cause);
-        // TODO Auto-generated constructor stub
     }
 
 }

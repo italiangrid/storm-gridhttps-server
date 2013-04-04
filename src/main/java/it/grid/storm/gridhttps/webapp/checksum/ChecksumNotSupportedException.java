@@ -19,22 +19,18 @@ public class ChecksumNotSupportedException extends RuntimeException {
 
     public ChecksumNotSupportedException() {
         super();
-        // TODO Auto-generated constructor stub
     }
 
     public ChecksumNotSupportedException(String message, Throwable cause) {
         super(message, cause);
-        // TODO Auto-generated constructor stub
     }
 
     public ChecksumNotSupportedException(String message) {
         super(message);
-        // TODO Auto-generated constructor stub
     }
 
     public ChecksumNotSupportedException(Throwable cause) {
         super(cause);
-        // TODO Auto-generated constructor stub
     }
 
 }

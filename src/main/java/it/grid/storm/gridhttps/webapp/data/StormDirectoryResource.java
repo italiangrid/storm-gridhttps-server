@@ -218,7 +218,6 @@ public class StormDirectoryResource extends StormResource implements MakeCollect
 
 	@Override
 	public boolean isLockedOutRecursive(Request request) {
-		// TODO Auto-generated method stub
 		return false;
 	}
 
