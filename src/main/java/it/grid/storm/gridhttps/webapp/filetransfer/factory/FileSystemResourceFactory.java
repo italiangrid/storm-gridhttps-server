@@ -16,9 +16,7 @@ import it.grid.storm.gridhttps.configuration.Configuration;
 import it.grid.storm.gridhttps.webapp.data.StormFactory;
 import it.grid.storm.gridhttps.webapp.data.StormResource;
 import it.grid.storm.gridhttps.webapp.webdav.factory.StormResourceFactory;
-import it.grid.storm.storagearea.StorageArea;
 import it.grid.storm.xmlrpc.ApiException;
-import it.grid.storm.xmlrpc.outputdata.LsOutputData.SurlInfo;
 
 import java.io.File;
 import java.net.UnknownHostException;
@@ -38,23 +36,13 @@ public final class FileSystemResourceFactory extends StormFactory {
 	}
 
 	@Override
-	public StormResource getDirectoryResource(File directory, StorageArea storageArea) {
-		return new FileTransferDirectoryResource(this, directory, storageArea);
+	public StormResource getDirectoryResource(File directory) {
+		return new FileTransferDirectoryResource(this, directory);
 	}
 
 	@Override
-	public StormResource getFileResource(File file, StorageArea storageArea) {
-		return new FileTransferFileResource(this, file, storageArea);
-	}
-
-	@Override
-	public StormResource getFileResource(File file, StorageArea storageArea, SurlInfo surlinfo) {
-		return new FileTransferFileResource(this, file, storageArea, surlinfo);
-	}
-
-	@Override
-	public StormResource getDirectoryResource(File directory, StorageArea storageArea, SurlInfo surlinfo) {
-		return new FileTransferDirectoryResource(this, directory, storageArea, surlinfo);
+	public StormResource getFileResource(File file) {
+		return new FileTransferFileResource(this, file);
 	}
 
 }

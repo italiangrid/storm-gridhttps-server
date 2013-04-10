@@ -166,13 +166,9 @@ public abstract class StormFactory implements ResourceFactory {
 		return path.replaceFirst(File.separator + getContextPath(), "");
 	}
 
-	public abstract StormResource getDirectoryResource(File directory, StorageArea storageArea);
+	public abstract StormResource getDirectoryResource(File directory);
 	
-	public abstract StormResource getDirectoryResource(File directory, StorageArea storageArea, SurlInfo surlinfo);
-
-	public abstract StormResource getFileResource(File file, StorageArea storageArea);
-
-	public abstract StormResource getFileResource(File file, StorageArea storageArea, SurlInfo surlinfo);
+	public abstract StormResource getFileResource(File file);
 
 	private boolean isDirectory(TFileType type) {
 		if (type != null) {
@@ -184,7 +180,7 @@ public abstract class StormFactory implements ResourceFactory {
 	public StormResource resolveFile(String host, File file, StorageArea storageArea) {
 		SurlInfo detail = null;
 		try {
-			detail = StormResourceHelper.doLimitedLsDetailed(this.getBackendApi(), file).get(0);
+			detail = StormResourceHelper.filterLs(StormResourceHelper.doLimitedLsDetailed(file).getInfos()).get(0);
 			return resolveFile(detail, storageArea);
 		} catch (RuntimeApiException e) {
 			log.error("retrieving detailed info for '" + file + "': " + e.getReason());
@@ -216,9 +212,9 @@ public abstract class StormFactory implements ResourceFactory {
 					if (surlInfo.getStfn().startsWith(storageArea.getStfnRoot())) {
 						File file = new File(storageArea.getRealPath(surlInfo.getStfn()));
 						if (isDirectory(surlInfo.getType())) {
-							r = getDirectoryResource(file, storageArea, surlInfo);
+							r = getDirectoryResource(file);
 						} else {
-							r = getFileResource(file, storageArea, surlInfo);
+							r = getFileResource(file);
 						}
 					} else {
 						log.error("surl-info does not match with given storage-area fsRoot!");

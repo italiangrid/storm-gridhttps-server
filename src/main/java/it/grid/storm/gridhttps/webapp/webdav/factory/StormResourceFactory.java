@@ -15,9 +15,7 @@ package it.grid.storm.gridhttps.webapp.webdav.factory;
 import it.grid.storm.gridhttps.configuration.Configuration;
 import it.grid.storm.gridhttps.webapp.data.StormFactory;
 import it.grid.storm.gridhttps.webapp.data.StormResource;
-import it.grid.storm.storagearea.StorageArea;
 import it.grid.storm.xmlrpc.ApiException;
-import it.grid.storm.xmlrpc.outputdata.LsOutputData.SurlInfo;
 
 import java.io.File;
 import java.net.UnknownHostException;
@@ -36,23 +34,13 @@ public final class StormResourceFactory extends StormFactory {
 	}
 
 	@Override
-	public StormResource getDirectoryResource(File directory, StorageArea storageArea) {
-		return new WebdavDirectoryResource(this, directory, storageArea);
+	public StormResource getDirectoryResource(File directory) {
+		return new WebdavDirectoryResource(this, directory);
 	}
 
 	@Override
-	public StormResource getFileResource(File file, StorageArea storageArea) {
-		return new WebdavFileResource(this, file, storageArea);
-	}
-
-	@Override
-	public StormResource getFileResource(File file, StorageArea storageArea, SurlInfo surlinfo) {
-		return new WebdavFileResource(this, file, storageArea, surlinfo);
-	}
-
-	@Override
-	public StormResource getDirectoryResource(File directory, StorageArea storageArea, SurlInfo surlinfo) {
-		return new WebdavDirectoryResource(this, directory, storageArea, surlinfo);
+	public StormResource getFileResource(File file) {
+		return new WebdavFileResource(this, file);
 	}
 
 }

@@ -26,7 +26,6 @@ import it.grid.storm.gridhttps.webapp.data.exceptions.StormRequestFailureExcepti
 import it.grid.storm.gridhttps.webapp.webdav.factory.html.StormHtmlRootPage;
 import it.grid.storm.storagearea.StorageArea;
 import it.grid.storm.storagearea.StorageAreaManager;
-import it.grid.storm.xmlrpc.outputdata.PingOutputData;
 
 import java.io.File;
 import java.io.IOException;
@@ -54,6 +53,7 @@ public class StormAuthorizationFilter implements Filter {
 
 	public void init(FilterConfig fc) throws ServletException {
 		log.info("StormAuthorizationFilter - Init");
+		StormResourceHelper.init(Configuration.getBackendInfo().getHostname(), Configuration.getBackendInfo().getPort());
 	}
 
 	public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
@@ -63,12 +63,12 @@ public class StormAuthorizationFilter implements Filter {
 
 		String requestStr = getCommand(httpHelper, user);
 		log.info("Received: " + requestStr);
-		
+
 		String requestedPath = httpHelper.getRequestURI().getRawPath();
 		log.debug("Requested-URI: " + requestedPath);
 
 		if (requestedPath.contains("%20")) {
-			String errorMsg =  "Request URI '" + requestedPath + "' contains not allowed spaces! ";
+			String errorMsg = "Request URI '" + requestedPath + "' contains not allowed spaces! ";
 			log.error(errorMsg + "Exiting..");
 			sendError(httpHelper.getResponse(), HttpServletResponse.SC_BAD_REQUEST, errorMsg);
 		} else if (isRootPath(requestedPath)) {
@@ -102,14 +102,14 @@ public class StormAuthorizationFilter implements Filter {
 		String path = httpHelper.getRequestURI().getPath();
 		return "User '" + userStr + "' is authorized to " + method + " " + path;
 	}
-	
+
 	private String getUnAuthorizedMsg(HttpHelper httpHelper, UserCredentials user, String reason) {
 		String userStr = user.getRealUserDN().isEmpty() ? "anonymous" : user.getRealUserDN();
 		String method = httpHelper.getRequestMethod();
 		String path = httpHelper.getRequestURI().getPath();
 		return "User '" + userStr + "' is NOT authorized to " + method + " " + path + ": " + reason;
 	}
-	
+
 	private String getCommand(HttpHelper httpHelper, UserCredentials user) {
 		String fqans = user.getUserFQANSAsStr();
 		String userStr = user.getRealUserDN().isEmpty() ? "anonymous" : user.getRealUserDN();
@@ -120,11 +120,11 @@ public class StormAuthorizationFilter implements Filter {
 		String ipSender = httpHelper.getRequest().getRemoteAddr();
 		return method + " " + path + destination + " from " + userStr + " ip " + ipSender;
 	}
-	
+
 	private void processRootRequest(HttpHelper httpHelper, UserCredentials user) throws IOException {
 		String method = httpHelper.getRequestMethod();
 		if (method.equals("OPTIONS")) {
-			doPing();
+			doPing(user);
 			sendDavHeader(httpHelper.getResponse());
 		} else if (method.equals("GET")) {
 			sendRootPage(httpHelper, user);
@@ -135,7 +135,8 @@ public class StormAuthorizationFilter implements Filter {
 		try {
 			if (isFileTransferRequest(path)) {
 				log.debug("Received a file-transfer request");
-				return new FileTransferAuthorizationFilter(httpHelper, File.separator + Configuration.getGridhttpsInfo().getFiletransferContextPath());
+				return new FileTransferAuthorizationFilter(httpHelper, File.separator
+						+ Configuration.getGridhttpsInfo().getFiletransferContextPath());
 			} else {
 				log.debug("Received a webdav request");
 				return new WebDAVAuthorizationFilter(httpHelper);
@@ -172,15 +173,9 @@ public class StormAuthorizationFilter implements Filter {
 		}
 	}
 
-	private void doPing() {
-		String hostnameBE = Configuration.getBackendInfo().getHostname();
-		int portBE = Configuration.getBackendInfo().getPort();
-		log.debug("ping " + hostnameBE + ":" + portBE);
+	private void doPing(UserCredentials user) {
 		try {
-			PingOutputData output = StormResourceHelper.doPing(hostnameBE, portBE);
-			log.debug(output.getBeOs());
-			log.debug(output.getBeVersion());
-			log.debug(output.getVersionInfo());
+			StormResourceHelper.doPing(user, Configuration.getBackendInfo().getHostname(), Configuration.getBackendInfo().getPort());
 		} catch (RuntimeApiException e) {
 			log.error(e.getMessage());
 		} catch (StormRequestFailureException e) {

@@ -12,7 +12,6 @@
  */
 package it.grid.storm.gridhttps.webapp.webdav.authorization.methods;
 
-import it.grid.storm.gridhttps.configuration.Configuration;
 import it.grid.storm.gridhttps.webapp.HttpHelper;
 import it.grid.storm.gridhttps.webapp.authorization.AuthorizationStatus;
 import it.grid.storm.gridhttps.webapp.authorization.UserCredentials;
@@ -20,35 +19,53 @@ import it.grid.storm.gridhttps.webapp.authorization.methods.AbstractMethodAuthor
 import it.grid.storm.gridhttps.webapp.data.StormResourceHelper;
 import it.grid.storm.gridhttps.webapp.data.exceptions.RuntimeApiException;
 import it.grid.storm.gridhttps.webapp.data.exceptions.StormRequestFailureException;
-import it.grid.storm.xmlrpc.outputdata.PingOutputData;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class OptionsMethodAuthorization extends AbstractMethodAuthorization {
 
-	public OptionsMethodAuthorization(HttpHelper httpHelper) {
+	private String hostname;
+	private int port;
+
+	public OptionsMethodAuthorization(HttpHelper httpHelper, String hostname, int port) {
 		super(httpHelper);
+		this.setHostname(hostname);
+		this.setPort(port);
 	}
 
 	private static final Logger log = LoggerFactory.getLogger(OptionsMethodAuthorization.class);
 
 	@Override
 	public AuthorizationStatus isUserAuthorized(UserCredentials user) {
-		String hostnameBE = Configuration.getBackendInfo().getHostname(); 
-		int portBE = Configuration.getBackendInfo().getPort();
-		/* ping storm-backend if method = OPTIONS */
-		log.debug("ping " + hostnameBE + ":" + portBE);
+		this.doPing();
+		return AuthorizationStatus.AUTHORIZED();
+	}
+
+	private void doPing() {
+		// PING
 		try {
-			PingOutputData output = StormResourceHelper.doPing(hostnameBE, portBE, user);
-			log.debug(output.getBeOs());
-			log.debug(output.getBeVersion());
-			log.debug(output.getVersionInfo());
+			StormResourceHelper.doPing(this.getHTTPHelper().getUser(), this.getHostname(), this.getPort());
 		} catch (RuntimeApiException e) {
 			log.error(e.getMessage() + ": " + e.getReason());
 		} catch (StormRequestFailureException e) {
 			log.error(e.getMessage() + ": " + e.getReason());
 		}
-		return AuthorizationStatus.AUTHORIZED();
+	}
+
+	public String getHostname() {
+		return hostname;
+	}
+
+	private void setHostname(String hostname) {
+		this.hostname = hostname;
+	}
+
+	public int getPort() {
+		return port;
+	}
+
+	private void setPort(int port) {
+		this.port = port;
 	}
 }

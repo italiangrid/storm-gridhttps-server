@@ -18,7 +18,9 @@ import io.milton.http.exceptions.BadRequestException;
 import io.milton.http.exceptions.ConflictException;
 import io.milton.http.exceptions.NotAuthorizedException;
 import it.grid.storm.gridhttps.webapp.data.StormFactory;
-import it.grid.storm.storagearea.StorageArea;
+import it.grid.storm.gridhttps.webapp.data.exceptions.RuntimeApiException;
+import it.grid.storm.gridhttps.webapp.data.exceptions.StormRequestFailureException;
+import it.grid.storm.gridhttps.webapp.data.exceptions.TooManyResultsException;
 import it.grid.storm.xmlrpc.outputdata.LsOutputData.SurlInfo;
 
 import java.io.*;
@@ -30,20 +32,12 @@ public class StormFileResource extends StormResource {
 
 	private static final Logger log = LoggerFactory.getLogger(StormFileResource.class);
 	
-	public StormFileResource(StormFactory factory, File file, StorageArea storageArea) {
-		super(factory.getLocalhostname(), factory, file, storageArea);
-	}
-	
-	public StormFileResource(StormFactory factory, File file, StorageArea storageArea, SurlInfo info) {
-		super(factory.getLocalhostname(), factory, file, storageArea, info);
+	public StormFileResource(StormFactory factory, File file) {
+		super(factory.getLocalhostname(), factory, file);
 	}
 	
 	public StormFileResource(StormDirectoryResource parentDir, String childFileName) {
-		this(parentDir.getFactory(), new File(parentDir.getFile(), childFileName), parentDir.getStorageArea());
-	}
-	
-	public StormFileResource(StormDirectoryResource parentDir, String childFileName, SurlInfo info) {
-		this(parentDir.getFactory(), new File(parentDir.getFile(), childFileName), parentDir.getStorageArea(), info);
+		this(parentDir.getFactory(), new File(parentDir.getFile(), childFileName));
 	}
 
 	public Long getContentLength() {
@@ -68,16 +62,21 @@ public class StormFileResource extends StormResource {
 	}
 
 	public void moveTo(StormDirectoryResource newParent, String newName) throws NotAuthorizedException, ConflictException, BadRequestException {
-		StormResourceHelper.doMoveTo(this, newParent, newName);
+		StormResourceHelper.doMove(this, newParent, newName);
 		setFile(new File(newParent.getFile(), newName));
 	}
 
 	public void copyTo(StormDirectoryResource newParent, String newName) throws NotAuthorizedException, ConflictException, BadRequestException {
 		StormResourceHelper.doCopyFile(this, newParent, newName);
 	}
-	
+
 	public void replaceContent(InputStream in, Long length) throws BadRequestException, ConflictException, NotAuthorizedException {		
 		StormResourceHelper.doPutOverwrite(this, in);
+	}
+
+	@Override
+	public SurlInfo getSurlInfo() throws RuntimeApiException, StormRequestFailureException, TooManyResultsException {
+		return StormResourceHelper.filterLs(StormResourceHelper.doLimitedLsDetailed(this.getFile()).getInfos()).get(0);
 	}
 
 }

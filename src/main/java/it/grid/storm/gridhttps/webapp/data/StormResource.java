@@ -21,19 +21,14 @@ import it.grid.storm.gridhttps.webapp.data.Surl;
 import it.grid.storm.gridhttps.webapp.data.exceptions.RuntimeApiException;
 import it.grid.storm.gridhttps.webapp.data.exceptions.StormRequestFailureException;
 import it.grid.storm.gridhttps.webapp.data.exceptions.TooManyResultsException;
-import it.grid.storm.srm.types.Recursion;
-import it.grid.storm.srm.types.TCheckSumType;
-import it.grid.storm.srm.types.TCheckSumValue;
-import it.grid.storm.srm.types.TReturnStatus;
-import it.grid.storm.srm.types.TSizeInBytes;
 import it.grid.storm.storagearea.StorageArea;
+import it.grid.storm.storagearea.StorageAreaManager;
 import it.grid.storm.xmlrpc.outputdata.LsOutputData.SurlInfo;
 
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
-import java.util.ArrayList;
 import java.util.Date;
 
 import org.slf4j.Logger;
@@ -43,106 +38,51 @@ public abstract class StormResource implements Resource, DigestResource, PropFin
 
 	private static final Logger log = LoggerFactory.getLogger(StormResource.class);
 
-	public static final int SINGLE_DETAILED = 0;
-	public static final int RECURSIVE_UNDETAILED = 1;
-	public static final int RECURSIVE_DETAILED = 2;
-
 	private File file;
 	private StormFactory factory;
 	private String host;
-	private Surl surl;
-	private StorageArea storageArea;
-	private TCheckSumType checkSumType;
-	private TCheckSumValue checkSumValue;
-	private TSizeInBytes size;
-	private TReturnStatus status;
-	private String stfn;
-	private Date lastModified;
-	private Date creationDate;
-	private String name;
 
-	public StormResource(String host, StormFactory factory, File file, StorageArea storageArea) {
-		setName(file.getName());
-		setHost(host);
-		setFactory(factory);
-		setFile(file);
-		setStorageArea(storageArea);
-		setSurl(new Surl(getFile(), getStorageArea()));
-		try {
-			importInfo(StormResource.loadSurlInfo(this, SINGLE_DETAILED));
-		} catch (TooManyResultsException e) {
-			log.warn("TooManyResultsException with a ls -d is impossible! How did you arrive here??");
-		}
+	public StormResource(String host, StormFactory factory, File file) {
+		this.setHost(host);
+		this.setFactory(factory);
+		this.setFile(file);
 	}
-
-	public StormResource(String host, StormFactory factory, File file, StorageArea storageArea, SurlInfo info) {
-		setName(file.getName());
-		setHost(host);
-		setFactory(factory);
-		setFile(file);
-		setStorageArea(storageArea);
-		setSurl(new Surl(getFile(), getStorageArea()));
-		importInfo(info);
-	}
-
-	public void importInfo(SurlInfo info) {
-		if (info == null) {
-			log.warn("StormResource failed to initialize surl-info attributes! info is null! Maybe " + this.getStfn() + " doesn't exist!");
-			return;
-		}
-		setCheckSumType(info.getCheckSumType());
-		setCheckSumValue(info.getCheckSumValue());
-		setStatus(info.getStatus());
-		setSize(info.getSize());
-		setStfn(info.getStfn());
-		setLastModified(info.getModificationTime());
-		if (info.getCreationTime() != null) {
-			setCreationDate(info.getCreationTime());
-		} else {
-			log.debug("Creation date not found! set equals to ModificationTime.");
-			setCreationDate(info.getModificationTime());
-		}
-	}
-
-	protected void setHost(String host) {
+	
+	private void setHost(String host) {
 		this.host = host;
 	}
 
-	protected void setFactory(StormFactory factory) {
+	private void setFactory(StormFactory factory) {
 		this.factory = factory;
 	}
 
-	protected void setSurl(Surl surl) {
-		this.surl = surl;
+	protected void setFile(File file) {
+		this.file = file;
 	}
-
-	protected void setStorageArea(StorageArea storageArea) {
-		this.storageArea = storageArea;
-	}
-
-	protected void setFile(File newFile) {
-		this.file = newFile;
-	}
-
+	
 	public String getHost() {
 		return host;
 	}
 
 	public File getFile() {
-		return file;
+		return this.file;
 	}
 
+	public StorageArea getStorageArea() {
+		return StorageAreaManager.getMatchingSA(this.getFile());
+	}
+	
 	public StormFactory getFactory() {
 		return factory;
 	}
 
 	public String getUniqueId() {
-		String id = getModifiedDate() + "_" + getSize() + "_" + getStfn();
+		String id = this.getFile().toString() + "_" + this.getSurl().asString();
 		return id.hashCode() + "";
 	}
 
 	public String getName() {
-		return name;
+		return this.getFile().getName();
 	}
 
 	/*
@@ -180,130 +120,46 @@ public abstract class StormResource implements Resource, DigestResource, PropFin
 		return factory.getRealm(this.host);
 	}
 
-	public Date getModifiedDate() {
-		return lastModified;
-	}
-
-	public Date getCreateDate() {
-		return creationDate;
-	}
-
 	public int compareTo(Resource o) {
 		return this.getName().compareTo(o.getName());
 	}
 
 	public Surl getSurl() {
-		return surl;
+		return new Surl(this.getFile());
 	}
 
-	public ArrayList<String> getSurlAsList() {
-		ArrayList<String> surls = new ArrayList<String>();
-		surls.add(getSurl().asString());
-		return surls;
+	public InputStream getInputStream() throws FileNotFoundException {
+		return new FileInputStream(this.getFile());
 	}
 
-	public InputStream getInputStream() {
-		InputStream in;
+	public abstract SurlInfo getSurlInfo() throws RuntimeApiException, StormRequestFailureException, TooManyResultsException;
+	
+	public Date getModifiedDate() {
 		try {
-			in = new FileInputStream(getFile());
-		} catch (FileNotFoundException e) {
-			log.error(e.getMessage());
-			return null;
-		}
-		return in;
-	}
-
-	public StorageArea getStorageArea() {
-		return storageArea;
-	}
-
-	public SurlInfo getSurlInfo(int depth) throws TooManyResultsException {
-		return StormResource.loadSurlInfo(this, depth);
-	}
-
-	protected static SurlInfo loadSurlInfo(StormResource resource, int depth) throws TooManyResultsException {
-		ArrayList<SurlInfo> info = null;
-		try {
-			switch (depth) {
-			case SINGLE_DETAILED:
-				info = StormResourceHelper.doLimitedLsDetailed(resource);
-				break;
-			case RECURSIVE_UNDETAILED:
-				info = StormResourceHelper.doLs(resource);
-				break;
-			case RECURSIVE_DETAILED:
-				info = StormResourceHelper.doLsDetailed(resource, Recursion.NONE);
-				break;
-			}
+			return this.getSurlInfo().getModificationTime();
 		} catch (RuntimeApiException e) {
-			log.error("Retrieving surl-info for " + resource.getFile() + ": " + e.getReason());
-			throw new RuntimeException(e);
+			log.error("Unable to load surl-info: " + e.getReason());
 		} catch (StormRequestFailureException e) {
-			log.warn("Retrieving surl-info for " + resource.getFile() + ": " + e.getReason());
-//		} catch (TooManyResultsException e) {
-//			log.error("Retrieving surl-info for " + resource.getFile() + ": " + e.getReason());
-//			throw new RuntimeException(e);
+			log.debug("Unable to load surl-info: " + e.getReason());
+		} catch (TooManyResultsException e) {
+			log.error("Unable to load surl-info: " + e.getReason());
 		}
-		return info != null ? info.get(0) : null;
+		return null;
 	}
 
-	public TCheckSumType getCheckSumType() {
-		return checkSumType;
-	}
-
-	private void setCheckSumType(TCheckSumType checkSumType) {
-		log.debug("set-checkSumType: " + checkSumType);
-		this.checkSumType = checkSumType;
-	}
-
-	public TCheckSumValue getCheckSumValue() {
-		return checkSumValue;
-	}
-
-	private void setCheckSumValue(TCheckSumValue checkSumValue) {
-		log.debug("set-checkSumValue: " + checkSumValue);
-		this.checkSumValue = checkSumValue;
-	}
-
-	public TSizeInBytes getSize() {
-		return size;
-	}
-
-	private void setSize(TSizeInBytes size) {
-		log.debug("set-size: " + size);
-		this.size = size;
-	}
-
-	public TReturnStatus getStatus() {
-		return status;
-	}
-
-	private void setStatus(TReturnStatus status) {
-		log.debug("set-status: " + status);
-		this.status = status;
-	}
-
-	public String getStfn() {
-		return stfn;
-	}
-
-	private void setStfn(String stfn) {
-		log.debug("set-stfn: " + stfn);
-		this.stfn = stfn;
-	}
-
-	private void setLastModified(Date lastModified) {
-		log.debug("set-lastModified: " + lastModified);
-		this.lastModified = lastModified;
-	}
-
-	private void setCreationDate(Date creationDate) {
-		log.debug("set-creationDate: " + creationDate);
-		this.creationDate = creationDate;
-	}
-
-	private void setName(String name) {
-		this.name = name;
+	public Date getCreateDate() {
+		SurlInfo info;
+		try {
+			info = this.getSurlInfo();
+			return info.getCreationTime() != null ? info.getCreationTime() : info.getModificationTime();
+		} catch (RuntimeApiException e) {
+			log.error("Unable to load surl-info: " + e.getReason());
+		} catch (StormRequestFailureException e) {
+			log.debug("Unable to load surl-info: " + e.getReason());
+		} catch (TooManyResultsException e) {
+			log.error("Unable to load surl-info: " + e.getReason());
+		}
+		return null;
 	}
 
 }

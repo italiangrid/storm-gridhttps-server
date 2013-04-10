@@ -34,8 +34,7 @@ import it.grid.storm.gridhttps.webapp.data.exceptions.RuntimeApiException;
 import it.grid.storm.gridhttps.webapp.data.exceptions.StormRequestFailureException;
 import it.grid.storm.gridhttps.webapp.data.exceptions.TooManyResultsException;
 import it.grid.storm.srm.types.Recursion;
-import it.grid.storm.srm.types.TReturnStatus;
-import it.grid.storm.storagearea.StorageArea;
+import it.grid.storm.srm.types.RecursionLevel;
 import it.grid.storm.xmlrpc.outputdata.LsOutputData.SurlInfo;
 
 import java.io.File;
@@ -55,20 +54,12 @@ public class StormDirectoryResource extends StormResource implements MakeCollect
 
 	private static final Logger log = LoggerFactory.getLogger(StormDirectoryResource.class);
 
-	public StormDirectoryResource(StormFactory factory, File dir, StorageArea storageArea) {
-		super(factory.getLocalhostname(), factory, dir, storageArea);
-	}
-
-	public StormDirectoryResource(StormFactory factory, File dir, StorageArea storageArea, SurlInfo surlInfo) {
-		super(factory.getLocalhostname(), factory, dir, storageArea, surlInfo);
+	public StormDirectoryResource(StormFactory factory, File dir) {
+		super(factory.getLocalhostname(), factory, dir);
 	}
 
 	public StormDirectoryResource(StormDirectoryResource parentDir, String childDirName) {
-		this(parentDir.getFactory(), new File(parentDir.getFile(), childDirName), parentDir.getStorageArea());
-	}
-
-	public StormDirectoryResource(StormDirectoryResource parentDir, String childDirName, SurlInfo surlInfo) {
-		this(parentDir.getFactory(), new File(parentDir.getFile(), childDirName), parentDir.getStorageArea(), surlInfo);
+		this(parentDir.getFactory(), new File(parentDir.getFile(), childDirName));
 	}
 
 	@Override
@@ -101,13 +92,21 @@ public class StormDirectoryResource extends StormResource implements MakeCollect
 	@Override
 	public List<? extends Resource> getChildren() throws NotAuthorizedException, BadRequestException {
 		List<? extends Resource> list = null;
+		Collection<SurlInfo> entries;
 		try {
-			list = getAllChildren();
+			entries = this.getChildrenSurlInfo();
 		} catch (TooManyResultsException e) {
 			int numberOfMaxEntries = getMaxEntriesNumberFromExplanation(e.getStatus().getExplanation());
 			log.warn("Too many results with Ls, max entries is " + numberOfMaxEntries + ". Re-trying with counted Ls.");
-			list = getNChildren(numberOfMaxEntries);
+			try {
+				entries = this.getNChildrenSurlInfo(numberOfMaxEntries);
+			} catch (TooManyResultsException e1) {
+				log.error("The number of children requested for '" + this.getFile()
+						+ "' is greater than the max number of results allowed: " + e.getStatus().getExplanation());
+				return null;
+			}
 		}
+		list = resolveSurlArray(entries);
 		return list != null ? list : new ArrayList<StormResource>();
 	}
 
@@ -126,29 +125,6 @@ public class StormDirectoryResource extends StormResource implements MakeCollect
 					+ numberOfMaxEntriesString + " is not a valid integer!");
 		}
 		return numberOfMaxEntries;
-	}
-
-	private List<? extends Resource> getAllChildren() throws NotAuthorizedException, BadRequestException, TooManyResultsException {
-		ArrayList<StormResource> list = new ArrayList<StormResource>();
-		SurlInfo info = getSurlInfo(StormResource.RECURSIVE_DETAILED);
-		if (info != null)
-			list = resolveSurlArray(info.getSubpathInfo());
-		return list;
-	}
-
-	private List<? extends Resource> getNChildren(int numberOfChildren) throws NotAuthorizedException, BadRequestException {
-		ArrayList<StormResource> list = new ArrayList<StormResource>();
-		Collection<SurlInfo> entries = null;
-		try {
-			entries = StormResourceHelper.doLsDetailed(this, Recursion.NONE, numberOfChildren).get(0).getSubpathInfo();
-		} catch (TooManyResultsException e) {
-			log.error("The number of children requested for '" + this.getStfn() + "' is greater than the max number of results allowed: "
-					+ e.getStatus().getExplanation());
-			return list;
-		}
-		if (entries != null)
-			list = resolveSurlArray(entries);
-		return list;
 	}
 
 	@Override
@@ -202,7 +178,7 @@ public class StormDirectoryResource extends StormResource implements MakeCollect
 	@Override
 	public void moveTo(CollectionResource newParent, String newName) throws ConflictException, NotAuthorizedException, BadRequestException {
 		if (newParent instanceof StormDirectoryResource) {
-			StormResourceHelper.doMoveTo(this, (StormDirectoryResource) newParent, newName);
+			StormResourceHelper.doMove(this, (StormDirectoryResource) newParent, newName);
 			setFile(((StormDirectoryResource) newParent).getFile());
 		} else
 			log.error("Directory Resource class " + newParent.getClass().getName() + " not supported!");
@@ -212,8 +188,9 @@ public class StormDirectoryResource extends StormResource implements MakeCollect
 	public void copyTo(CollectionResource newParent, String newName) throws NotAuthorizedException, BadRequestException, ConflictException {
 		if (newParent instanceof StormDirectoryResource) {
 			StormResourceHelper.doCopyDirectory(this, (StormDirectoryResource) newParent, newName);
-		} else
+		} else {
 			log.error("Directory Resource class " + newParent.getClass().getName() + " not supported!");
+		}
 	}
 
 	@Override
@@ -222,14 +199,20 @@ public class StormDirectoryResource extends StormResource implements MakeCollect
 	}
 
 	@Override
-	public TReturnStatus getStatus() {
-		SurlInfo info = null;
-		try {
-			info = StormResource.loadSurlInfo(this, RECURSIVE_UNDETAILED);
-		} catch (TooManyResultsException e) {
-			return e.getStatus();
-		}
-		return info!=null ? info.getStatus() : null;
+	public SurlInfo getSurlInfo() throws RuntimeApiException, StormRequestFailureException, TooManyResultsException {
+		return StormResourceHelper.filterLs(StormResourceHelper.doLsDetailed(this.getFile()).getInfos()).get(0);
+	}
+
+	public Collection<SurlInfo> getChildrenSurlInfo() throws RuntimeApiException, StormRequestFailureException, TooManyResultsException {
+		return StormResourceHelper.filterLs(StormResourceHelper.doLsDetailed(this, new RecursionLevel(Recursion.NONE)).getInfos()).get(0)
+				.getSubpathInfo();
+	}
+
+	public Collection<SurlInfo> getNChildrenSurlInfo(int numberOfChildren) throws RuntimeApiException, StormRequestFailureException,
+			TooManyResultsException {
+		return StormResourceHelper
+				.filterLs(StormResourceHelper.doLsDetailed(this, new RecursionLevel(Recursion.NONE), numberOfChildren).getInfos()).get(0)
+				.getSubpathInfo();
 	}
 
 }

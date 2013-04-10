@@ -25,8 +25,6 @@ import it.grid.storm.gridhttps.webapp.data.StormDirectoryResource;
 import it.grid.storm.gridhttps.webapp.data.StormFactory;
 import it.grid.storm.gridhttps.webapp.data.StormFileResource;
 import it.grid.storm.gridhttps.webapp.data.StormResourceHelper;
-import it.grid.storm.storagearea.StorageArea;
-import it.grid.storm.xmlrpc.outputdata.LsOutputData.SurlInfo;
 
 import java.io.*;
 import java.util.Map;
@@ -38,15 +36,15 @@ import org.slf4j.LoggerFactory;
 public class WebdavFileResource extends StormFileResource implements CopyableResource, DeletableResource, GetableResource, MoveableResource,
 		PropFindableResource, ReplaceableResource {
 
+	public WebdavFileResource(StormFactory factory, File file) {
+		super(factory, file);
+	}
+	
+	public WebdavFileResource(StormDirectoryResource parentDir, String childFileName) {
+		super(parentDir, childFileName);
+	}
+
 	private static final Logger log = LoggerFactory.getLogger(WebdavFileResource.class);
-	
-	public WebdavFileResource(StormFactory factory, File file, StorageArea storageArea) {
-		super(factory, file, storageArea);
-	}
-	
-	public WebdavFileResource(StormFactory factory, File file, StorageArea storageArea, SurlInfo surlInfo) {
-		super(factory, file, storageArea, surlInfo);		
-	}
 
 	public void sendContent(OutputStream out, Range range, Map<String, String> params, String contentType) throws IOException, NotAuthorizedException, BadRequestException, NotFoundException {
 		log.debug("Called function for GET FILE");
@@ -65,7 +63,7 @@ public class WebdavFileResource extends StormFileResource implements CopyableRes
 		out.flush();
 		IOUtils.closeQuietly(in);
 	}
-
+	
 	public void replaceContent(InputStream in, Long length) throws BadRequestException, ConflictException, NotAuthorizedException {
 		log.debug("Called function for PUT-OVERWRITE");
 		HttpHelper httpHelper = new HttpHelper(MiltonServlet.request(), MiltonServlet.response());

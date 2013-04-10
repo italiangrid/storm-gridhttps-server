@@ -28,7 +28,11 @@ import io.milton.resource.Resource;
 import it.grid.storm.gridhttps.webapp.data.StormDirectoryResource;
 import it.grid.storm.gridhttps.webapp.data.StormFileResource;
 import it.grid.storm.gridhttps.webapp.data.StormResource;
+import it.grid.storm.gridhttps.webapp.data.exceptions.RuntimeApiException;
+import it.grid.storm.gridhttps.webapp.data.exceptions.StormRequestFailureException;
+import it.grid.storm.gridhttps.webapp.data.exceptions.TooManyResultsException;
 import it.grid.storm.srm.types.TReturnStatus;
+import it.grid.storm.xmlrpc.outputdata.LsOutputData.SurlInfo;
 
 class StormPropertySource implements PropertySource {
 
@@ -51,19 +55,38 @@ class StormPropertySource implements PropertySource {
 		if (checkPropery(name, r)) {
 			if (r instanceof StormFileResource) {
 				StormFileResource srmFile = (StormFileResource) r;
-				if (property.equals("checksumType") && (srmFile.getCheckSumType() != null)) {
-					value = srmFile.getCheckSumType().getValue();
-				} else if (property.equals("checksumValue") && (srmFile.getCheckSumValue() != null)) {
-					value = srmFile.getCheckSumValue().getValue();
-				} else if (property.equals("status") && (srmFile.getStatus() != null)) {
-					value =  srmFile.getStatus().toString();
+				SurlInfo info;
+				try {
+					info = srmFile.getSurlInfo();
+				} catch (RuntimeApiException e) {
+					return "";
+				} catch (StormRequestFailureException e) {
+					return "";
+				} catch (TooManyResultsException e) {
+					return "";
+				}
+				if (property.equals("checksumType") && (info.getCheckSumType() != null)) {
+					value = info.getCheckSumType().getValue();
+				} else if (property.equals("checksumValue") && (info.getCheckSumValue() != null)) {
+					value = info.getCheckSumValue().getValue();
+				} else if (property.equals("status") && (info.getStatus() != null)) {
+					value = info.getStatus().toString();
 				}
 			} else if (r instanceof StormDirectoryResource) {
-				StormDirectoryResource srmDir = (StormDirectoryResource) r;
 				if (property.equals("status")) {
-					TReturnStatus status = srmDir.getStatus();
-					if (status != null) 
-						value =  status.toString();
+					StormDirectoryResource srmDir = (StormDirectoryResource) r;
+					SurlInfo info;
+					try {
+						info = srmDir.getSurlInfo();
+						if (info.getStatus() != null)
+							value = info.getStatus().toString();
+					} catch (RuntimeApiException e) {
+					} catch (StormRequestFailureException e) {
+					} catch (TooManyResultsException e) {
+						TReturnStatus status = e.getStatus();
+						if (status != null)
+							value = status.toString();
+					}
 				}
 			}
 		}
@@ -84,7 +107,7 @@ class StormPropertySource implements PropertySource {
 	public void clearProperty(QName name, Resource r) throws PropertySetException, NotAuthorizedException {
 		log.warn("clear property " + name.getLocalPart() + " is not permit");
 	}
-	
+
 	public List<QName> getAllPropertyNames(Resource r) throws NotAuthorizedException, BadRequestException {
 		List<QName> list = new ArrayList<QName>();
 		if (r instanceof StormResource) {

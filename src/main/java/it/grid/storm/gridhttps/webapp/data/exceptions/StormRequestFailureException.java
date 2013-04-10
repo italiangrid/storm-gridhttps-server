@@ -13,17 +13,25 @@
 package it.grid.storm.gridhttps.webapp.data.exceptions;
 
 import io.milton.http.exceptions.BadRequestException;
+import it.grid.storm.srm.types.TReturnStatus;
 
 public class StormRequestFailureException extends BadRequestException {
 
 	private static final long serialVersionUID = 1200998154780371147L;
 
-	public StormRequestFailureException(String reason) {
-		super(reason);
+	private TReturnStatus status;
+	
+	public StormRequestFailureException(TReturnStatus status) {
+		super(status.toString());
+		this.setStatus(status);
 	}
 
-	public StormRequestFailureException(String s, Throwable throwable) {
-		super(s, throwable);
+	public TReturnStatus getStatus() {
+		return status;
+	}
+
+	private void setStatus(TReturnStatus status) {
+		this.status = status;
 	}
 
 }

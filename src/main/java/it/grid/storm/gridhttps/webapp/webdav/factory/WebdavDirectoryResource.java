@@ -21,15 +21,11 @@ import io.milton.resource.*;
 import io.milton.servlet.MiltonServlet;
 import it.grid.storm.gridhttps.webapp.data.StormDirectoryResource;
 import it.grid.storm.gridhttps.webapp.data.StormFactory;
-import it.grid.storm.gridhttps.webapp.data.StormResource;
-import it.grid.storm.gridhttps.webapp.data.StormResourceHelper;
 import it.grid.storm.gridhttps.webapp.data.exceptions.RuntimeApiException;
 import it.grid.storm.gridhttps.webapp.data.exceptions.StormResourceException;
 import it.grid.storm.gridhttps.webapp.data.exceptions.TooManyResultsException;
 import it.grid.storm.gridhttps.webapp.webdav.factory.html.StormHtmlFolderPage;
-import it.grid.storm.srm.types.Recursion;
 import it.grid.storm.srm.types.TReturnStatus;
-import it.grid.storm.storagearea.StorageArea;
 import it.grid.storm.xmlrpc.outputdata.LsOutputData.SurlInfo;
 
 import java.io.File;
@@ -47,20 +43,12 @@ public class WebdavDirectoryResource extends StormDirectoryResource implements M
 
 	private static final Logger log = LoggerFactory.getLogger(WebdavDirectoryResource.class);
 
-	public WebdavDirectoryResource(StormFactory factory, File dir, StorageArea storageArea) {
-		super(factory, dir, storageArea);
+	public WebdavDirectoryResource(StormFactory factory, File dir) {
+		super(factory, dir);
 	}
 
 	public WebdavDirectoryResource(StormDirectoryResource parentDir, String childDirName) {
-		this(parentDir.getFactory(), new File(parentDir.getFile(), childDirName), parentDir.getStorageArea());
-	}
-
-	public WebdavDirectoryResource(StormFactory factory, File dir, StorageArea storageArea, SurlInfo surlInfo) {
-		super(factory, dir, storageArea, surlInfo);
-	}
-
-	public WebdavDirectoryResource(StormDirectoryResource parentDir, String childDirName, SurlInfo surlInfo) {
-		this(parentDir.getFactory(), new File(parentDir.getFile(), childDirName), parentDir.getStorageArea(), surlInfo);
+		this(parentDir.getFactory(), new File(parentDir.getFile(), childDirName));
 	}
 
 	public CollectionResource createCollection(String name) throws NotAuthorizedException, ConflictException, BadRequestException {
@@ -115,12 +103,11 @@ public class WebdavDirectoryResource extends StormDirectoryResource implements M
 		Collection<SurlInfo> entries = null;
 		int numberOfMaxEntries = 0;
 		try {
-			entries = this.getSurlInfo(StormResource.RECURSIVE_DETAILED).getSubpathInfo();
+			entries = this.getChildrenSurlInfo();
 		} catch (TooManyResultsException e) {
 			TReturnStatus status = e.getStatus();
 			String[] array = status.getExplanation().split(" ");
-			String numberOfMaxEntriesString = array[array.length - 1]; // last
-																		// element
+			String numberOfMaxEntriesString = array[array.length - 1]; // last element
 			try {
 				numberOfMaxEntries = Integer.valueOf(numberOfMaxEntriesString);
 			} catch (NumberFormatException e2) {
@@ -130,7 +117,7 @@ public class WebdavDirectoryResource extends StormDirectoryResource implements M
 						+ numberOfMaxEntriesString + " is not a valid integer!");
 			}
 			log.warn("Too many results with Ls, max entries is " + numberOfMaxEntries + ". Re-trying with counted Ls.");
-			entries = StormResourceHelper.doLsDetailed(this, Recursion.NONE, numberOfMaxEntries).get(0).getSubpathInfo();
+			entries = this.getNChildrenSurlInfo(numberOfMaxEntries);
 		}
 		if (entries != null)
 			buildDirectoryPage(out, entries, numberOfMaxEntries);

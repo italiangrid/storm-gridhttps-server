@@ -23,12 +23,11 @@ import it.grid.storm.gridhttps.webapp.authorization.AuthorizationStatus;
 import it.grid.storm.gridhttps.webapp.authorization.Constants;
 import it.grid.storm.gridhttps.webapp.authorization.UserCredentials;
 import it.grid.storm.gridhttps.webapp.authorization.methods.AbstractMethodAuthorization;
-import it.grid.storm.gridhttps.webapp.backendApi.StormBackendApi;
+import it.grid.storm.gridhttps.webapp.data.StormResourceHelper;
 import it.grid.storm.gridhttps.webapp.data.Surl;
 import it.grid.storm.gridhttps.webapp.data.exceptions.RuntimeApiException;
 import it.grid.storm.gridhttps.webapp.data.exceptions.StormRequestFailureException;
 import it.grid.storm.storagearea.StorageArea;
-import it.grid.storm.xmlrpc.BackendApi;
 import it.grid.storm.xmlrpc.outputdata.SurlArrayRequestOutputData;
 
 public class GetMethodAuthorization extends AbstractMethodAuthorization {
@@ -53,7 +52,7 @@ public class GetMethodAuthorization extends AbstractMethodAuthorization {
 			File resource = new File(reqPath);
 			if (resource.exists()) {
 				if (resource.isFile()) {
-					AuthorizationStatus status = doPrepareToGetStatus(user, resource, SA);
+					AuthorizationStatus status = doPrepareToGetStatus(new Surl(resource, SA));
 					if (status.isAuthorized()) {
 						return askAuth(user, Constants.READ_OPERATION, reqPath);
 					} else {
@@ -66,18 +65,15 @@ public class GetMethodAuthorization extends AbstractMethodAuthorization {
 				return AuthorizationStatus.NOTAUTHORIZED(400, "File does not exist"); 
 			}
 		} else {
-			return AuthorizationStatus.NOTAUTHORIZED(400, "No storage area matched with path = " + path);
+			return AuthorizationStatus.NOTAUTHORIZED(500, "Null storage area!");
 		}
 	}
 
-	private AuthorizationStatus doPrepareToGetStatus(UserCredentials user, File resource, StorageArea reqStorageArea) {
-		log.debug("Check for a prepare-to-get");
-		Surl surl = new Surl(resource, reqStorageArea);
-		BackendApi backend;
+	private AuthorizationStatus doPrepareToGetStatus(Surl surl) {
+		log.debug("Check for a prepare-to-get");	
 		SurlArrayRequestOutputData outputSPtG;
 		try {
-			backend = StormBackendApi.getBackend(Configuration.getBackendInfo().getHostname(), Configuration.getBackendInfo().getPort());
-			outputSPtG = StormBackendApi.prepareToGetStatus(backend, surl.asString(), user);
+			outputSPtG = StormResourceHelper.doPrepareToGetStatus(surl);
 		} catch (RuntimeApiException e) {
 			log.error(e.getMessage());
 			return AuthorizationStatus.NOTAUTHORIZED(500, e.getMessage());
