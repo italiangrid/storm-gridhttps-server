@@ -10,7 +10,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package it.grid.storm.gridhttps.webapp.webdav.factory;
+package it.grid.storm.gridhttps.webapp.webdav;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -25,14 +25,7 @@ import io.milton.http.exceptions.NotAuthorizedException;
 import io.milton.http.webdav.WebDavProtocol;
 import io.milton.property.PropertySource;
 import io.milton.resource.Resource;
-import it.grid.storm.gridhttps.webapp.data.StormDirectoryResource;
-import it.grid.storm.gridhttps.webapp.data.StormFileResource;
 import it.grid.storm.gridhttps.webapp.data.StormResource;
-import it.grid.storm.gridhttps.webapp.data.exceptions.RuntimeApiException;
-import it.grid.storm.gridhttps.webapp.data.exceptions.StormRequestFailureException;
-import it.grid.storm.gridhttps.webapp.data.exceptions.TooManyResultsException;
-import it.grid.storm.srm.types.TReturnStatus;
-import it.grid.storm.xmlrpc.outputdata.LsOutputData.SurlInfo;
 
 class StormPropertySource implements PropertySource {
 
@@ -51,45 +44,7 @@ class StormPropertySource implements PropertySource {
 
 	public String getProperty(QName name, Resource r) throws NotAuthorizedException {
 		String value = "";
-		String property = name.getLocalPart();
-		if (checkPropery(name, r)) {
-			if (r instanceof StormFileResource) {
-				StormFileResource srmFile = (StormFileResource) r;
-				SurlInfo info;
-				try {
-					info = srmFile.getSurlInfo();
-				} catch (RuntimeApiException e) {
-					return "";
-				} catch (StormRequestFailureException e) {
-					return "";
-				} catch (TooManyResultsException e) {
-					return "";
-				}
-				if (property.equals("checksumType") && (info.getCheckSumType() != null)) {
-					value = info.getCheckSumType().getValue();
-				} else if (property.equals("checksumValue") && (info.getCheckSumValue() != null)) {
-					value = info.getCheckSumValue().getValue();
-				} else if (property.equals("status") && (info.getStatus() != null)) {
-					value = info.getStatus().toString();
-				}
-			} else if (r instanceof StormDirectoryResource) {
-				if (property.equals("status")) {
-					StormDirectoryResource srmDir = (StormDirectoryResource) r;
-					SurlInfo info;
-					try {
-						info = srmDir.getSurlInfo();
-						if (info.getStatus() != null)
-							value = info.getStatus().toString();
-					} catch (RuntimeApiException e) {
-					} catch (StormRequestFailureException e) {
-					} catch (TooManyResultsException e) {
-						TReturnStatus status = e.getStatus();
-						if (status != null)
-							value = status.toString();
-					}
-				}
-			}
-		}
+		log.debug("THIS IS NO MORE IMPLEMENTATED!");
 		return value;
 	}
 

@@ -18,6 +18,7 @@ import io.milton.http.Request;
 import io.milton.http.Response;
 import io.milton.servlet.MiltonServlet;
 import it.grid.storm.gridhttps.configuration.Configuration;
+import it.grid.storm.gridhttps.webapp.webdav.StormPropFindPropertyBuilder;
 
 import java.io.File;
 import java.io.IOException;
@@ -88,7 +89,10 @@ public class WebdavSpringMiltonFilter implements javax.servlet.Filter {
 			this.httpManager = (HttpManager) milton;
 		} else if (milton instanceof HttpManagerBuilder) {
 			HttpManagerBuilder builder = (HttpManagerBuilder) milton;
-			this.httpManager = builder.buildHttpManager();
+			StormPropFindPropertyBuilder pfBuilder = new StormPropFindPropertyBuilder();
+			builder.setPropFindPropertyBuilder(pfBuilder);			
+			this.httpManager = builder.buildHttpManager();			
+			pfBuilder.setPropertySources(builder.getPropertySources());
 		}
 		servletContext = filterConfig.getServletContext();
 		log.debug("servletContext: " + servletContext.getClass());

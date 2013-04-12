@@ -135,31 +135,33 @@ public abstract class StormResource implements Resource, DigestResource, PropFin
 	public abstract SurlInfo getSurlInfo() throws RuntimeApiException, StormRequestFailureException, TooManyResultsException;
 	
 	public Date getModifiedDate() {
-		try {
-			return this.getSurlInfo().getModificationTime();
-		} catch (RuntimeApiException e) {
-			log.error("Unable to load surl-info: " + e.getReason());
-		} catch (StormRequestFailureException e) {
-			log.debug("Unable to load surl-info: " + e.getReason());
-		} catch (TooManyResultsException e) {
-			log.error("Unable to load surl-info: " + e.getReason());
-		}
-		return null;
+		return new Date(this.getFile().lastModified());
+//		try {
+//			return this.getSurlInfo().getModificationTime();
+//		} catch (RuntimeApiException e) {
+//			log.error("Unable to load surl-info: " + e.getReason());
+//		} catch (StormRequestFailureException e) {
+//			log.debug("Unable to load surl-info: " + e.getReason());
+//		} catch (TooManyResultsException e) {
+//			log.error("Unable to load surl-info: " + e.getReason());
+//		}
+//		return null;
 	}
 
 	public Date getCreateDate() {
-		SurlInfo info;
-		try {
-			info = this.getSurlInfo();
-			return info.getCreationTime() != null ? info.getCreationTime() : info.getModificationTime();
-		} catch (RuntimeApiException e) {
-			log.error("Unable to load surl-info: " + e.getReason());
-		} catch (StormRequestFailureException e) {
-			log.debug("Unable to load surl-info: " + e.getReason());
-		} catch (TooManyResultsException e) {
-			log.error("Unable to load surl-info: " + e.getReason());
-		}
-		return null;
+		return new Date(this.getFile().lastModified());
+//		SurlInfo info;
+//		try {
+//			info = this.getSurlInfo();
+//			return info.getCreationTime() != null ? info.getCreationTime() : info.getModificationTime();
+//		} catch (RuntimeApiException e) {
+//			log.error("Unable to load surl-info: " + e.getReason());
+//		} catch (StormRequestFailureException e) {
+//			log.debug("Unable to load surl-info: " + e.getReason());
+//		} catch (TooManyResultsException e) {
+//			log.error("Unable to load surl-info: " + e.getReason());
+//		}
+//		return null;
 	}
 
 }

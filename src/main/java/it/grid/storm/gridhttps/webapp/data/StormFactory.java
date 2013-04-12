@@ -170,7 +170,7 @@ public abstract class StormFactory implements ResourceFactory {
 	
 	public abstract StormResource getFileResource(File file);
 
-	private boolean isDirectory(TFileType type) {
+	private static boolean isDirectory(TFileType type) {
 		if (type != null) {
 			return type.equals(TFileType.DIRECTORY);
 		}
