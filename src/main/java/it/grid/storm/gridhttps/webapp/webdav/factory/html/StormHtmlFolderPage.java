@@ -26,18 +26,33 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 public class StormHtmlFolderPage extends HtmlPage {
 
+	private static final Logger log = LoggerFactory.getLogger(StormHtmlFolderPage.class);
+	
 	private class SurlInfoComparator implements Comparator<Object> {
 		public int compare(Object o1, Object o2) {
 			SurlInfo s1 = (SurlInfo) o1;
 			SurlInfo s2 = (SurlInfo) o2;
-			if (s1.getType().equals(TFileType.DIRECTORY) && !s2.getType().equals(TFileType.DIRECTORY))
-				return -1;
-			else if (!s1.getType().equals(TFileType.DIRECTORY) && s2.getType().equals(TFileType.DIRECTORY))
-				return 1;
-			else
+			if ((s1.getType() != null) && (s2.getType() != null)) {
+				if (s1.getType().equals(TFileType.DIRECTORY) && !s2.getType().equals(TFileType.DIRECTORY))
+					return -1;
+				else if (!s1.getType().equals(TFileType.DIRECTORY) && s2.getType().equals(TFileType.DIRECTORY))
+					return 1;
+				else
+					return s1.getStfn().compareTo(s2.getStfn());
+			} else {
+				if (s1.getType() == null) {
+					log.warn(s1.getStfn() + " type is NULL!");
+				}
+				if (s2.getType() == null) {
+					log.warn(s2.getStfn() + " type is NULL!");
+				}
 				return s1.getStfn().compareTo(s2.getStfn());
+			} 
 		}
 	}
 
@@ -296,22 +311,10 @@ public class StormHtmlFolderPage extends HtmlPage {
 		return out;
 	}
 
-	// private static String getMiltonLogoStyle() {
-	// String out =
-	// "#miltonlogo { width: 150px; margin-left: 15px; position: absolute; bottom: 8px; right: 15px; }";
-	// return out;
-	// }
-
 	private static String getH1Style() {
 		String out = "h1.title { float: left; font-size: 22pt; padding-top: 10px; padding-left: 5px; }";
 		return out;
 	}
-
-	// private static String getStormLogoStyle() {
-	// String out =
-	// "#stormlogo { width: 180px; float: right; padding-top: 5px; }";
-	// return out;
-	// }
 
 	private static String getEntryListStyle() {
 		String out = "table {width: 100%; font-family: Arial,\"Bitstream Vera Sans\",Helvetica,Verdana,sans-serif; color: #333;}";
