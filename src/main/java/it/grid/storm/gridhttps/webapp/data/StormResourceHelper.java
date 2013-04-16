@@ -315,6 +315,11 @@ public class StormResourceHelper {
 				log.warn("ignored '" + info.getStfn() + "' from ls list, status is " + info.getStatus().getStatusCode().getValue());
 				continue;
 			}
+			if (info.getType() == null) {
+				log.warn("Surl-Info Type is NULL! ignored surl-info details: ");
+				log.warn(info.toString());
+				continue;
+			}
 			filteredOutput.add(info);
 		}
 		return filteredOutput;
