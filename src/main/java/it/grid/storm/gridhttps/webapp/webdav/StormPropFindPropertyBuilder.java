@@ -35,8 +35,10 @@ import it.grid.storm.gridhttps.webapp.data.StormDirectoryResource;
 import it.grid.storm.gridhttps.webapp.data.StormFactory;
 import it.grid.storm.gridhttps.webapp.data.StormResource;
 import it.grid.storm.gridhttps.webapp.data.StormResourceHelper;
+import it.grid.storm.gridhttps.webapp.data.exceptions.TooManyResultsException;
 import it.grid.storm.srm.types.Recursion;
 import it.grid.storm.srm.types.RecursionLevel;
+import it.grid.storm.srm.types.TReturnStatus;
 import it.grid.storm.xmlrpc.outputdata.LsOutputData.SurlInfo;
 
 public class StormPropFindPropertyBuilder implements PropFindPropertyBuilder {
@@ -120,9 +122,31 @@ public class StormPropFindPropertyBuilder implements PropFindPropertyBuilder {
 		}
 		Set<QName> requestedFields = parseResult.isAllProp() ? findAllProps(resource) : parseResult.getNames();
 		RecursionLevel recursion = requestedDepth <= 1 ? new RecursionLevel(Recursion.NONE) : new RecursionLevel(Recursion.FULL);
-		SurlInfo surlInfo = StormResourceHelper.doLsDetailed((StormResource) resource, recursion).getInfos().iterator().next();
+		SurlInfo surlInfo = null;
+		try {
+			surlInfo = StormResourceHelper.doLsDetailed((StormResource) resource, recursion).getInfos().iterator().next();
+		} catch (TooManyResultsException e) {
+			int numberOfMaxEntries = getMaxResults(e.getStatus());
+			log.warn("Too many results with Ls, max entries is " + numberOfMaxEntries + ". Re-trying with counted Ls.");
+			surlInfo = StormResourceHelper.doLsDetailed((StormResource) resource, recursion, numberOfMaxEntries).getInfos().iterator().next();
+		}
 		process(responses, (StormResource) resource, surlInfo, href, collectionHref, requestedFields, requestedDepth, 0,
 				((StormResource) resource).getFactory());
+	}
+
+	private int getMaxResults(TReturnStatus status) {
+		String[] array = status.getExplanation().split(" ");
+		String numberOfMaxEntriesString = array[array.length - 1]; // last element
+		int numberOfMaxEntries = 0;
+		try {
+			numberOfMaxEntries = Integer.valueOf(numberOfMaxEntriesString);
+		} catch (NumberFormatException e2) {
+			log.error("Error parsing explanation string to retrieve the max number of entries of a srmLs -l, "
+					+ numberOfMaxEntriesString + " is not a valid integer!");
+			throw new RuntimeException("Error parsing explanation string to retrieve the max number of entries of a srmLs -l, "
+					+ numberOfMaxEntriesString + " is not a valid integer!");
+		}
+		return numberOfMaxEntries;
 	}
 
 	private void process(List<PropFindResponse> responses, StormResource resource, SurlInfo surlInfo, String href, String collectionHref,
