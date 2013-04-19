@@ -48,7 +48,7 @@ public class WebdavFileResource extends StormFileResource implements CopyableRes
 
 	public void sendContent(OutputStream out, Range range, Map<String, String> params, String contentType) throws IOException, NotAuthorizedException, BadRequestException, NotFoundException {
 		log.debug("Called function for GET FILE");
-		InputStream in = StormResourceHelper.doGetFile(this);
+		InputStream in = StormResourceHelper.getInstance().doGetFile(this);
 		if (in == null) {
 			log.error("Unable to get resource content '" + getFile().toString() + "'");
 			return;
@@ -75,7 +75,7 @@ public class WebdavFileResource extends StormFileResource implements CopyableRes
 
 	public void delete() throws NotAuthorizedException, ConflictException, BadRequestException {
 		log.debug("Called function for DELETE FILE");
-		StormResourceHelper.doDelete(this);
+		StormResourceHelper.getInstance().doDelete(this);
 	}
 
 	public void moveTo(CollectionResource newParent, String newName) throws NotAuthorizedException, ConflictException, BadRequestException {

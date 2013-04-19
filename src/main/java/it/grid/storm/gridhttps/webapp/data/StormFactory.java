@@ -25,7 +25,6 @@ import it.grid.storm.srm.types.TStatusCode;
 import it.grid.storm.storagearea.StorageArea;
 import it.grid.storm.storagearea.StorageAreaManager;
 import it.grid.storm.xmlrpc.ApiException;
-import it.grid.storm.xmlrpc.BackendApi;
 import it.grid.storm.xmlrpc.outputdata.LsOutputData.SurlInfo;
 
 public abstract class StormFactory implements ResourceFactory {
@@ -42,12 +41,10 @@ public abstract class StormFactory implements ResourceFactory {
 	String defaultPage;
 	boolean digestAllowed = true;
 	private String localhostname;
-	private BackendApi backendApi;
-
+	
 	public StormFactory(String beHost, int bePort, File root, String contextPath) throws UnknownHostException, ApiException {
 		setRoot(root);
 		setContextPath(contextPath);
-		setBackendApi(new BackendApi(beHost, new Long(bePort)));
 		setSecurityManager(new NullSecurityManager());
 		setContentService(new StormContentService());
 		setLocalhostname(java.net.InetAddress.getLocalHost().getHostName());
@@ -104,14 +101,6 @@ public abstract class StormFactory implements ResourceFactory {
 
 	public void setContentService(FileContentService contentService) {
 		this.contentService = contentService;
-	}
-
-	public BackendApi getBackendApi() {
-		return backendApi;
-	}
-
-	private void setBackendApi(BackendApi backendApi) {
-		this.backendApi = backendApi;
 	}
 
 	public String getLocalhostname() {
@@ -180,7 +169,7 @@ public abstract class StormFactory implements ResourceFactory {
 	public StormResource resolveFile(String host, File file, StorageArea storageArea) {
 		SurlInfo detail = null;
 		try {
-			detail = StormResourceHelper.filterLs(StormResourceHelper.doLimitedLsDetailed(file).getInfos()).get(0);
+			detail = StormResourceHelper.getInstance().doLimitedLsDetailed(file).getInfos().iterator().next();
 			return resolveFile(detail, storageArea);
 		} catch (RuntimeApiException e) {
 			log.error("retrieving detailed info for '" + file + "': " + e.getReason());

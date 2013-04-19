@@ -74,7 +74,7 @@ public class PutMethodAuthorization extends AbstractMethodAuthorization {
 		log.debug("Check for a prepare-to-put");
 		SurlArrayRequestOutputData outputSPtP;
 		try {
-			outputSPtP = StormResourceHelper.doPrepareToPutStatus(surl);
+			outputSPtP = StormResourceHelper.getInstance().doPrepareToPutStatus(surl);
 		} catch (RuntimeApiException e) {
 			log.error(e.getMessage());
 			return AuthorizationStatus.NOTAUTHORIZED(500, e.getMessage());

@@ -19,11 +19,10 @@ import it.grid.storm.xmlrpc.outputdata.LsOutputData.SurlInfo;
 import java.io.OutputStream;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
-import java.util.Collection;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import org.slf4j.Logger;
@@ -33,25 +32,23 @@ public class StormHtmlFolderPage extends HtmlPage {
 
 	private static final Logger log = LoggerFactory.getLogger(StormHtmlFolderPage.class);
 	
-	private class SurlInfoComparator implements Comparator<Object> {
-		public int compare(Object o1, Object o2) {
-			SurlInfo s1 = (SurlInfo) o1;
-			SurlInfo s2 = (SurlInfo) o2;
-			if ((s1.getType() != null) && (s2.getType() != null)) {
-				if (s1.getType().equals(TFileType.DIRECTORY) && !s2.getType().equals(TFileType.DIRECTORY))
-					return -1;
-				else if (!s1.getType().equals(TFileType.DIRECTORY) && s2.getType().equals(TFileType.DIRECTORY))
-					return 1;
-				else
-					return s1.getStfn().compareTo(s2.getStfn());
-			} else {
-				if (s1.getType() == null) {
-					log.warn(s1.getStfn() + " type is NULL!");
-				}
-				if (s2.getType() == null) {
-					log.warn(s2.getStfn() + " type is NULL!");
-				}
+	private class SurlInfoComparator implements Comparator<SurlInfo> {
+		public int compare(SurlInfo s1, SurlInfo s2) {
+			if (s1 != null && s2 == null) {
+				log.warn("s2 surlInfo is NULL!");
+				return -1;
+			}
+			if (s2 != null && s1 == null) {
+				log.warn("s1 surlInfo is NULL!");
+				return 1;
+			}
+			if (s1.getType().equals(s2.getType())) {
 				return s1.getStfn().compareTo(s2.getStfn());
+			}
+			if (s1.getType().equals(TFileType.DIRECTORY)) {
+				return -1;
+			} else { 
+				return 1;
 			} 
 		}
 	}
@@ -109,7 +106,7 @@ public class StormHtmlFolderPage extends HtmlPage {
 		close("div");
 	}
 
-	public void addFolderList(String dirPath, Collection<SurlInfo> entries) {
+	public void addFolderList(String dirPath, ArrayList<SurlInfo> entries) {
 		Map<String, String> attributes = new HashMap<String, String>();
 		openTable();
 		openTableRow();
@@ -136,7 +133,7 @@ public class StormHtmlFolderPage extends HtmlPage {
 		SimpleDateFormat dateFormat = new SimpleDateFormat("EEE, d MMM yyyy HH:mm:ss");
 		DecimalFormat decimalFormat = new DecimalFormat("#.##");
 		if (entries != null) {
-			Collections.sort((List<SurlInfo>) entries, new SurlInfoComparator());
+			Collections.sort(entries, new SurlInfoComparator());
 			for (SurlInfo entry : entries) {
 				String name = entry.getStfn().split("/")[entry.getStfn().split("/").length - 1];
 				String path = buildHref(dirPath, name);

@@ -32,7 +32,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.util.Collection;
+import java.util.ArrayList;
 import java.util.Map;
 
 import org.slf4j.Logger;
@@ -100,7 +100,7 @@ public class WebdavDirectoryResource extends StormDirectoryResource implements M
 	public void sendContent(OutputStream out, Range range, Map<String, String> params, String contentType) throws IOException,
 			NotAuthorizedException, BadRequestException {
 		log.debug("Called function for GET DIRECTORY");
-		Collection<SurlInfo> entries = null;
+		ArrayList<SurlInfo> entries = null;
 		int numberOfMaxEntries = 0;
 		try {
 			entries = this.getChildrenSurlInfo();
@@ -123,7 +123,7 @@ public class WebdavDirectoryResource extends StormDirectoryResource implements M
 			buildDirectoryPage(out, entries, numberOfMaxEntries);
 	}
 
-	private void buildDirectoryPage(OutputStream out, Collection<SurlInfo> entries, int nmax) {
+	private void buildDirectoryPage(OutputStream out, ArrayList<SurlInfo> entries, int nmax) {
 		String dirPath = MiltonServlet.request().getRequestURI();
 		StormHtmlFolderPage page = new StormHtmlFolderPage(out);
 		page.start();

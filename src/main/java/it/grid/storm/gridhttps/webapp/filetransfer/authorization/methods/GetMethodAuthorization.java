@@ -73,7 +73,7 @@ public class GetMethodAuthorization extends AbstractMethodAuthorization {
 		log.debug("Check for a prepare-to-get");	
 		SurlArrayRequestOutputData outputSPtG;
 		try {
-			outputSPtG = StormResourceHelper.doPrepareToGetStatus(surl);
+			outputSPtG = StormResourceHelper.getInstance().doPrepareToGetStatus(surl);
 		} catch (RuntimeApiException e) {
 			log.error(e.getMessage());
 			return AuthorizationStatus.NOTAUTHORIZED(500, e.getMessage());

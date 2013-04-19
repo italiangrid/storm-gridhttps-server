@@ -65,7 +65,7 @@ public class StormDirectoryResource extends StormResource implements MakeCollect
 	@Override
 	public CollectionResource createCollection(String name) throws RuntimeApiException, StormRequestFailureException,
 			NotAuthorizedException, ConflictException, BadRequestException {
-		return StormResourceHelper.doMkCol(this, name);
+		return StormResourceHelper.getInstance().doMkCol(this, name);
 	}
 
 	@Override
@@ -130,12 +130,12 @@ public class StormDirectoryResource extends StormResource implements MakeCollect
 	@Override
 	public Resource createNew(String name, InputStream in, Long length, String contentType) throws IOException, NotAuthorizedException,
 			ConflictException, BadRequestException {
-		return StormResourceHelper.doPut(this, name, in);
+		return StormResourceHelper.getInstance().doPut(this, name, in);
 	}
 
 	@Override
 	public void delete() throws NotAuthorizedException, ConflictException, BadRequestException {
-		StormResourceHelper.doDelete(this);
+		StormResourceHelper.getInstance().doDelete(this);
 	}
 
 	@Override
@@ -178,7 +178,7 @@ public class StormDirectoryResource extends StormResource implements MakeCollect
 	@Override
 	public void moveTo(CollectionResource newParent, String newName) throws ConflictException, NotAuthorizedException, BadRequestException {
 		if (newParent instanceof StormDirectoryResource) {
-			StormResourceHelper.doMove(this, (StormDirectoryResource) newParent, newName);
+			StormResourceHelper.getInstance().doMove(this, (StormDirectoryResource) newParent, newName);
 			setFile(((StormDirectoryResource) newParent).getFile());
 		} else
 			log.error("Directory Resource class " + newParent.getClass().getName() + " not supported!");
@@ -187,7 +187,7 @@ public class StormDirectoryResource extends StormResource implements MakeCollect
 	@Override
 	public void copyTo(CollectionResource newParent, String newName) throws NotAuthorizedException, BadRequestException, ConflictException {
 		if (newParent instanceof StormDirectoryResource) {
-			StormResourceHelper.doCopyDirectory(this, (StormDirectoryResource) newParent, newName);
+			StormResourceHelper.getInstance().doCopyDirectory(this, (StormDirectoryResource) newParent, newName);
 		} else {
 			log.error("Directory Resource class " + newParent.getClass().getName() + " not supported!");
 		}
@@ -200,19 +200,17 @@ public class StormDirectoryResource extends StormResource implements MakeCollect
 
 	@Override
 	public SurlInfo getSurlInfo() throws RuntimeApiException, StormRequestFailureException, TooManyResultsException {
-		return StormResourceHelper.filterLs(StormResourceHelper.doLsDetailed(this.getFile()).getInfos()).get(0);
+		return StormResourceHelper.getInstance().doLsDetailed(this.getFile()).getInfos().iterator().next();
 	}
 
-	public Collection<SurlInfo> getChildrenSurlInfo() throws RuntimeApiException, StormRequestFailureException, TooManyResultsException {
-		return StormResourceHelper.filterLs(StormResourceHelper.doLsDetailed(this, new RecursionLevel(Recursion.NONE)).getInfos()).get(0)
-				.getSubpathInfo();
+	public ArrayList<SurlInfo> getChildrenSurlInfo() throws RuntimeApiException, StormRequestFailureException, TooManyResultsException {
+		return StormResourceHelper.getInstance().filterLs(StormResourceHelper.getInstance().doLsDetailed(this, new RecursionLevel(Recursion.NONE)).getInfos().iterator().next().getSubpathInfo());
 	}
 
-	public Collection<SurlInfo> getNChildrenSurlInfo(int numberOfChildren) throws RuntimeApiException, StormRequestFailureException,
+	public ArrayList<SurlInfo> getNChildrenSurlInfo(int numberOfChildren) throws RuntimeApiException, StormRequestFailureException,
 			TooManyResultsException {
-		return StormResourceHelper
-				.filterLs(StormResourceHelper.doLsDetailed(this, new RecursionLevel(Recursion.NONE), numberOfChildren).getInfos()).get(0)
-				.getSubpathInfo();
+		return StormResourceHelper.getInstance()
+				.filterLs(StormResourceHelper.getInstance().doLsDetailed(this, new RecursionLevel(Recursion.NONE), numberOfChildren).getInfos().iterator().next().getSubpathInfo());
 	}
 
 }

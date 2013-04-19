@@ -25,6 +25,7 @@ import io.milton.http.exceptions.NotAuthorizedException;
 import io.milton.http.exceptions.NotFoundException;
 import io.milton.resource.Resource;
 import io.milton.servlet.MiltonServlet;
+import it.grid.storm.gridhttps.configuration.Configuration;
 import it.grid.storm.gridhttps.webapp.HttpHelper;
 import it.grid.storm.gridhttps.webapp.authorization.UserCredentials;
 import it.grid.storm.gridhttps.webapp.data.Surl;
@@ -52,23 +53,31 @@ import org.slf4j.LoggerFactory;
 
 public class StormResourceHelper {
 
-	private static final Logger log = LoggerFactory.getLogger(StormResourceHelper.class);
+	private final Logger log = LoggerFactory.getLogger(StormResourceHelper.class);
 
-	private static String hostnameBE;
-	private static int portBE;
-	private static ArrayList<TStatusCode> lsIgnored;
+	private String hostnameBE;
+	private int portBE;
+	private ArrayList<TStatusCode> lsIgnored;
 
-	public static void init(String hostname, int port) {
-		StormResourceHelper.hostnameBE = hostname;
-		StormResourceHelper.portBE = port;
-		StormResourceHelper.lsIgnored = new ArrayList<TStatusCode>();
-		StormResourceHelper.lsIgnored.add(TStatusCode.SRM_FAILURE);
-		StormResourceHelper.lsIgnored.add(TStatusCode.SRM_INVALID_PATH);
+	public static StormResourceHelper getInstance() {
+		return new StormResourceHelper(Configuration.getBackendInfo().getHostname(), Configuration.getBackendInfo().getPort());
+	}
+	
+	private StormResourceHelper(String hostname, int port) {
+		init(hostname, port);
+	}
+	
+	private void init(String hostname, int port) {
+		this.hostnameBE = hostname;
+		this.portBE = port;
+		this.lsIgnored = new ArrayList<TStatusCode>();
+		this.lsIgnored.add(TStatusCode.SRM_FAILURE);
+		this.lsIgnored.add(TStatusCode.SRM_INVALID_PATH);
 	}
 
-	private static BackendApi getBackend() throws RuntimeApiException {
+	private BackendApi getBackend() throws RuntimeApiException {
 		try {
-			return new BackendApi(StormResourceHelper.hostnameBE, new Long(StormResourceHelper.portBE));
+			return new BackendApi(this.hostnameBE, new Long(this.portBE));
 		} catch (ApiException e) {
 			log.error(e.getMessage());
 			throw new RuntimeApiException(e.getMessage(), e);
@@ -77,32 +86,32 @@ public class StormResourceHelper {
 
 	/* ABORT REQUEST */
 
-	private static void doAbortRequest(Surl surl, TRequestToken token) throws RuntimeApiException, StormRequestFailureException {
+	private void doAbortRequest(Surl surl, TRequestToken token) throws RuntimeApiException, StormRequestFailureException {
 		HttpHelper helper = new HttpHelper(MiltonServlet.request(), MiltonServlet.response());
 		AbortRequest rollbackOp = new AbortRequest(surl, token);
-		rollbackOp.executeAs(helper.getUser(), StormResourceHelper.getBackend());
+		rollbackOp.executeAs(helper.getUser(), this.getBackend());
 	}
 
 	/* MKCOL */
 
-	public static StormDirectoryResource doMkCol(StormDirectoryResource parentDir, String destName) throws RuntimeApiException,
+	public StormDirectoryResource doMkCol(StormDirectoryResource parentDir, String destName) throws RuntimeApiException,
 			StormRequestFailureException {
 		HttpHelper helper = new HttpHelper(MiltonServlet.request(), MiltonServlet.response());
 		MkDir operation = new MkDir(new Surl(parentDir.getSurl(), destName));
-		operation.executeAs(helper.getUser(), StormResourceHelper.getBackend());
+		operation.executeAs(helper.getUser(), this.getBackend());
 		return new StormDirectoryResource(parentDir, destName);
 	}
 
 	/* PING */
 
-	public static PingOutputData doPing(UserCredentials user, String hostname, int port) throws RuntimeApiException, StormRequestFailureException {
+	public PingOutputData doPing(UserCredentials user, String hostname, int port) throws RuntimeApiException, StormRequestFailureException {
 		Ping operation = new Ping(hostname, port);
-		return operation.executeAs(user, StormResourceHelper.getBackend());
+		return operation.executeAs(user, this.getBackend());
 	}
 
 	/* DELETE */
 
-	public static RequestOutputData doDelete(StormResource toDelete) throws RuntimeApiException, StormRequestFailureException,
+	public RequestOutputData doDelete(StormResource toDelete) throws RuntimeApiException, StormRequestFailureException,
 			TooManyResultsException {
 		HttpHelper helper = new HttpHelper(MiltonServlet.request(), MiltonServlet.response());
 		SRMOperation operation;
@@ -111,28 +120,28 @@ public class StormResourceHelper {
 		} else { // FILE
 			operation = new Rm(toDelete.getSurl());
 		}
-		return (RequestOutputData) operation.executeAs(helper.getUser(), StormResourceHelper.getBackend());
+		return (RequestOutputData) operation.executeAs(helper.getUser(), this.getBackend());
 	}
 
 	/* MOVE */
 
-	public static RequestOutputData doMove(StormResource source, StormDirectoryResource destParent, String destName)
+	public RequestOutputData doMove(StormResource source, StormDirectoryResource destParent, String destName)
 			throws RuntimeApiException, StormRequestFailureException {
 		HttpHelper helper = new HttpHelper(MiltonServlet.request(), MiltonServlet.response());
 		Move operation = new Move(source.getSurl(), new Surl(destParent.getSurl(), destName));
-		return operation.executeAs(helper.getUser(), StormResourceHelper.getBackend());
+		return operation.executeAs(helper.getUser(), this.getBackend());
 	}
 
 	/* GET */
 
-	public static InputStream doGetFile(StormFileResource source) throws NotFoundException, RuntimeApiException,
+	public InputStream doGetFile(StormFileResource source) throws NotFoundException, RuntimeApiException,
 			StormRequestFailureException {
 		HttpHelper helper = new HttpHelper(MiltonServlet.request(), MiltonServlet.response());
 		// PTG
 		ArrayList<String> transferProtocols = new ArrayList<String>();
 		transferProtocols.add(helper.getRequestProtocol());
 		PrepareToGet operation = new PrepareToGet(source.getSurl(), transferProtocols);
-		PtGOutputData outputPtG = operation.executeAs(helper.getUser(), StormResourceHelper.getBackend());
+		PtGOutputData outputPtG = operation.executeAs(helper.getUser(), this.getBackend());
 		// READ FROM DISK
 		log.debug("reading file '" + source.getFile().toString() + "' ...");
 		InputStream in = null;
@@ -140,21 +149,21 @@ public class StormResourceHelper {
 			in = source.getFactory().getContentService().getFileContent(source.getFile());
 		} catch (FileNotFoundException e) {
 			log.error(e.getMessage());
-			StormResourceHelper.doAbortRequest(source.getSurl(), outputPtG.getToken());
+			this.doAbortRequest(source.getSurl(), outputPtG.getToken());
 			throw new NotFoundException("Couldn't locate content");
 		}
 		// RF
 		ReleaseFile operation2 = new ReleaseFile(source.getSurl(), outputPtG.getToken());
 		try {
-			operation2.executeAs(helper.getUser(), StormResourceHelper.getBackend());
+			operation2.executeAs(helper.getUser(), this.getBackend());
 		} catch (RuntimeApiException e) {
-			StormResourceHelper.doAbortRequest(source.getSurl(), outputPtG.getToken());
+			this.doAbortRequest(source.getSurl(), outputPtG.getToken());
 			throw e;
 		} catch (StormRequestFailureException e) {
-			StormResourceHelper.doAbortRequest(source.getSurl(), outputPtG.getToken());
+			this.doAbortRequest(source.getSurl(), outputPtG.getToken());
 			throw e;
 		} catch (RuntimeException e) {
-			StormResourceHelper.doAbortRequest(source.getSurl(), outputPtG.getToken());
+			this.doAbortRequest(source.getSurl(), outputPtG.getToken());
 			throw e;
 		}
 		return in;
@@ -162,7 +171,7 @@ public class StormResourceHelper {
 
 	/* PUT */
 
-	public static StormFileResource doPut(StormDirectoryResource parentDir, String name, InputStream in)
+	public StormFileResource doPut(StormDirectoryResource parentDir, String name, InputStream in)
 			throws RuntimeApiException, StormRequestFailureException, StormResourceException {
 		HttpHelper helper = new HttpHelper(MiltonServlet.request(), MiltonServlet.response());
 		// PTP
@@ -170,132 +179,132 @@ public class StormResourceHelper {
 		transferProtocols.add(helper.getRequestProtocol());
 		Surl toCreate = new Surl(parentDir.getSurl(), name);
 		PrepareToPut operation = new PrepareToPut(toCreate, transferProtocols, false);
-		FileTransferOutputData outputPtP = operation.executeAs(helper.getUser(), StormResourceHelper.getBackend());
+		FileTransferOutputData outputPtP = operation.executeAs(helper.getUser(), this.getBackend());
 		// WRITE FILE
 		File fsDest = new File(parentDir.getFile(), name);
 		try {
 			parentDir.getFactory().getContentService().setFileContent(fsDest, in);
 		} catch (FileNotFoundException e) {
 			log.error(e.getMessage());
-			StormResourceHelper.doAbortRequest(toCreate, outputPtP.getToken());
+			this.doAbortRequest(toCreate, outputPtP.getToken());
 			throw new StormResourceException("FileNotFoundException!", e);
 		} catch (IOException e) {
 			log.error(e.getMessage());
-			StormResourceHelper.doAbortRequest(toCreate, outputPtP.getToken());
+			this.doAbortRequest(toCreate, outputPtP.getToken());
 			throw new StormResourceException("IOException!", e);
 		}
 		// PD
 		PutDone operation2 = new PutDone(toCreate, outputPtP.getToken());
 		try {
-			operation2.executeAs(helper.getUser(), StormResourceHelper.getBackend());
+			operation2.executeAs(helper.getUser(), this.getBackend());
 		} catch (RuntimeApiException e) {
-			StormResourceHelper.doAbortRequest(toCreate, outputPtP.getToken());
+			this.doAbortRequest(toCreate, outputPtP.getToken());
 			throw e;
 		} catch (StormRequestFailureException e) {
-			StormResourceHelper.doAbortRequest(toCreate, outputPtP.getToken());
+			this.doAbortRequest(toCreate, outputPtP.getToken());
 			throw e;
 		} catch (RuntimeException e) {
-			StormResourceHelper.doAbortRequest(toCreate, outputPtP.getToken());
+			this.doAbortRequest(toCreate, outputPtP.getToken());
 			throw e;
 		}
 		return new StormFileResource(parentDir, name);
 	}
 	
-	public static void doPutOverwrite(StormFileResource toReplace, InputStream in)
+	public void doPutOverwrite(StormFileResource toReplace, InputStream in)
 			throws RuntimeApiException, StormRequestFailureException, StormResourceException {
 		HttpHelper helper = new HttpHelper(MiltonServlet.request(), MiltonServlet.response());
 		// PTP
 		ArrayList<String> transferProtocols = new ArrayList<String>();
 		transferProtocols.add(helper.getRequestProtocol());
 		PrepareToPut operation = new PrepareToPut(toReplace.getSurl(), transferProtocols, true);
-		FileTransferOutputData outputPtP = operation.executeAs(helper.getUser(), StormResourceHelper.getBackend());
+		FileTransferOutputData outputPtP = operation.executeAs(helper.getUser(), this.getBackend());
 		// WRITE FILE
 		try {
 			toReplace.getFactory().getContentService().setFileContent(toReplace.getFile(), in);
 		} catch (FileNotFoundException e) {
 			log.error(e.getMessage());
-			StormResourceHelper.doAbortRequest(toReplace.getSurl(), outputPtP.getToken());
+			this.doAbortRequest(toReplace.getSurl(), outputPtP.getToken());
 			throw new StormResourceException("FileNotFoundException!", e);
 		} catch (IOException e) {
 			log.error(e.getMessage());
-			StormResourceHelper.doAbortRequest(toReplace.getSurl(), outputPtP.getToken());
+			this.doAbortRequest(toReplace.getSurl(), outputPtP.getToken());
 			throw new StormResourceException("IOException!", e);
 		}
 		// PD
 		PutDone operation2 = new PutDone(toReplace.getSurl(), outputPtP.getToken());
 		try {
-			operation2.executeAs(helper.getUser(), StormResourceHelper.getBackend());
+			operation2.executeAs(helper.getUser(), this.getBackend());
 		} catch (RuntimeApiException e) {
-			StormResourceHelper.doAbortRequest(toReplace.getSurl(), outputPtP.getToken());
+			this.doAbortRequest(toReplace.getSurl(), outputPtP.getToken());
 			throw e;
 		} catch (StormRequestFailureException e) {
-			StormResourceHelper.doAbortRequest(toReplace.getSurl(), outputPtP.getToken());
+			this.doAbortRequest(toReplace.getSurl(), outputPtP.getToken());
 			throw e;
 		} catch (RuntimeException e) {
-			StormResourceHelper.doAbortRequest(toReplace.getSurl(), outputPtP.getToken());
+			this.doAbortRequest(toReplace.getSurl(), outputPtP.getToken());
 			throw e;
 		}
 	}
 
 	/* STATUS OF PTG */
 
-	public static SurlArrayRequestOutputData doPrepareToGetStatus(Surl source) throws RuntimeApiException, StormRequestFailureException {
+	public SurlArrayRequestOutputData doPrepareToGetStatus(Surl source) throws RuntimeApiException, StormRequestFailureException {
 		HttpHelper helper = new HttpHelper(MiltonServlet.request(), MiltonServlet.response());
 		PrepareToGetStatus operation = new PrepareToGetStatus(source);
-		return operation.executeAs(helper.getUser(), StormResourceHelper.getBackend());
+		return operation.executeAs(helper.getUser(), this.getBackend());
 	}
 	
-	public static SurlArrayRequestOutputData doPrepareToGetStatus(StormFileResource source) throws RuntimeApiException, StormRequestFailureException {
-		return StormResourceHelper.doPrepareToGetStatus(source.getSurl());
+	public SurlArrayRequestOutputData doPrepareToGetStatus(StormFileResource source) throws RuntimeApiException, StormRequestFailureException {
+		return this.doPrepareToGetStatus(source.getSurl());
 	}
 
 	/* STATUS OF PTP */
 
-	public static SurlArrayRequestOutputData doPrepareToPutStatus(Surl source) throws RuntimeApiException, StormRequestFailureException {
+	public SurlArrayRequestOutputData doPrepareToPutStatus(Surl source) throws RuntimeApiException, StormRequestFailureException {
 		HttpHelper helper = new HttpHelper(MiltonServlet.request(), MiltonServlet.response());
 		PrepareToPutStatus operation = new PrepareToPutStatus(source);
-		return operation.executeAs(helper.getUser(), StormResourceHelper.getBackend());
+		return operation.executeAs(helper.getUser(), this.getBackend());
 	}
 	
-	public static SurlArrayRequestOutputData doPrepareToPutStatus(StormFileResource source) throws RuntimeApiException, StormRequestFailureException {
-		return StormResourceHelper.doPrepareToPutStatus(source.getSurl());
+	public SurlArrayRequestOutputData doPrepareToPutStatus(StormFileResource source) throws RuntimeApiException, StormRequestFailureException {
+		return this.doPrepareToPutStatus(source.getSurl());
 	}
 
 	/* COPY */
 
-	public static void doCopyDirectory(StormDirectoryResource sourceDir, StormDirectoryResource newParent, String newName)
+	public void doCopyDirectory(StormDirectoryResource sourceDir, StormDirectoryResource newParent, String newName)
 			throws NotAuthorizedException, ConflictException, BadRequestException, StormRequestFailureException {
 		HttpHelper httpHelper = new HttpHelper(MiltonServlet.request(), MiltonServlet.response());
-		doCopyDirectory(sourceDir, newParent, newName, httpHelper.isDepthInfinity());
+		this.doCopyDirectory(sourceDir, newParent, newName, httpHelper.isDepthInfinity());
 	}
 	
-	private static void doCopyDirectory(StormDirectoryResource sourceDir, StormDirectoryResource newParent, String newName,
+	private void doCopyDirectory(StormDirectoryResource sourceDir, StormDirectoryResource newParent, String newName,
 			boolean isDepthInfinity) throws RuntimeApiException, StormRequestFailureException, StormResourceException, BadRequestException,
 			NotAuthorizedException {
 		log.debug("copy '" + sourceDir.getSurl().asString() + "' to '" + newParent.getSurl().asString() + File.separator + newName
 				+ "' ...");
 		// create destination folder:
-		StormDirectoryResource destinationResource = StormResourceHelper.doMkCol(newParent, newName);
+		StormDirectoryResource destinationResource = this.doMkCol(newParent, newName);
 		// COPY every resource from the source to the destination folder:
 		for (Resource r : sourceDir.getChildren()) {
 			if (r instanceof StormFileResource) { // is a file
-				StormResourceHelper.doCopyFile((StormFileResource) r, destinationResource, ((StormFileResource) r).getName());
+				this.doCopyFile((StormFileResource) r, destinationResource, ((StormFileResource) r).getName());
 			} else if (r instanceof StormDirectoryResource) { // is a directory
 				if (isDepthInfinity) { // recursion on
-					StormResourceHelper.doCopyDirectory((StormDirectoryResource) r, destinationResource,
+					this.doCopyDirectory((StormDirectoryResource) r, destinationResource,
 							((StormDirectoryResource) r).getName(), isDepthInfinity);
 				} else { // recursion off
-					StormResourceHelper.doMkCol(destinationResource, ((StormDirectoryResource) r).getName());
+					this.doMkCol(destinationResource, ((StormDirectoryResource) r).getName());
 				}
 			}
 		}
 	}
 	
-	public static void doCopyFile(StormFileResource source, StormDirectoryResource newParent, String newName) throws RuntimeApiException,
+	public void doCopyFile(StormFileResource source, StormDirectoryResource newParent, String newName) throws RuntimeApiException,
 			StormRequestFailureException, StormResourceException {
 		log.debug("copy '" + source.getSurl().asString() + "' to '" + newParent.getSurl().asString() + File.separator + newName + "' ...");
 		try {
-			StormResourceHelper.doPut(newParent, newName, source.getInputStream());
+			this.doPut(newParent, newName, source.getInputStream());
 		} catch (FileNotFoundException e) {
 			log.error(e.getMessage());
 			throw new StormResourceException("FileNotFoundException!", e);
@@ -304,14 +313,14 @@ public class StormResourceHelper {
 
 	/* LS */
 
-	public static ArrayList<SurlInfo> filterLs(Collection<SurlInfo> collection) {
+	public ArrayList<SurlInfo> filterLs(Collection<SurlInfo> collection) {
 		ArrayList<SurlInfo> filteredOutput = new ArrayList<SurlInfo>();
 		for (SurlInfo info : collection) {
 			if (info == null) {
 				log.warn("ignored NULL surl-info!!");
 				continue;
 			}
-			if (StormResourceHelper.lsIgnored.contains(info.getStatus().getStatusCode())) {
+			if (this.lsIgnored.contains(info.getStatus().getStatusCode())) {
 				log.warn("ignored '" + info.getStfn() + "' from ls list, status is " + info.getStatus().getStatusCode().getValue());
 				continue;
 			}
@@ -327,71 +336,71 @@ public class StormResourceHelper {
 
 	// new RecursionLevel(Recursion.LIMITED, 0) >> LIMITED DETAILED LS
 
-	public static LsOutputData doLs(File source) throws RuntimeApiException, StormRequestFailureException, TooManyResultsException {
+	public LsOutputData doLs(File source) throws RuntimeApiException, StormRequestFailureException, TooManyResultsException {
 		HttpHelper helper = new HttpHelper(MiltonServlet.request(), MiltonServlet.response());
 		Ls operation = new Ls(new Surl(source));
-		return operation.executeAs(helper.getUser(), StormResourceHelper.getBackend());
+		return operation.executeAs(helper.getUser(), this.getBackend());
 	}
 
-	public static LsOutputData doLsDetailed(File source) throws RuntimeApiException, StormRequestFailureException, TooManyResultsException {
+	public LsOutputData doLsDetailed(File source) throws RuntimeApiException, StormRequestFailureException, TooManyResultsException {
 		HttpHelper helper = new HttpHelper(MiltonServlet.request(), MiltonServlet.response());
 		LsDetailed operation = new LsDetailed(new Surl(source));
-		return operation.executeAs(helper.getUser(), StormResourceHelper.getBackend());
+		return operation.executeAs(helper.getUser(), this.getBackend());
 	}
 
-	public static LsOutputData doLsDetailed(File source, RecursionLevel recursion) throws RuntimeApiException,
+	public LsOutputData doLsDetailed(File source, RecursionLevel recursion) throws RuntimeApiException,
 			StormRequestFailureException, TooManyResultsException {
 		HttpHelper helper = new HttpHelper(MiltonServlet.request(), MiltonServlet.response());
 		LsDetailed operation = new LsDetailed(new Surl(source), recursion);
-		return operation.executeAs(helper.getUser(), StormResourceHelper.getBackend());
+		return operation.executeAs(helper.getUser(), this.getBackend());
 	}
 
-	public static LsOutputData doLsDetailed(File source, RecursionLevel recursion, int count) throws RuntimeApiException,
+	public LsOutputData doLsDetailed(File source, RecursionLevel recursion, int count) throws RuntimeApiException,
 			StormRequestFailureException, TooManyResultsException {
 		HttpHelper helper = new HttpHelper(MiltonServlet.request(), MiltonServlet.response());
 		LsDetailed operation = new LsDetailed(new Surl(source), recursion, count);
-		return operation.executeAs(helper.getUser(), StormResourceHelper.getBackend());
+		return operation.executeAs(helper.getUser(), this.getBackend());
 	}
 
-	public static LsOutputData doLs(StormResource source) throws RuntimeApiException, StormRequestFailureException, TooManyResultsException {
-		return StormResourceHelper.doLs(source.getFile());
+	public LsOutputData doLs(StormResource source) throws RuntimeApiException, StormRequestFailureException, TooManyResultsException {
+		return this.doLs(source.getFile());
 	}
 
-	public static LsOutputData doLsDetailed(StormResource source) throws RuntimeApiException, StormRequestFailureException,
+	public LsOutputData doLsDetailed(StormResource source) throws RuntimeApiException, StormRequestFailureException,
 			TooManyResultsException {
-		return StormResourceHelper.doLsDetailed(source.getFile());
+		return this.doLsDetailed(source.getFile());
 	}
 
-	public static LsOutputData doLsDetailed(StormResource source, RecursionLevel recursion) throws RuntimeApiException,
+	public LsOutputData doLsDetailed(StormResource source, RecursionLevel recursion) throws RuntimeApiException,
 			StormRequestFailureException, TooManyResultsException {
-		return StormResourceHelper.doLsDetailed(source.getFile(), recursion);
+		return this.doLsDetailed(source.getFile(), recursion);
 	}
 
-	public static LsOutputData doLsDetailed(StormResource source, RecursionLevel recursion, int count) throws RuntimeApiException,
+	public LsOutputData doLsDetailed(StormResource source, RecursionLevel recursion, int count) throws RuntimeApiException,
 			StormRequestFailureException, TooManyResultsException {
-		return StormResourceHelper.doLsDetailed(source.getFile(), recursion, count);
+		return this.doLsDetailed(source.getFile(), recursion, count);
 	}
 
 	/* LIMITED LS DETAILED */
 
-	public static LsOutputData doLimitedLsDetailed(File source) throws RuntimeApiException, StormRequestFailureException,
+	public LsOutputData doLimitedLsDetailed(File source) throws RuntimeApiException, StormRequestFailureException,
 			TooManyResultsException {
-		return StormResourceHelper.doLsDetailed(source, new RecursionLevel(Recursion.LIMITED, 0));
+		return this.doLsDetailed(source, new RecursionLevel(Recursion.LIMITED, 0));
 	}
 
-	public static LsOutputData doLimitedLsDetailed(File source, int count) throws RuntimeApiException,
+	public LsOutputData doLimitedLsDetailed(File source, int count) throws RuntimeApiException,
 			StormRequestFailureException, TooManyResultsException {
-		return StormResourceHelper.doLsDetailed(source, new RecursionLevel(Recursion.LIMITED, 0), count);
+		return this.doLsDetailed(source, new RecursionLevel(Recursion.LIMITED, 0), count);
 	}
 
-	public static LsOutputData doLimitedLsDetailed(StormResource source) throws RuntimeApiException, StormRequestFailureException,
+	public LsOutputData doLimitedLsDetailed(StormResource source) throws RuntimeApiException, StormRequestFailureException,
 			TooManyResultsException {
-		return StormResourceHelper.doLimitedLsDetailed(source.getFile());
+		return this.doLimitedLsDetailed(source.getFile());
 	}
 
-	public static LsOutputData doLimitedLsDetailed(StormResource source, int count) throws RuntimeApiException,
+	public LsOutputData doLimitedLsDetailed(StormResource source, int count) throws RuntimeApiException,
 			StormRequestFailureException, TooManyResultsException {
-		return StormResourceHelper.doLimitedLsDetailed(source.getFile(), count);
+		return this.doLimitedLsDetailed(source.getFile(), count);
 	}
 
 }

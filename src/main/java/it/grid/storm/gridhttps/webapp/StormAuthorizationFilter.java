@@ -53,7 +53,6 @@ public class StormAuthorizationFilter implements Filter {
 
 	public void init(FilterConfig fc) throws ServletException {
 		log.info("StormAuthorizationFilter - Init");
-		StormResourceHelper.init(Configuration.getBackendInfo().getHostname(), Configuration.getBackendInfo().getPort());
 	}
 
 	public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
@@ -175,7 +174,7 @@ public class StormAuthorizationFilter implements Filter {
 
 	private void doPing(UserCredentials user) {
 		try {
-			StormResourceHelper.doPing(user, Configuration.getBackendInfo().getHostname(), Configuration.getBackendInfo().getPort());
+			StormResourceHelper.getInstance().doPing(user, Configuration.getBackendInfo().getHostname(), Configuration.getBackendInfo().getPort());
 		} catch (RuntimeApiException e) {
 			log.error(e.getMessage());
 		} catch (StormRequestFailureException e) {

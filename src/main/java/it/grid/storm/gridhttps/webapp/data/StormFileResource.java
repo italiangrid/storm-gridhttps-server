@@ -58,25 +58,25 @@ public class StormFileResource extends StormResource {
 	}
 
 	public void delete() throws NotAuthorizedException, ConflictException, BadRequestException {
-		StormResourceHelper.doDelete(this);
+		StormResourceHelper.getInstance().doDelete(this);
 	}
 
 	public void moveTo(StormDirectoryResource newParent, String newName) throws NotAuthorizedException, ConflictException, BadRequestException {
-		StormResourceHelper.doMove(this, newParent, newName);
+		StormResourceHelper.getInstance().doMove(this, newParent, newName);
 		setFile(new File(newParent.getFile(), newName));
 	}
 
 	public void copyTo(StormDirectoryResource newParent, String newName) throws NotAuthorizedException, ConflictException, BadRequestException {
-		StormResourceHelper.doCopyFile(this, newParent, newName);
+		StormResourceHelper.getInstance().doCopyFile(this, newParent, newName);
 	}
 
 	public void replaceContent(InputStream in, Long length) throws BadRequestException, ConflictException, NotAuthorizedException {		
-		StormResourceHelper.doPutOverwrite(this, in);
+		StormResourceHelper.getInstance().doPutOverwrite(this, in);
 	}
 
 	@Override
 	public SurlInfo getSurlInfo() throws RuntimeApiException, StormRequestFailureException, TooManyResultsException {
-		return StormResourceHelper.filterLs(StormResourceHelper.doLimitedLsDetailed(this.getFile()).getInfos()).get(0);
+		return StormResourceHelper.getInstance().doLimitedLsDetailed(this.getFile()).getInfos().iterator().next();
 	}
 
 }

@@ -45,7 +45,7 @@ public class StormPropFindPropertyBuilder implements PropFindPropertyBuilder {
 	private List<PropertySource> propertySources;
 	private ArrayList<String> standardProperties;
 	private ArrayList<String> srmProperties;
-
+	
 	public StormPropFindPropertyBuilder() {
 		this.standardProperties = new ArrayList<String>();
 		this.standardProperties.add("getcontentlength");
@@ -120,7 +120,7 @@ public class StormPropFindPropertyBuilder implements PropFindPropertyBuilder {
 		}
 		Set<QName> requestedFields = parseResult.isAllProp() ? findAllProps(resource) : parseResult.getNames();
 		RecursionLevel recursion = requestedDepth <= 1 ? new RecursionLevel(Recursion.NONE) : new RecursionLevel(Recursion.FULL);
-		SurlInfo surlInfo = StormResourceHelper.doLsDetailed((StormResource) resource, recursion).getInfos().iterator().next();
+		SurlInfo surlInfo = StormResourceHelper.getInstance().doLsDetailed((StormResource) resource, recursion).getInfos().iterator().next();
 		process(responses, (StormResource) resource, surlInfo, href, collectionHref, requestedFields, requestedDepth, 0,
 				((StormResource) resource).getFactory());
 	}
@@ -194,7 +194,7 @@ public class StormPropFindPropertyBuilder implements PropFindPropertyBuilder {
 		responses.add(r);
 
 		if (requestedDepth > currentDepth && (resource instanceof StormDirectoryResource)) {
-			for (SurlInfo info : StormResourceHelper.filterLs(surlInfo.getSubpathInfo())) {
+			for (SurlInfo info : StormResourceHelper.getInstance().filterLs(surlInfo.getSubpathInfo())) {
 				StormResource child = factory.resolveFile(info);
 				if (child instanceof PropFindableResource) {
 					String childName = child.getName();

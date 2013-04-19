@@ -45,7 +45,7 @@ public class OptionsMethodAuthorization extends AbstractMethodAuthorization {
 	private void doPing() {
 		// PING
 		try {
-			StormResourceHelper.doPing(this.getHTTPHelper().getUser(), this.getHostname(), this.getPort());
+			StormResourceHelper.getInstance().doPing(this.getHTTPHelper().getUser(), this.getHostname(), this.getPort());
 		} catch (RuntimeApiException e) {
 			log.error(e.getMessage() + ": " + e.getReason());
 		} catch (StormRequestFailureException e) {
