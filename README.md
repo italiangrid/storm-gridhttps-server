@@ -10,21 +10,15 @@ server when used in conjunction with StoRM SRM interface.
 * Scientific Linux 5 x86_64
 * Scientific Linux 6 x86_64
 
-## Required repositories
-
-In order to build the StoRM GridHTTPs Server, please enable the following repositories on your build machine
-
-### EPEL
-
-<pre>
-yum install epel-release
-</pre>
-
 ## Building
 Required packages:
 
 * git
+* java-1.6.0-openjdk
+* java-1.6.0-openjdk-devel
 * maven
+
+> Maven is a Java tool, so you must have Java installed in order to proceed. More precisely, you need a Java Development Kit (JDK), the Java Runtime Environment (JRE) is not sufficient.
 
 Download source files:
 <pre>
@@ -39,7 +33,7 @@ mvn -s mirror-settings.xml clean
 mvn -s mirror-settings.xml -U package
 </pre>
 
-It could be necessary to set JAVA_HOME environment variable, for example:
+>It could be necessary to set JAVA_HOME environment variable, for example:
 <pre>
 export JAVA_HOME="/usr/lib/jvm/java"
 </pre>
