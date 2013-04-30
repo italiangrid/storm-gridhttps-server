@@ -27,7 +27,7 @@ public class DefaultConfiguration {
 
 	/* storm gridhttps-server configuration*/
 	public final static int 		SERVER_MAPPER_SERVLET_PORT = 8086;
-	public final static boolean 	SERVER_WEBAPP_USE_HTTP = false;
+	public final static boolean 	SERVER_WEBAPP_USE_HTTP = true;
 	public final static int 		SERVER_WEBAPP_HTTP_PORT = 8085;
 	public final static int 		SERVER_WEBAPP_HTTPS_PORT = 8443;
 	public final static boolean 	SERVER_WEBAPP_HTTPS_WANT_CLIENT_AUTH = true;

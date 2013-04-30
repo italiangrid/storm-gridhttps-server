@@ -47,8 +47,8 @@
 # ============================
 
 # Enable http connections
-# Default: false - Available values: [true|false]
-#http.enabled = false
+# Default: true - Available values: [true|false]
+#http.enabled = true
 
 # Gridhttps http port.
 # Default: 8085
