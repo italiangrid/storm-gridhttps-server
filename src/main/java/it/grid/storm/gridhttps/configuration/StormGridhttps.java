@@ -49,6 +49,7 @@ public class StormGridhttps {
 		sslOptions.setTrustStoreDirectory(DefaultConfiguration.SERVER_WEBAPP_HTTPS_TRUST_STORE_DIRECTORY);
 		sslOptions.setNeedClientAuth(DefaultConfiguration.SERVER_WEBAPP_HTTPS_NEED_CLIENT_AUTH);
 		sslOptions.setWantClientAuth(DefaultConfiguration.SERVER_WEBAPP_HTTPS_WANT_CLIENT_AUTH);
+		sslOptions.setTrustStoreRefreshIntervalInMsec(DefaultConfiguration.SERVER_WEBAPP_TRUST_STORE_REFRESH_INTERVAL);
 		this.setSsloptions(sslOptions);
 		this.setLogFile(DefaultConfiguration.LOG_FILE);
 		this.setFiletransferContextPath(DefaultConfiguration.WEBAPP_FILETRANSFER_CONTEXTPATH);
