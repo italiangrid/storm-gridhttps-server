@@ -85,8 +85,6 @@ public class Configuration {
 			getFrontendInfo().setHostname(configuration.get("backend", "srm.endpoint").split(":")[0]);
 			getFrontendInfo().setPort(Integer.valueOf(configuration.get("backend", "srm.endpoint").split(":")[1]));
 		}
-		if (configuration.get("backend").containsKey("root-directory"))
-			getGridhttpsInfo().setRootDirectory(new File(configuration.get("backend", "root-directory")));
 		if (configuration.get("backend").containsKey("compute-checksum"))
 			getGridhttpsInfo().setComputeChecksum(configuration.get("backend", "compute-checksum", boolean.class));
 //		if (configuration.get("backend").containsKey("checksum-type"))
