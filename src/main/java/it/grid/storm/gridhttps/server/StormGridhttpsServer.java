@@ -29,9 +29,13 @@ import org.eclipse.jetty.servlet.ServletHolder;
 import org.eclipse.jetty.util.thread.QueuedThreadPool;
 import org.eclipse.jetty.webapp.WebAppContext;
 import org.italiangrid.utils.https.ServerFactory;
+import org.italiangrid.utils.https.impl.canl.CANLListener;
+import org.italiangrid.voms.util.CertificateValidatorBuilder;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import eu.emi.security.authn.x509.X509CertChainValidatorExt;
 
 public class StormGridhttpsServer {
 
@@ -50,7 +54,14 @@ public class StormGridhttpsServer {
 	}
 
 	private void init() throws ServerException {
-		oneServer = ServerFactory.newServer(gridhttpsInfo.getHostname(), gridhttpsInfo.getHttpsPort(), gridhttpsInfo.getSsloptions());
+		CANLListener l = new CANLListener();
+		X509CertChainValidatorExt validator = CertificateValidatorBuilder
+			.buildCertificateValidator(gridhttpsInfo.getSsloptions()
+				.getTrustStoreDirectory(), l, l, gridhttpsInfo.getSsloptions()
+				.getTrustStoreRefreshIntervalInMsec());
+		oneServer = ServerFactory.newServer(gridhttpsInfo.getHostname(),
+			gridhttpsInfo.getHttpsPort(), gridhttpsInfo.getSsloptions(), validator,
+			ServerFactory.MAX_CONNECTIONS, ServerFactory.MAX_REQUEST_QUEUE_SIZE);
 		davHttpsConnector = oneServer.getConnectors()[0];
 		oneServer.setStopAtShutdown(true);
 		oneServer.setGracefulShutdown(1000);
