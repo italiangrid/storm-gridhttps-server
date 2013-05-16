@@ -92,7 +92,7 @@ public class PutMethodAuthorization extends AbstractMethodAuthorization {
 		} else if (requestStatus.equals("SRM_SUCCESS")) {
 			String surlStatus = outputSPtP.getStatus(surl.asString()).getStatusCode().getValue();
 			log.debug("Surl-status: " + surlStatus);
-			if (surlStatus.equals("SRM_FILE_PINNED")) {
+			if (surlStatus.equals("SRM_SPACE_AVAILABLE")) {
 				return AuthorizationStatus.AUTHORIZED();
 			} 
 			return AuthorizationStatus.NOTAUTHORIZED(412, outputSPtP.getStatus(surl.asString()).getExplanation());			
