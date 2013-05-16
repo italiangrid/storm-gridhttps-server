@@ -88,7 +88,7 @@ public class PutMethodAuthorization extends AbstractMethodAuthorization {
 		String requestStatus = outputSPtP.getStatus().getStatusCode().getValue();
 		log.debug("Request-status: " + requestStatus);
 		if (requestStatus.equals("SRM_INVALID_REQUEST")) {
-			return AuthorizationStatus.NOTAUTHORIZED(412, "You must do a prepare-to-get on surl '" + surl.asString() + "' before!");			
+			return AuthorizationStatus.NOTAUTHORIZED(412, "You must do a prepare-to-put on surl '" + surl.asString() + "' before!");			
 		} else if (requestStatus.equals("SRM_SUCCESS")) {
 			String surlStatus = outputSPtP.getStatus(surl.asString()).getStatusCode().getValue();
 			log.debug("Surl-status: " + surlStatus);
