@@ -24,7 +24,6 @@ import it.grid.storm.gridhttps.webapp.authorization.Constants;
 import it.grid.storm.gridhttps.webapp.authorization.UserCredentials;
 import it.grid.storm.gridhttps.webapp.authorization.methods.AbstractMethodAuthorization;
 import it.grid.storm.gridhttps.webapp.data.Surl;
-import it.grid.storm.gridhttps.webapp.data.exceptions.StormRequestFailureException;
 import it.grid.storm.gridhttps.webapp.data.exceptions.RuntimeApiException;
 import it.grid.storm.gridhttps.webapp.srmOperations.PrepareToPutStatus;
 import it.grid.storm.storagearea.StorageArea;
@@ -80,9 +79,6 @@ public class PutMethodAuthorization extends AbstractMethodAuthorization {
 			PrepareToPutStatus operation = new PrepareToPutStatus(surl);
 			outputSPtP = operation.executeAs(this.getHTTPHelper().getUser(), backEnd);
 		} catch (RuntimeApiException e) {
-			log.error(e.getMessage());
-			return AuthorizationStatus.NOTAUTHORIZED(500, e.getMessage());
-		} catch (StormRequestFailureException e) {
 			log.error(e.getMessage());
 			return AuthorizationStatus.NOTAUTHORIZED(500, e.getMessage());
 		} catch (ApiException e) {

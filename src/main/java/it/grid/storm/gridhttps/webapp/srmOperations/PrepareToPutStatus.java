@@ -6,7 +6,6 @@ import org.slf4j.LoggerFactory;
 import it.grid.storm.gridhttps.webapp.authorization.UserCredentials;
 import it.grid.storm.gridhttps.webapp.data.Surl;
 import it.grid.storm.gridhttps.webapp.data.exceptions.RuntimeApiException;
-import it.grid.storm.gridhttps.webapp.data.exceptions.StormRequestFailureException;
 import it.grid.storm.xmlrpc.ApiException;
 import it.grid.storm.xmlrpc.BackendApi;
 import it.grid.storm.xmlrpc.outputdata.SurlArrayRequestOutputData;
@@ -30,7 +29,7 @@ public class PrepareToPutStatus implements SRMOperation {
 	}
 	
 	@Override
-	public SurlArrayRequestOutputData executeAs(UserCredentials user, BackendApi backend) throws RuntimeApiException, StormRequestFailureException {
+	public SurlArrayRequestOutputData executeAs(UserCredentials user, BackendApi backend) throws RuntimeApiException {
 		SurlArrayRequestOutputData outputSPtP = null;
 		log.debug("status of prepare to put on '" + this.getSurl().asString() + "' ...");
 		try {
@@ -47,9 +46,6 @@ public class PrepareToPutStatus implements SRMOperation {
 		}
 		log.debug(outputSPtP.getStatus().getStatusCode().getValue());
 		log.debug(outputSPtP.getStatus().getExplanation());
-		if (!outputSPtP.getStatus().getStatusCode().getValue().equals("SRM_SUCCESS")) {
-			throw new StormRequestFailureException(outputSPtP.getStatus());
-		}
 		return outputSPtP;
 	}
 	
