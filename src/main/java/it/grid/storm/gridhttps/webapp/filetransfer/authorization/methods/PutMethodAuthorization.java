@@ -23,11 +23,13 @@ import it.grid.storm.gridhttps.webapp.authorization.AuthorizationStatus;
 import it.grid.storm.gridhttps.webapp.authorization.Constants;
 import it.grid.storm.gridhttps.webapp.authorization.UserCredentials;
 import it.grid.storm.gridhttps.webapp.authorization.methods.AbstractMethodAuthorization;
-import it.grid.storm.gridhttps.webapp.data.StormResourceHelper;
 import it.grid.storm.gridhttps.webapp.data.Surl;
 import it.grid.storm.gridhttps.webapp.data.exceptions.StormRequestFailureException;
 import it.grid.storm.gridhttps.webapp.data.exceptions.RuntimeApiException;
+import it.grid.storm.gridhttps.webapp.srmOperations.PrepareToPutStatus;
 import it.grid.storm.storagearea.StorageArea;
+import it.grid.storm.xmlrpc.ApiException;
+import it.grid.storm.xmlrpc.BackendApi;
 import it.grid.storm.xmlrpc.outputdata.SurlArrayRequestOutputData;
 
 public class PutMethodAuthorization extends AbstractMethodAuthorization {
@@ -74,11 +76,16 @@ public class PutMethodAuthorization extends AbstractMethodAuthorization {
 		log.debug("Check for a prepare-to-put");
 		SurlArrayRequestOutputData outputSPtP;
 		try {
-			outputSPtP = StormResourceHelper.getInstance().doPrepareToPutStatus(surl);
+			BackendApi backEnd = new BackendApi(Configuration.getBackendInfo().getHostname(), new Long(Configuration.getBackendInfo().getPort()));
+			PrepareToPutStatus operation = new PrepareToPutStatus(surl);
+			outputSPtP = operation.executeAs(this.getHTTPHelper().getUser(), backEnd);
 		} catch (RuntimeApiException e) {
 			log.error(e.getMessage());
 			return AuthorizationStatus.NOTAUTHORIZED(500, e.getMessage());
 		} catch (StormRequestFailureException e) {
+			log.error(e.getMessage());
+			return AuthorizationStatus.NOTAUTHORIZED(500, e.getMessage());
+		} catch (ApiException e) {
 			log.error(e.getMessage());
 			return AuthorizationStatus.NOTAUTHORIZED(500, e.getMessage());
 		} 

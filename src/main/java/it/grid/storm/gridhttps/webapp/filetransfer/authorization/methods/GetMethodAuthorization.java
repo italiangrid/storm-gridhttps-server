@@ -23,11 +23,13 @@ import it.grid.storm.gridhttps.webapp.authorization.AuthorizationStatus;
 import it.grid.storm.gridhttps.webapp.authorization.Constants;
 import it.grid.storm.gridhttps.webapp.authorization.UserCredentials;
 import it.grid.storm.gridhttps.webapp.authorization.methods.AbstractMethodAuthorization;
-import it.grid.storm.gridhttps.webapp.data.StormResourceHelper;
 import it.grid.storm.gridhttps.webapp.data.Surl;
 import it.grid.storm.gridhttps.webapp.data.exceptions.RuntimeApiException;
 import it.grid.storm.gridhttps.webapp.data.exceptions.StormRequestFailureException;
+import it.grid.storm.gridhttps.webapp.srmOperations.PrepareToGetStatus;
 import it.grid.storm.storagearea.StorageArea;
+import it.grid.storm.xmlrpc.ApiException;
+import it.grid.storm.xmlrpc.BackendApi;
 import it.grid.storm.xmlrpc.outputdata.SurlArrayRequestOutputData;
 
 public class GetMethodAuthorization extends AbstractMethodAuthorization {
@@ -73,13 +75,18 @@ public class GetMethodAuthorization extends AbstractMethodAuthorization {
 		log.debug("Check for a prepare-to-get");	
 		SurlArrayRequestOutputData outputSPtG;
 		try {
-			outputSPtG = StormResourceHelper.getInstance().doPrepareToGetStatus(surl);
+			BackendApi backEnd = new BackendApi(Configuration.getBackendInfo().getHostname(), new Long(Configuration.getBackendInfo().getPort()));
+			PrepareToGetStatus operation = new PrepareToGetStatus(surl);
+			outputSPtG = operation.executeAs(this.getHTTPHelper().getUser(), backEnd);
 		} catch (RuntimeApiException e) {
 			log.error(e.getMessage());
 			return AuthorizationStatus.NOTAUTHORIZED(500, e.getMessage());
 		} catch (StormRequestFailureException e) {
 			log.error(e.getReason());
 			return AuthorizationStatus.NOTAUTHORIZED(500, e.getReason());
+		} catch (ApiException e) {
+			log.error(e.getMessage());
+			return AuthorizationStatus.NOTAUTHORIZED(500, e.getMessage());
 		}
 		String requestStatus = outputSPtG.getStatus().getStatusCode().getValue();
 		log.debug("Request-status: " + requestStatus);
