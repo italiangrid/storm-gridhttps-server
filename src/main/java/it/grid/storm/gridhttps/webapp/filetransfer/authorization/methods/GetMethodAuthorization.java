@@ -86,13 +86,17 @@ public class GetMethodAuthorization extends AbstractMethodAuthorization {
 		}
 		String requestStatus = outputSPtG.getStatus().getStatusCode().getValue();
 		log.debug("Request-status: " + requestStatus);
-		String surlStatus = outputSPtG.getStatus(surl.asString()).getStatusCode().getValue();
-		log.debug("Surl-status: " + surlStatus);
-		if (requestStatus.equals("SRM_SUCCESS") && surlStatus.equals("SRM_FILE_PINNED")) {
-			return AuthorizationStatus.AUTHORIZED();
-		} else {
-			return AuthorizationStatus.NOTAUTHORIZED(412, "You must do a prepare-to-get on surl '" + surl.asString() + "' before!");
+		if (requestStatus.equals("SRM_INVALID_REQUEST")) {
+			return AuthorizationStatus.NOTAUTHORIZED(412, "You must do a prepare-to-get on surl '" + surl.asString() + "' before!");			
+		} else if (requestStatus.equals("SRM_SUCCESS")) {
+			String surlStatus = outputSPtG.getStatus(surl.asString()).getStatusCode().getValue();
+			log.debug("Surl-status: " + surlStatus);
+			if (surlStatus.equals("SRM_FILE_PINNED")) {
+				return AuthorizationStatus.AUTHORIZED();
+			} 
+			return AuthorizationStatus.NOTAUTHORIZED(412, outputSPtG.getStatus(surl.asString()).getExplanation());			
 		}
+		return AuthorizationStatus.NOTAUTHORIZED(500, outputSPtG.getStatus().getExplanation());
 	}
 	
 }
