@@ -129,9 +129,6 @@ public abstract class StormFactory implements ResourceFactory {
 		String hostNoPort = stripPortFromHost(host);
 		path = stripContext(path);
 		log.debug("getResource: host: " + hostNoPort + " - url:" + path);
-		if (!isLocalResource(host)) {
-			log.warn("Received host '" + host + "' doesn't match with local hostname '" + this.getLocalhostname() + "'! Check your /etc/hosts file..");
-		}
 		if (!isRoot(path)) {
 		  StorageArea currentSA = StorageAreaManager.getMatchingSA(path);
 		  if (currentSA != null) {
