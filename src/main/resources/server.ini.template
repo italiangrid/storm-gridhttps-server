@@ -103,18 +103,15 @@ backend.hostname =
 # Default: STORM_BACKEND_HOSTNAME:8444
 #srm.endpoint = ${backend.hostname}:8444
 
-# If compute-checksum is true, for the checksum-type specified a valid checksum-value is computed for every file created
+# If compute-checksum is true, a valid Adler32 checksum-value is computed for every file created
 # Default: true
 #compute-checksum = true
-
-# Checksum-type specify the kind of algorithm has to be used to compute checksum, if compute-checksum is true.
-# Default: adler32 (other values: ...)
-#checksum-type = adler32
 
 
 
 
 #Change-log
+#08-08-2013 Removed checksum-type
 #02-04-2013 Removed webapp-directory
 #02-04-2013 Unified webdav.max.active.threads, webdav.max.queued.threads, mapping.max.active.threads and mapping.max.queued.threads into max.active.threads and max.queued.threads for the single server running 
 #28-03-2013 Removed service>webdav.context-path and service>filetransfer.context-path

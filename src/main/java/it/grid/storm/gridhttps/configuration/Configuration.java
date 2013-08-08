@@ -87,8 +87,6 @@ public class Configuration {
 		}
 		if (configuration.get("backend").containsKey("compute-checksum"))
 			getGridhttpsInfo().setComputeChecksum(configuration.get("backend", "compute-checksum", boolean.class));
-//		if (configuration.get("backend").containsKey("checksum-type"))
-//			getGridhttpsInfo().setChecksumType(configuration.get("backend", "checksum-type"));
 		System.out.println("configuration successfully loaded");
 	}
 	
