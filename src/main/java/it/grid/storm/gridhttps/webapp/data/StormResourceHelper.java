@@ -138,9 +138,7 @@ public class StormResourceHelper {
 			StormRequestFailureException {
 		HttpHelper helper = new HttpHelper(MiltonServlet.request(), MiltonServlet.response());
 		// PTG
-		ArrayList<String> transferProtocols = new ArrayList<String>();
-		transferProtocols.add(helper.getRequestProtocol());
-		PrepareToGet operation = new PrepareToGet(source.getSurl(), transferProtocols);
+		PrepareToGet operation = new PrepareToGet(source.getSurl());
 		PtGOutputData outputPtG = operation.executeAs(helper.getUser(), this.getBackend());
 		// READ FROM DISK
 		log.debug("reading file '" + source.getFile().toString() + "' ...");
@@ -175,10 +173,8 @@ public class StormResourceHelper {
 			throws RuntimeApiException, StormRequestFailureException, StormResourceException {
 		HttpHelper helper = new HttpHelper(MiltonServlet.request(), MiltonServlet.response());
 		// PTP
-		ArrayList<String> transferProtocols = new ArrayList<String>();
-		transferProtocols.add(helper.getRequestProtocol());
 		Surl toCreate = new Surl(parentDir.getSurl(), name);
-		PrepareToPut operation = new PrepareToPut(toCreate, transferProtocols, false);
+		PrepareToPut operation = new PrepareToPut(toCreate);
 		FileTransferOutputData outputPtP = operation.executeAs(helper.getUser(), this.getBackend());
 		// WRITE FILE
 		File fsDest = new File(parentDir.getFile(), name);
@@ -214,9 +210,7 @@ public class StormResourceHelper {
 			throws RuntimeApiException, StormRequestFailureException, StormResourceException {
 		HttpHelper helper = new HttpHelper(MiltonServlet.request(), MiltonServlet.response());
 		// PTP
-		ArrayList<String> transferProtocols = new ArrayList<String>();
-		transferProtocols.add(helper.getRequestProtocol());
-		PrepareToPut operation = new PrepareToPut(toReplace.getSurl(), transferProtocols, true);
+		PrepareToPut operation = new PrepareToPut(toReplace.getSurl(), true);
 		FileTransferOutputData outputPtP = operation.executeAs(helper.getUser(), this.getBackend());
 		// WRITE FILE
 		try {
