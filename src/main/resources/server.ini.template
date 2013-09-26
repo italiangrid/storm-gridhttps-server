@@ -29,8 +29,8 @@
 # ============================
 
 # GridHTTPs logging configuration file
-# Default: /etc/storm/gridhttps-server/logback.xml
-#log.configuration-file = /etc/storm/gridhttps-server/logback.xml
+# Default: /etc/storm/gridhttps-server/logging.xml
+#log.configuration-file = /etc/storm/gridhttps-server/logging.xml
 
 # Maximum number of active threads for server's requests
 # Default: 150
@@ -111,6 +111,7 @@ backend.hostname =
 
 
 #Change-log
+#26-09-2013 Changed default logging configuration file from logback.xml to logging.xml
 #08-08-2013 Removed checksum-type
 #02-04-2013 Removed webapp-directory
 #02-04-2013 Unified webdav.max.active.threads, webdav.max.queued.threads, mapping.max.active.threads and mapping.max.queued.threads into max.active.threads and max.queued.threads for the single server running 

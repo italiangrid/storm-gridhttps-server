@@ -50,6 +50,6 @@ public class DefaultConfiguration {
 	public final static String 		WEBAPP_CHECKSUM_TYPE = "adler32";
 	
 	/* general */
-	public final static String 		LOG_FILE = "/etc/storm/gridhttps-server/logback.xml";
+	public final static String 		LOG_FILE = "/etc/storm/gridhttps-server/logging.xml";
 
 }

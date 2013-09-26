@@ -99,6 +99,7 @@ public class StormGridhttpsServer {
 			String[] davConnectors = { davHttpsConnector.getName() };
 			webAppContext.setConnectorNames(davConnectors);
 		}
+		webAppContext.setCompactPath(true);
 		return webAppContext;
 	}
 
@@ -110,6 +111,7 @@ public class StormGridhttpsServer {
 		servletContext.setContextPath(contextPath);
 		servletContext.addServlet(new ServletHolder(new MapperServlet()), contextSpec);
 		servletContext.setConnectorNames(mappingConnectors);
+		servletContext.setCompactPath(true);
 		return servletContext;
 	}
 

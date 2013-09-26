@@ -18,9 +18,6 @@ import it.grid.storm.gridhttps.server.exceptions.ServerException;
 import it.grid.storm.gridhttps.server.utils.CommandLineArgsParser;
 import it.grid.storm.storagearea.StorageAreaManager;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,16 +29,13 @@ import ch.qos.logback.core.util.StatusPrinter;
 
 public class Main {
 
-	private static Logger log = LoggerFactory.getLogger(Main.class);
+	private static final Logger log = LoggerFactory.getLogger(Main.class);
 	private static StormGridhttpsServer server;
 	private static String configurationFileName;
 
 	public static void main(String[] args) {
 
-		System.out.println("StoRM Gridhttps-server");
-		System.out.println("bootstrapping...");
-
-//		waitfor(5000);
+		log.info("StoRM Gridhttps-server - bootstrapping...");
 
 		try {
 			parseCommandLine(args);
@@ -54,7 +48,7 @@ public class Main {
 			server.start();
 			server.status();
 		} catch (InitException e) {
-			System.err.println(e.getMessage());
+			log.error(e.getMessage());
 			System.exit(0);
 		} catch (ServerException e) {
 			log.error(e.getMessage());
@@ -81,21 +75,6 @@ public class Main {
 
 	}
 
-	private static void waitfor(int waitfor) {
-		if (waitfor == 0)
-			return;
-		Object lock = new Object();
-		System.out.println("Waiting for " + waitfor + " ms");
-		synchronized (lock) {
-			try {
-				lock.wait(waitfor);
-				System.out.println("It's time to boot!");
-			} catch (InterruptedException e) {
-				System.err.println(e.getMessage());
-			}
-		}
-	}
-
 	private static void initStorageAreas(String hostname, int port) throws InitException {
 		try {
 			StorageAreaManager.init(hostname, port);
@@ -105,39 +84,37 @@ public class Main {
 	}
 
 	private static void initLogging(String logFilePath) throws InitException {
-		/* INIT LOGGING COMPONENT */
-		System.out.println("init logging...");
+		log.info("Configuring logging from {}", logFilePath);
+		
+		File f = new File(logFilePath);
+		if (!f.exists() || !f.canRead()) {
+			String message = String.format("Error loading logging configuration: "
+				+ "'%s' does not exist or is not readable.",logFilePath);
+			throw new RuntimeException(message);
+		}
+			
+		LoggerContext lc = (LoggerContext) LoggerFactory.getILoggerFactory();
+		JoranConfigurator configurator = new JoranConfigurator();
 
-		LoggerContext context = (LoggerContext) LoggerFactory.getILoggerFactory();
+		configurator.setContext(lc);
+		lc.reset();
 
 		try {
-			FileInputStream fin = new FileInputStream(logFilePath);
-			JoranConfigurator configurator = new JoranConfigurator();
-			configurator.setContext(context);
-			context.reset();
-			configurator.doConfigure(fin);
-			fin.close();
-		} catch (JoranException je) {
-			// StatusPrinter will handle this
-		} catch (FileNotFoundException e) {
-			System.err.println(e.getMessage());
-			e.printStackTrace();
-		} catch (IOException e) {
-			System.err.println(e.getMessage());
-			e.printStackTrace();
+			configurator.doConfigure(logFilePath);
+		} catch (JoranException e) {
+			throw new RuntimeException(e);
 		}
-		StatusPrinter.printInCaseOfErrorsOrWarnings(context);
-		log.info("log successfully initialized");
-		System.out.println("log successfully initialized");
+		
+		StatusPrinter.printInCaseOfErrorsOrWarnings(lc);
 	}
 
 	private static void parseCommandLine(String[] args) throws InitException {
-		System.out.println("received as command line arguments: ");
+		log.info("received as command line arguments: ");
 		CommandLineArgsParser cli = new CommandLineArgsParser(args);
 		cli.addOption("conf", "the absolute file path of the server configuration file [mandatory]", true, true);
 		try {
 			configurationFileName = cli.getString("conf");
-			System.out.println("configuration-file: " + configurationFileName);
+			log.info("configuration-file: " + configurationFileName);
 		} catch (Exception e) {
 			throw new InitException(e);
 		}

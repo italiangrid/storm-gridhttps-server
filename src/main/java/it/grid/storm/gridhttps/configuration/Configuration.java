@@ -6,10 +6,14 @@ import java.net.UnknownHostException;
 
 import org.ini4j.InvalidFileFormatException;
 import org.ini4j.Wini;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import it.grid.storm.gridhttps.configuration.exceptions.InitException;
 
 public class Configuration {
+	
+	private static final Logger log = LoggerFactory.getLogger(Configuration.class);
 	
 	private static StormGridhttps gridhttpsInfo;
 	private static StormBackend backendInfo;
@@ -31,7 +35,7 @@ public class Configuration {
 	}
 
 	public static void loadConfigurationFromFile(File conf) throws InitException {
-		System.out.println("loading configuration from file: " + conf.toString());
+		log.info("loading configuration from file: " + conf.toString());
 		Wini configuration;
 		try {
 			configuration = new Wini(conf);
@@ -87,15 +91,15 @@ public class Configuration {
 		}
 		if (configuration.get("backend").containsKey("compute-checksum"))
 			getGridhttpsInfo().setComputeChecksum(configuration.get("backend", "compute-checksum", boolean.class));
-		System.out.println("configuration successfully loaded");
+		log.info("configuration successfully loaded");
 	}
 	
 	public static void checkConfiguration() throws InitException {
-		System.out.println("checking backend configuration...");
+		log.info("checking backend configuration...");
 		getBackendInfo().checkConfiguration();
-		System.out.println("checking frontend configuration...");
+		log.info("checking frontend configuration...");
 		getFrontendInfo().checkConfiguration();
-		System.out.println("checking gridhttps configuration...");
+		log.info("checking gridhttps configuration...");
 		getGridhttpsInfo().checkConfiguration();
 	}
 	
