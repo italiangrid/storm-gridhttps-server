@@ -31,7 +31,7 @@ import io.milton.servlet.MiltonServlet;
 import it.grid.storm.gridhttps.webapp.HttpHelper;
 import it.grid.storm.gridhttps.webapp.authorization.UserCredentials;
 import it.grid.storm.gridhttps.webapp.data.exceptions.RuntimeApiException;
-import it.grid.storm.gridhttps.webapp.data.exceptions.StormRequestFailureException;
+import it.grid.storm.gridhttps.webapp.data.exceptions.SRMOperationException;
 import it.grid.storm.gridhttps.webapp.data.exceptions.StormResourceException;
 import it.grid.storm.gridhttps.webapp.data.exceptions.TooManyResultsException;
 
@@ -81,7 +81,7 @@ public class StormStandardFilter implements Filter {
 			ex.printStackTrace();
 			response.sendError(Status.SC_INTERNAL_SERVER_ERROR, ex.getReason());
 			response.setStatus(Status.SC_INTERNAL_SERVER_ERROR);
-		} catch (StormRequestFailureException ex) {
+		} catch (SRMOperationException ex) {
 			log.warn("RequestFailureException: " + ex.getReason());
 			response.sendError(Status.SC_SERVICE_UNAVAILABLE, ex.getReason());
 			response.setStatus(Status.SC_SERVICE_UNAVAILABLE);

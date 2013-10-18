@@ -21,8 +21,7 @@ import it.grid.storm.gridhttps.webapp.authorization.UserCredentials;
 import it.grid.storm.gridhttps.webapp.filetransfer.authorization.FileTransferAuthorizationFilter;
 import it.grid.storm.gridhttps.webapp.webdav.authorization.WebDAVAuthorizationFilter;
 import it.grid.storm.gridhttps.webapp.data.StormResourceHelper;
-import it.grid.storm.gridhttps.webapp.data.exceptions.RuntimeApiException;
-import it.grid.storm.gridhttps.webapp.data.exceptions.StormRequestFailureException;
+import it.grid.storm.gridhttps.webapp.data.exceptions.SRMOperationException;
 import it.grid.storm.gridhttps.webapp.webdav.factory.html.StormHtmlRootPage;
 import it.grid.storm.storagearea.StorageArea;
 import it.grid.storm.storagearea.StorageAreaManager;
@@ -175,9 +174,7 @@ public class StormAuthorizationFilter implements Filter {
 	private void doPing(UserCredentials user) {
 		try {
 			StormResourceHelper.getInstance().doPing(user, Configuration.getBackendInfo().getHostname(), Configuration.getBackendInfo().getPort());
-		} catch (RuntimeApiException e) {
-			log.error(e.getMessage());
-		} catch (StormRequestFailureException e) {
+		} catch (SRMOperationException e) {
 			log.error(e.getMessage());
 		}
 	}

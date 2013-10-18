@@ -8,9 +8,10 @@ import org.slf4j.LoggerFactory;
 
 import it.grid.storm.gridhttps.webapp.authorization.UserCredentials;
 import it.grid.storm.gridhttps.webapp.data.Surl;
-import it.grid.storm.gridhttps.webapp.data.exceptions.RuntimeApiException;
-import it.grid.storm.gridhttps.webapp.data.exceptions.StormRequestFailureException;
+import it.grid.storm.gridhttps.webapp.data.exceptions.SRMOperationException;
 import it.grid.storm.srm.types.TRequestToken;
+import it.grid.storm.srm.types.TReturnStatus;
+import it.grid.storm.srm.types.TStatusCode;
 import it.grid.storm.xmlrpc.ApiException;
 import it.grid.storm.xmlrpc.BackendApi;
 import it.grid.storm.xmlrpc.outputdata.SurlArrayRequestOutputData;
@@ -19,24 +20,38 @@ public class ReleaseFile implements SRMOperation {
 
 	private static final Logger log = LoggerFactory.getLogger(ReleaseFile.class);
 	
-	private ArrayList<String> surlList;
+	private ArrayList<String> surlList = new ArrayList<String>();
 	private TRequestToken token;
 	
 	public ReleaseFile(Surl surl, TRequestToken token) {
-		this.surlList = new ArrayList<String>();
+		
+		if (surl == null)
+			throw new IllegalArgumentException(this.getClass().getName() + " constructor: null surl");
+		if (token == null)
+			throw new IllegalArgumentException(this.getClass().getName() + " constructor: null token");
+		
+		this.surlList.clear();
 		this.surlList.add(surl.asString());
 		this.setToken(token);
 	}
 	
 	public ReleaseFile(ArrayList<Surl> surlList, TRequestToken token) {
-		this.surlList = new ArrayList<String>();
+		
+		if (surlList == null)
+			throw new IllegalArgumentException(this.getClass().getName() + " constructor: null surl-list");
+		if (surlList.isEmpty())
+			throw new IllegalArgumentException(this.getClass().getName() + " constructor: empty surl-list");
+		if (token == null)
+			throw new IllegalArgumentException(this.getClass().getName() + " constructor: null token");
+		
+		this.surlList.clear();
 		for (Surl surl : surlList)
 			this.surlList.add(surl.asString());
 		this.setToken(token);
 	}
 	
 	@Override
-	public SurlArrayRequestOutputData executeAs(UserCredentials user, BackendApi backend) throws RuntimeApiException, StormRequestFailureException {
+	public SurlArrayRequestOutputData executeAs(UserCredentials user, BackendApi backend) throws SRMOperationException {
 	
 		log.debug("release '" + StringUtils.join(this.getSurlList().toArray(), ',') + "' ...");
 		SurlArrayRequestOutputData output = null;
@@ -50,19 +65,12 @@ public class ReleaseFile implements SRMOperation {
 			}
 		} catch (ApiException e) {
 			log.error(e.getMessage());
-			throw new RuntimeApiException(e.getMessage(), e);
-		} catch (RuntimeException e) {
-			log.error(e.getMessage());
-			throw e;
+			TReturnStatus status = new TReturnStatus(TStatusCode.SRM_INTERNAL_ERROR, e.toString());
+			throw new SRMOperationException(status, e);
 		}
 		log.debug(output.getStatus().getStatusCode().getValue());
 		log.debug(output.getStatus().getExplanation());
-		if (!output.isSuccess()) {
-			throw new StormRequestFailureException(output.getStatus());
-		}
 		return output;
-		
-		
 	}
 
 	public ArrayList<String> getSurlList() {

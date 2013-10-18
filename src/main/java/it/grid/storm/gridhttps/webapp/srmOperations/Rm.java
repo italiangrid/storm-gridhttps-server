@@ -8,8 +8,9 @@ import org.slf4j.LoggerFactory;
 
 import it.grid.storm.gridhttps.webapp.authorization.UserCredentials;
 import it.grid.storm.gridhttps.webapp.data.Surl;
-import it.grid.storm.gridhttps.webapp.data.exceptions.RuntimeApiException;
-import it.grid.storm.gridhttps.webapp.data.exceptions.StormRequestFailureException;
+import it.grid.storm.gridhttps.webapp.data.exceptions.SRMOperationException;
+import it.grid.storm.srm.types.TReturnStatus;
+import it.grid.storm.srm.types.TStatusCode;
 import it.grid.storm.xmlrpc.ApiException;
 import it.grid.storm.xmlrpc.BackendApi;
 import it.grid.storm.xmlrpc.outputdata.RequestOutputData;
@@ -18,15 +19,25 @@ public class Rm implements SRMOperation {
 
 	private static final Logger log = LoggerFactory.getLogger(Rm.class);
 	
-	private ArrayList<String> surlList;
+	private ArrayList<String> surlList = new ArrayList<String>();
 
 	public Rm(Surl surl) {
-		this.surlList = new ArrayList<String>();
+		
+		if (surl == null)
+			throw new IllegalArgumentException(this.getClass().getName() + " constructor: null surl");
+		
+		this.surlList.clear();
 		this.surlList.add(surl.asString());
 	}
 	
 	public Rm(ArrayList<Surl> surlList) {
-		this.surlList = new ArrayList<String>();
+		
+		if (surlList == null)
+			throw new IllegalArgumentException(this.getClass().getName() + " constructor: null surl-list");
+		if (surlList.isEmpty())
+			throw new IllegalArgumentException(this.getClass().getName() + " constructor: empty surl-list");
+		
+		this.surlList.clear();
 		for (Surl surl : surlList)
 			this.surlList.add(surl.asString());
 	}
@@ -36,7 +47,7 @@ public class Rm implements SRMOperation {
 	}
 	
 	@Override
-	public RequestOutputData executeAs(UserCredentials user, BackendApi backend) throws RuntimeApiException, StormRequestFailureException {
+	public RequestOutputData executeAs(UserCredentials user, BackendApi backend) throws SRMOperationException {
 		RequestOutputData output = null;
 		log.debug("delete '" + StringUtils.join(this.getSurlList().toArray(), ',') + "' ...");
 		try {
@@ -49,13 +60,11 @@ public class Rm implements SRMOperation {
 			}
 		} catch (ApiException e) {
 			log.error(e.getMessage());
-			throw new RuntimeApiException(e.getMessage(), e);
+			TReturnStatus status = new TReturnStatus(TStatusCode.SRM_INTERNAL_ERROR, e.toString());
+			throw new SRMOperationException(status, e);
 		}
 		log.debug(output.getStatus().getStatusCode().getValue());
 		log.debug(output.getStatus().getExplanation());
-		if (!output.isSuccess()) {
-			throw new StormRequestFailureException(output.getStatus());
-		}
 		return output;
 	}
 	

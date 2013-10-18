@@ -31,7 +31,7 @@ import io.milton.resource.Resource;
 import it.grid.storm.gridhttps.webapp.data.StormFactory;
 import it.grid.storm.gridhttps.webapp.data.StormResourceHelper;
 import it.grid.storm.gridhttps.webapp.data.exceptions.RuntimeApiException;
-import it.grid.storm.gridhttps.webapp.data.exceptions.StormRequestFailureException;
+import it.grid.storm.gridhttps.webapp.data.exceptions.SRMOperationException;
 import it.grid.storm.gridhttps.webapp.data.exceptions.TooManyResultsException;
 import it.grid.storm.srm.types.Recursion;
 import it.grid.storm.srm.types.RecursionLevel;
@@ -63,7 +63,7 @@ public class StormDirectoryResource extends StormResource implements MakeCollect
 	}
 
 	@Override
-	public CollectionResource createCollection(String name) throws RuntimeApiException, StormRequestFailureException,
+	public CollectionResource createCollection(String name) throws RuntimeApiException, SRMOperationException,
 			NotAuthorizedException, ConflictException, BadRequestException {
 		return StormResourceHelper.getInstance().doMkCol(this, name);
 	}
@@ -199,15 +199,15 @@ public class StormDirectoryResource extends StormResource implements MakeCollect
 	}
 
 	@Override
-	public SurlInfo getSurlInfo() throws RuntimeApiException, StormRequestFailureException, TooManyResultsException {
+	public SurlInfo getSurlInfo() throws RuntimeApiException, SRMOperationException, TooManyResultsException {
 		return StormResourceHelper.getInstance().doLsDetailed(this.getFile()).getInfos().iterator().next();
 	}
 
-	public ArrayList<SurlInfo> getChildrenSurlInfo() throws RuntimeApiException, StormRequestFailureException, TooManyResultsException {
+	public ArrayList<SurlInfo> getChildrenSurlInfo() throws RuntimeApiException, SRMOperationException, TooManyResultsException {
 		return StormResourceHelper.getInstance().filterLs(StormResourceHelper.getInstance().doLsDetailed(this, new RecursionLevel(Recursion.NONE)).getInfos().iterator().next().getSubpathInfo());
 	}
 
-	public ArrayList<SurlInfo> getNChildrenSurlInfo(int numberOfChildren) throws RuntimeApiException, StormRequestFailureException,
+	public ArrayList<SurlInfo> getNChildrenSurlInfo(int numberOfChildren) throws RuntimeApiException, SRMOperationException,
 			TooManyResultsException {
 		return StormResourceHelper.getInstance()
 				.filterLs(StormResourceHelper.getInstance().doLsDetailed(this, new RecursionLevel(Recursion.NONE), numberOfChildren).getInfos().iterator().next().getSubpathInfo());

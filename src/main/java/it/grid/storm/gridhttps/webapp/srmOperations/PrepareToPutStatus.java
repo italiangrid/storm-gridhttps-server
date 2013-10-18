@@ -5,7 +5,9 @@ import org.slf4j.LoggerFactory;
 
 import it.grid.storm.gridhttps.webapp.authorization.UserCredentials;
 import it.grid.storm.gridhttps.webapp.data.Surl;
-import it.grid.storm.gridhttps.webapp.data.exceptions.RuntimeApiException;
+import it.grid.storm.gridhttps.webapp.data.exceptions.SRMOperationException;
+import it.grid.storm.srm.types.TReturnStatus;
+import it.grid.storm.srm.types.TStatusCode;
 import it.grid.storm.xmlrpc.ApiException;
 import it.grid.storm.xmlrpc.BackendApi;
 import it.grid.storm.xmlrpc.outputdata.SurlArrayRequestOutputData;
@@ -17,6 +19,10 @@ public class PrepareToPutStatus implements SRMOperation {
 	private Surl surl;
 
 	public PrepareToPutStatus(Surl surl) {
+
+		if (surl == null)
+			throw new IllegalArgumentException(this.getClass().getName() + " constructor: null surl");
+		
 		this.setSurl(surl);
 	}
 	
@@ -29,11 +35,11 @@ public class PrepareToPutStatus implements SRMOperation {
 	}
 	
 	@Override
-	public SurlArrayRequestOutputData executeAs(UserCredentials user, BackendApi backend) throws RuntimeApiException {
+	public SurlArrayRequestOutputData executeAs(UserCredentials user, BackendApi backend) throws SRMOperationException {
 		SurlArrayRequestOutputData outputSPtP = null;
 		log.debug("status of prepare to put on '" + this.getSurl().asString() + "' ...");
 		try {
-			if (user.isAnonymous()) { // HTTP
+			if (user.isAnonymous()) {
 				outputSPtP = backend.prepareToPutStatus(this.getSurl().asString());
 			} else if (user.getUserFQANS().isEmpty()) {
 				outputSPtP = backend.prepareToPutStatus(user.getUserDN(), this.getSurl().asString());
@@ -42,7 +48,8 @@ public class PrepareToPutStatus implements SRMOperation {
 			}
 		} catch (ApiException e) {
 			log.error(e.getMessage());
-			throw new RuntimeApiException(e.getMessage(), e);
+			TReturnStatus status = new TReturnStatus(TStatusCode.SRM_INTERNAL_ERROR, e.toString());
+			throw new SRMOperationException(status, e);
 		}
 		log.debug(outputSPtP.getStatus().getStatusCode().getValue());
 		log.debug(outputSPtP.getStatus().getExplanation());
