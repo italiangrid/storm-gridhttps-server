@@ -5,8 +5,9 @@ import org.slf4j.LoggerFactory;
 
 import it.grid.storm.gridhttps.webapp.authorization.UserCredentials;
 import it.grid.storm.gridhttps.webapp.data.Surl;
-import it.grid.storm.gridhttps.webapp.data.exceptions.RuntimeApiException;
-import it.grid.storm.gridhttps.webapp.data.exceptions.StormRequestFailureException;
+import it.grid.storm.gridhttps.webapp.data.exceptions.SRMOperationException;
+import it.grid.storm.srm.types.TReturnStatus;
+import it.grid.storm.srm.types.TStatusCode;
 import it.grid.storm.xmlrpc.ApiException;
 import it.grid.storm.xmlrpc.BackendApi;
 import it.grid.storm.xmlrpc.outputdata.RequestOutputData;
@@ -19,16 +20,22 @@ public class Move implements SRMOperation {
 	private Surl destination;
 
 	public Move(Surl source, Surl destination) {
+		
+		if (source == null)
+			throw new IllegalArgumentException(this.getClass().getName() + " constructor: null source surl");
+		if (destination == null)
+			throw new IllegalArgumentException(this.getClass().getName() + " constructor: null destination surl");
+		
 		this.setSource(source);
 		this.setDestination(destination);
 	}
 	
 	@Override
-	public RequestOutputData executeAs(UserCredentials user, BackendApi backend) throws RuntimeApiException, StormRequestFailureException {
+	public RequestOutputData executeAs(UserCredentials user, BackendApi backend) throws SRMOperationException {
 		RequestOutputData output = null;
 		log.debug("move '" + this.getSource().asString() + "' to '" + this.getDestination().asString() + "' ...");
 		try {
-			if (user.isAnonymous()) { // HTTP
+			if (user.isAnonymous()) {
 				output = backend.mv(this.getSource().asString(), this.getDestination().asString());
 			} else if (user.getUserFQANS().isEmpty()) {
 				output = backend.mv(user.getUserDN(), this.getSource().asString(), this.getDestination().asString());
@@ -37,13 +44,11 @@ public class Move implements SRMOperation {
 			}
 		} catch (ApiException e) {
 			log.error(e.getMessage());
-			throw new RuntimeApiException(e.getMessage(), e);
+			TReturnStatus status = new TReturnStatus(TStatusCode.SRM_INTERNAL_ERROR, e.toString());
+			throw new SRMOperationException(status, e);
 		}
 		log.debug(output.getStatus().getStatusCode().getValue());
 		log.debug(output.getStatus().getExplanation());
-		if (!output.isSuccess()) {
-			throw new StormRequestFailureException(output.getStatus());
-		}
 		return output;
 	}
 

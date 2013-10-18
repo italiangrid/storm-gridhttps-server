@@ -19,7 +19,7 @@ import io.milton.resource.*;
 import it.grid.storm.gridhttps.webapp.data.StormFactory;
 import it.grid.storm.gridhttps.webapp.data.Surl;
 import it.grid.storm.gridhttps.webapp.data.exceptions.RuntimeApiException;
-import it.grid.storm.gridhttps.webapp.data.exceptions.StormRequestFailureException;
+import it.grid.storm.gridhttps.webapp.data.exceptions.SRMOperationException;
 import it.grid.storm.gridhttps.webapp.data.exceptions.TooManyResultsException;
 import it.grid.storm.storagearea.StorageArea;
 import it.grid.storm.storagearea.StorageAreaManager;
@@ -132,7 +132,7 @@ public abstract class StormResource implements Resource, DigestResource, PropFin
 		return new FileInputStream(this.getFile());
 	}
 
-	public abstract SurlInfo getSurlInfo() throws RuntimeApiException, StormRequestFailureException, TooManyResultsException;
+	public abstract SurlInfo getSurlInfo() throws RuntimeApiException, SRMOperationException, TooManyResultsException;
 	
 	public Date getModifiedDate() {
 		return new Date(this.getFile().lastModified());

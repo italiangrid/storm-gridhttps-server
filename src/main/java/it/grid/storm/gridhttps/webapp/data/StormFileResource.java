@@ -19,7 +19,7 @@ import io.milton.http.exceptions.ConflictException;
 import io.milton.http.exceptions.NotAuthorizedException;
 import it.grid.storm.gridhttps.webapp.data.StormFactory;
 import it.grid.storm.gridhttps.webapp.data.exceptions.RuntimeApiException;
-import it.grid.storm.gridhttps.webapp.data.exceptions.StormRequestFailureException;
+import it.grid.storm.gridhttps.webapp.data.exceptions.SRMOperationException;
 import it.grid.storm.gridhttps.webapp.data.exceptions.TooManyResultsException;
 import it.grid.storm.xmlrpc.outputdata.LsOutputData.SurlInfo;
 
@@ -75,7 +75,7 @@ public class StormFileResource extends StormResource {
 	}
 
 	@Override
-	public SurlInfo getSurlInfo() throws RuntimeApiException, StormRequestFailureException, TooManyResultsException {
+	public SurlInfo getSurlInfo() throws RuntimeApiException, SRMOperationException, TooManyResultsException {
 		return StormResourceHelper.getInstance().doLimitedLsDetailed(this.getFile()).getInfos().iterator().next();
 	}
 

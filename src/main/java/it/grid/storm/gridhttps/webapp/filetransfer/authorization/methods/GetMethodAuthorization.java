@@ -24,7 +24,7 @@ import it.grid.storm.gridhttps.webapp.authorization.Constants;
 import it.grid.storm.gridhttps.webapp.authorization.UserCredentials;
 import it.grid.storm.gridhttps.webapp.authorization.methods.AbstractMethodAuthorization;
 import it.grid.storm.gridhttps.webapp.data.Surl;
-import it.grid.storm.gridhttps.webapp.data.exceptions.RuntimeApiException;
+import it.grid.storm.gridhttps.webapp.data.exceptions.SRMOperationException;
 import it.grid.storm.gridhttps.webapp.srmOperations.PrepareToGetStatus;
 import it.grid.storm.storagearea.StorageArea;
 import it.grid.storm.xmlrpc.ApiException;
@@ -77,8 +77,8 @@ public class GetMethodAuthorization extends AbstractMethodAuthorization {
 			BackendApi backEnd = new BackendApi(Configuration.getBackendInfo().getHostname(), new Long(Configuration.getBackendInfo().getPort()));
 			PrepareToGetStatus operation = new PrepareToGetStatus(surl);
 			outputSPtG = operation.executeAs(this.getHTTPHelper().getUser(), backEnd);
-		} catch (RuntimeApiException e) {
-			log.error(e.getMessage());
+		} catch (SRMOperationException e) {
+			log.error(e.toString());
 			return AuthorizationStatus.NOTAUTHORIZED(500, e.getMessage());
 		} catch (ApiException e) {
 			log.error(e.getMessage());

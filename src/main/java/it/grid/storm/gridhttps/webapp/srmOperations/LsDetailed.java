@@ -8,11 +8,10 @@ import org.slf4j.LoggerFactory;
 
 import it.grid.storm.gridhttps.webapp.authorization.UserCredentials;
 import it.grid.storm.gridhttps.webapp.data.Surl;
-import it.grid.storm.gridhttps.webapp.data.exceptions.RuntimeApiException;
-import it.grid.storm.gridhttps.webapp.data.exceptions.StormRequestFailureException;
-import it.grid.storm.gridhttps.webapp.data.exceptions.TooManyResultsException;
+import it.grid.storm.gridhttps.webapp.data.exceptions.SRMOperationException;
 import it.grid.storm.srm.types.Recursion;
 import it.grid.storm.srm.types.RecursionLevel;
+import it.grid.storm.srm.types.TReturnStatus;
 import it.grid.storm.srm.types.TStatusCode;
 import it.grid.storm.xmlrpc.ApiException;
 import it.grid.storm.xmlrpc.BackendApi;
@@ -22,29 +21,23 @@ public class LsDetailed implements SRMOperation {
 
 	private static final Logger log = LoggerFactory.getLogger(LsDetailed.class);
 
-	private ArrayList<String> surlList;
+	public static RecursionLevel DEFAULT_RECURSION_LEVEL = new RecursionLevel(Recursion.NONE);
+	public static int DEFAULT_COUNT = -1;
+	
+	private ArrayList<String> surlList = new ArrayList<String>();
 	private RecursionLevel recursion;
-	private boolean hasCount;
 	private int count;
 
 	public LsDetailed(Surl surl) {
-		this.surlList = new ArrayList<String>();
-		this.surlList.add(surl.asString());
-		this.setRecursion(new RecursionLevel(Recursion.NONE));
-		this.setHasCount(false);
+		this(surl, DEFAULT_RECURSION_LEVEL, DEFAULT_COUNT);
 	}
 
 	public LsDetailed(ArrayList<Surl> surlList) {
-		this.surlList = new ArrayList<String>();
-		for (Surl surl : surlList)
-			this.surlList.add(surl.asString());
-		this.setRecursion(new RecursionLevel(Recursion.NONE));
-		this.setHasCount(false);
+		this(surlList, DEFAULT_RECURSION_LEVEL, DEFAULT_COUNT);
 	}
 
 	public LsDetailed(Surl surl, RecursionLevel recursion) {
-		this(surl);
-		this.setRecursion(recursion);
+		this(surl, recursion, DEFAULT_COUNT);
 	}
 
 	public LsDetailed(ArrayList<Surl> surlList, RecursionLevel recursion) {
@@ -53,25 +46,42 @@ public class LsDetailed implements SRMOperation {
 	}
 
 	public LsDetailed(Surl surl, RecursionLevel recursion, int count) {
-		this(surl, recursion);
-		this.setHasCount(true);
+		
+		if (surl == null)
+			throw new IllegalArgumentException(this.getClass().getName() + " constructor: null surl");
+		if (recursion == null)
+			throw new IllegalArgumentException(this.getClass().getName() + " constructor: null recursion");
+		
+		this.surlList.clear();
+		this.surlList.add(surl.asString());
+		this.setRecursion(recursion);
 		this.setCount(count);
 	}
 
 	public LsDetailed(ArrayList<Surl> surlList, RecursionLevel recursion, int count) {
-		this(surlList, recursion);
-		this.setHasCount(true);
+		
+		if (surlList == null)
+			throw new IllegalArgumentException(this.getClass().getName() + " constructor: null surl-list");
+		if (surlList.isEmpty())
+			throw new IllegalArgumentException(this.getClass().getName() + " constructor: empty surl-list");
+		if (recursion == null)
+			throw new IllegalArgumentException(this.getClass().getName() + " constructor: null recursion");
+		
+		this.surlList.clear();
+		for (Surl surl : surlList)
+			this.surlList.add(surl.asString());
+		this.setRecursion(recursion);
 		this.setCount(count);
 	}
 
 	@Override
-	public LsOutputData executeAs(UserCredentials user, BackendApi backend) throws RuntimeApiException, StormRequestFailureException,
-			TooManyResultsException {
+	public LsOutputData executeAs(UserCredentials user, BackendApi backend) throws SRMOperationException {
+		
 		log.debug("ls-detailed '" + StringUtils.join(this.getSurlList().toArray(), ',') + "' ...");
 		LsOutputData output = null;
 		try {
 			if (this.hasCount()) {
-				if (user.isAnonymous()) { // HTTP
+				if (user.isAnonymous()) {
 					output = backend.lsDetailed(this.getSurlList(), this.getRecursion(), this.getCount());
 				} else if (user.getUserFQANS().isEmpty()) {
 					output = backend.lsDetailed(user.getUserDN(), this.getSurlList(), this.getRecursion(), this.getCount());
@@ -79,7 +89,7 @@ public class LsDetailed implements SRMOperation {
 					output = backend.lsDetailed(user.getUserDN(), user.getUserFQANS(), this.getSurlList(), this.getRecursion(), this.getCount());
 				}
 			} else {
-				if (user.isAnonymous()) { // HTTP
+				if (user.isAnonymous()) {
 					output = backend.lsDetailed(this.getSurlList(), this.getRecursion());
 				} else if (user.getUserFQANS().isEmpty()) {
 					output = backend.lsDetailed(user.getUserDN(), this.getSurlList(), this.getRecursion());
@@ -89,14 +99,11 @@ public class LsDetailed implements SRMOperation {
 			}
 		} catch (ApiException e) {
 			log.error(e.getMessage());
-			throw new RuntimeApiException("Backend API Exception!", e);
+			TReturnStatus status = new TReturnStatus(TStatusCode.SRM_INTERNAL_ERROR, e.toString());
+			throw new SRMOperationException(status, e);
 		}
 		log.debug(output.getStatus().getStatusCode().getValue());
 		log.debug(output.getStatus().getExplanation());
-		if (output.getStatus().getStatusCode().equals(TStatusCode.SRM_TOO_MANY_RESULTS))
-			throw new TooManyResultsException("ls-detailed output status is " + output.getStatus().getStatusCode().getValue(), output.getStatus());
-		if (!output.isSuccess())
-			throw new StormRequestFailureException(output.getStatus());
 		return output;
 	}
 
@@ -121,11 +128,7 @@ public class LsDetailed implements SRMOperation {
 	}
 
 	public boolean hasCount() {
-		return hasCount;
-	}
-
-	private void setHasCount(boolean hasCount) {
-		this.hasCount = hasCount;
+		return this.getCount() != DEFAULT_COUNT;
 	}
 
 }

@@ -17,8 +17,7 @@ import io.milton.resource.Resource;
 import it.grid.storm.gridhttps.webapp.contentservice.StormContentService;
 import it.grid.storm.gridhttps.webapp.data.StormResource;
 import it.grid.storm.gridhttps.webapp.data.StormResourceHelper;
-import it.grid.storm.gridhttps.webapp.data.exceptions.RuntimeApiException;
-import it.grid.storm.gridhttps.webapp.data.exceptions.StormRequestFailureException;
+import it.grid.storm.gridhttps.webapp.data.exceptions.SRMOperationException;
 import it.grid.storm.gridhttps.webapp.data.exceptions.TooManyResultsException;
 import it.grid.storm.srm.types.TFileType;
 import it.grid.storm.srm.types.TStatusCode;
@@ -167,10 +166,11 @@ public abstract class StormFactory implements ResourceFactory {
 		try {
 			detail = StormResourceHelper.getInstance().doLimitedLsDetailed(file).getInfos().iterator().next();
 			return resolveFile(detail, storageArea);
-		} catch (RuntimeApiException e) {
-			log.error("retrieving detailed info for '" + file + "': " + e.getReason());
-		} catch (StormRequestFailureException e) {
-			log.debug(file + " not exists! Got a SRM_FAILURE with reason: " + e.getReason());
+		} catch (SRMOperationException e) {
+			if (e.getException() instanceof ApiException)
+				log.error("retrieving detailed info for '" + file + "': " + e.getReason());
+			else
+				log.debug(file + " not exists! Got a SRM_FAILURE with reason: " + e.getReason());
 		} catch (TooManyResultsException e) {
 			log.warn(e.getReason());
 		}
