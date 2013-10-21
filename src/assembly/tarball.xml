@@ -39,7 +39,6 @@
 			</outputDirectory>
 			<includes>
 				<include>storm-gridhttps-server.jar</include>
-				<!-- <include>storm-gridhttps-webapp.war</include> -->
 			</includes>
 		</fileSet>
 

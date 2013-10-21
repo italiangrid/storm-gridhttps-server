@@ -20,13 +20,31 @@
 			<email>enrico.vianello@cnaf.infn.it</email>
 		</developer>
 		<developer>
-			<name>Michele Dibenedetto</name>
+			<name>Andrea Ceccanti</name>
 			<organization>INFN CNAF</organization>
 			<roles>
 				<role>Developer</role>
 			</roles>
 			<organizationUrl>http://www.cnaf.infn.it/</organizationUrl>
-			<email>michele.dibenedetto@cnaf.infn.it</email>
+			<email>andrea.ceccanti@cnaf.infn.it</email>
+		</developer>
+		<developer>
+			<name>Valerio Venturi</name>
+			<organization>INFN CNAF</organization>
+			<roles>
+				<role>Developer</role>
+			</roles>
+			<organizationUrl>http://www.cnaf.infn.it/</organizationUrl>
+			<email>valerio.venturi@cnaf.infn.it</email>
+		</developer>
+		<developer>
+			<name>Daniele Andreotti</name>
+			<organization>INFN CNAF</organization>
+			<roles>
+				<role>Developer</role>
+			</roles>
+			<organizationUrl>http://www.cnaf.infn.it/</organizationUrl>
+			<email>daniele.andreotti@cnaf.infn.it</email>
 		</developer>
 	</developers>
 
@@ -37,8 +55,7 @@
 		<mavenCompilerVersion>3.0</mavenCompilerVersion>
 		<mavenJarVersion>2.4</mavenJarVersion>
 		<mavenAssemblyVersion>2.4</mavenAssemblyVersion>
-
-		<vomsApiVersion>3.0.0-rc2</vomsApiVersion>
+		
 		<httpsutilsVersion>0.2.1</httpsutilsVersion>
 		<xmlrpcApiVersion>0.0.15-SNAPSHOT</xmlrpcApiVersion>
 	
@@ -51,21 +68,20 @@
 		<httpclientVersion>4.2.1</httpclientVersion>
 		<javaxServletVersion>3.0.0.v201112011016</javaxServletVersion>
 		<ini4jVersion>0.5.2</ini4jVersion>
-		<jettyServerVersion>8.1.4.v20120524</jettyServerVersion>
 		<commonscliVersion>20040117.000000</commonscliVersion>
 
+		<!-- tarball.xml variables -->
 		<conf_installation_prefix>/etc/storm</conf_installation_prefix>
 		<module_name>gridhttps-server</module_name>
 		<log_installation_directory>/var/log/storm</log_installation_directory>
 		<jar_installation_prefix>/usr/share/java</jar_installation_prefix>
 		<doc_installation_prefix>/usr/share/doc</doc_installation_prefix>
 
-
 	</properties>
 
 	<build>
 
-		<finalName>storm-gridhttps-server</finalName>
+		<finalName>${project.name}</finalName>
 
 		<plugins>
 			<plugin>
@@ -116,6 +132,7 @@
 	</build>
 
 	<dependencies>
+	
 		<dependency>
 			<groupId>org.slf4j</groupId>
 			<artifactId>slf4j-api</artifactId>
@@ -145,12 +162,6 @@
 			<groupId>org.apache.httpcomponents</groupId>
 			<artifactId>httpclient</artifactId>
 			<version>${httpclientVersion}</version>
-		</dependency>
-		<dependency>
-			<groupId>org.eclipse.jetty.orbit</groupId>
-			<artifactId>javax.servlet</artifactId>
-			<version>${javaxServletVersion}</version>
-			<scope>compile</scope>
 		</dependency>
 		<dependency>
 			<groupId>commons-lang</groupId>
@@ -196,18 +207,7 @@
 			<artifactId>xmlrpc-api</artifactId>
 			<version>${xmlrpcApiVersion}</version>
 		</dependency>
-		<dependency>
-			<groupId>org.italiangrid</groupId>
-			<artifactId>voms-api-java</artifactId>
-			<version>${vomsApiVersion}</version>
-		</dependency>
 
-		<dependency>
-			<groupId>org.eclipse.jetty.aggregate</groupId>
-			<artifactId>jetty-all-server</artifactId>
-			<version>${jettyServerVersion}</version>
-			<scope>compile</scope>
-		</dependency>
 		<dependency>
 			<groupId>org.ini4j</groupId>
 			<artifactId>ini4j</artifactId>
