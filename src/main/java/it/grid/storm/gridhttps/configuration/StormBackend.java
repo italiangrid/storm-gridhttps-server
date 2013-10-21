@@ -15,14 +15,18 @@ package it.grid.storm.gridhttps.configuration;
 import it.grid.storm.gridhttps.configuration.exceptions.InitException;
 
 public class StormBackend {
+	
 	private String hostname;
 	private int port;
+	private String token;
 	private int servicePort;
 
-	public StormBackend(String hostname, int port, int servicePort) {
+	
+	public StormBackend(String hostname, int port, String token, int servicePort) {
 		this();
 		this.setHostname(hostname);
 		this.setPort(port);
+		this.setToken(token);
 		this.setServicePort(servicePort);
 	}
 	
@@ -46,6 +50,22 @@ public class StormBackend {
 	public void setPort(int port) {
 		this.port = port;
 	}
+	
+	/**
+	 * @return the token
+	 */
+	public String getToken() {
+	
+		return token;
+	}
+	
+	/**
+	 * @param token the token to set
+	 */
+	public void setToken(String token) {
+	
+		this.token = token;
+	}
 
 	public int getServicePort() {
 		return servicePort;
@@ -64,6 +84,8 @@ public class StormBackend {
 			throw new InitException("backend hostname is empty!");
 		if (port <= 0)
 			throw new InitException("backend port is "+port+"!");
+		if(token == null)
+			throw new InitException("backend token must be provide");
 		if (servicePort <= 0)
 			throw new InitException("backend service port is "+servicePort+"!");
 		if (servicePort == port)
