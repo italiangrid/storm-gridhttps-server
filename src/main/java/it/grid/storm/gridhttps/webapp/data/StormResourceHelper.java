@@ -161,7 +161,7 @@ public class StormResourceHelper {
 		// PTG
 		PrepareToGet ptg = new PrepareToGet(source.getSurl());
 		PtGOutputData outputPtG = ptg.executeAs(this.getHttpHelper().getUser(), this.getBackend());
-		if (!outputPtG.isSuccess()) {
+		if (!outputPtG.getStatus().getStatusCode().equals(TStatusCode.SRM_FILE_PINNED)) {
 			this.doAbortRequest(source.getSurl(), outputPtG.getToken());
 			throw new SRMOperationException(outputPtG.getStatus(), new Exception(outputPtG.getStatus().getExplanation()));
 		}
@@ -199,7 +199,7 @@ public class StormResourceHelper {
 		Surl toCreate = new Surl(parentDir.getSurl(), name);
 		PrepareToPut ptp = new PrepareToPut(toCreate);
 		FileTransferOutputData oPtP = ptp.executeAs(getHttpHelper().getUser(), this.getBackend());
-		if (!oPtP.getStatus().getStatusCode().getValue().equals("SRM_SPACE_AVAILABLE")) {
+		if (!oPtP.getStatus().getStatusCode().equals(TStatusCode.SRM_SPACE_AVAILABLE)) {
 			this.doAbortRequest(toCreate, oPtP.getToken());
 			throw new SRMOperationException(oPtP.getStatus(), new Exception(oPtP.getStatus().getExplanation()));
 		}
