@@ -15,7 +15,7 @@ package it.grid.storm.gridhttps.webapp.filetransfer.factory;
 import it.grid.storm.gridhttps.configuration.Configuration;
 import it.grid.storm.gridhttps.webapp.data.StormFactory;
 import it.grid.storm.gridhttps.webapp.data.StormResource;
-import it.grid.storm.gridhttps.webapp.webdav.factory.StormResourceFactory;
+import it.grid.storm.gridhttps.webapp.webdav.factory.WebdavResourceFactory;
 import it.grid.storm.xmlrpc.ApiException;
 
 import java.io.File;
@@ -26,7 +26,7 @@ import org.slf4j.LoggerFactory;
 
 public final class FileSystemResourceFactory extends StormFactory {
 
-	private static final Logger log = LoggerFactory.getLogger(StormResourceFactory.class);
+	private static final Logger log = LoggerFactory.getLogger(WebdavResourceFactory.class);
 
 	public FileSystemResourceFactory() throws UnknownHostException, ApiException {
 		super(Configuration.getBackendInfo().getHostname(), Configuration.getBackendInfo().getPort(), Configuration.getGridhttpsInfo().getRootDirectory(),

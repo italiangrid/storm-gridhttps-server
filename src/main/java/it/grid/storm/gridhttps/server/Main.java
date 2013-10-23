@@ -49,10 +49,10 @@ public class Main {
 			server.status();
 		} catch (InitException e) {
 			log.error(e.getMessage());
-			System.exit(0);
+			System.exit(1);
 		} catch (ServerException e) {
 			log.error(e.getMessage());
-			System.exit(0);
+			System.exit(1);
 		}
 
 		// adds an handler to CTRL-C that stops and deletes the webapp directory

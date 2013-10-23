@@ -12,57 +12,42 @@
  */
 package it.grid.storm.gridhttps.webapp.webdav.authorization.methods;
 
-import it.grid.storm.gridhttps.webapp.HttpHelper;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import it.grid.storm.gridhttps.configuration.Configuration;
+import it.grid.storm.gridhttps.webapp.authorization.AuthorizationException;
 import it.grid.storm.gridhttps.webapp.authorization.AuthorizationStatus;
 import it.grid.storm.gridhttps.webapp.authorization.UserCredentials;
-import it.grid.storm.gridhttps.webapp.authorization.methods.AbstractMethodAuthorization;
 import it.grid.storm.gridhttps.webapp.data.StormResourceHelper;
 import it.grid.storm.gridhttps.webapp.data.exceptions.SRMOperationException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class OptionsMethodAuthorization extends AbstractMethodAuthorization {
+public class OptionsMethodAuthorization extends WebDAVMethodAuthorization {
 
-	private String hostname;
-	private int port;
-
-	public OptionsMethodAuthorization(HttpHelper httpHelper, String hostname, int port) {
-		super(httpHelper);
-		this.setHostname(hostname);
-		this.setPort(port);
+	public OptionsMethodAuthorization() {
+		super();
 	}
 
 	private static final Logger log = LoggerFactory.getLogger(OptionsMethodAuthorization.class);
 
-	@Override
-	public AuthorizationStatus isUserAuthorized(UserCredentials user) {
-		this.doPing();
-		return AuthorizationStatus.AUTHORIZED();
-	}
-
-	private void doPing() {
+	private void doPing(UserCredentials user) {
 		// PING
 		try {
-			StormResourceHelper.getInstance().doPing(this.getHTTPHelper().getUser(), this.getHostname(), this.getPort());
+			StormResourceHelper.getInstance().doPing(user, Configuration.getBackendInfo().getHostname(), Configuration.getBackendInfo().getPort());
 		} catch (SRMOperationException e) {
 			log.error(e.toString());
 		}
 	}
 
-	public String getHostname() {
-		return hostname;
-	}
+	@Override
+	public AuthorizationStatus isUserAuthorized(HttpServletRequest request,
+		HttpServletResponse response, UserCredentials user)
+		throws AuthorizationException {
 
-	private void setHostname(String hostname) {
-		this.hostname = hostname;
-	}
-
-	public int getPort() {
-		return port;
-	}
-
-	private void setPort(int port) {
-		this.port = port;
+		this.doPing(user);
+		return AuthorizationStatus.AUTHORIZED();
 	}
 }

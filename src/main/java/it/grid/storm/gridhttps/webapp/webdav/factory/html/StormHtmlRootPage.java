@@ -71,7 +71,7 @@ public class StormHtmlRootPage extends HtmlPage {
 		closeTableRow();
 		for (StorageArea sa : sas) {
 			String name = sa.getStfnRoot().substring(1);
-			String path = buildHref(sa.getStfnRoot(), "");
+			String path = buildHref("/webdav" + sa.getStfnRoot(), "");
 			openTableRow();
 			openTableCol();
 			addImage(getFolderIco());

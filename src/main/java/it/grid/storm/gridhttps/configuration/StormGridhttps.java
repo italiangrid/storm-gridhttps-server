@@ -29,6 +29,7 @@ public class StormGridhttps {
 	private String logFile;
 	
 	private File rootDirectory;
+	private String webappContextPath;
 	private String webdavContextPath;
 	private String filetransferContextPath;
 	
@@ -53,6 +54,7 @@ public class StormGridhttps {
 		this.setSsloptions(sslOptions);
 		this.setLogFile(DefaultConfiguration.LOG_FILE);
 		this.setFiletransferContextPath(DefaultConfiguration.WEBAPP_FILETRANSFER_CONTEXTPATH);
+		this.setWebappContextPath(DefaultConfiguration.WEBAPP_CONTEXTPATH);
 		this.setWebdavContextPath(DefaultConfiguration.WEBAPP_WEBDAV_CONTEXTPATH);
 		this.setRootDirectory(new File(DefaultConfiguration.WEBAPP_GPFS_ROOTDIRECTORY));
 		this.setComputeChecksum(DefaultConfiguration.WEBAPP_COMPUTE_CHECKSUM);
@@ -116,11 +118,6 @@ public class StormGridhttps {
 	public void setLogFile(String logFile) {
 		this.logFile = logFile;
 	}
-
-//	public String toString() {
-//		return "{'" + hostname + "', " + httpPort + ", " + httpsPort + ", " + enabledHttp + ", " + mapperServlet + ", '" + webappsDirectory
-//				+ "', " + ssloptions + ", '" + logFile + "', '" + warFile + "'}";
-//	}
 
 	public void checkConfiguration() throws InitException {
 		mapperServlet.checkConfiguration();
@@ -198,6 +195,14 @@ public class StormGridhttps {
 
 	public void setServerActiveThreadsMax(int serverActiveThreadsMax) {
 		this.serverActiveThreadsMax = serverActiveThreadsMax;
+	}
+
+	public String getWebappContextPath() {
+		return webappContextPath;
+	}
+
+	public void setWebappContextPath(String webappContextPath) {
+		this.webappContextPath = webappContextPath;
 	}
 
 }

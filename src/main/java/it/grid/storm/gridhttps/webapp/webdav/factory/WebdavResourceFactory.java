@@ -23,14 +23,14 @@ import java.net.UnknownHostException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public final class StormResourceFactory extends StormFactory {
+public final class WebdavResourceFactory extends StormFactory {
 
-	private static final Logger log = LoggerFactory.getLogger(StormResourceFactory.class);
+	private static final Logger log = LoggerFactory.getLogger(WebdavResourceFactory.class);
 
-	public StormResourceFactory() throws UnknownHostException, ApiException {
+	public WebdavResourceFactory() throws UnknownHostException, ApiException {
 		super(Configuration.getBackendInfo().getHostname(), Configuration.getBackendInfo().getPort(), Configuration.getGridhttpsInfo().getRootDirectory(),
 				Configuration.getGridhttpsInfo().getWebdavContextPath());
-		log.debug("StormResourceFactory created");
+		log.info("StormResourceFactory created");
 	}
 
 	@Override

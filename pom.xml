@@ -61,7 +61,7 @@
 	
 		<logbackVersion>1.0.6</logbackVersion>
 		<slf4jVersion>1.6.6</slf4jVersion>
-		<miltonVersion>2.4.2.3</miltonVersion>
+		<miltonVersion>2.5.2.0</miltonVersion>
 		<springVersion>3.1.2.RELEASE</springVersion>
 		<commonsLangVersion>2.3</commonsLangVersion>
 		<httpcoreVersion>4.2.2</httpcoreVersion>
@@ -200,6 +200,11 @@
 		<dependency>
 			<groupId>org.springframework</groupId>
 			<artifactId>spring-beans</artifactId>
+			<version>${springVersion}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework</groupId>
+			<artifactId>spring-web</artifactId>
 			<version>${springVersion}</version>
 		</dependency>
 		<dependency>

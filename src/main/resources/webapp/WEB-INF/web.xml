@@ -5,8 +5,18 @@
 	version="2.4">
 
 	<filter>
-		<filter-name>StormAuthorizationFilter</filter-name>
-		<filter-class>it.grid.storm.gridhttps.webapp.StormAuthorizationFilter</filter-class>
+		<filter-name>WebDAVAuthorizationFilter</filter-name>
+		<filter-class>it.grid.storm.gridhttps.webapp.webdav.WebDAVFilter</filter-class>
+	</filter>
+	
+	<filter>
+		<filter-name>WebDAVServiceRoot</filter-name>
+		<filter-class>it.grid.storm.gridhttps.webapp.webdav.WebDAVRootFilter</filter-class>
+	</filter>
+	
+	<filter>
+		<filter-name>FileTransferAuthorizationFilter</filter-name>
+		<filter-class>it.grid.storm.gridhttps.webapp.filetransfer.FileTransferFilter</filter-class>
 	</filter>
 	
 	<filter>
@@ -16,6 +26,10 @@
 			<param-name>contextConfigLocation</param-name>
 			<param-value>webdavApplicationContext.xml</param-value>
 		</init-param>
+		<init-param>
+            <param-name>milton.exclude.paths</param-name>    
+            <param-value>/static,/templates</param-value>
+        </init-param>
 	</filter>
 	
 	<filter>
@@ -25,16 +39,30 @@
 			<param-name>contextConfigLocation</param-name>
 			<param-value>fileTransferApplicationContext.xml</param-value>
 		</init-param>
+		<init-param>
+            <param-name>milton.exclude.paths</param-name>    
+            <param-value>/static,/templates</param-value>
+        </init-param>
 	</filter>
 
 	<filter-mapping>
-		<filter-name>StormAuthorizationFilter</filter-name>
-		<url-pattern>/*</url-pattern>
+		<filter-name>WebDAVAuthorizationFilter</filter-name>
+		<url-pattern>/webdav/*</url-pattern>
+	</filter-mapping>
+	
+	<filter-mapping>
+		<filter-name>WebDAVServiceRoot</filter-name>
+		<url-pattern>/webdav/*</url-pattern>
 	</filter-mapping>
 
 	<filter-mapping>
 		<filter-name>WebdavSpringMiltonFilter</filter-name>
-		<url-pattern>/*</url-pattern>
+		<url-pattern>/webdav/*</url-pattern>
+	</filter-mapping>
+
+	<filter-mapping>
+		<filter-name>FileTransferAuthorizationFilter</filter-name>
+		<url-pattern>/fileTransfer/*</url-pattern>
 	</filter-mapping>
 
 	<filter-mapping>

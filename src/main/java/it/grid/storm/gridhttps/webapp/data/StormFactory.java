@@ -42,6 +42,7 @@ public abstract class StormFactory implements ResourceFactory {
 	private String localhostname;
 	
 	public StormFactory(String beHost, int bePort, File root, String contextPath) throws UnknownHostException, ApiException {
+		log.info("StoRM Factory constructor");
 		setRoot(root);
 		setContextPath(contextPath);
 		setSecurityManager(new NullSecurityManager());

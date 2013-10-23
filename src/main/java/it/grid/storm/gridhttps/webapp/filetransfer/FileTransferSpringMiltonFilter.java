@@ -16,11 +16,14 @@ import io.milton.config.HttpManagerBuilder;
 import io.milton.http.HttpManager;
 import io.milton.http.Request;
 import io.milton.http.Response;
+import io.milton.property.PropertySource;
 import io.milton.servlet.MiltonServlet;
 import it.grid.storm.gridhttps.configuration.Configuration;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
+
 import javax.servlet.FilterChain;
 import javax.servlet.FilterConfig;
 import javax.servlet.ServletContext;
@@ -29,6 +32,7 @@ import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeansException;
@@ -87,6 +91,7 @@ public class FileTransferSpringMiltonFilter implements javax.servlet.Filter {
 			this.httpManager = (HttpManager) milton;
 		} else if (milton instanceof HttpManagerBuilder) {
 			HttpManagerBuilder builder = (HttpManagerBuilder) milton;
+			builder.setPropertySources(new ArrayList<PropertySource>());
 			this.httpManager = builder.buildHttpManager();
 		}
 		servletContext = filterConfig.getServletContext();

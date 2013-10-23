@@ -42,12 +42,13 @@ import it.grid.storm.xmlrpc.outputdata.LsOutputData.SurlInfo;
 public class StormPropFindPropertyBuilder implements PropFindPropertyBuilder {
 
 	private static final Logger log = LoggerFactory.getLogger(StormPropFindPropertyBuilder.class);
-	private List<PropertySource> propertySources;
-	private ArrayList<String> standardProperties;
-	private ArrayList<String> srmProperties;
+	private List<PropertySource> propertySources = new ArrayList<PropertySource>();
+	private ArrayList<String> standardProperties = new ArrayList<String>();
+	private ArrayList<String> srmProperties = new ArrayList<String>();
 	
 	public StormPropFindPropertyBuilder() {
-		this.standardProperties = new ArrayList<String>();
+		this.propertySources.clear();
+		this.standardProperties.clear();
 		this.standardProperties.add("getcontentlength");
 		this.standardProperties.add("getcontenttype");
 		this.standardProperties.add("displayname");
@@ -59,7 +60,7 @@ public class StormPropFindPropertyBuilder implements PropFindPropertyBuilder {
 		this.standardProperties.add("iscollection");
 		this.standardProperties.add("isreadonly");
 		this.standardProperties.add("supported-report-set");
-		this.srmProperties = new ArrayList<String>();
+		this.srmProperties.clear();
 		this.srmProperties.add("getcreated");
 		this.srmProperties.add("creationdate");
 		this.srmProperties.add("getlastmodified");
@@ -267,6 +268,11 @@ public class StormPropFindPropertyBuilder implements PropFindPropertyBuilder {
 	 */
 	public static String fixUrlForWindows(String url) {
 		return url.replace("&", "%26");
+	}
+
+	public List<PropertySource> getPropertySources() {
+
+		return this.getPropertySources();
 	}
 
 }

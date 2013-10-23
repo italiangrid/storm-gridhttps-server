@@ -12,26 +12,43 @@
  */
 package it.grid.storm.gridhttps.webapp.webdav.authorization.methods;
 
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import it.grid.storm.gridhttps.webapp.HttpHelper;
+import it.grid.storm.gridhttps.webapp.authorization.AuthorizationException;
 import it.grid.storm.gridhttps.webapp.authorization.AuthorizationStatus;
 import it.grid.storm.gridhttps.webapp.authorization.Constants;
 import it.grid.storm.gridhttps.webapp.authorization.UserCredentials;
-import it.grid.storm.gridhttps.webapp.authorization.methods.AbstractMethodAuthorization;
 import it.grid.storm.storagearea.StorageArea;
+import it.grid.storm.storagearea.StorageAreaManager;
 
-public class GetMethodAuthorization extends AbstractMethodAuthorization {
+public class GetMethodAuthorization extends WebDAVMethodAuthorization {
+
+	private static final Logger log = LoggerFactory.getLogger(GetMethodAuthorization.class);
 	
-	private StorageArea SA;
-	
-	public GetMethodAuthorization(HttpHelper httpHelper, StorageArea SA) {
-		super(httpHelper);
-		this.SA = SA;
+	public GetMethodAuthorization() {
+		super();
 	}
-	
-	public AuthorizationStatus isUserAuthorized(UserCredentials user) {
-		String path = SA.getRealPath(getHTTPHelper().getRequestURI().getRawPath());
-		String operation = Constants.PREPARE_TO_GET_OPERATION;
-		return askAuth(user, operation, path);
+
+	@Override
+	public AuthorizationStatus isUserAuthorized(HttpServletRequest request,
+		HttpServletResponse response, UserCredentials user)
+		throws AuthorizationException {
+
+		HttpHelper httpHelper = new HttpHelper(request, response);
+		String srcPath = this.stripContext(httpHelper.getRequestURI().getRawPath());
+		log.debug(getClass().getName() + ": path = " + srcPath);
+		StorageArea srcSA = StorageAreaManager.getMatchingSA(srcPath);
+		if (srcSA == null)
+			return AuthorizationStatus.NOTAUTHORIZED(400, "Unable to resolve storage area!");
+		log.debug(getClass().getName() + ": storage area = " + srcSA.getName());
+		if (!srcSA.isProtocol(httpHelper.getRequestProtocol().toUpperCase()))
+			return AuthorizationStatus.NOTAUTHORIZED(401, "Storage area " + srcSA.getName() + " doesn't support " + httpHelper.getRequestProtocol() + " protocol");
+		return super.askAuth(user, Constants.PREPARE_TO_GET_OPERATION, srcSA.getRealPath(srcPath));
 	}
 
 }

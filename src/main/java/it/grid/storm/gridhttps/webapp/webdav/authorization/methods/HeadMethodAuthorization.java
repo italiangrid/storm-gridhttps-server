@@ -12,19 +12,24 @@
  */
 package it.grid.storm.gridhttps.webapp.webdav.authorization.methods;
 
-import it.grid.storm.gridhttps.webapp.HttpHelper;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import it.grid.storm.gridhttps.webapp.authorization.AuthorizationException;
 import it.grid.storm.gridhttps.webapp.authorization.AuthorizationStatus;
 import it.grid.storm.gridhttps.webapp.authorization.UserCredentials;
-import it.grid.storm.gridhttps.webapp.authorization.methods.AbstractMethodAuthorization;
 
-public class HeadMethodAuthorization extends AbstractMethodAuthorization {
+public class HeadMethodAuthorization extends WebDAVMethodAuthorization {
 
-	public HeadMethodAuthorization(HttpHelper httpHelper) {
-		super(httpHelper);
+	public HeadMethodAuthorization() {
+		super();
 	}
 
 	@Override
-	public AuthorizationStatus isUserAuthorized(UserCredentials user) {
-		return AuthorizationStatus.AUTHORIZED();
+	public AuthorizationStatus isUserAuthorized(HttpServletRequest request,
+		HttpServletResponse response, UserCredentials user)
+		throws AuthorizationException {
+		
+		return (new GetMethodAuthorization()).isUserAuthorized(request, response, user);
 	}
 }

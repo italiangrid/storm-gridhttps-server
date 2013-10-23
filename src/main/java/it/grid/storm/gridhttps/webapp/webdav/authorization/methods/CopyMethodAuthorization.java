@@ -12,41 +12,63 @@
  */
 package it.grid.storm.gridhttps.webapp.webdav.authorization.methods;
 
-import java.net.URI;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import it.grid.storm.gridhttps.webapp.HttpHelper;
+import it.grid.storm.gridhttps.webapp.authorization.AuthorizationException;
 import it.grid.storm.gridhttps.webapp.authorization.AuthorizationStatus;
 import it.grid.storm.gridhttps.webapp.authorization.Constants;
 import it.grid.storm.gridhttps.webapp.authorization.UserCredentials;
-import it.grid.storm.gridhttps.webapp.authorization.methods.AbstractMethodAuthorization;
 import it.grid.storm.storagearea.StorageArea;
+import it.grid.storm.storagearea.StorageAreaManager;
 
-public class CopyMethodAuthorization extends AbstractMethodAuthorization {
+public class CopyMethodAuthorization extends WebDAVMethodAuthorization {
 
-	private StorageArea srcSA;
-	private StorageArea destSA;
-
-	public CopyMethodAuthorization(HttpHelper httpHelper, StorageArea srcSA, StorageArea destSA) {
-		super(httpHelper);
-		this.srcSA = srcSA;
-		this.destSA = destSA;
-	}
+	private static final Logger log = LoggerFactory.getLogger(CopyMethodAuthorization.class);
 	
-	public AuthorizationStatus isUserAuthorized(UserCredentials user) {
-		if (getHTTPHelper().hasDestinationHeader()) { 
-			URI srcURI = getHTTPHelper().getRequestURI();
-			URI destURI = getHTTPHelper().getDestinationURI();
-			String path = srcSA.getRealPath(srcURI.getRawPath());
-			String operation = Constants.CP_FROM_OPERATION;
-			AuthorizationStatus srcResponse = askAuth(user, operation, path);
-			if (srcResponse.isAuthorized()) {
-				path = destSA.getRealPath(destURI.getRawPath());
-				operation = getHTTPHelper().isOverwriteRequest() ? Constants.CP_TO_OVERWRITE_OPERATION : Constants.CP_TO_OPERATION;
-				return askAuth(user, operation, path);
-			} 
+	public CopyMethodAuthorization() {
+		super();
+	}
+
+	@Override
+	public AuthorizationStatus isUserAuthorized(HttpServletRequest request,
+		HttpServletResponse response, UserCredentials user)
+		throws AuthorizationException {
+
+		AuthorizationStatus srcResponse;
+		HttpHelper httpHelper = new HttpHelper(request, response);
+		if (!httpHelper.hasDestinationHeader())
+			return AuthorizationStatus.NOTAUTHORIZED(400, "No destination header found");
+		String srcPath = this.stripContext(httpHelper.getRequestURI().getRawPath());
+		log.debug(getClass().getName() + ": from path = " + srcPath);
+		StorageArea srcSA = StorageAreaManager.getMatchingSA(srcPath);
+		if (srcSA == null)
+			return AuthorizationStatus.NOTAUTHORIZED(400, "Unable to resolve storage area!");
+		log.debug(getClass().getName() + ": from storage area = " + srcSA.getName());
+		if (!srcSA.isProtocol(httpHelper.getRequestProtocol().toUpperCase()))
+			return AuthorizationStatus.NOTAUTHORIZED(401, "Storage area " + srcSA.getName() + " doesn't support " + httpHelper.getRequestProtocol() + " protocol");
+		srcResponse = super.askAuth(user, Constants.CP_FROM_OPERATION, srcSA.getRealPath(srcPath));
+		if (!srcResponse.isAuthorized())
 			return srcResponse;
-		} 
-		return AuthorizationStatus.NOTAUTHORIZED(400, "no destination header found");
+		String destPath = this.stripContext(httpHelper.getDestinationURI().getRawPath());
+		log.debug(getClass().getName() + ": to path = " + destPath);
+		if (srcPath.equals(destPath))
+			return AuthorizationStatus.NOTAUTHORIZED(403, "The source and destination URIs are the same!");
+		StorageArea destSA = StorageAreaManager.getMatchingSA(destPath);
+		if (destSA == null)
+			return AuthorizationStatus.NOTAUTHORIZED(400, "Unable to resolve storage area!");
+		log.debug(getClass().getName() + ": to storage area = " + destSA.getName());
+		if (!destSA.isProtocol(httpHelper.getDestinationProtocol().toUpperCase()))
+			return AuthorizationStatus.NOTAUTHORIZED(401, "Storage area " + destSA.getName() + " doesn't support " + httpHelper.getDestinationProtocol() + " protocol");
+		if (httpHelper.isOverwriteRequest())
+			srcResponse = super.askAuth(user, Constants.CP_TO_OVERWRITE_OPERATION, destSA.getRealPath(destPath));
+		else
+			srcResponse = super.askAuth(user, Constants.CP_TO_OPERATION, destSA.getRealPath(destPath));
+		return srcResponse;
 	}
 
 }

@@ -90,15 +90,10 @@ public class StormGridhttpsServer {
 		String webappResourceDir = this.getClass().getClassLoader().getResource("webapp").toExternalForm();
 		webAppContext = new WebAppContext();
 		webAppContext.setResourceBase(webappResourceDir);
-		webAppContext.setContextPath(gridhttpsInfo.getWebdavContextPath());
+		webAppContext.setContextPath(gridhttpsInfo.getWebappContextPath());
 		webAppContext.setParentLoaderPriority(true);
-		if (gridhttpsInfo.isHTTPEnabled()) {
-			String[] davConnectors = { davHttpsConnector.getName(), davHttpConnector.getName() };
-			webAppContext.setConnectorNames(davConnectors);
-		} else {
-			String[] davConnectors = { davHttpsConnector.getName() };
-			webAppContext.setConnectorNames(davConnectors);
-		}
+		String[] davConnectors = { davHttpsConnector.getName(), davHttpConnector.getName() };
+		webAppContext.setConnectorNames(davConnectors);
 		webAppContext.setCompactPath(true);
 		return webAppContext;
 	}
@@ -137,7 +132,12 @@ public class StormGridhttpsServer {
 		} catch (Exception e) {
 			throw new ServerException(e);
 		}
-		log.info("gridhttps-server started ");
+		if (!oneServer.isFailed()) {
+			log.info("gridhttps-server started ");
+	  } else {
+			log.error("gridhttps-server failed ");
+			throw new ServerException("gridhttps-server failed!");
+	  }
 	}
 
 	public boolean isRunning() {

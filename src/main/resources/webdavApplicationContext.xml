@@ -3,7 +3,7 @@
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-2.0.xsd">
 
-	<bean id="resource.factory" class="it.grid.storm.gridhttps.webapp.webdav.factory.StormResourceFactory" />
+	<bean id="resource.factory" class="it.grid.storm.gridhttps.webapp.webdav.factory.WebdavResourceFactory" />
 
 	<bean id="webdav-extra.property" class="it.grid.storm.gridhttps.webapp.webdav.StormPropertySource" />
 
@@ -17,7 +17,7 @@
 		<property name="enableCookieAuth" value="false" />
 		<property name="enableCompression" value="false" />
 		<property name="enableExpectContinue" value="false" />
-		<!-- enableCompression may be true...? -->
+		<property name="buffering" value="never"/>
 		<property name="extraPropertySources">
 			<list>
 				<ref bean="webdav-extra.property" />
@@ -25,5 +25,5 @@
 		</property>
 		<property name="enabledJson" value="false" />
 	</bean>
-
+	
 </beans>

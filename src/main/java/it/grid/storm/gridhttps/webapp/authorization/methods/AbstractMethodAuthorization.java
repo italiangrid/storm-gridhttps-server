@@ -12,28 +12,17 @@
  */
 package it.grid.storm.gridhttps.webapp.authorization.methods;
 
-import it.grid.storm.gridhttps.webapp.HttpHelper;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import it.grid.storm.gridhttps.webapp.authorization.AuthorizationException;
 import it.grid.storm.gridhttps.webapp.authorization.AuthorizationStatus;
 import it.grid.storm.gridhttps.webapp.authorization.StormAuthorizationUtils;
 import it.grid.storm.gridhttps.webapp.authorization.UserCredentials;
 
 public abstract class AbstractMethodAuthorization {
 
-	private HttpHelper httpHelper;
-	
-	public AbstractMethodAuthorization(HttpHelper httpHelper) {
-		this.setHTTPHelper(httpHelper);
-	}
-	
-	protected HttpHelper getHTTPHelper() {
-		return httpHelper;
-	}
-
-	private void setHTTPHelper(HttpHelper httpHelper) {
-		this.httpHelper = httpHelper;
-	}
-	
-	public abstract AuthorizationStatus isUserAuthorized(UserCredentials user);
+	public abstract AuthorizationStatus isUserAuthorized(HttpServletRequest request, HttpServletResponse response, UserCredentials user) throws AuthorizationException;
 
 	protected AuthorizationStatus askAuth(UserCredentials user, String operation, String path) {	
 		try {
