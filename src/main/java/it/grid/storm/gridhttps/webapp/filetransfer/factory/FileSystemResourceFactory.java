@@ -32,7 +32,7 @@ public final class FileSystemResourceFactory extends StormFactory {
 		super(Configuration.getBackendInfo().getHostname(), Configuration.getBackendInfo().getPort(), Configuration.getGridhttpsInfo().getRootDirectory(),
 				Configuration.getGridhttpsInfo().getFiletransferContextPath());
 		this.setAllowDirectoryBrowsing(false);
-		log.debug("FileSystemResourceFactory created");
+		log.debug(this.getClass().getName() + " created");
 	}
 
 	@Override

@@ -12,14 +12,24 @@
  */
 package it.grid.storm.gridhttps.webapp.filetransfer;
 
+import io.milton.config.HttpManagerBuilder;
+import io.milton.http.HttpManager;
+import io.milton.http.Request;
+import io.milton.http.Response;
+import io.milton.http.http11.DefaultHttp11ResponseHandler.BUFFERING;
+import io.milton.property.PropertySource;
+import io.milton.servlet.MiltonServlet;
 import it.grid.storm.gridhttps.webapp.HttpHelper;
+import it.grid.storm.gridhttps.webapp.StormStandardFilter;
 import it.grid.storm.gridhttps.webapp.authorization.AuthorizationException;
 import it.grid.storm.gridhttps.webapp.authorization.AuthorizationFilter;
 import it.grid.storm.gridhttps.webapp.authorization.AuthorizationStatus;
 import it.grid.storm.gridhttps.webapp.authorization.UserCredentials;
 import it.grid.storm.gridhttps.webapp.filetransfer.authorization.FileTransferAuthorization;
+import it.grid.storm.gridhttps.webapp.filetransfer.factory.FileSystemResourceFactory;
 
 import java.io.IOException;
+import java.util.ArrayList;
 
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;
@@ -37,11 +47,35 @@ public class FileTransferFilter implements Filter {
 
 	private static final Logger log = LoggerFactory.getLogger(FileTransferFilter.class);
 	
+	private FilterConfig filterConfig;
+	private HttpManager httpManager;
 	private AuthorizationFilter authFilter = new FileTransferAuthorization();
 	
 	@Override
 	public void init(FilterConfig filterConfig) throws ServletException {
-		log.info("FileTransferFilter - Init");
+		log.debug(this.getClass().getName() + " - Init");
+		this.filterConfig = filterConfig;
+		
+		try {
+			log.debug(this.getClass().getName() + " - Init HttpManagerBuilder");
+			HttpManagerBuilder builder = new HttpManagerBuilder();
+			builder.setResourceFactory(new FileSystemResourceFactory());
+			builder.setDefaultStandardFilter(new StormStandardFilter());
+			builder.setEnabledJson(false);
+			builder.setBuffering(BUFFERING.never);
+			builder.setEnableBasicAuth(false);
+			builder.setEnableCompression(false);
+			builder.setEnableExpectContinue(false);
+			builder.setEnableFormAuth(false);
+			builder.setEnableCookieAuth(false);
+			builder.setPropertySources(new ArrayList<PropertySource>());
+			this.httpManager = builder.buildHttpManager();
+			log.debug(this.getClass().getName() + " - HttpManager created!");
+			
+		} catch (Exception e) {
+			log.error(e.getMessage());
+			System.exit(1);
+		}		
 	}
 
 	@Override
@@ -73,7 +107,7 @@ public class FileTransferFilter implements Filter {
 		}
 		if (status.isAuthorized()) {
 			log.debug(getAuthorizedMsg(httpHelper, user));
-			chain.doFilter(request, response);
+			doMiltonProcessing((HttpServletRequest) request, (HttpServletResponse) response);
 		} else {
 			log.warn(getUnAuthorizedMsg(httpHelper, user, status.getReason()));
 			sendError(httpHelper.getResponse(), status.getErrorCode(), status.getReason());
@@ -112,6 +146,19 @@ public class FileTransferFilter implements Filter {
 		} catch (IOException e) {
 			log.error(e.getMessage());
 			e.printStackTrace();
+		}
+	}
+	
+	private void doMiltonProcessing(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+		try {
+			MiltonServlet.setThreadlocals(req, resp);
+			Request request = new io.milton.servlet.ServletRequest(req, this.filterConfig.getServletContext());
+			Response response = new io.milton.servlet.ServletResponse(resp);
+			httpManager.process(request, response);
+		} finally {
+			MiltonServlet.clearThreadlocals();
+			resp.getOutputStream().flush();
+			resp.flushBuffer();
 		}
 	}
 

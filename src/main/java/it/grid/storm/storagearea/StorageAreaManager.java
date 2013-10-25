@@ -12,6 +12,9 @@
  */
 package it.grid.storm.storagearea;
 
+import it.grid.storm.gridhttps.webapp.authorization.Constants;
+import it.grid.storm.gridhttps.webapp.authorization.StormAuthorizationUtils;
+import it.grid.storm.gridhttps.webapp.authorization.UserCredentials;
 import it.grid.storm.remotecall.ConfigDiscoveryServiceConstants;
 
 import java.io.File;
@@ -320,11 +323,49 @@ public class StorageAreaManager {
 		}
 		for (String stfnRoot : stfnRootList) {
 			StorageArea storageArea = new StorageArea(name, root, stfnRoot, protocolList);
-			log.info("Decoded storage area: [" + storageArea.toString() + "]");
+			log.info("Decoded storage area: " + storageArea.getName());
+			log.debug("- details: [" + storageArea.toString() + "]");
 			producedList.add(storageArea);
 		}
 		log.debug("Decoded " + producedList.size() + " storage areas");
 		return producedList;
 	}
 
+	public List<StorageArea> getUserAuthorizedStorageAreas(UserCredentials user, String reqProtocol) {
+		List<StorageArea> out = new ArrayList<StorageArea>();
+		for (StorageArea current : storageAreas) {
+			if (current.getProtocols().contains(reqProtocol)) {
+				if (isUserAuthorized(user, current.getFSRoot())) {
+					out.add(current);
+				}
+			}
+		}
+		return out;
+	}
+	
+	private boolean isUserAuthorized(UserCredentials user, String path) {
+		boolean response = false;
+		try {
+			response = StormAuthorizationUtils.isUserAuthorized(user, Constants.PREPARE_TO_GET_OPERATION, path);
+		} catch (IllegalArgumentException e) {
+			e.printStackTrace();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		if (!response && !user.isAnonymous()) {
+			/* Re-try as anonymous user: */
+			user.forceAnonymous();
+			try {
+				response = StormAuthorizationUtils.isUserAuthorized(user, Constants.PREPARE_TO_GET_OPERATION, path);
+			} catch (IllegalArgumentException e) {
+				e.printStackTrace();
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+			user.unforceAnonymous();
+		}
+		return response;
+	}
+	
+	
 }

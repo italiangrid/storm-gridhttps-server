@@ -42,12 +42,13 @@ public abstract class StormFactory implements ResourceFactory {
 	private String localhostname;
 	
 	public StormFactory(String beHost, int bePort, File root, String contextPath) throws UnknownHostException, ApiException {
-		log.info("StoRM Factory constructor");
+		log.debug(this.getClass().getName() + " constructor");
 		setRoot(root);
 		setContextPath(contextPath);
 		setSecurityManager(new NullSecurityManager());
 		setContentService(new StormContentService());
 		setLocalhostname(java.net.InetAddress.getLocalHost().getHostName());
+		log.debug(this.getClass().getName() + " created");
 	}
 
 	private boolean isRoot(String path) {

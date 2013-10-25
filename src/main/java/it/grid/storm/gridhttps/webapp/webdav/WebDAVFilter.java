@@ -12,12 +12,25 @@
  */
 package it.grid.storm.gridhttps.webapp.webdav;
 
+import io.milton.config.HttpManagerBuilder;
+import io.milton.http.HttpManager;
+import io.milton.http.Request;
+import io.milton.http.Response;
+import io.milton.http.http11.DefaultHttp11ResponseHandler.BUFFERING;
+import io.milton.property.PropertySource;
+import io.milton.servlet.MiltonServlet;
 import it.grid.storm.gridhttps.configuration.Configuration;
 import it.grid.storm.gridhttps.webapp.HttpHelper;
+import it.grid.storm.gridhttps.webapp.StormStandardFilter;
 import it.grid.storm.gridhttps.webapp.authorization.AuthorizationException;
 import it.grid.storm.gridhttps.webapp.authorization.AuthorizationStatus;
 import it.grid.storm.gridhttps.webapp.authorization.UserCredentials;
+import it.grid.storm.gridhttps.webapp.data.StormResourceHelper;
+import it.grid.storm.gridhttps.webapp.data.exceptions.SRMOperationException;
 import it.grid.storm.gridhttps.webapp.webdav.authorization.WebDAVAuthorization;
+import it.grid.storm.gridhttps.webapp.webdav.factory.WebdavResourceFactory;
+import it.grid.storm.gridhttps.webapp.webdav.factory.html.StormHtmlRootPage;
+import it.grid.storm.storagearea.StorageAreaManager;
 
 import java.io.File;
 import java.io.IOException;
@@ -40,13 +53,42 @@ public class WebDAVFilter implements Filter {
 	private static final Logger log = LoggerFactory.getLogger(WebDAVFilter.class);
 
 	private ArrayList<String> rootPaths;
+	private HttpManager httpManager;
+	private FilterConfig filterConfig;
 	
 	@Override
 	public void init(FilterConfig filterConfig) throws ServletException {
-		log.info("WebDAVFilter - Init");
+		log.debug(this.getClass().getName() + " - Init");
+		this.filterConfig = filterConfig;
 		this.rootPaths = new ArrayList<String>();
 		this.rootPaths.add(File.separator + Configuration.getGridhttpsInfo().getWebdavContextPath());
 		this.rootPaths.add(File.separator + Configuration.getGridhttpsInfo().getWebdavContextPath() + File.separator);
+		
+		try {
+			log.debug(this.getClass().getName() + " - Init HttpManagerBuilder");
+			HttpManagerBuilder builder = new HttpManagerBuilder();
+			builder.setResourceFactory(new WebdavResourceFactory());
+			builder.setDefaultStandardFilter(new StormStandardFilter());
+			ArrayList<PropertySource> extraPropertySources = new ArrayList<PropertySource>();
+			extraPropertySources.add(new StormPropertySource());
+			builder.setExtraPropertySources(extraPropertySources);
+			builder.setEnabledJson(false);
+			builder.setBuffering(BUFFERING.never);
+			builder.setEnableBasicAuth(false);
+			builder.setEnableCompression(false);
+			builder.setEnableExpectContinue(false);
+			builder.setEnableFormAuth(false);
+			builder.setEnableCookieAuth(false);
+			builder.setPropertySources(new ArrayList<PropertySource>());
+			StormPropFindPropertyBuilder pfBuilder = new StormPropFindPropertyBuilder();
+			builder.setPropFindPropertyBuilder(pfBuilder);
+			this.httpManager = builder.buildHttpManager();
+			log.debug(this.getClass().getName() + " - HttpManager created!");
+			pfBuilder.setPropertySources(builder.getPropertySources());
+		} catch (Exception e) {
+			log.error(this.getClass().getName() + " - " + e.getMessage());
+			System.exit(1);
+		}		
 	}
 		
 	@Override
@@ -85,7 +127,12 @@ public class WebDAVFilter implements Filter {
 		
 		if (status.isAuthorized()) {
 			log.debug(getAuthorizedMsg(httpHelper, user));
-			chain.doFilter(request, response);
+			if (isRootPath(requestedPath)) {
+				log.debug("Requested-URI is root");
+				processRootRequest(httpHelper, user);
+			} else {
+				doMiltonProcessing((HttpServletRequest) request, (HttpServletResponse) response);
+			}
 		} else {
 			log.warn(getUnAuthorizedMsg(httpHelper, user, status.getReason()));
 			sendError(httpHelper.getResponse(), status.getErrorCode(), status.getReason());
@@ -151,6 +198,56 @@ public class WebDAVFilter implements Filter {
 			log.error(e.getMessage());
 			e.printStackTrace();
 		}
+	}
+	
+	private void doMiltonProcessing(HttpServletRequest req,
+		HttpServletResponse resp) throws IOException {
+
+		try {
+			MiltonServlet.setThreadlocals(req, resp);
+			Request request = new io.milton.servlet.ServletRequest(req,
+				this.filterConfig.getServletContext());
+			Response response = new io.milton.servlet.ServletResponse(resp);
+			httpManager.process(request, response);
+		} finally {
+			MiltonServlet.clearThreadlocals();
+			resp.getOutputStream().flush();
+			resp.flushBuffer();
+		}
+	}
+	
+	private void sendDavHeader(HttpServletResponse response) throws IOException {
+		response.addHeader("DAV", "1");
+		response.flushBuffer();
+	}
+	
+	private void processRootRequest(HttpHelper httpHelper, UserCredentials user) throws IOException {
+		String method = httpHelper.getRequestMethod();
+		if (method.toUpperCase().equals("OPTIONS")) {
+			doPing(user);
+			sendDavHeader(httpHelper.getResponse());
+		} else if (method.toUpperCase().equals("GET")) {
+			sendRootPage(httpHelper, user);
+		}
+	}
+	
+	private void doPing(UserCredentials user) {
+		try {
+			StormResourceHelper.getInstance().doPing(user, Configuration.getBackendInfo().getHostname(), Configuration.getBackendInfo().getPort());
+		} catch (SRMOperationException e) {
+			log.error(e.getMessage());
+		}
+	}
+
+	private void sendRootPage(HttpHelper httpHelper, UserCredentials user) throws IOException {
+		httpHelper.getResponse().addHeader("Content-Type", "text/html");
+		httpHelper.getResponse().addHeader("DAV", "1");
+		StormHtmlRootPage page = new StormHtmlRootPage(httpHelper.getResponse().getOutputStream());
+		page.start();
+		page.addTitle("StoRM Gridhttps-server WebDAV");
+		page.addNavigator("/");
+		page.addStorageAreaList(StorageAreaManager.getInstance().getUserAuthorizedStorageAreas(user, httpHelper.getRequestProtocol()));
+		page.end();
 	}
 	
 	@Override

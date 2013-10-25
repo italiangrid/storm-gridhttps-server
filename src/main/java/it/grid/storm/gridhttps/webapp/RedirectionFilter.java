@@ -25,7 +25,7 @@ public class RedirectionFilter implements Filter {
 	
 	@Override
 	public void init(FilterConfig filterConfig) throws ServletException {
-		log.info("RedirectionFilter - Init");
+		log.debug(this.getClass().getName() + " init");
 	}
 
 	@Override
