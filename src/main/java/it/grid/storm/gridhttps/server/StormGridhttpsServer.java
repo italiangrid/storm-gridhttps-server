@@ -92,8 +92,13 @@ public class StormGridhttpsServer {
 		webAppContext.setResourceBase(webappResourceDir);
 		webAppContext.setContextPath(gridhttpsInfo.getWebappContextPath());
 		webAppContext.setParentLoaderPriority(true);
-		String[] davConnectors = { davHttpsConnector.getName(), davHttpConnector.getName() };
-		webAppContext.setConnectorNames(davConnectors);
+		if (gridhttpsInfo.isHTTPEnabled()) {
+			String[] davConnectors = { davHttpsConnector.getName(), davHttpConnector.getName() };
+			webAppContext.setConnectorNames(davConnectors);
+		} else {
+			String[] davConnectors = { davHttpsConnector.getName() };
+			webAppContext.setConnectorNames(davConnectors);
+		}
 		webAppContext.setCompactPath(true);
 		return webAppContext;
 	}
