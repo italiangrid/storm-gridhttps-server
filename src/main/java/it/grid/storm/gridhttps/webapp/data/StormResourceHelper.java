@@ -54,26 +54,29 @@ public class StormResourceHelper {
 
 	private String hostnameBE;
 	private int portBE;
+	private String tokenBE;
 	private ArrayList<TStatusCode> lsIgnored;
 	private BackendApi backend;
 	private HttpHelper helper;
 
 	public static StormResourceHelper getInstance() throws SRMOperationException {
-		return new StormResourceHelper(Configuration.getBackendInfo().getHostname(), Configuration.getBackendInfo().getPort());
+		return new StormResourceHelper(Configuration.getBackendInfo().getHostname(), Configuration.getBackendInfo().getPort(), 
+			Configuration.getBackendInfo().getToken());
 	}
 	
-	private StormResourceHelper(String hostname, int port) throws SRMOperationException {
-		init(hostname, port);
+	private StormResourceHelper(String hostname, int port, String token) throws SRMOperationException {
+		init(hostname, port, token);
 	}
 	
-	private void init(String hostname, int port) throws SRMOperationException {
+	private void init(String hostname, int port, String token) throws SRMOperationException {
 		this.hostnameBE = hostname;
 		this.portBE = port;
+		this.tokenBE = token;
 		this.lsIgnored = new ArrayList<TStatusCode>();
 		this.lsIgnored.add(TStatusCode.SRM_FAILURE);
 		this.lsIgnored.add(TStatusCode.SRM_INVALID_PATH);
 		try {
-			this.backend = new BackendApi(this.hostnameBE, new Long(this.portBE));
+			this.backend = new BackendApi(this.hostnameBE, new Long(this.portBE), this.tokenBE);
 		} catch (ApiException e) {
 			log.error(e.toString());
 			TReturnStatus status = new TReturnStatus(TStatusCode.SRM_INTERNAL_ERROR, e.toString());

@@ -75,9 +75,13 @@ public class PutMethodAuthorization extends AbstractMethodAuthorization {
 		log.debug("Check for a prepare-to-put");
 		SurlArrayRequestOutputData outputSPtP;
 		try {
-			BackendApi backEnd = new BackendApi(Configuration.getBackendInfo().getHostname(), new Long(Configuration.getBackendInfo().getPort()));
+			
+			BackendApi backEnd = new BackendApi(Configuration.getBackendInfo().getHostname(), 
+				new Long(Configuration.getBackendInfo().getPort()), Configuration.getBackendInfo().getToken());
+		
 			PrepareToPutStatus operation = new PrepareToPutStatus(surl);
 			outputSPtP = operation.executeAs(this.getHTTPHelper().getUser(), backEnd);
+		
 		} catch (ApiException e) {
 			log.error(e.getMessage());
 			return AuthorizationStatus.NOTAUTHORIZED(500, e.getMessage());

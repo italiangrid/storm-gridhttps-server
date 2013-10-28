@@ -85,6 +85,8 @@ public class Configuration {
 			getBackendInfo().setServicePort(configuration.get("backend", "backend.authorization-service.port", int.class));
 		if (configuration.get("backend").containsKey("backend.srm-service.port"))
 			getBackendInfo().setPort(configuration.get("backend", "backend.srm-service.port", int.class));
+		if (configuration.get("backend").containsKey("backend.xmlrpc.token"))
+			getBackendInfo().setToken(configuration.get("backend", "backend.xmlrpc.token", String.class));
 		if (configuration.get("backend").containsKey("srm.endpoint")) {
 			getFrontendInfo().setHostname(configuration.get("backend", "srm.endpoint").split(":")[0]);
 			getFrontendInfo().setPort(Integer.valueOf(configuration.get("backend", "srm.endpoint").split(":")[1]));
