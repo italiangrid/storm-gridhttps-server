@@ -55,10 +55,10 @@
 		<mavenCompilerVersion>3.0</mavenCompilerVersion>
 		<mavenJarVersion>2.4</mavenJarVersion>
 		<mavenAssemblyVersion>2.4</mavenAssemblyVersion>
-		
+
 		<httpsutilsVersion>0.2.1</httpsutilsVersion>
 		<xmlrpcApiVersion>0.0.15-SNAPSHOT</xmlrpcApiVersion>
-	
+
 		<logbackVersion>1.0.6</logbackVersion>
 		<slf4jVersion>1.6.6</slf4jVersion>
 		<miltonVersion>2.5.2.0</miltonVersion>
@@ -132,7 +132,7 @@
 	</build>
 
 	<dependencies>
-	
+
 		<dependency>
 			<groupId>org.slf4j</groupId>
 			<artifactId>slf4j-api</artifactId>

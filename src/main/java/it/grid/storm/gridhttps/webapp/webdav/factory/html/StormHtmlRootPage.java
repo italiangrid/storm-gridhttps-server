@@ -12,7 +12,7 @@
  */
 package it.grid.storm.gridhttps.webapp.webdav.factory.html;
 
-import it.grid.storm.storagearea.StorageArea;
+import it.grid.storm.gridhttps.common.storagearea.StorageArea;
 
 import java.io.OutputStream;
 import java.util.HashMap;

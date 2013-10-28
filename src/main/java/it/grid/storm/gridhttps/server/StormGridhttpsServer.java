@@ -17,7 +17,6 @@ import it.grid.storm.gridhttps.server.exceptions.ServerException;
 import it.grid.storm.gridhttps.server.mapperservlet.MapperServlet;
 
 import java.io.File;
-import java.io.IOException;
 
 import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.Handler;
@@ -44,16 +43,17 @@ public class StormGridhttpsServer {
 	private static final Logger log = LoggerFactory.getLogger(StormGridhttpsServer.class);
 	private StormGridhttps gridhttpsInfo;
 	private Server oneServer;
-	private WebAppContext webAppContext;
-	private ServletContextHandler servletContext;
-	private Connector davHttpsConnector, davHttpConnector, mapHttpConnector;
+	private WebAppContext webdavContext, filetransferContext;
+	private ServletContextHandler mappingContext;
+	private Connector httpsConnector, httpConnector, mapHttpConnector;
 
 	public StormGridhttpsServer(StormGridhttps gridhttpsInfo) throws ServerException {
 		this.gridhttpsInfo = gridhttpsInfo;
-		init();
+		initServer();
+		initContextHandlers();
 	}
 
-	private void init() throws ServerException {
+	private void initServer() {
 		CANLListener l = new CANLListener();
 		X509CertChainValidatorExt validator = CertificateValidatorBuilder
 			.buildCertificateValidator(gridhttpsInfo.getSsloptions()
@@ -62,57 +62,75 @@ public class StormGridhttpsServer {
 		oneServer = ServerFactory.newServer(gridhttpsInfo.getHostname(),
 			gridhttpsInfo.getHttpsPort(), gridhttpsInfo.getSsloptions(), validator,
 			ServerFactory.MAX_CONNECTIONS, ServerFactory.MAX_REQUEST_QUEUE_SIZE);
-		davHttpsConnector = oneServer.getConnectors()[0];
 		oneServer.setStopAtShutdown(true);
 		oneServer.setGracefulShutdown(1000);
 		oneServer.setThreadPool(getThreadPool());
-		/* add plain HTTP connector if enabled */
+		httpsConnector = oneServer.getConnectors()[0];
+		initConnectors();
+	}
+	
+	private void initConnectors() {
 		if (gridhttpsInfo.isHTTPEnabled()) {
-			davHttpConnector = getHttpConnector(gridhttpsInfo.getHostname(), gridhttpsInfo.getHttpPort());
-			oneServer.addConnector(davHttpConnector);
+			httpConnector = getHttpConnector(gridhttpsInfo.getHostname(), gridhttpsInfo.getHttpPort());
+			oneServer.addConnector(httpConnector);
 		}
-		/* add MapperServlet connector */
 		mapHttpConnector = getHttpConnector(gridhttpsInfo.getHostname(), gridhttpsInfo.getMapperServlet().getPort());
 		oneServer.addConnector(mapHttpConnector);
-		/* deploy webapp and servlet */
+	}
+	
+	private void initContextHandlers() throws ServerException {
+
 		ContextHandlerCollection contexts = new ContextHandlerCollection();
 		try {
-			buildWebAppContext();
-		} catch (IOException e) {
+			initWebDAVContext();
+			initFileTransferContext();
+			initMappingServletContext();
+		} catch (Exception e) {
 			throw new ServerException(e);
 		}
-		buildServletContext();
-		contexts.setHandlers(new Handler[] { webAppContext, servletContext, new DefaultHandler() });
+		contexts.setHandlers(new Handler[] { webdavContext, filetransferContext, mappingContext, new DefaultHandler() });
 		oneServer.setHandler(contexts);
 	}
 	
-	private WebAppContext buildWebAppContext() throws IOException{
+	private void initWebDAVContext() {
 		String webappResourceDir = this.getClass().getClassLoader().getResource("webapp").toExternalForm();
-		webAppContext = new WebAppContext();
-		webAppContext.setResourceBase(webappResourceDir);
-		webAppContext.setContextPath(gridhttpsInfo.getWebappContextPath());
-		webAppContext.setParentLoaderPriority(true);
+		webdavContext = new WebAppContext();
+		webdavContext.setResourceBase(webappResourceDir);
+		webdavContext.setDescriptor(webappResourceDir + "/WEB-INF/webdav.xml");
+		webdavContext.setContextPath(File.separator + gridhttpsInfo.getWebdavContextPath());
+		webdavContext.setParentLoaderPriority(true);
 		if (gridhttpsInfo.isHTTPEnabled()) {
-			String[] davConnectors = { davHttpsConnector.getName(), davHttpConnector.getName() };
-			webAppContext.setConnectorNames(davConnectors);
+			webdavContext.setConnectorNames(new String[] { httpsConnector.getName(), httpConnector.getName() });
 		} else {
-			String[] davConnectors = { davHttpsConnector.getName() };
-			webAppContext.setConnectorNames(davConnectors);
+			webdavContext.setConnectorNames(new String[] { httpsConnector.getName() });
 		}
-		webAppContext.setCompactPath(true);
-		return webAppContext;
+		webdavContext.setCompactPath(true);
+	}
+	
+	private void initFileTransferContext() {
+		String webappResourceDir = this.getClass().getClassLoader().getResource("webapp").toExternalForm();
+		filetransferContext = new WebAppContext();
+		filetransferContext.setResourceBase(webappResourceDir);
+		filetransferContext.setDescriptor(webappResourceDir + "/WEB-INF/filetransfer.xml");
+		filetransferContext.setContextPath(File.separator + gridhttpsInfo.getFiletransferContextPath());
+		filetransferContext.setParentLoaderPriority(true);
+		if (gridhttpsInfo.isHTTPEnabled()) {
+			filetransferContext.setConnectorNames(new String[] { httpsConnector.getName(), httpConnector.getName() });
+		} else {
+			filetransferContext.setConnectorNames(new String[] { httpsConnector.getName() });
+		}
+		filetransferContext.setCompactPath(true);
 	}
 
-	private ServletContextHandler buildServletContext() {
+	private void initMappingServletContext() {
 		String contextPath = File.separator + gridhttpsInfo.getMapperServlet().getContextPath();
 		String contextSpec = File.separator + gridhttpsInfo.getMapperServlet().getContextSpec();
 		String[] mappingConnectors = { mapHttpConnector.getName() };
-		servletContext = new ServletContextHandler(ServletContextHandler.SESSIONS);
-		servletContext.setContextPath(contextPath);
-		servletContext.addServlet(new ServletHolder(new MapperServlet()), contextSpec);
-		servletContext.setConnectorNames(mappingConnectors);
-		servletContext.setCompactPath(true);
-		return servletContext;
+		mappingContext = new ServletContextHandler(ServletContextHandler.SESSIONS);
+		mappingContext.setContextPath(contextPath);
+		mappingContext.addServlet(new ServletHolder(new MapperServlet()), contextSpec);
+		mappingContext.setConnectorNames(mappingConnectors);
+		mappingContext.setCompactPath(true);
 	}
 
 	private Connector getHttpConnector(String hostname, int httpPort) {

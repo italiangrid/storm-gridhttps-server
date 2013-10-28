@@ -6,14 +6,15 @@ import io.milton.http.exceptions.BadRequestException;
 import io.milton.http.exceptions.ConflictException;
 import io.milton.http.exceptions.NotAuthorizedException;
 import io.milton.resource.*;
-import it.grid.storm.gridhttps.webapp.data.StormDirectoryResource;
-import it.grid.storm.gridhttps.webapp.data.StormFactory;
+import it.grid.storm.gridhttps.webapp.common.factory.StormDirectoryResource;
+import it.grid.storm.gridhttps.webapp.common.factory.StormFactory;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Map;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

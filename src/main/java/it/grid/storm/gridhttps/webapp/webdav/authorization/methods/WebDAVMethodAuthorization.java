@@ -15,7 +15,7 @@ package it.grid.storm.gridhttps.webapp.webdav.authorization.methods;
 import java.io.File;
 
 import it.grid.storm.gridhttps.configuration.Configuration;
-import it.grid.storm.gridhttps.webapp.authorization.methods.AbstractMethodAuthorization;
+import it.grid.storm.gridhttps.webapp.common.authorization.methods.AbstractMethodAuthorization;
 
 public abstract class WebDAVMethodAuthorization extends AbstractMethodAuthorization {
 	

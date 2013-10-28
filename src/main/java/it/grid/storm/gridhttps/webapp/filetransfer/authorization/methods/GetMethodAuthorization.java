@@ -20,17 +20,17 @@ import javax.servlet.http.HttpServletResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import it.grid.storm.gridhttps.common.storagearea.StorageArea;
+import it.grid.storm.gridhttps.common.storagearea.StorageAreaManager;
 import it.grid.storm.gridhttps.configuration.Configuration;
 import it.grid.storm.gridhttps.webapp.HttpHelper;
-import it.grid.storm.gridhttps.webapp.authorization.AuthorizationException;
-import it.grid.storm.gridhttps.webapp.authorization.AuthorizationStatus;
-import it.grid.storm.gridhttps.webapp.authorization.Constants;
-import it.grid.storm.gridhttps.webapp.authorization.UserCredentials;
-import it.grid.storm.gridhttps.webapp.data.Surl;
-import it.grid.storm.gridhttps.webapp.data.exceptions.SRMOperationException;
-import it.grid.storm.gridhttps.webapp.srmOperations.PrepareToGetStatus;
-import it.grid.storm.storagearea.StorageArea;
-import it.grid.storm.storagearea.StorageAreaManager;
+import it.grid.storm.gridhttps.webapp.common.Surl;
+import it.grid.storm.gridhttps.webapp.common.authorization.AuthorizationException;
+import it.grid.storm.gridhttps.webapp.common.authorization.AuthorizationStatus;
+import it.grid.storm.gridhttps.webapp.common.authorization.Constants;
+import it.grid.storm.gridhttps.webapp.common.authorization.UserCredentials;
+import it.grid.storm.gridhttps.webapp.common.exceptions.SRMOperationException;
+import it.grid.storm.gridhttps.webapp.common.srmOperations.PrepareToGetStatus;
 import it.grid.storm.xmlrpc.ApiException;
 import it.grid.storm.xmlrpc.BackendApi;
 import it.grid.storm.xmlrpc.outputdata.SurlArrayRequestOutputData;
@@ -50,11 +50,11 @@ public class GetMethodAuthorization extends FileTransferMethodAuthorization {
 
 		HttpHelper httpHelper = new HttpHelper(request, response);
 		String srcPath = this.stripContext(httpHelper.getRequestURI().getRawPath());
-		log.debug(getClass().getName() + ": path = " + srcPath);
+		log.debug(getClass().getSimpleName() + ": path = " + srcPath);
 		StorageArea srcSA = StorageAreaManager.getMatchingSA(srcPath);
 		if (srcSA == null)
 			return AuthorizationStatus.NOTAUTHORIZED(400, "Unable to resolve storage area!");
-		log.debug(getClass().getName() + ": storage area = " + srcSA.getName());
+		log.debug(getClass().getSimpleName() + ": storage area = " + srcSA.getName());
 		if (!srcSA.isProtocol(httpHelper.getRequestProtocol().toUpperCase()))
 			return AuthorizationStatus.NOTAUTHORIZED(401, "Storage area " + srcSA.getName() + " doesn't support " + httpHelper.getRequestProtocol() + " protocol");
 		File resource = new File(srcSA.getRealPath(srcPath));

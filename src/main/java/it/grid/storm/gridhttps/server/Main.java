@@ -12,11 +12,12 @@
  */
 package it.grid.storm.gridhttps.server;
 
+import it.grid.storm.gridhttps.common.storagearea.StorageAreaManager;
 import it.grid.storm.gridhttps.configuration.Configuration;
 import it.grid.storm.gridhttps.configuration.exceptions.InitException;
 import it.grid.storm.gridhttps.server.exceptions.ServerException;
 import it.grid.storm.gridhttps.server.utils.CommandLineArgsParser;
-import it.grid.storm.storagearea.StorageAreaManager;
+
 import java.io.File;
 
 import org.slf4j.Logger;

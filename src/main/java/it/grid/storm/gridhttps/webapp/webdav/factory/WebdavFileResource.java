@@ -21,10 +21,10 @@ import io.milton.http.exceptions.NotFoundException;
 import io.milton.resource.*;
 import io.milton.servlet.MiltonServlet;
 import it.grid.storm.gridhttps.webapp.HttpHelper;
-import it.grid.storm.gridhttps.webapp.data.StormDirectoryResource;
-import it.grid.storm.gridhttps.webapp.data.StormFactory;
-import it.grid.storm.gridhttps.webapp.data.StormFileResource;
-import it.grid.storm.gridhttps.webapp.data.StormResourceHelper;
+import it.grid.storm.gridhttps.webapp.common.StormResourceHelper;
+import it.grid.storm.gridhttps.webapp.common.factory.StormDirectoryResource;
+import it.grid.storm.gridhttps.webapp.common.factory.StormFactory;
+import it.grid.storm.gridhttps.webapp.common.factory.StormFileResource;
 
 import java.io.*;
 import java.util.Map;
@@ -83,7 +83,7 @@ public class WebdavFileResource extends StormFileResource implements CopyableRes
 		if (newParent instanceof StormDirectoryResource) {
 			super.moveTo((StormDirectoryResource) newParent, newName);
 		} else
-			log.error("Directory Resource class " + newParent.getClass().getName() + " not supported!");
+			log.error("Directory Resource class " + newParent.getClass().getSimpleName() + " not supported!");
 	}
 
 	public void copyTo(CollectionResource newParent, String newName) throws NotAuthorizedException, ConflictException, BadRequestException {
@@ -91,7 +91,7 @@ public class WebdavFileResource extends StormFileResource implements CopyableRes
 		if (newParent instanceof StormDirectoryResource) {
 			super.copyTo((StormDirectoryResource) newParent, newName);
 		} else {
-			log.error("Directory Resource class " + newParent.getClass().getName() + " not supported!");
+			log.error("Directory Resource class " + newParent.getClass().getSimpleName() + " not supported!");
 		}
 	}
 }

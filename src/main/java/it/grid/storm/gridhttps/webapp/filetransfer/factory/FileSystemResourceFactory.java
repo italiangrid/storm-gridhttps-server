@@ -13,8 +13,8 @@
 package it.grid.storm.gridhttps.webapp.filetransfer.factory;
 
 import it.grid.storm.gridhttps.configuration.Configuration;
-import it.grid.storm.gridhttps.webapp.data.StormFactory;
-import it.grid.storm.gridhttps.webapp.data.StormResource;
+import it.grid.storm.gridhttps.webapp.common.StormResource;
+import it.grid.storm.gridhttps.webapp.common.factory.StormFactory;
 import it.grid.storm.gridhttps.webapp.webdav.factory.WebdavResourceFactory;
 import it.grid.storm.xmlrpc.ApiException;
 
@@ -32,7 +32,7 @@ public final class FileSystemResourceFactory extends StormFactory {
 		super(Configuration.getBackendInfo().getHostname(), Configuration.getBackendInfo().getPort(), Configuration.getGridhttpsInfo().getRootDirectory(),
 				Configuration.getGridhttpsInfo().getFiletransferContextPath());
 		this.setAllowDirectoryBrowsing(false);
-		log.debug(this.getClass().getName() + " created");
+		log.debug(this.getClass().getSimpleName() + " created");
 	}
 
 	@Override

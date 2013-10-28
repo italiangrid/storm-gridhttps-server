@@ -13,8 +13,8 @@
 package it.grid.storm.gridhttps.webapp.webdav.factory;
 
 import it.grid.storm.gridhttps.configuration.Configuration;
-import it.grid.storm.gridhttps.webapp.data.StormFactory;
-import it.grid.storm.gridhttps.webapp.data.StormResource;
+import it.grid.storm.gridhttps.webapp.common.StormResource;
+import it.grid.storm.gridhttps.webapp.common.factory.StormFactory;
 import it.grid.storm.xmlrpc.ApiException;
 
 import java.io.File;
@@ -30,7 +30,7 @@ public final class WebdavResourceFactory extends StormFactory {
 	public WebdavResourceFactory() throws UnknownHostException, ApiException {
 		super(Configuration.getBackendInfo().getHostname(), Configuration.getBackendInfo().getPort(), Configuration.getGridhttpsInfo().getRootDirectory(),
 				Configuration.getGridhttpsInfo().getWebdavContextPath());
-		log.debug(this.getClass().getName() + " created");
+		log.debug(this.getClass().getSimpleName() + " created");
 	}
 
 	@Override

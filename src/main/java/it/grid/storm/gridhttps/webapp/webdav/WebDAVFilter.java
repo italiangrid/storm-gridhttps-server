@@ -19,18 +19,18 @@ import io.milton.http.Response;
 import io.milton.http.http11.DefaultHttp11ResponseHandler.BUFFERING;
 import io.milton.property.PropertySource;
 import io.milton.servlet.MiltonServlet;
+import it.grid.storm.gridhttps.common.storagearea.StorageAreaManager;
 import it.grid.storm.gridhttps.configuration.Configuration;
 import it.grid.storm.gridhttps.webapp.HttpHelper;
 import it.grid.storm.gridhttps.webapp.StormStandardFilter;
-import it.grid.storm.gridhttps.webapp.authorization.AuthorizationException;
-import it.grid.storm.gridhttps.webapp.authorization.AuthorizationStatus;
-import it.grid.storm.gridhttps.webapp.authorization.UserCredentials;
-import it.grid.storm.gridhttps.webapp.data.StormResourceHelper;
-import it.grid.storm.gridhttps.webapp.data.exceptions.SRMOperationException;
-import it.grid.storm.gridhttps.webapp.webdav.authorization.WebDAVAuthorization;
+import it.grid.storm.gridhttps.webapp.common.StormResourceHelper;
+import it.grid.storm.gridhttps.webapp.common.authorization.AuthorizationException;
+import it.grid.storm.gridhttps.webapp.common.authorization.AuthorizationStatus;
+import it.grid.storm.gridhttps.webapp.common.authorization.UserCredentials;
+import it.grid.storm.gridhttps.webapp.common.exceptions.SRMOperationException;
+import it.grid.storm.gridhttps.webapp.webdav.authorization.WebDAVAuthorizationFilter;
 import it.grid.storm.gridhttps.webapp.webdav.factory.WebdavResourceFactory;
 import it.grid.storm.gridhttps.webapp.webdav.factory.html.StormHtmlRootPage;
-import it.grid.storm.storagearea.StorageAreaManager;
 
 import java.io.File;
 import java.io.IOException;
@@ -58,14 +58,14 @@ public class WebDAVFilter implements Filter {
 	
 	@Override
 	public void init(FilterConfig filterConfig) throws ServletException {
-		log.debug(this.getClass().getName() + " - Init");
+		log.debug(this.getClass().getSimpleName() + " - Init");
 		this.filterConfig = filterConfig;
 		this.rootPaths = new ArrayList<String>();
 		this.rootPaths.add(File.separator + Configuration.getGridhttpsInfo().getWebdavContextPath());
 		this.rootPaths.add(File.separator + Configuration.getGridhttpsInfo().getWebdavContextPath() + File.separator);
 		
 		try {
-			log.debug(this.getClass().getName() + " - Init HttpManagerBuilder");
+			log.debug(this.getClass().getSimpleName() + " - Init HttpManagerBuilder");
 			HttpManagerBuilder builder = new HttpManagerBuilder();
 			builder.setResourceFactory(new WebdavResourceFactory());
 			builder.setDefaultStandardFilter(new StormStandardFilter());
@@ -83,10 +83,10 @@ public class WebDAVFilter implements Filter {
 			StormPropFindPropertyBuilder pfBuilder = new StormPropFindPropertyBuilder();
 			builder.setPropFindPropertyBuilder(pfBuilder);
 			this.httpManager = builder.buildHttpManager();
-			log.debug(this.getClass().getName() + " - HttpManager created!");
+			log.debug(this.getClass().getSimpleName() + " - HttpManager created!");
 			pfBuilder.setPropertySources(builder.getPropertySources());
 		} catch (Exception e) {
-			log.error(this.getClass().getName() + " - " + e.getMessage());
+			log.error(this.getClass().getSimpleName() + " - " + e.getMessage());
 			System.exit(1);
 		}		
 	}
@@ -105,9 +105,7 @@ public class WebDAVFilter implements Filter {
 		}
 		
 		UserCredentials user = httpHelper.getUser();
-				
 		printCommand(httpHelper, user);
-
 		String requestedPath = httpHelper.getRequestURI().getRawPath();
 		log.debug("Requested-URI: " + requestedPath);
 
@@ -116,15 +114,7 @@ public class WebDAVFilter implements Filter {
 			return;
 		}
 		
-		AuthorizationStatus status;
-		try {
-			status = checkAuthorization(httpHelper, user, requestedPath);
-		} catch (Exception e) {
-			log.error(e.getMessage());
-			sendError(httpHelper.getResponse(), HttpServletResponse.SC_BAD_REQUEST, e.getMessage());
-			return;
-		}
-		
+		AuthorizationStatus status = checkAuthorization(httpHelper, user, requestedPath);
 		if (status.isAuthorized()) {
 			log.debug(getAuthorizedMsg(httpHelper, user));
 			if (isRootPath(requestedPath)) {
@@ -140,16 +130,18 @@ public class WebDAVFilter implements Filter {
 		}
 	}
 
-	private AuthorizationStatus checkAuthorization(HttpHelper httpHelper, UserCredentials user, String requestedPath) throws Exception {
+	private AuthorizationStatus checkAuthorization(HttpHelper httpHelper, UserCredentials user, String requestedPath) {
 		
-		if (requestedPath.contains("%20")) 
-			throw new Exception("Request URI '" + requestedPath + "' contains not allowed spaces!");
+		if (requestedPath.contains("%20")) {
+			log.error("Request URI '" + requestedPath + "' contains not allowed spaces!");
+			return AuthorizationStatus.NOTAUTHORIZED(400, "Request URI '" + requestedPath + "' contains not allowed spaces!");
+		}
 		if (isRootPath(requestedPath)) {
-			log.debug(this.getClass().getName() + ": is root path");
+			log.debug(this.getClass().getSimpleName() + ": is root path");
 			return AuthorizationStatus.AUTHORIZED();
 		} else {
 			try {
-				return (new WebDAVAuthorization()).isUserAuthorized(httpHelper.getRequest(), httpHelper.getResponse(), user);
+				return (new WebDAVAuthorizationFilter()).isUserAuthorized(httpHelper.getRequest(), httpHelper.getResponse(), user);
 			} catch (AuthorizationException e) {
 				log.error(e.getMessage());
 				return AuthorizationStatus.NOTAUTHORIZED(400, e.getMessage());
@@ -159,14 +151,14 @@ public class WebDAVFilter implements Filter {
 	}
 
 	private String getAuthorizedMsg(HttpHelper httpHelper, UserCredentials user) {
-		String userStr = user.getRealUserDN().isEmpty() ? "anonymous" : user.getRealUserDN();
+		String userStr = user.isAnonymous() ? "anonymous" : user.getRealUserDN();
 		String method = httpHelper.getRequestMethod();
 		String path = httpHelper.getRequestURI().getPath();
 		return "User '" + userStr + "' is authorized to " + method + " " + path;
 	}
 
 	private String getUnAuthorizedMsg(HttpHelper httpHelper, UserCredentials user, String reason) {
-		String userStr = user.getRealUserDN().isEmpty() ? "anonymous" : user.getRealUserDN();
+		String userStr = user.isAnonymous() ? "anonymous" : user.getRealUserDN();
 		String method = httpHelper.getRequestMethod();
 		String path = httpHelper.getRequestURI().getPath();
 		return "User '" + userStr + "' is NOT authorized to " + method + " " + path + ": " + reason;
@@ -174,13 +166,13 @@ public class WebDAVFilter implements Filter {
 
 	private void printCommand(HttpHelper httpHelper, UserCredentials user) {
 		String fqans = user.getUserFQANSAsStr();
-		String userStr = user.getRealUserDN().isEmpty() ? "anonymous" : user.getRealUserDN();
+		String userStr = user.isAnonymous() ? "anonymous" : user.getRealUserDN();
 		userStr += fqans.isEmpty() ? "" : " with fqans '" + fqans + "'";
 		String method = httpHelper.getRequestMethod();
 		String path = httpHelper.getRequestURI().getPath();
 		String destination = httpHelper.hasDestinationHeader() ? " to " + httpHelper.getDestinationURI().getPath() : "";
 		String ipSender = httpHelper.getRequest().getRemoteAddr();
-		log.info(method + " " + path + destination + " from " + userStr + " ip " + ipSender);
+		log.info("Received " + method + " " + path + destination + " from " + userStr + " ip " + ipSender);
 	}
 
 	private boolean isFavicon(String requestedPath) {
@@ -252,6 +244,5 @@ public class WebDAVFilter implements Filter {
 	
 	@Override
 	public void destroy() {
-		log.debug("WebDAVAuthorizationFilter destroy");
 	}
 }

@@ -21,11 +21,11 @@ import io.milton.property.PropertySource;
 import io.milton.servlet.MiltonServlet;
 import it.grid.storm.gridhttps.webapp.HttpHelper;
 import it.grid.storm.gridhttps.webapp.StormStandardFilter;
-import it.grid.storm.gridhttps.webapp.authorization.AuthorizationException;
-import it.grid.storm.gridhttps.webapp.authorization.AuthorizationFilter;
-import it.grid.storm.gridhttps.webapp.authorization.AuthorizationStatus;
-import it.grid.storm.gridhttps.webapp.authorization.UserCredentials;
-import it.grid.storm.gridhttps.webapp.filetransfer.authorization.FileTransferAuthorization;
+import it.grid.storm.gridhttps.webapp.common.authorization.AuthorizationException;
+import it.grid.storm.gridhttps.webapp.common.authorization.AuthorizationFilter;
+import it.grid.storm.gridhttps.webapp.common.authorization.AuthorizationStatus;
+import it.grid.storm.gridhttps.webapp.common.authorization.UserCredentials;
+import it.grid.storm.gridhttps.webapp.filetransfer.authorization.FileTransferAuthorizationFilter;
 import it.grid.storm.gridhttps.webapp.filetransfer.factory.FileSystemResourceFactory;
 
 import java.io.IOException;
@@ -49,15 +49,15 @@ public class FileTransferFilter implements Filter {
 	
 	private FilterConfig filterConfig;
 	private HttpManager httpManager;
-	private AuthorizationFilter authFilter = new FileTransferAuthorization();
+	private AuthorizationFilter authFilter = new FileTransferAuthorizationFilter();
 	
 	@Override
 	public void init(FilterConfig filterConfig) throws ServletException {
-		log.debug(this.getClass().getName() + " - Init");
+		log.debug(this.getClass().getSimpleName() + " - Init");
 		this.filterConfig = filterConfig;
 		
 		try {
-			log.debug(this.getClass().getName() + " - Init HttpManagerBuilder");
+			log.debug(this.getClass().getSimpleName() + " - Init HttpManagerBuilder");
 			HttpManagerBuilder builder = new HttpManagerBuilder();
 			builder.setResourceFactory(new FileSystemResourceFactory());
 			builder.setDefaultStandardFilter(new StormStandardFilter());
@@ -70,7 +70,7 @@ public class FileTransferFilter implements Filter {
 			builder.setEnableCookieAuth(false);
 			builder.setPropertySources(new ArrayList<PropertySource>());
 			this.httpManager = builder.buildHttpManager();
-			log.debug(this.getClass().getName() + " - HttpManager created!");
+			log.debug(this.getClass().getSimpleName() + " - HttpManager created!");
 			
 		} catch (Exception e) {
 			log.error(e.getMessage());
