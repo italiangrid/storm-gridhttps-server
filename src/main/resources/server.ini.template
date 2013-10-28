@@ -85,6 +85,10 @@ backend.hostname =
 # Default: 8080
 #backend.srm-service.port = 8080
 
+# Token used to authenticate to the StoRM BackEnd XMLRPC services
+#backend.xmlrpc.token =
+
+
 # StoRM SRM EndPoint
 # Default: STORM_BACKEND_HOSTNAME:8444
 #srm.endpoint = ${backend.hostname}:8444

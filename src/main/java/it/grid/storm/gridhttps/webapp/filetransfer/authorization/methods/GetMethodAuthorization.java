@@ -72,7 +72,10 @@ public class GetMethodAuthorization extends FileTransferMethodAuthorization {
 		log.debug("Check for a prepare-to-get");	
 		SurlArrayRequestOutputData outputSPtG;
 		try {
-			BackendApi backEnd = new BackendApi(Configuration.getBackendInfo().getHostname(), new Long(Configuration.getBackendInfo().getPort()));
+			
+			BackendApi backEnd = new BackendApi(Configuration.getBackendInfo().getHostname(), 
+				new Long(Configuration.getBackendInfo().getPort()), Configuration.getBackendInfo().getToken());
+			
 			PrepareToGetStatus operation = new PrepareToGetStatus(surl);
 			outputSPtG = operation.executeAs(user, backEnd);
 		} catch (SRMOperationException e) {

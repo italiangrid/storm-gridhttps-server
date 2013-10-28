@@ -72,7 +72,10 @@ public class PutMethodAuthorization extends FileTransferMethodAuthorization {
 		log.debug("Check for a prepare-to-put");
 		SurlArrayRequestOutputData outputSPtP;
 		try {
-			BackendApi backEnd = new BackendApi(Configuration.getBackendInfo().getHostname(), new Long(Configuration.getBackendInfo().getPort()));
+			
+			BackendApi backEnd = new BackendApi(Configuration.getBackendInfo().getHostname(), 
+				new Long(Configuration.getBackendInfo().getPort()), Configuration.getBackendInfo().getToken());
+		
 			PrepareToPutStatus operation = new PrepareToPutStatus(surl);
 			outputSPtP = operation.executeAs(user, backEnd);
 		} catch (ApiException e) {

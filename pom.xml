@@ -57,8 +57,7 @@
 		<mavenAssemblyVersion>2.4</mavenAssemblyVersion>
 
 		<httpsutilsVersion>0.2.1</httpsutilsVersion>
-		<xmlrpcApiVersion>0.0.15-SNAPSHOT</xmlrpcApiVersion>
-
+		<xmlrpcApiVersion>0.0.16-SNAPSHOT</xmlrpcApiVersion>
 		<logbackVersion>1.0.6</logbackVersion>
 		<slf4jVersion>1.6.6</slf4jVersion>
 		<miltonVersion>2.5.2.0</miltonVersion>

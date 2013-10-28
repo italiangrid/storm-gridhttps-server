@@ -10,7 +10,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package it.grid.storm.gridhttps.webapp.common;
+package it.grid.storm.gridhttps.webapp.data;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -24,9 +24,9 @@ import io.milton.resource.Resource;
 import io.milton.servlet.MiltonServlet;
 import it.grid.storm.gridhttps.configuration.Configuration;
 import it.grid.storm.gridhttps.webapp.HttpHelper;
+import it.grid.storm.gridhttps.webapp.common.StormResource;
 import it.grid.storm.gridhttps.webapp.common.Surl;
 import it.grid.storm.gridhttps.webapp.common.authorization.UserCredentials;
-import it.grid.storm.gridhttps.webapp.common.exceptions.RuntimeApiException;
 import it.grid.storm.gridhttps.webapp.common.exceptions.SRMOperationException;
 import it.grid.storm.gridhttps.webapp.common.exceptions.TooManyResultsException;
 import it.grid.storm.gridhttps.webapp.common.factory.StormDirectoryResource;
@@ -56,26 +56,29 @@ public class StormResourceHelper {
 
 	private String hostnameBE;
 	private int portBE;
+	private String tokenBE;
 	private ArrayList<TStatusCode> lsIgnored;
 	private BackendApi backend;
 	private HttpHelper helper;
 
 	public static StormResourceHelper getInstance() throws SRMOperationException {
-		return new StormResourceHelper(Configuration.getBackendInfo().getHostname(), Configuration.getBackendInfo().getPort());
+		return new StormResourceHelper(Configuration.getBackendInfo().getHostname(), Configuration.getBackendInfo().getPort(), 
+			Configuration.getBackendInfo().getToken());
 	}
 	
-	private StormResourceHelper(String hostname, int port) throws SRMOperationException {
-		init(hostname, port);
+	private StormResourceHelper(String hostname, int port, String token) throws SRMOperationException {
+		init(hostname, port, token);
 	}
 	
-	private void init(String hostname, int port) throws SRMOperationException {
+	private void init(String hostname, int port, String token) throws SRMOperationException {
 		this.hostnameBE = hostname;
 		this.portBE = port;
+		this.tokenBE = token;
 		this.lsIgnored = new ArrayList<TStatusCode>();
 		this.lsIgnored.add(TStatusCode.SRM_FAILURE);
 		this.lsIgnored.add(TStatusCode.SRM_INVALID_PATH);
 		try {
-			this.backend = new BackendApi(this.hostnameBE, new Long(this.portBE), Configuration.getBackendInfo().getToken());
+			this.backend = new BackendApi(this.hostnameBE, new Long(this.portBE), this.tokenBE);
 		} catch (ApiException e) {
 			log.error(e.toString());
 			TReturnStatus status = new TReturnStatus(TStatusCode.SRM_INTERNAL_ERROR, e.toString());
@@ -405,7 +408,7 @@ public class StormResourceHelper {
 		return this.doLs(source.getFile());
 	}
 
-	public LsOutputData doLsDetailed(StormResource source) throws RuntimeApiException, SRMOperationException, TooManyResultsException {
+	public LsOutputData doLsDetailed(StormResource source) throws SRMOperationException, TooManyResultsException {
 		
 		return this.doLsDetailed(source.getFile());
 	}
