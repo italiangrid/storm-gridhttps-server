@@ -14,63 +14,61 @@ package it.grid.storm.gridhttps.webapp.filetransfer.authorization.methods;
 
 import java.io.File;
 
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import it.grid.storm.gridhttps.common.storagearea.StorageArea;
+import it.grid.storm.gridhttps.common.storagearea.StorageAreaManager;
 import it.grid.storm.gridhttps.configuration.Configuration;
 import it.grid.storm.gridhttps.webapp.HttpHelper;
-import it.grid.storm.gridhttps.webapp.authorization.AuthorizationStatus;
-import it.grid.storm.gridhttps.webapp.authorization.Constants;
-import it.grid.storm.gridhttps.webapp.authorization.UserCredentials;
-import it.grid.storm.gridhttps.webapp.authorization.methods.AbstractMethodAuthorization;
-import it.grid.storm.gridhttps.webapp.data.Surl;
-import it.grid.storm.gridhttps.webapp.data.exceptions.SRMOperationException;
-import it.grid.storm.gridhttps.webapp.srmOperations.PrepareToGetStatus;
-import it.grid.storm.storagearea.StorageArea;
+import it.grid.storm.gridhttps.webapp.common.Surl;
+import it.grid.storm.gridhttps.webapp.common.authorization.AuthorizationException;
+import it.grid.storm.gridhttps.webapp.common.authorization.AuthorizationStatus;
+import it.grid.storm.gridhttps.webapp.common.authorization.Constants;
+import it.grid.storm.gridhttps.webapp.common.authorization.UserCredentials;
+import it.grid.storm.gridhttps.webapp.common.exceptions.SRMOperationException;
+import it.grid.storm.gridhttps.webapp.common.srmOperations.PrepareToGetStatus;
 import it.grid.storm.xmlrpc.ApiException;
 import it.grid.storm.xmlrpc.BackendApi;
 import it.grid.storm.xmlrpc.outputdata.SurlArrayRequestOutputData;
 
-public class GetMethodAuthorization extends AbstractMethodAuthorization {
+public class GetMethodAuthorization extends FileTransferMethodAuthorization {
 
 	private static final Logger log = LoggerFactory.getLogger(GetMethodAuthorization.class);
+		
+	public GetMethodAuthorization() {
+		super();
+	}
 	
-	private StorageArea SA;
-	
-	public GetMethodAuthorization(HttpHelper httpHelper, StorageArea SA) {
-		super(httpHelper);
-		this.SA = SA;
+	@Override
+	public AuthorizationStatus isUserAuthorized(HttpServletRequest request,
+		HttpServletResponse response, UserCredentials user)
+		throws AuthorizationException {
+
+		HttpHelper httpHelper = new HttpHelper(request, response);
+		String srcPath = this.stripContext(httpHelper.getRequestURI().getRawPath());
+		log.debug(getClass().getSimpleName() + ": path = " + srcPath);
+		StorageArea srcSA = StorageAreaManager.getMatchingSA(srcPath);
+		if (srcSA == null)
+			return AuthorizationStatus.NOTAUTHORIZED(400, "Unable to resolve storage area!");
+		log.debug(getClass().getSimpleName() + ": storage area = " + srcSA.getName());
+		if (!srcSA.isProtocol(httpHelper.getRequestProtocol().toUpperCase()))
+			return AuthorizationStatus.NOTAUTHORIZED(401, "Storage area " + srcSA.getName() + " doesn't support " + httpHelper.getRequestProtocol() + " protocol");
+		File resource = new File(srcSA.getRealPath(srcPath));
+		if (!resource.exists()) 
+			return AuthorizationStatus.NOTAUTHORIZED(400, "File does not exist");
+		if (!resource.isFile())
+			return AuthorizationStatus.NOTAUTHORIZED(400,"Resource required is not a file");
+		AuthorizationStatus status = doPrepareToGetStatus(user, new Surl(resource, srcSA));
+		if (!status.isAuthorized())
+			return status;
+		return super.askAuth(user, Constants.READ_OPERATION, srcSA.getRealPath(srcPath));
 	}
 
-	private String stripContext(String url) {
-		return url.replaceFirst(File.separator + Configuration.getGridhttpsInfo().getFiletransferContextPath(), "");
-	}
-
-	public AuthorizationStatus isUserAuthorized(UserCredentials user) {
-		String path = stripContext(getHTTPHelper().getRequestURI().getRawPath());
-		if (SA != null) {
-			String reqPath = SA.getRealPath(path);
-			File resource = new File(reqPath);
-			if (resource.exists()) {
-				if (resource.isFile()) {
-					AuthorizationStatus status = doPrepareToGetStatus(new Surl(resource, SA));
-					if (status.isAuthorized()) {
-						return askAuth(user, Constants.READ_OPERATION, reqPath);
-					} else {
-						return status;
-					}
-				} else {
-					return AuthorizationStatus.NOTAUTHORIZED(400,"Resource required is not a file"); 
-				}
-			} else {
-				return AuthorizationStatus.NOTAUTHORIZED(400, "File does not exist"); 
-			}
-		} else {
-			return AuthorizationStatus.NOTAUTHORIZED(500, "Null storage area!");
-		}
-	}
-
-	private AuthorizationStatus doPrepareToGetStatus(Surl surl) {
+	private AuthorizationStatus doPrepareToGetStatus(UserCredentials user, Surl surl) {
 		log.debug("Check for a prepare-to-get");	
 		SurlArrayRequestOutputData outputSPtG;
 		try {
@@ -79,8 +77,7 @@ public class GetMethodAuthorization extends AbstractMethodAuthorization {
 				new Long(Configuration.getBackendInfo().getPort()), Configuration.getBackendInfo().getToken());
 			
 			PrepareToGetStatus operation = new PrepareToGetStatus(surl);
-			outputSPtG = operation.executeAs(this.getHTTPHelper().getUser(), backEnd);
-		
+			outputSPtG = operation.executeAs(user, backEnd);
 		} catch (SRMOperationException e) {
 			log.error(e.toString());
 			return AuthorizationStatus.NOTAUTHORIZED(500, e.getMessage());

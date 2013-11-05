@@ -55,18 +55,13 @@
 		<mavenCompilerVersion>3.0</mavenCompilerVersion>
 		<mavenJarVersion>2.4</mavenJarVersion>
 		<mavenAssemblyVersion>2.4</mavenAssemblyVersion>
-		
+
 		<httpsutilsVersion>0.2.1</httpsutilsVersion>
 		<xmlrpcApiVersion>0.0.16-SNAPSHOT</xmlrpcApiVersion>
-	
-		<logbackVersion>1.0.6</logbackVersion>
-		<slf4jVersion>1.6.6</slf4jVersion>
-		<miltonVersion>2.4.2.3</miltonVersion>
-		<springVersion>3.1.2.RELEASE</springVersion>
+		<miltonVersion>2.5.2.0</miltonVersion>
 		<commonsLangVersion>2.3</commonsLangVersion>
 		<httpcoreVersion>4.2.2</httpcoreVersion>
 		<httpclientVersion>4.2.1</httpclientVersion>
-		<javaxServletVersion>3.0.0.v201112011016</javaxServletVersion>
 		<ini4jVersion>0.5.2</ini4jVersion>
 		<commonscliVersion>20040117.000000</commonscliVersion>
 
@@ -132,22 +127,7 @@
 	</build>
 
 	<dependencies>
-	
-		<dependency>
-			<groupId>org.slf4j</groupId>
-			<artifactId>slf4j-api</artifactId>
-			<version>${slf4jVersion}</version>
-		</dependency>
-		<dependency>
-			<groupId>ch.qos.logback</groupId>
-			<artifactId>logback-classic</artifactId>
-			<version>${logbackVersion}</version>
-		</dependency>
-		<dependency>
-			<groupId>ch.qos.logback</groupId>
-			<artifactId>logback-core</artifactId>
-			<version>${logbackVersion}</version>
-		</dependency>
+
 		<dependency>
 			<groupId>org.italiangrid</groupId>
 			<artifactId>https-utils</artifactId>
@@ -191,16 +171,6 @@
 			<groupId>io.milton</groupId>
 			<artifactId>milton-api</artifactId>
 			<version>${miltonVersion}</version>
-		</dependency>
-		<dependency>
-			<groupId>org.springframework</groupId>
-			<artifactId>spring-context</artifactId>
-			<version>${springVersion}</version>
-		</dependency>
-		<dependency>
-			<groupId>org.springframework</groupId>
-			<artifactId>spring-beans</artifactId>
-			<version>${springVersion}</version>
 		</dependency>
 		<dependency>
 			<groupId>igi.storm.backend</groupId>

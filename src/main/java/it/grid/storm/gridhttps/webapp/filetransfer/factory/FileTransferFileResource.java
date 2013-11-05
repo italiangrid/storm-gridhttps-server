@@ -20,8 +20,8 @@ import io.milton.http.exceptions.ConflictException;
 import io.milton.http.exceptions.NotAuthorizedException;
 import io.milton.http.exceptions.NotFoundException;
 import io.milton.resource.*;
-import it.grid.storm.gridhttps.webapp.data.StormFactory;
-import it.grid.storm.gridhttps.webapp.data.StormFileResource;
+import it.grid.storm.gridhttps.webapp.common.factory.StormFactory;
+import it.grid.storm.gridhttps.webapp.common.factory.StormFileResource;
 
 import java.io.*;
 import java.util.Map;

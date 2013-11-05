@@ -12,11 +12,12 @@
  */
 package it.grid.storm.gridhttps.server;
 
+import it.grid.storm.gridhttps.common.storagearea.StorageAreaManager;
 import it.grid.storm.gridhttps.configuration.Configuration;
 import it.grid.storm.gridhttps.configuration.exceptions.InitException;
 import it.grid.storm.gridhttps.server.exceptions.ServerException;
 import it.grid.storm.gridhttps.server.utils.CommandLineArgsParser;
-import it.grid.storm.storagearea.StorageAreaManager;
+
 import java.io.File;
 
 import org.slf4j.Logger;
@@ -49,10 +50,10 @@ public class Main {
 			server.status();
 		} catch (InitException e) {
 			log.error(e.getMessage());
-			System.exit(0);
+			System.exit(1);
 		} catch (ServerException e) {
 			log.error(e.getMessage());
-			System.exit(0);
+			System.exit(1);
 		}
 
 		// adds an handler to CTRL-C that stops and deletes the webapp directory

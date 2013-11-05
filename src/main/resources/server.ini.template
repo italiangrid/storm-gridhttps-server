@@ -1,27 +1,13 @@
 # ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-#    server.com   
+#    server.ini
 # ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 #
-#   This file contains properties that govern the operation of StoRM gridhttps server. 
+#   This file contains properties that govern the operation of StoRM GridHTTPs server. 
 #   The file is read at startup of the service. 
 #   Your changes will be applied when the service will be restarted.
 #
 # ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-
-############################
-###  SERVICE PARAMETERS  ###
-############################
-## 
-##  NOTE: 
-##        The SERVICE PARAMETERS are managed also by YAIM. 
-##        So, if you install and configure the service with YAIM, please 
-##        remember that the parameters tagged as YAIM will be overwrite at every  
-##        reconfiguration done with YAIM, so if you want change some parameters 
-##        you should use the YAIM configuration files:
-##           <siteinfo_dir>/services/se_storm_gridhttps (or equivalent)
-## 
-        
+    
 [service]
 
 # ============================
@@ -80,7 +66,7 @@
 
 # Canl truststore update time interval expressed in milliseconds.
 # Default: 60000L (1 minute)
-#x509.truststore.refresh-interval = 600000L
+#x509.truststore.refresh-interval = 60000L
 
 [backend]
 

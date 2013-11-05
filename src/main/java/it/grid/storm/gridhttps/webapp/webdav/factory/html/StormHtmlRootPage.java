@@ -12,7 +12,7 @@
  */
 package it.grid.storm.gridhttps.webapp.webdav.factory.html;
 
-import it.grid.storm.storagearea.StorageArea;
+import it.grid.storm.gridhttps.common.storagearea.StorageArea;
 
 import java.io.OutputStream;
 import java.util.HashMap;
@@ -71,7 +71,7 @@ public class StormHtmlRootPage extends HtmlPage {
 		closeTableRow();
 		for (StorageArea sa : sas) {
 			String name = sa.getStfnRoot().substring(1);
-			String path = buildHref(sa.getStfnRoot(), "");
+			String path = buildHref("/webdav" + sa.getStfnRoot(), "");
 			openTableRow();
 			openTableCol();
 			addImage(getFolderIco());

@@ -12,7 +12,7 @@
  */
 package it.grid.storm.gridhttps.webapp;
 
-import it.grid.storm.gridhttps.webapp.authorization.UserCredentials;
+import it.grid.storm.gridhttps.webapp.common.authorization.UserCredentials;
 
 import java.io.IOException;
 import java.net.URI;

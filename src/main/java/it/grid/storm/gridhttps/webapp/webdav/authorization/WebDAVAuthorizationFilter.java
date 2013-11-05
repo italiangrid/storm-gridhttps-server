@@ -12,26 +12,17 @@
  */
 package it.grid.storm.gridhttps.webapp.webdav.authorization;
 
-import it.grid.storm.gridhttps.configuration.Configuration;
-import it.grid.storm.gridhttps.webapp.HttpHelper;
-import it.grid.storm.gridhttps.webapp.authorization.AuthorizationFilter;
-import it.grid.storm.gridhttps.webapp.authorization.AuthorizationStatus;
-import it.grid.storm.gridhttps.webapp.authorization.UserCredentials;
-import it.grid.storm.gridhttps.webapp.authorization.methods.AbstractMethodAuthorization;
-import it.grid.storm.gridhttps.webapp.webdav.authorization.methods.CopyMethodAuthorization;
-import it.grid.storm.gridhttps.webapp.webdav.authorization.methods.DeleteMethodAuthorization;
-import it.grid.storm.gridhttps.webapp.webdav.authorization.methods.GetMethodAuthorization;
-import it.grid.storm.gridhttps.webapp.webdav.authorization.methods.HeadMethodAuthorization;
-import it.grid.storm.gridhttps.webapp.webdav.authorization.methods.MkcolMethodAuthorization;
-import it.grid.storm.gridhttps.webapp.webdav.authorization.methods.MoveMethodAuthorization;
-import it.grid.storm.gridhttps.webapp.webdav.authorization.methods.OptionsMethodAuthorization;
-import it.grid.storm.gridhttps.webapp.webdav.authorization.methods.PropfindMethodAuthorization;
-import it.grid.storm.gridhttps.webapp.webdav.authorization.methods.PutMethodAuthorization;
-import it.grid.storm.storagearea.StorageArea;
-import it.grid.storm.storagearea.StorageAreaManager;
+import it.grid.storm.gridhttps.webapp.common.authorization.AuthorizationException;
+import it.grid.storm.gridhttps.webapp.common.authorization.AuthorizationFilter;
+import it.grid.storm.gridhttps.webapp.common.authorization.AuthorizationStatus;
+import it.grid.storm.gridhttps.webapp.common.authorization.UserCredentials;
+import it.grid.storm.gridhttps.webapp.common.authorization.methods.AbstractMethodAuthorization;
+import it.grid.storm.gridhttps.webapp.webdav.authorization.methods.*;
 
 import java.util.ArrayList;
-import java.util.HashMap;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -54,122 +45,48 @@ public class WebDAVAuthorizationFilter extends AuthorizationFilter {
 			add("HEAD");
 		}
 	};
+	
+	@Override
+	public AuthorizationStatus isUserAuthorized(HttpServletRequest request,
+		HttpServletResponse response, UserCredentials user) throws AuthorizationException {
 
-	private ArrayList<String> destinationMethods = new ArrayList<String>() {
-		private static final long serialVersionUID = -2207218709330278065L;
-		{
-			add("MOVE");
-			add("COPY");
+		/* check method */
+		String method = request.getMethod().toUpperCase();
+		if (!isMethodAllowed(method)) {
+			log.error("Received a request for a not allowed method : " + method);
+			return AuthorizationStatus.NOTAUTHORIZED(405, "Method " + method + " not allowed!");
 		}
-	};
+		
+		/* get method handler */
+		AbstractMethodAuthorization authHandler = getAuthorizationMethodHandler(method);
+		
+		return authHandler.isUserAuthorized(request, response, user);
+	}
 
-	private HashMap<String, AbstractMethodAuthorization> METHODS_MAP;
-	private StorageArea reqStorageArea;
-	private StorageArea destStorageArea;
-
-	public WebDAVAuthorizationFilter(HttpHelper httpHelper) throws Exception {
-		super(httpHelper);
-		initStorageAreas();
-		doInitMethodMap();
-
+	private AbstractMethodAuthorization getAuthorizationMethodHandler(String method) throws AuthorizationException {
+		if (method.equals("PROPFIND"))
+			return new PropfindMethodAuthorization();
+		if (method.equals("OPTIONS"))
+			return new OptionsMethodAuthorization();
+		if (method.equals("GET"))
+			return new GetMethodAuthorization();
+		if (method.equals("DELETE"))
+			return new DeleteMethodAuthorization();
+		if (method.equals("PUT"))
+			return new PutMethodAuthorization();
+		if (method.equals("MKCOL"))
+			return new MkcolMethodAuthorization();
+		if (method.equals("MOVE"))
+			return new MoveMethodAuthorization();
+		if (method.equals("COPY"))
+			return new CopyMethodAuthorization();
+		if (method.equals("HEAD"))
+			return new HeadMethodAuthorization();
+		throw new AuthorizationException("Invalid method!");
 	}
 
 	private boolean isMethodAllowed(String method) {
 		return allowedMethods.contains(method);
 	}
-
-	private boolean isRequestProtocolAllowed(String protocol) {
-		return getRequestStorageArea().getProtocols().contains(protocol);
-	}
-
-	private StorageArea getRequestStorageArea() {
-		return reqStorageArea;
-	}
-
-	private boolean isDestinationProtocolAllowed(String protocol) {
-		return getDestinationStorageArea().getProtocols().contains(protocol);
-	}
-
-	private StorageArea getDestinationStorageArea() {
-		return destStorageArea;
-	}
-
-	private boolean hasDestination(String method) {
-		return destinationMethods.contains(method);
-	}
-
-	public AuthorizationStatus isUserAuthorized(UserCredentials user) {
-		String method = getHTTPHelper().getRequestMethod();
-		String reqProtocol = getHTTPHelper().getRequestProtocol();
-		String reqPath = getHTTPHelper().getRequestURI().getRawPath();
-		/* check method */
-		if (!isMethodAllowed(method)) {
-			log.warn("Received a request for a not allowed method : " + method);
-			return AuthorizationStatus.NOTAUTHORIZED(405, "Method " + method + " not allowed!");
-		}
-		/* check protocol */
-		if (!isRequestProtocolAllowed(reqProtocol)) {
-			log.warn("Received a request-uri with a not allowed protocol: " + reqProtocol);
-			return AuthorizationStatus.NOTAUTHORIZED(401, "Unauthorized request protocol: " + reqProtocol);
-		}
-		if (hasDestination(method)) {
-			/* check destination */
-			if (getHTTPHelper().hasDestinationHeader()) {
-				String destProtocol = getHTTPHelper().getDestinationProtocol();
-				String destPath = getHTTPHelper().getDestinationURI().getRawPath();
-				if (isDestinationProtocolAllowed(destProtocol)) {
-					if (reqPath.equals(destPath)) {
-						return AuthorizationStatus.NOTAUTHORIZED(403, "The source and destination URIs are the same!");
-					}
-				} else {
-					log.warn("Received a destination-uri with a not allowed protocol: " + destProtocol);
-					return AuthorizationStatus.NOTAUTHORIZED(401, "Unauthorized destination protocol: " + destProtocol);
-				}
-			} else {
-				return AuthorizationStatus.NOTAUTHORIZED(400, "Missed necessary destination header!");
-			}
-		}
-		return getAuthorizationHandler().isUserAuthorized(user);
-	}
-
-	private void initStorageAreas() throws Exception {
-		reqStorageArea = null;
-		log.debug("searching storagearea by uri: " + getHTTPHelper().getRequestURI().getPath());
-		reqStorageArea = StorageAreaManager.getMatchingSA(getHTTPHelper().getRequestURI());
-		if (reqStorageArea == null) {
-			log.error("No matching StorageArea found for uri " + getHTTPHelper().getRequestURI().getPath()
-					+ " Unable to build http(s) relative path");
-			throw new Exception("No matching StorageArea found for the provided path");
-		}
-		destStorageArea = null;
-		if (hasDestination(getHTTPHelper().getRequestMethod())) {
-			log.debug("searching storagearea by uri: " + getHTTPHelper().getDestinationURI().getPath());
-			destStorageArea = StorageAreaManager.getMatchingSA(getHTTPHelper().getDestinationURI());
-			if (destStorageArea == null) {
-				log.error("No matching StorageArea found for uri " + getHTTPHelper().getDestinationURI().getPath()
-						+ " Unable to build http(s) relative path");
-				throw new Exception("No matching StorageArea found for the provided path");
-			}
-		}
-	}
-
-	private void doInitMethodMap() {
-		METHODS_MAP = new HashMap<String, AbstractMethodAuthorization>();
-		METHODS_MAP.clear();
-		METHODS_MAP.put("PROPFIND", new PropfindMethodAuthorization(getHTTPHelper(), reqStorageArea));
-		METHODS_MAP.put("OPTIONS", new OptionsMethodAuthorization(getHTTPHelper(), Configuration.getBackendInfo().getHostname(),
-				Configuration.getBackendInfo().getPort()));
-		METHODS_MAP.put("GET", new GetMethodAuthorization(getHTTPHelper(), reqStorageArea));
-		METHODS_MAP.put("DELETE", new DeleteMethodAuthorization(getHTTPHelper(), reqStorageArea));
-		METHODS_MAP.put("PUT", new PutMethodAuthorization(getHTTPHelper(), reqStorageArea));
-		METHODS_MAP.put("MKCOL", new MkcolMethodAuthorization(getHTTPHelper(), reqStorageArea));
-		METHODS_MAP.put("MOVE", new MoveMethodAuthorization(getHTTPHelper(), reqStorageArea, destStorageArea));
-		METHODS_MAP.put("COPY", new CopyMethodAuthorization(getHTTPHelper(), reqStorageArea, destStorageArea));
-		METHODS_MAP.put("HEAD", new HeadMethodAuthorization(getHTTPHelper()));
-	}
-
-	public AbstractMethodAuthorization getAuthorizationHandler() {
-		return METHODS_MAP.get(this.getHTTPHelper().getRequestMethod());
-	}
-
+	
 }

@@ -24,12 +24,14 @@ import io.milton.resource.Resource;
 import io.milton.servlet.MiltonServlet;
 import it.grid.storm.gridhttps.configuration.Configuration;
 import it.grid.storm.gridhttps.webapp.HttpHelper;
-import it.grid.storm.gridhttps.webapp.authorization.UserCredentials;
-import it.grid.storm.gridhttps.webapp.data.Surl;
-import it.grid.storm.gridhttps.webapp.data.exceptions.RuntimeApiException;
-import it.grid.storm.gridhttps.webapp.data.exceptions.SRMOperationException;
-import it.grid.storm.gridhttps.webapp.data.exceptions.TooManyResultsException;
-import it.grid.storm.gridhttps.webapp.srmOperations.*;
+import it.grid.storm.gridhttps.webapp.common.StormResource;
+import it.grid.storm.gridhttps.webapp.common.Surl;
+import it.grid.storm.gridhttps.webapp.common.authorization.UserCredentials;
+import it.grid.storm.gridhttps.webapp.common.exceptions.SRMOperationException;
+import it.grid.storm.gridhttps.webapp.common.exceptions.TooManyResultsException;
+import it.grid.storm.gridhttps.webapp.common.factory.StormDirectoryResource;
+import it.grid.storm.gridhttps.webapp.common.factory.StormFileResource;
+import it.grid.storm.gridhttps.webapp.common.srmOperations.*;
 import it.grid.storm.srm.types.Recursion;
 import it.grid.storm.srm.types.RecursionLevel;
 import it.grid.storm.srm.types.TRequestToken;
@@ -406,7 +408,7 @@ public class StormResourceHelper {
 		return this.doLs(source.getFile());
 	}
 
-	public LsOutputData doLsDetailed(StormResource source) throws RuntimeApiException, SRMOperationException, TooManyResultsException {
+	public LsOutputData doLsDetailed(StormResource source) throws SRMOperationException, TooManyResultsException {
 		
 		return this.doLsDetailed(source.getFile());
 	}

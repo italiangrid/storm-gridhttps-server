@@ -31,10 +31,10 @@ import io.milton.property.PropertySource.PropertyMetaData;
 import io.milton.resource.CollectionResource;
 import io.milton.resource.PropFindableResource;
 import io.milton.resource.Resource;
-import it.grid.storm.gridhttps.webapp.data.StormDirectoryResource;
-import it.grid.storm.gridhttps.webapp.data.StormFactory;
-import it.grid.storm.gridhttps.webapp.data.StormResource;
-import it.grid.storm.gridhttps.webapp.data.StormResourceHelper;
+import it.grid.storm.gridhttps.webapp.common.StormResource;
+import it.grid.storm.gridhttps.webapp.common.StormResourceHelper;
+import it.grid.storm.gridhttps.webapp.common.factory.StormDirectoryResource;
+import it.grid.storm.gridhttps.webapp.common.factory.StormFactory;
 import it.grid.storm.srm.types.Recursion;
 import it.grid.storm.srm.types.RecursionLevel;
 import it.grid.storm.xmlrpc.outputdata.LsOutputData.SurlInfo;
@@ -42,12 +42,13 @@ import it.grid.storm.xmlrpc.outputdata.LsOutputData.SurlInfo;
 public class StormPropFindPropertyBuilder implements PropFindPropertyBuilder {
 
 	private static final Logger log = LoggerFactory.getLogger(StormPropFindPropertyBuilder.class);
-	private List<PropertySource> propertySources;
-	private ArrayList<String> standardProperties;
-	private ArrayList<String> srmProperties;
+	private List<PropertySource> propertySources = new ArrayList<PropertySource>();
+	private ArrayList<String> standardProperties = new ArrayList<String>();
+	private ArrayList<String> srmProperties = new ArrayList<String>();
 	
 	public StormPropFindPropertyBuilder() {
-		this.standardProperties = new ArrayList<String>();
+		this.propertySources.clear();
+		this.standardProperties.clear();
 		this.standardProperties.add("getcontentlength");
 		this.standardProperties.add("getcontenttype");
 		this.standardProperties.add("displayname");
@@ -59,7 +60,7 @@ public class StormPropFindPropertyBuilder implements PropFindPropertyBuilder {
 		this.standardProperties.add("iscollection");
 		this.standardProperties.add("isreadonly");
 		this.standardProperties.add("supported-report-set");
-		this.srmProperties = new ArrayList<String>();
+		this.srmProperties.clear();
 		this.srmProperties.add("getcreated");
 		this.srmProperties.add("creationdate");
 		this.srmProperties.add("getlastmodified");
@@ -267,6 +268,11 @@ public class StormPropFindPropertyBuilder implements PropFindPropertyBuilder {
 	 */
 	public static String fixUrlForWindows(String url) {
 		return url.replace("&", "%26");
+	}
+
+	public List<PropertySource> getPropertySources() {
+
+		return this.getPropertySources();
 	}
 
 }
