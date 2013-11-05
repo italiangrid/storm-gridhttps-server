@@ -3,6 +3,7 @@ package it.grid.storm.gridhttps.webapp.common.srmOperations;
 import it.grid.storm.gridhttps.webapp.common.Surl;
 import it.grid.storm.gridhttps.webapp.common.authorization.UserCredentials;
 import it.grid.storm.gridhttps.webapp.common.exceptions.SRMOperationException;
+import it.grid.storm.gridhttps.webapp.common.exceptions.SRMOperationException.TSRMExceptionReason;
 import it.grid.storm.srm.types.TReturnStatus;
 import it.grid.storm.srm.types.TStatusCode;
 import it.grid.storm.xmlrpc.ApiException;
@@ -90,7 +91,7 @@ public class PrepareToPut implements SRMOperation {
 		} catch (ApiException e) {
 			log.error(e.getMessage());
 			TReturnStatus status = new TReturnStatus(TStatusCode.SRM_INTERNAL_ERROR, e.toString());
-			throw new SRMOperationException(status, e);
+			throw new SRMOperationException(status, TSRMExceptionReason.INTERNALERROR);
 		}
 		log.debug(outputPtP.getStatus().getStatusCode().getValue());
 		log.debug(outputPtP.getStatus().getExplanation());

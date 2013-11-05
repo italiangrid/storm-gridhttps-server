@@ -19,7 +19,7 @@
 
 	</appender>
 
-	<logger name="io.milton" level="WARN">
+	<logger name="io.milton" level="ERROR">
 		<appender-ref ref="PROCESS" />
 	</logger>
 

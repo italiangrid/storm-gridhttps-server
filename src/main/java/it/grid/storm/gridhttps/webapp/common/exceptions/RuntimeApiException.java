@@ -12,9 +12,7 @@
  */
 package it.grid.storm.gridhttps.webapp.common.exceptions;
 
-import io.milton.http.exceptions.BadRequestException;
-
-public class RuntimeApiException extends BadRequestException {
+public class RuntimeApiException extends RuntimeException {
 
 	private static final long serialVersionUID = 3065886408319057340L;
 	

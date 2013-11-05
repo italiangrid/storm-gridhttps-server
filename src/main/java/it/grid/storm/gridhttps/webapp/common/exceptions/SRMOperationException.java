@@ -17,19 +17,19 @@ import it.grid.storm.srm.types.TReturnStatus;
 
 public class SRMOperationException extends BadRequestException {
 
+	public enum TSRMExceptionReason {
+		 INTERNALERROR, TOOMANYRESULTS, SRMFAILURE;
+		}
+	
 	private static final long serialVersionUID = 1200998154780371147L;
 
 	private TReturnStatus status;
-	private Exception e;
+	private TSRMExceptionReason exceptionReason;
 	
-	public SRMOperationException(TReturnStatus status) {
-		this(status, null);
-	}
-	
-	public SRMOperationException(TReturnStatus status, Exception ex) {
+	public SRMOperationException(TReturnStatus status, TSRMExceptionReason reason) {
 		super(status.toString());
 		this.setStatus(status);
-		this.setException(ex);
+		this.setExceptionReason(reason);
 	}
 
 	public TReturnStatus getStatus() {
@@ -40,12 +40,14 @@ public class SRMOperationException extends BadRequestException {
 		this.status = status;
 	}
 
-	public Exception getException() {
-		return e;
+	public TSRMExceptionReason getExceptionReason() {
+
+		return exceptionReason;
 	}
 
-	private void setException(Exception e) {
-		this.e = e;
+	private void setExceptionReason(TSRMExceptionReason exceptionReason) {
+
+		this.exceptionReason = exceptionReason;
 	}
 
 }

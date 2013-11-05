@@ -21,7 +21,6 @@ import it.grid.storm.gridhttps.common.storagearea.StorageAreaManager;
 import it.grid.storm.gridhttps.webapp.common.Surl;
 import it.grid.storm.gridhttps.webapp.common.exceptions.RuntimeApiException;
 import it.grid.storm.gridhttps.webapp.common.exceptions.SRMOperationException;
-import it.grid.storm.gridhttps.webapp.common.exceptions.TooManyResultsException;
 import it.grid.storm.gridhttps.webapp.common.factory.StormFactory;
 import it.grid.storm.xmlrpc.outputdata.LsOutputData.SurlInfo;
 
@@ -132,36 +131,14 @@ public abstract class StormResource implements Resource, DigestResource, PropFin
 		return new FileInputStream(this.getFile());
 	}
 
-	public abstract SurlInfo getSurlInfo() throws RuntimeApiException, SRMOperationException, TooManyResultsException;
+	public abstract SurlInfo getSurlInfo() throws RuntimeApiException, SRMOperationException;
 	
 	public Date getModifiedDate() {
 		return new Date(this.getFile().lastModified());
-//		try {
-//			return this.getSurlInfo().getModificationTime();
-//		} catch (RuntimeApiException e) {
-//			log.error("Unable to load surl-info: " + e.getReason());
-//		} catch (StormRequestFailureException e) {
-//			log.debug("Unable to load surl-info: " + e.getReason());
-//		} catch (TooManyResultsException e) {
-//			log.error("Unable to load surl-info: " + e.getReason());
-//		}
-//		return null;
 	}
 
 	public Date getCreateDate() {
 		return new Date(this.getFile().lastModified());
-//		SurlInfo info;
-//		try {
-//			info = this.getSurlInfo();
-//			return info.getCreationTime() != null ? info.getCreationTime() : info.getModificationTime();
-//		} catch (RuntimeApiException e) {
-//			log.error("Unable to load surl-info: " + e.getReason());
-//		} catch (StormRequestFailureException e) {
-//			log.debug("Unable to load surl-info: " + e.getReason());
-//		} catch (TooManyResultsException e) {
-//			log.error("Unable to load surl-info: " + e.getReason());
-//		}
-//		return null;
 	}
 
 }

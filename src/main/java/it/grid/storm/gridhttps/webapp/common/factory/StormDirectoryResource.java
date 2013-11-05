@@ -32,7 +32,7 @@ import it.grid.storm.gridhttps.webapp.common.StormResource;
 import it.grid.storm.gridhttps.webapp.common.StormResourceHelper;
 import it.grid.storm.gridhttps.webapp.common.exceptions.RuntimeApiException;
 import it.grid.storm.gridhttps.webapp.common.exceptions.SRMOperationException;
-import it.grid.storm.gridhttps.webapp.common.exceptions.TooManyResultsException;
+import it.grid.storm.gridhttps.webapp.common.exceptions.SRMOperationException.TSRMExceptionReason;
 import it.grid.storm.gridhttps.webapp.common.factory.StormFactory;
 import it.grid.storm.srm.types.Recursion;
 import it.grid.storm.srm.types.RecursionLevel;
@@ -96,16 +96,19 @@ public class StormDirectoryResource extends StormResource implements MakeCollect
 		Collection<SurlInfo> entries;
 		try {
 			entries = this.getChildrenSurlInfo();
-		} catch (TooManyResultsException e) {
-			int numberOfMaxEntries = getMaxEntriesNumberFromExplanation(e.getStatus().getExplanation());
-			log.warn("Too many results with Ls, max entries is " + numberOfMaxEntries + ". Re-trying with counted Ls.");
-			try {
-				entries = this.getNChildrenSurlInfo(numberOfMaxEntries);
-			} catch (TooManyResultsException e1) {
-				log.error("The number of children requested for '" + this.getFile()
+		} catch (SRMOperationException e) {
+			if (e.getExceptionReason().equals(TSRMExceptionReason.TOOMANYRESULTS)) {
+				int numberOfMaxEntries = getMaxEntriesNumberFromExplanation(e.getStatus().getExplanation());
+				log.warn("Too many results with Ls, max entries is " + numberOfMaxEntries + ". Re-trying with counted Ls.");
+				try {
+					entries = this.getNChildrenSurlInfo(numberOfMaxEntries);
+				} catch (SRMOperationException e1) {
+					log.error("The number of children requested for '" + this.getFile()
 						+ "' is greater than the max number of results allowed: " + e.getStatus().getExplanation());
-				return null;
-			}
+					return null;
+				}
+			} else
+				throw e;
 		}
 		list = resolveSurlArray(entries);
 		return list != null ? list : new ArrayList<StormResource>();
@@ -200,16 +203,15 @@ public class StormDirectoryResource extends StormResource implements MakeCollect
 	}
 
 	@Override
-	public SurlInfo getSurlInfo() throws RuntimeApiException, SRMOperationException, TooManyResultsException {
+	public SurlInfo getSurlInfo() throws RuntimeApiException, SRMOperationException {
 		return StormResourceHelper.getInstance().doLsDetailed(this.getFile()).getInfos().iterator().next();
 	}
 
-	public ArrayList<SurlInfo> getChildrenSurlInfo() throws RuntimeApiException, SRMOperationException, TooManyResultsException {
+	public ArrayList<SurlInfo> getChildrenSurlInfo() throws RuntimeApiException, SRMOperationException {
 		return StormResourceHelper.getInstance().filterLs(StormResourceHelper.getInstance().doLsDetailed(this, new RecursionLevel(Recursion.NONE)).getInfos().iterator().next().getSubpathInfo());
 	}
 
-	public ArrayList<SurlInfo> getNChildrenSurlInfo(int numberOfChildren) throws RuntimeApiException, SRMOperationException,
-			TooManyResultsException {
+	public ArrayList<SurlInfo> getNChildrenSurlInfo(int numberOfChildren) throws RuntimeApiException, SRMOperationException {
 		return StormResourceHelper.getInstance()
 				.filterLs(StormResourceHelper.getInstance().doLsDetailed(this, new RecursionLevel(Recursion.NONE), numberOfChildren).getInfos().iterator().next().getSubpathInfo());
 	}

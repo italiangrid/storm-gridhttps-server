@@ -21,7 +21,6 @@ import it.grid.storm.gridhttps.webapp.common.StormResource;
 import it.grid.storm.gridhttps.webapp.common.StormResourceHelper;
 import it.grid.storm.gridhttps.webapp.common.exceptions.RuntimeApiException;
 import it.grid.storm.gridhttps.webapp.common.exceptions.SRMOperationException;
-import it.grid.storm.gridhttps.webapp.common.exceptions.TooManyResultsException;
 import it.grid.storm.gridhttps.webapp.common.factory.StormFactory;
 import it.grid.storm.xmlrpc.outputdata.LsOutputData.SurlInfo;
 
@@ -77,7 +76,7 @@ public class StormFileResource extends StormResource {
 	}
 
 	@Override
-	public SurlInfo getSurlInfo() throws RuntimeApiException, SRMOperationException, TooManyResultsException {
+	public SurlInfo getSurlInfo() throws RuntimeApiException, SRMOperationException {
 		return StormResourceHelper.getInstance().doLimitedLsDetailed(this.getFile()).getInfos().iterator().next();
 	}
 

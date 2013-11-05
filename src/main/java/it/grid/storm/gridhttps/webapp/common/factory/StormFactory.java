@@ -19,11 +19,13 @@ import it.grid.storm.gridhttps.common.storagearea.StorageAreaManager;
 import it.grid.storm.gridhttps.webapp.common.StormResource;
 import it.grid.storm.gridhttps.webapp.common.StormResourceHelper;
 import it.grid.storm.gridhttps.webapp.common.contentservice.StormContentService;
+import it.grid.storm.gridhttps.webapp.common.exceptions.RuntimeApiException;
 import it.grid.storm.gridhttps.webapp.common.exceptions.SRMOperationException;
-import it.grid.storm.gridhttps.webapp.common.exceptions.TooManyResultsException;
+import it.grid.storm.gridhttps.webapp.common.exceptions.SRMOperationException.TSRMExceptionReason;
 import it.grid.storm.srm.types.TFileType;
 import it.grid.storm.srm.types.TStatusCode;
 import it.grid.storm.xmlrpc.ApiException;
+import it.grid.storm.xmlrpc.outputdata.LsOutputData;
 import it.grid.storm.xmlrpc.outputdata.LsOutputData.SurlInfo;
 
 public abstract class StormFactory implements ResourceFactory {
@@ -164,19 +166,35 @@ public abstract class StormFactory implements ResourceFactory {
 	}
 		
 	public StormResource resolveFile(String host, File file, StorageArea storageArea) {
-		SurlInfo detail = null;
+		LsOutputData output = null;
+		
 		try {
-			detail = StormResourceHelper.getInstance().doLimitedLsDetailed(file).getInfos().iterator().next();
-			return resolveFile(detail, storageArea);
+			
+			output = StormResourceHelper.getInstance().doLimitedLsDetailed(file);
+			
 		} catch (SRMOperationException e) {
-			if (e.getException() instanceof ApiException)
-				log.error("retrieving detailed info for '" + file + "': " + e.getReason());
-			else
-				log.debug(file + " not exists! Got a SRM_FAILURE with reason: " + e.getReason());
-		} catch (TooManyResultsException e) {
-			log.warn(e.getReason());
-		}
-		return null;
+			
+			if (e.getExceptionReason().equals(TSRMExceptionReason.INTERNALERROR)) {
+				
+				log.error("retrieving detailed info for '" + file + "': " + e.getStatus().getExplanation());
+				throw new RuntimeApiException(e.getStatus().getExplanation());
+			
+			} else if (e.getExceptionReason().equals(TSRMExceptionReason.SRMFAILURE)) {
+				
+				log.debug(file + " not exists! Got a SRM_FAILURE with reason: " + e.getStatus().getExplanation());
+				return null;
+			
+			} else if (e.getExceptionReason().equals(TSRMExceptionReason.TOOMANYRESULTS)) {
+				
+				log.warn(e.getMessage());
+				return null;
+				
+			} else {
+				log.warn("Unknown type exception! " + e.getMessage());
+				return null;
+			}
+		} 
+		return resolveFile(output.getInfos().iterator().next(), storageArea);
 	}
 
 	public StormResource resolveFile(SurlInfo surlInfo) {

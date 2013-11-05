@@ -32,8 +32,6 @@ import it.grid.storm.gridhttps.webapp.HttpHelper;
 import it.grid.storm.gridhttps.webapp.common.authorization.UserCredentials;
 import it.grid.storm.gridhttps.webapp.common.exceptions.RuntimeApiException;
 import it.grid.storm.gridhttps.webapp.common.exceptions.SRMOperationException;
-import it.grid.storm.gridhttps.webapp.common.exceptions.StormResourceException;
-import it.grid.storm.gridhttps.webapp.common.exceptions.TooManyResultsException;
 
 public class StormStandardFilter implements Filter {
 
@@ -67,26 +65,17 @@ public class StormStandardFilter implements Filter {
 			ex.printStackTrace();
 			response.sendError(Status.SC_INTERNAL_SERVER_ERROR, ex.getMessage());
 			response.setStatus(Status.SC_INTERNAL_SERVER_ERROR);
+		} catch (RuntimeApiException ex) {
+			log.error("RuntimeApiException: " + ex.getMessage());
+			response.sendError(Status.SC_INTERNAL_SERVER_ERROR, ex.getMessage());
+			response.setStatus(Status.SC_INTERNAL_SERVER_ERROR);
 		} catch (RuntimeException ex) {
 			log.error("RuntimeException: " + ex.getMessage());
 			ex.printStackTrace();
 			response.sendError(Status.SC_INTERNAL_SERVER_ERROR, ex.getMessage());
 			response.setStatus(Status.SC_INTERNAL_SERVER_ERROR);
-		} catch (TooManyResultsException ex) {
-			log.warn("TooManyResultsException: " + ex.getReason());
-			response.sendError(Status.SC_SERVICE_UNAVAILABLE, ex.getReason());
-			response.setStatus(Status.SC_SERVICE_UNAVAILABLE);
-		} catch (RuntimeApiException ex) {
-			log.error("RuntimeApiException: " + ex.getReason());
-			ex.printStackTrace();
-			response.sendError(Status.SC_INTERNAL_SERVER_ERROR, ex.getReason());
-			response.setStatus(Status.SC_INTERNAL_SERVER_ERROR);
 		} catch (SRMOperationException ex) {
 			log.warn("RequestFailureException: " + ex.getReason());
-			response.sendError(Status.SC_SERVICE_UNAVAILABLE, ex.getReason());
-			response.setStatus(Status.SC_SERVICE_UNAVAILABLE);
-		} catch (StormResourceException ex) {
-			log.error("ResourceException: " + ex.getReason());
 			response.sendError(Status.SC_SERVICE_UNAVAILABLE, ex.getReason());
 			response.setStatus(Status.SC_SERVICE_UNAVAILABLE);
 		} catch (BadRequestException ex) {
