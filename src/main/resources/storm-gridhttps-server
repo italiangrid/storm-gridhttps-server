@@ -139,6 +139,7 @@ start () {
 	cd /usr/share/java/storm-gridhttps-server
         export PATH=$JAVA_HOME/bin:$PATH
         run su "$STORM_GRIDHTTPS_USER" -m -s /bin/sh -c "java \
+                -server -Xmx512m \
                 ${STORM_DEBUG_OPTION} \
                 -Dstorm.log.dir='$STORM_LOGDIR' \
                 -jar /usr/share/java/storm-gridhttps-server/storm-gridhttps-server.jar \
