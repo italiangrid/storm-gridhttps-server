@@ -58,10 +58,8 @@ public class GetMethodAuthorization extends FileTransferMethodAuthorization {
 		if (!srcSA.isProtocol(httpHelper.getRequestProtocol().toUpperCase()))
 			return AuthorizationStatus.NOTAUTHORIZED(401, "Storage area " + srcSA.getName() + " doesn't support " + httpHelper.getRequestProtocol() + " protocol");
 		File resource = new File(srcSA.getRealPath(srcPath));
-		if (!resource.exists()) 
-			return AuthorizationStatus.NOTAUTHORIZED(400, "File does not exist");
-		if (!resource.isFile())
-			return AuthorizationStatus.NOTAUTHORIZED(400,"Resource required is not a file");
+		if (!resource.exists() || resource.isDirectory()) 
+			return AuthorizationStatus.NOTAUTHORIZED(404, "Not Found");
 		AuthorizationStatus status = doPrepareToGetStatus(user, new Surl(resource, srcSA));
 		if (!status.isAuthorized())
 			return status;
