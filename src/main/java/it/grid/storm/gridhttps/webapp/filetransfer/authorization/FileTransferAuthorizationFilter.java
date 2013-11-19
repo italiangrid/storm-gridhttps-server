@@ -18,6 +18,7 @@ import it.grid.storm.gridhttps.webapp.common.authorization.AuthorizationStatus;
 import it.grid.storm.gridhttps.webapp.common.authorization.UserCredentials;
 import it.grid.storm.gridhttps.webapp.common.authorization.methods.AbstractMethodAuthorization;
 import it.grid.storm.gridhttps.webapp.filetransfer.authorization.methods.GetMethodAuthorization;
+import it.grid.storm.gridhttps.webapp.filetransfer.authorization.methods.HeadMethodAuthorization;
 import it.grid.storm.gridhttps.webapp.filetransfer.authorization.methods.PutMethodAuthorization;
 
 import java.util.ArrayList;
@@ -37,6 +38,7 @@ public class FileTransferAuthorizationFilter extends AuthorizationFilter {
 		{
 			add("GET");
 			add("PUT");
+			add("HEAD");
 		}
 	};
 	
@@ -62,6 +64,8 @@ public class FileTransferAuthorizationFilter extends AuthorizationFilter {
 			return new GetMethodAuthorization();
 		if (method.equals("PUT"))
 			return new PutMethodAuthorization();
+		if (method.equals("HEAD"))
+			return new HeadMethodAuthorization();
 		throw new AuthorizationException("Invalid method!");
 	}
 
