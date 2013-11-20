@@ -15,12 +15,14 @@ package it.grid.storm.gridhttps.server;
 import it.grid.storm.gridhttps.configuration.StormGridhttps;
 import it.grid.storm.gridhttps.server.exceptions.ServerException;
 import it.grid.storm.gridhttps.server.mapperservlet.MapperServlet;
+import it.grid.storm.gridhttps.server.statushandler.StatusHandler;
 
 import java.io.File;
 
 import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.Handler;
 import org.eclipse.jetty.server.Server;
+import org.eclipse.jetty.server.handler.ContextHandler;
 import org.eclipse.jetty.server.handler.ContextHandlerCollection;
 import org.eclipse.jetty.server.handler.DefaultHandler;
 import org.eclipse.jetty.server.nio.SelectChannelConnector;
@@ -45,6 +47,7 @@ public class StormGridhttpsServer {
 	private Server oneServer;
 	private WebAppContext webdavContext, filetransferContext;
 	private ServletContextHandler mappingContext;
+	private ContextHandler statusContext;
 	private Connector httpsConnector, httpConnector, mapHttpConnector;
 
 	public StormGridhttpsServer(StormGridhttps gridhttpsInfo) throws ServerException {
@@ -85,13 +88,22 @@ public class StormGridhttpsServer {
 			initWebDAVContext();
 			initFileTransferContext();
 			initMappingServletContext();
+			initStatusHandlerContext();
 		} catch (Exception e) {
 			throw new ServerException(e);
 		}
-		contexts.setHandlers(new Handler[] { webdavContext, filetransferContext, mappingContext, new DefaultHandler() });
+		contexts.setHandlers(new Handler[] { webdavContext, filetransferContext, mappingContext, statusContext, new DefaultHandler() });
 		oneServer.setHandler(contexts);
 	}
 	
+	private void initStatusHandlerContext() {
+
+		statusContext = new ContextHandler();
+		statusContext.setContextPath("/");
+		statusContext.setResourceBase(".");
+		statusContext.setHandler(new StatusHandler());
+	}
+
 	private void initWebDAVContext() {
 		String webappResourceDir = this.getClass().getClassLoader().getResource("webapp").toExternalForm();
 		webdavContext = new WebAppContext();
