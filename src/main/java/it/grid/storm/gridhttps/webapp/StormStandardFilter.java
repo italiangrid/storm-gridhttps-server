@@ -75,17 +75,17 @@ public class StormStandardFilter implements Filter {
 			response.sendError(Status.SC_INTERNAL_SERVER_ERROR, ex.getMessage());
 			response.setStatus(Status.SC_INTERNAL_SERVER_ERROR);
 		} catch (SRMOperationException ex) {
-			log.warn("RequestFailureException: " + ex.getReason());
+			log.error("RequestFailureException: " + ex.getReason());
 			response.sendError(Status.SC_SERVICE_UNAVAILABLE, ex.getReason());
 			response.setStatus(Status.SC_SERVICE_UNAVAILABLE);
 		} catch (BadRequestException ex) {
-			log.error(ex.getReason());
+			log.warn(ex.getReason());
 			manager.getResponseHandler().respondBadRequest(ex.getResource(), response, request);
 		} catch (ConflictException ex) {
-			log.error(ex.getMessage() + ": The requested operation could not be performed because of prior state.");
+			log.info(ex.getMessage());
 			manager.getResponseHandler().respondConflict(ex.getResource(), response, request, INTERNAL_SERVER_ERROR_HTML);
 		} catch (NotAuthorizedException ex) {
-			log.error(ex.getMessage() + ": The current user is not able to perform the requested operation.");
+			log.info(ex.getMessage() + ": The current user is not able to perform the requested operation.");
 			manager.getResponseHandler().respondUnauthorised(ex.getResource(), response, request);
 		} catch (Throwable e) {
 			/*
@@ -116,12 +116,10 @@ public class StormStandardFilter implements Filter {
 		int code = response.getStatus().code;
 		String text = response.getStatus().text != null ? response.getStatus().text : "";
 		String msg = getCommand(httpHelper, user) + " exited with " + code + " " + text;
-		if (code >= 200 && code < 300) {
-			log.info(msg);
-		} else if (code >= 500 && code < 600) {
+		if (code >= 500 && code < 600) {
 			log.error(msg);
 		} else {
-			log.warn(msg);
+			log.info(msg);
 		}
 	}
 
