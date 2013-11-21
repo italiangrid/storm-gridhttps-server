@@ -13,8 +13,12 @@
 package it.grid.storm.gridhttps.common.storagearea;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @author Michele Dibenedetto
@@ -22,6 +26,8 @@ import java.util.List;
  */
 public class StorageArea {
 
+	private static final Logger log = LoggerFactory.getLogger(StorageArea.class);
+	
 	private String name;
 	private String FSRoot;
 	private String stfnRoot;
@@ -136,5 +142,17 @@ public class StorageArea {
 		return fsPath.replaceFirst(getFSRoot(), getStfnRoot()).replace("//", "/");
 	}
 
+	public boolean isOwner(String stfn) {
+		return isOwner(new File(getRealPath(stfn)));
+	}
+	
+	public boolean isOwner(File file) {
+		try {
+			return file.getCanonicalPath().startsWith(this.getFSRoot());
+		} catch (IOException e) {
+			log.error(e.getMessage());
+		}
+		return false;
+	}
 	
 }
