@@ -22,30 +22,34 @@ import java.security.cert.X509Certificate;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.italiangrid.utils.voms.CurrentSecurityContext;
+import org.italiangrid.utils.voms.SecurityContextFactory;
 import org.italiangrid.utils.voms.VOMSSecurityContext;
-import org.italiangrid.voms.VOMSValidators;
 import org.italiangrid.voms.ac.VOMSACValidator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class HttpHelper {
 
+	public static final String VOMS_VALIDATOR_KEY = "VOMS_VALIDATOR";
+	
 	public static final int DEPTH_NULL = -1;
 	public static final int DEPTH_0 = 0;
 	public static final int DEPTH_1 = 1;
 	public static final int DEPTH_INFINITY = 2;
 	
-	
-	private static final VOMSACValidator vomsValidator = VOMSValidators.newValidator();
+	private final VOMSACValidator vomsValidator; 
 
 	private static final Logger log = LoggerFactory.getLogger(HttpHelper.class);
 
 	private HttpServletRequest HTTPRequest = null;
 	private HttpServletResponse HTTPResponse = null;
 	
-	public HttpHelper(HttpServletRequest HTTPRequest, HttpServletResponse HTTPResponse) {
-		this.HTTPRequest = HTTPRequest;
-		this.HTTPResponse = HTTPResponse;
+	public HttpHelper(HttpServletRequest req, HttpServletResponse res) {
+		HTTPRequest = req;
+		HTTPResponse = res;
+		vomsValidator = (VOMSACValidator) req.getServletContext()
+			.getAttribute(VOMS_VALIDATOR_KEY);
 	}
 
 	public HttpServletRequest getRequest() {
@@ -201,13 +205,15 @@ public class HttpHelper {
 	
 	public VOMSSecurityContext getVOMSSecurityContext() {
 		if (!hasVOMSSecurityContext()) {
-			VOMSSecurityContext.clearCurrentContext();
-			VOMSSecurityContext currentContext = new VOMSSecurityContext();
-			currentContext.setValidator(vomsValidator);
-			VOMSSecurityContext.setCurrentContext(currentContext);
-			getRequest().setAttribute("VOMSSecurityContext", currentContext);
+			CurrentSecurityContext.clear();
+			VOMSSecurityContext sc = 
+				SecurityContextFactory.newVOMSSecurityContext(vomsValidator);
+
+			CurrentSecurityContext.set(sc);
+			getRequest().setAttribute("VOMSSecurityContext", sc);
 		}
-		return (VOMSSecurityContext) getRequest().getAttribute("VOMSSecurityContext");
+		return (VOMSSecurityContext) getRequest()
+			.getAttribute("VOMSSecurityContext");
 	}
 	
 
