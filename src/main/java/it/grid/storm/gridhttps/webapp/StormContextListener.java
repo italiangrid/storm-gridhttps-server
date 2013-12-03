@@ -82,7 +82,8 @@ public class StormContextListener implements ServletContextListener {
 
 		shutdownVOMSValidator(sce);
 
-		log.info("Storm Gridhttps webapp rooted {} stopped.");
+		log.info("Storm Gridhttps webapp rooted at {} stopped.",
+			sce.getServletContext().getContextPath());
 
 
 	}

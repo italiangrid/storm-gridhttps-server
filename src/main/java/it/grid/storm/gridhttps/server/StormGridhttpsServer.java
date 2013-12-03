@@ -111,6 +111,7 @@ public class StormGridhttpsServer {
 		webdavContext.setDescriptor(webappResourceDir + "/WEB-INF/webdav.xml");
 		webdavContext.setContextPath(File.separator + gridhttpsInfo.getWebdavContextPath());
 		webdavContext.setParentLoaderPriority(true);
+		webdavContext.setThrowUnavailableOnStartupException(true);
 		if (gridhttpsInfo.isHTTPEnabled()) {
 			webdavContext.setConnectorNames(new String[] { httpsConnector.getName(), httpConnector.getName() });
 		} else {
@@ -126,6 +127,7 @@ public class StormGridhttpsServer {
 		filetransferContext.setDescriptor(webappResourceDir + "/WEB-INF/filetransfer.xml");
 		filetransferContext.setContextPath(File.separator + gridhttpsInfo.getFiletransferContextPath());
 		filetransferContext.setParentLoaderPriority(true);
+		filetransferContext.setThrowUnavailableOnStartupException(true);
 		if (gridhttpsInfo.isHTTPEnabled()) {
 			filetransferContext.setConnectorNames(new String[] { httpsConnector.getName(), httpConnector.getName() });
 		} else {
