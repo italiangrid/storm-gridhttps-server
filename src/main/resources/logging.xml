@@ -13,7 +13,7 @@
 		</rollingPolicy>
 
 		<encoder>
-			<pattern>%date{ISO8601} [%.-16thread] %highlight(%-5level) %msg%n
+			<pattern>%date{ISO8601} [%.-16thread] %-5level %msg%n
 			</pattern>
 		</encoder>
 
