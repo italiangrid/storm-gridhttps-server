@@ -15,15 +15,9 @@ package it.grid.storm.gridhttps.webapp.webdav.authorization.methods;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import it.grid.storm.gridhttps.configuration.Configuration;
-import it.grid.storm.gridhttps.webapp.common.StormResourceHelper;
 import it.grid.storm.gridhttps.webapp.common.authorization.AuthorizationException;
 import it.grid.storm.gridhttps.webapp.common.authorization.AuthorizationStatus;
 import it.grid.storm.gridhttps.webapp.common.authorization.UserCredentials;
-import it.grid.storm.gridhttps.webapp.common.exceptions.SRMOperationException;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class OptionsMethodAuthorization extends WebDAVMethodAuthorization {
 
@@ -31,23 +25,11 @@ public class OptionsMethodAuthorization extends WebDAVMethodAuthorization {
 		super();
 	}
 
-	private static final Logger log = LoggerFactory.getLogger(OptionsMethodAuthorization.class);
-
-	private void doPing(UserCredentials user) {
-		// PING
-		try {
-			StormResourceHelper.getInstance().doPing(user, Configuration.getBackendInfo().getHostname(), Configuration.getBackendInfo().getPort());
-		} catch (SRMOperationException e) {
-			log.error(e.toString());
-		}
-	}
-
 	@Override
 	public AuthorizationStatus isUserAuthorized(HttpServletRequest request,
 		HttpServletResponse response, UserCredentials user)
 		throws AuthorizationException {
 
-		this.doPing(user);
 		return AuthorizationStatus.AUTHORIZED();
 	}
 }
