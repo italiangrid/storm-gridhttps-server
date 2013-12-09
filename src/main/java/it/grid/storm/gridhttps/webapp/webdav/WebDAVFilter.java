@@ -23,11 +23,9 @@ import it.grid.storm.gridhttps.common.storagearea.StorageAreaManager;
 import it.grid.storm.gridhttps.configuration.Configuration;
 import it.grid.storm.gridhttps.webapp.HttpHelper;
 import it.grid.storm.gridhttps.webapp.StormStandardFilter;
-import it.grid.storm.gridhttps.webapp.common.StormResourceHelper;
 import it.grid.storm.gridhttps.webapp.common.authorization.AuthorizationException;
 import it.grid.storm.gridhttps.webapp.common.authorization.AuthorizationStatus;
 import it.grid.storm.gridhttps.webapp.common.authorization.UserCredentials;
-import it.grid.storm.gridhttps.webapp.common.exceptions.SRMOperationException;
 import it.grid.storm.gridhttps.webapp.webdav.authorization.WebDAVAuthorizationFilter;
 import it.grid.storm.gridhttps.webapp.webdav.factory.WebdavResourceFactory;
 import it.grid.storm.gridhttps.webapp.webdav.factory.html.StormHtmlRootPage;
@@ -216,18 +214,9 @@ public class WebDAVFilter implements Filter {
 	private void processRootRequest(HttpHelper httpHelper, UserCredentials user) throws IOException {
 		String method = httpHelper.getRequestMethod();
 		if (method.toUpperCase().equals("OPTIONS")) {
-			doPing(user);
 			sendDavHeader(httpHelper.getResponse());
 		} else if (method.toUpperCase().equals("GET")) {
 			sendRootPage(httpHelper, user);
-		}
-	}
-	
-	private void doPing(UserCredentials user) {
-		try {
-			StormResourceHelper.getInstance().doPing(user, Configuration.getBackendInfo().getHostname(), Configuration.getBackendInfo().getPort());
-		} catch (SRMOperationException e) {
-			log.error(e.getMessage());
 		}
 	}
 
