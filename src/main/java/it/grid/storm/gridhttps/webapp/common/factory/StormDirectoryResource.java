@@ -21,7 +21,6 @@ import io.milton.http.exceptions.NotFoundException;
 import io.milton.resource.CollectionResource;
 import io.milton.resource.CopyableResource;
 import io.milton.resource.DeletableCollectionResource;
-import io.milton.resource.DeletableResource;
 import io.milton.resource.GetableResource;
 import io.milton.resource.MakeCollectionableResource;
 import io.milton.resource.MoveableResource;
@@ -32,7 +31,6 @@ import it.grid.storm.gridhttps.webapp.common.StormResource;
 import it.grid.storm.gridhttps.webapp.common.StormResourceHelper;
 import it.grid.storm.gridhttps.webapp.common.exceptions.RuntimeApiException;
 import it.grid.storm.gridhttps.webapp.common.exceptions.SRMOperationException;
-import it.grid.storm.gridhttps.webapp.common.exceptions.SRMOperationException.TSRMExceptionReason;
 import it.grid.storm.gridhttps.webapp.common.factory.StormFactory;
 import it.grid.storm.srm.types.Recursion;
 import it.grid.storm.srm.types.RecursionLevel;
@@ -43,15 +41,14 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class StormDirectoryResource extends StormResource implements MakeCollectionableResource, PutableResource, CopyableResource,
-		DeletableResource, MoveableResource, PropFindableResource, GetableResource, DeletableCollectionResource {
+public class StormDirectoryResource extends StormResource implements MakeCollectionableResource, PutableResource, CopyableResource, 
+		MoveableResource, PropFindableResource, GetableResource, DeletableCollectionResource {
 
 	private static final Logger log = LoggerFactory.getLogger(StormDirectoryResource.class);
 
@@ -71,64 +68,23 @@ public class StormDirectoryResource extends StormResource implements MakeCollect
 
 	@Override
 	public Resource child(String name) throws NotAuthorizedException, BadRequestException {
-		File fsDest = new File(getFile(), name);
-		return getFactory().resolveFile(this.getHost(), fsDest, getStorageArea());
-	}
-
-	private ArrayList<StormResource> resolveSurlArray(Collection<SurlInfo> entries) {
-		ArrayList<StormResource> list = new ArrayList<StormResource>();
-		if (entries != null) {
-			for (SurlInfo entry : entries) {
-				StormResource resource = getFactory().resolveFile(entry, getStorageArea());
-				if (resource != null) {
-					list.add(resource);
-				} else {
-					log.warn("Couldn't add child '" + entry.getStfn() + "'!");
-				}
-			}
-		}
-		return list;
+		
+		return getFactory().resolveFile(getFile(), name);
 	}
 
 	@Override
 	public List<? extends Resource> getChildren() throws NotAuthorizedException, BadRequestException {
-		List<? extends Resource> list = null;
-		Collection<SurlInfo> entries;
-		try {
-			entries = this.getChildrenSurlInfo();
-		} catch (SRMOperationException e) {
-			if (e.getExceptionReason().equals(TSRMExceptionReason.TOOMANYRESULTS)) {
-				int numberOfMaxEntries = getMaxEntriesNumberFromExplanation(e.getStatus().getExplanation());
-				log.warn("Too many results with Ls, max entries is " + numberOfMaxEntries + ". Re-trying with counted Ls.");
-				try {
-					entries = this.getNChildrenSurlInfo(numberOfMaxEntries);
-				} catch (SRMOperationException e1) {
-					log.error("The number of children requested for '" + this.getFile()
-						+ "' is greater than the max number of results allowed: " + e.getStatus().getExplanation());
-					return null;
-				}
-			} else
-				throw e;
+		
+		List<StormResource> list = new ArrayList<StormResource>();
+		File[] children = getFile().listFiles();
+		
+		for (File file : children) {
+			StormResource res = getFactory().resolveFile(file);
+			if (res != null)
+				list.add(res);
 		}
-		list = resolveSurlArray(entries);
-		return list != null ? list : new ArrayList<StormResource>();
-	}
-
-	private int getMaxEntriesNumberFromExplanation(String explanation) {
-		String[] array = explanation.split(" ");
-		String numberOfMaxEntriesString = array[array.length - 1]; // last
-																	// element
-		log.debug("Extracted number of max entries from explanation '" + explanation + "': " + numberOfMaxEntriesString);
-		int numberOfMaxEntries = 0;
-		try {
-			numberOfMaxEntries = Integer.valueOf(numberOfMaxEntriesString);
-		} catch (NumberFormatException e2) {
-			log.error("Error parsing explanation string to retrieve the max number of entries of a srmLs -l, " + numberOfMaxEntriesString
-					+ " is not a valid integer!");
-			throw new RuntimeException("Error parsing explanation string to retrieve the max number of entries of a srmLs -l, "
-					+ numberOfMaxEntriesString + " is not a valid integer!");
-		}
-		return numberOfMaxEntries;
+		
+		return list;	
 	}
 
 	@Override

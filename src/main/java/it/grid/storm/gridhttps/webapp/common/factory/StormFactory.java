@@ -2,7 +2,6 @@ package it.grid.storm.gridhttps.webapp.common.factory;
 
 import java.io.File;
 import java.net.UnknownHostException;
-import java.util.ArrayList;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,15 +16,9 @@ import io.milton.resource.Resource;
 import it.grid.storm.gridhttps.common.storagearea.StorageArea;
 import it.grid.storm.gridhttps.common.storagearea.StorageAreaManager;
 import it.grid.storm.gridhttps.webapp.common.StormResource;
-import it.grid.storm.gridhttps.webapp.common.StormResourceHelper;
 import it.grid.storm.gridhttps.webapp.common.contentservice.StormContentService;
-import it.grid.storm.gridhttps.webapp.common.exceptions.RuntimeApiException;
-import it.grid.storm.gridhttps.webapp.common.exceptions.SRMOperationException;
-import it.grid.storm.gridhttps.webapp.common.exceptions.SRMOperationException.TSRMExceptionReason;
-import it.grid.storm.srm.types.TFileType;
 import it.grid.storm.srm.types.TStatusCode;
 import it.grid.storm.xmlrpc.ApiException;
-import it.grid.storm.xmlrpc.outputdata.LsOutputData;
 import it.grid.storm.xmlrpc.outputdata.LsOutputData.SurlInfo;
 
 public abstract class StormFactory implements ResourceFactory {
@@ -138,7 +131,7 @@ public abstract class StormFactory implements ResourceFactory {
 				String fsPath = currentSA.getRealPath(path);
 				log.debug("real path: " + fsPath);
 				File requested = new File(getRoot(), fsPath);
-				r = resolveFile(host, requested, currentSA);
+				r = resolveFile(requested);
 			} else {
 				log.warn("Unable to identify a StorageArea that matches: " + path);
 			}
@@ -157,44 +150,30 @@ public abstract class StormFactory implements ResourceFactory {
 	public abstract StormResource getDirectoryResource(File directory);
 	
 	public abstract StormResource getFileResource(File file);
-
-	private static boolean isDirectory(TFileType type) {
-		if (type != null) {
-			return type.equals(TFileType.DIRECTORY);
-		}
-		return false;
-	}
+	
+	/**
+	 * Returns the StormResource associated to the file, or null if file doesn't exist
+	 * 
+	 **/
+	public StormResource resolveFile(File file) {
 		
-	public StormResource resolveFile(String host, File file, StorageArea storageArea) {
-		LsOutputData output = null;
-		
-		try {
-			
-			output = StormResourceHelper.getInstance().doLimitedLsDetailed(file);
-			
-		} catch (SRMOperationException e) {
-			
-			if (e.getExceptionReason().equals(TSRMExceptionReason.INTERNALERROR)) {
-				
-				log.error("retrieving detailed info for '" + file + "': " + e.getStatus().getExplanation());
-				throw new RuntimeApiException(e.getStatus().getExplanation());
-			
-			} else if (e.getExceptionReason().equals(TSRMExceptionReason.SRMFAILURE)) {
-				
-				log.debug(file + " not exists! Got a SRM_FAILURE with reason: " + e.getStatus().getExplanation());
-				return null;
-			
-			} else if (e.getExceptionReason().equals(TSRMExceptionReason.TOOMANYRESULTS)) {
-				
-				log.warn(e.getMessage());
-				return null;
-				
+		if (file.exists()) {
+			if (file.isDirectory()) {
+				return getDirectoryResource(file);
 			} else {
-				log.warn("Unknown type exception! " + e.getMessage());
-				return null;
+				return getFileResource(file);
 			}
 		} 
-		return resolveFile(output.getInfos().iterator().next(), storageArea);
+		return null;
+	}
+	
+	/**
+	 * Returns the StormResource associated to the file, or null if file doesn't exist
+	 * 
+	 **/
+	public StormResource resolveFile(File parent, String childname) {
+		
+		return resolveFile(new File(parent, childname));
 	}
 
 	public StormResource resolveFile(SurlInfo surlInfo) {
@@ -203,39 +182,35 @@ public abstract class StormFactory implements ResourceFactory {
 	}
 	
 	public StormResource resolveFile(SurlInfo surlInfo, StorageArea storageArea) {
-		ArrayList<TStatusCode> notSuccessful = new ArrayList<TStatusCode>() {
-			private static final long serialVersionUID = 1L;
-			{
-				add(TStatusCode.SRM_FAILURE);
-				add(TStatusCode.SRM_INVALID_PATH);
-			}
-		};
-		StormResource r = null;
-		if (surlInfo != null) {
-			if (!notSuccessful.contains(surlInfo.getStatus().getStatusCode())) {
-				if (surlInfo.getType() != null) {
-					if (surlInfo.getStfn().startsWith(storageArea.getStfnRoot())) {
-						File file = new File(storageArea.getRealPath(surlInfo.getStfn()));
-						if (isDirectory(surlInfo.getType())) {
-							r = getDirectoryResource(file);
-						} else {
-							r = getFileResource(file);
-						}
-					} else {
-						log.error("surl-info does not match with given storage-area fsRoot!");
-					}
-				} else {
-					log.error(surlInfo.getStfn() + " type is null! Even if status is " + surlInfo.getStatus().toString());
-				}
-			} else {
-				log.warn(surlInfo.getStfn() + " not exists! Got a " + surlInfo.getStatus().getStatusCode() + " with reason: " + surlInfo.getStatus().getExplanation());
-			}
-		} else {
-			log.error("received a null surl-info! Can't resolve resource!");
+		if (surlInfo == null) {
+			log.debug("Resolve file error: received a null surl-info!");
+			return null;
 		}
-		return r;
+		if (storageArea == null) {
+			log.debug("Resolve file error: received a null storage-area!");
+			return null;
+		}
+		if (!isSuccessful(surlInfo.getStatus().getStatusCode())) {
+			log.debug("Resolve file error: surl status is " + surlInfo.getStatus().getStatusCode() + " " + surlInfo.getStatus().getExplanation());
+			return null;
+		}
+		if (surlInfo.getType() == null) {
+			log.debug("Resolve file error: surl-info type is null!");
+			return null;
+		}
+		File file = new File(storageArea.getRealPath(surlInfo.getStfn()));
+		if (!storageArea.isOwner(file)) {
+			log.debug("Resolve file error: storage area " + storageArea.getName() + " isn't the owner of " + surlInfo.getStfn());
+			return null;
+		}
+		return resolveFile(file);
 	}
 
+	private boolean isSuccessful(TStatusCode status) {
+		return (!status.equals(TStatusCode.SRM_FAILURE) 
+			&& !status.equals(TStatusCode.SRM_INVALID_PATH));
+	}
+	
 	public String getRealm(String host) {
 		return getSecurityManager().getRealm(host);
 	}
