@@ -1,12 +1,29 @@
+/*
+ * Copyright (c) Istituto Nazionale di Fisica Nucleare (INFN). 2006-2013.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package it.grid.storm.gridhttps.webapp;
+
+import java.util.concurrent.TimeUnit;
 
 import javax.servlet.ServletContextEvent;
 import javax.servlet.ServletContextListener;
 
-import org.italiangrid.voms.VOMSValidators;
 import org.italiangrid.voms.ac.VOMSACValidator;
+import org.italiangrid.voms.ac.impl.DefaultVOMSValidator;
+import org.italiangrid.voms.util.CertificateValidatorBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import eu.emi.security.authn.x509.X509CertChainValidatorExt;
 
 /**
  * Handles Gridhttps webapp startup/shutdown events.
@@ -20,9 +37,24 @@ public class StormContextListener implements ServletContextListener {
 
 	private void initializeVOMSValidator(ServletContextEvent sce){
 
+		X509CertChainValidatorExt certValidator =
+			CertificateValidatorBuilder.buildCertificateValidator(
+				"/etc/grid-security/certificates", 
+				null, 
+				null, 
+				TimeUnit.MINUTES.toMillis(120), 
+				CertificateValidatorBuilder.DEFAULT_NS_CHECKS,
+				CertificateValidatorBuilder.DEFAULT_CRL_CHECKS,
+				CertificateValidatorBuilder.DEFAULT_OCSP_CHECKS,
+				false);
+		
 		try{
-			VOMSACValidator validator = 
-				VOMSValidators.newValidator(new VOMSValidationListener()); 
+		
+			VOMSACValidator validator =
+				new DefaultVOMSValidator.Builder()
+					.validationListener(new VOMSValidationListener())
+					.certChainValidator(certValidator)
+					.build();
 
 			sce.getServletContext().setAttribute(HttpHelper.VOMS_VALIDATOR_KEY, 
 				validator);
@@ -64,12 +96,22 @@ public class StormContextListener implements ServletContextListener {
 		}
 	}
 	
+	private void initializeHTTPClient(){
+		StormHTTPClient.INSTANCE.init(200);
+	}
+	
+	private void disposeHTTPClient(){
+		StormHTTPClient.INSTANCE.dispose();
+	}
+	
 	@Override
 	public void contextInitialized(ServletContextEvent sce) {
 		log.info("Storm Gridhttps webapp rooted at {} starting...", 
 			sce.getServletContext().getContextPath());
 		
 		initializeVOMSValidator(sce);
+		initializeHTTPClient();
+		
 		log.info("Storm Gridhttps webapp rooted at {} started.", 
 			sce.getServletContext().getContextPath());
 	}
@@ -81,11 +123,9 @@ public class StormContextListener implements ServletContextListener {
 			sce.getServletContext().getContextPath());
 
 		shutdownVOMSValidator(sce);
+		disposeHTTPClient();
 
 		log.info("Storm Gridhttps webapp rooted at {} stopped.",
 			sce.getServletContext().getContextPath());
-
-
 	}
-
 }

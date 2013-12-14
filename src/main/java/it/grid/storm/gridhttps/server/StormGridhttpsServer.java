@@ -61,7 +61,7 @@ public class StormGridhttpsServer {
 		X509CertChainValidatorExt validator = CertificateValidatorBuilder
 			.buildCertificateValidator(gridhttpsInfo.getSsloptions()
 				.getTrustStoreDirectory(), l, l, gridhttpsInfo.getSsloptions()
-				.getTrustStoreRefreshIntervalInMsec());
+				.getTrustStoreRefreshIntervalInMsec(), false);
 		oneServer = ServerFactory.newServer(gridhttpsInfo.getHostname(),
 			gridhttpsInfo.getHttpsPort(), gridhttpsInfo.getSsloptions(), validator,
 			ServerFactory.MAX_CONNECTIONS, ServerFactory.MAX_REQUEST_QUEUE_SIZE);

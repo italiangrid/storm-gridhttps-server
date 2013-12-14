@@ -12,15 +12,15 @@
  */
 package it.grid.storm.gridhttps.webapp.common.authorization;
 
-public class AuthorizationException extends Exception {
+public class AuthorizationException extends RuntimeException {
 
-	/**
-	 * 
-	 */
 	private static final long serialVersionUID = 1L;
 
 	public AuthorizationException(String string) {
 		super(string);
 	}
 
+	public AuthorizationException(Throwable t){
+		super(t);
+	}
 }

@@ -51,14 +51,16 @@ public class UserCredentials extends Object {
 				log.warn("Failed to init VOMS Security Context! User initialized with empty DN and FQANs");
 				return;
 			}
+
 			getHttpHelper().getVOMSSecurityContext().setClientCertChain(certChain);
 			if (getHttpHelper().getVOMSSecurityContext().getClientName() != null)
 				setUserDN(getHttpHelper().getVOMSSecurityContext().getClientName());
 			
 			ArrayList<String> fqans = new ArrayList<String>();
+
 			for (VOMSAttribute voms : getHttpHelper().getVOMSSecurityContext().getVOMSAttributes())
-				for (String s : voms.getFQANs())
-					fqans.add(s);
+				fqans.addAll(voms.getFQANs());
+			
 			if (!fqans.isEmpty())
 				setUserFQANS(fqans);
 			

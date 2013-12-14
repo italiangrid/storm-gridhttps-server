@@ -27,6 +27,7 @@ import ch.qos.logback.classic.LoggerContext;
 import ch.qos.logback.classic.joran.JoranConfigurator;
 import ch.qos.logback.core.joran.spi.JoranException;
 import ch.qos.logback.core.util.StatusPrinter;
+import eu.emi.security.authn.x509.impl.CertificateUtils;
 
 public class Main {
 
@@ -36,6 +37,8 @@ public class Main {
 
 	public static void main(String[] args) {
 
+		CertificateUtils.configureSecProvider();
+		
 		log.info("StoRM Gridhttps-server - bootstrapping...");
 
 		try {

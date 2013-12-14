@@ -28,7 +28,6 @@ public abstract class AbstractMethodAuthorization {
 		try {
 			boolean response = StormAuthorizationUtils.isUserAuthorized(user, operation, path);
 			if (!response && !user.isAnonymous()) {
-				/* Re-try as anonymous user: */
 				user.forceAnonymous();
 				response = StormAuthorizationUtils.isUserAuthorized(user, operation, path);
 			}
@@ -37,10 +36,8 @@ public abstract class AbstractMethodAuthorization {
 			} else {
 				return AuthorizationStatus.NOTAUTHORIZED(401, "You are not authorized to access the requested resource");
 			}			
-		} catch (IllegalArgumentException e) {
-			return AuthorizationStatus.NOTAUTHORIZED(500, "Error: " + e.getMessage());
-		} catch (Exception e) {
-			return AuthorizationStatus.NOTAUTHORIZED(500, "Error: " + e.getMessage());
+		} catch (Throwable  t) {
+			return AuthorizationStatus.NOTAUTHORIZED(500, "Error: " + t.getMessage());
 		}
 	}
 	

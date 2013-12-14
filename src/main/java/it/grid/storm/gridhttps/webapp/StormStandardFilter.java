@@ -88,6 +88,8 @@ public class StormStandardFilter implements Filter {
 			log.info(ex.getMessage() + ": The current user is not able to perform the requested operation.");
 			manager.getResponseHandler().respondUnauthorised(ex.getResource(), response, request);
 		} catch (Throwable e) {
+			
+			log.warn(e.getMessage(),e);
 			/*
 			 * Looks like in some cases we can be left with a connection in an
 			 * indeterminate state due to the content length not being equal to
@@ -116,7 +118,9 @@ public class StormStandardFilter implements Filter {
 		int code = response.getStatus().code;
 		String text = response.getStatus().text != null ? response.getStatus().text : "";
 		String msg = getCommand(httpHelper, user) + " exited with " + code + " " + text;
-		if (code >= 500 && code < 600) {
+		if (code >= 400){
+			log.warn(msg);
+		}else if (code >= 500 && code < 600) {
 			log.error(msg);
 		} else {
 			log.info(msg);
