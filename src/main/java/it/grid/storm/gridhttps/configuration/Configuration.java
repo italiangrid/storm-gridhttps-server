@@ -55,6 +55,14 @@ public class Configuration {
 		if (configuration.get("service").containsKey("max.queued.threads"))
 			getGridhttpsInfo().setServerQueuedThreadsMax(configuration.get("service", "max.queued.threads", int.class));
 		
+		if (configuration.get("service").containsKey("voms_caching.enabled"))
+		  getGridhttpsInfo().setVomsCachingEnabled(configuration.get("service",
+		    "voms_caching.enabled", boolean.class));
+		
+		if (configuration.get("service").containsKey("authz_call.enabled"))
+		  getGridhttpsInfo().setAuthzCallEnabled(configuration.get("service",
+		    "authz_call.enabled", boolean.class));
+
 		/* connectors */
 		if (!configuration.keySet().contains("connectors"))
 			throw new InitException("Configuration file 'connectors' section missed!");

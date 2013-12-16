@@ -88,7 +88,6 @@ backend.hostname =
 # Token used to authenticate to the StoRM BackEnd XMLRPC services
 #backend.xmlrpc.token =
 
-
 # StoRM SRM EndPoint
 # Default: STORM_BACKEND_HOSTNAME:8444
 #srm.endpoint = ${backend.hostname}:8444
@@ -96,15 +95,3 @@ backend.hostname =
 # If compute-checksum is true, a valid Adler32 checksum-value is computed for every file created
 # Default: true
 #compute-checksum = true
-
-
-
-
-#Change-log
-#26-09-2013 Changed default logging configuration file from logback.xml to logging.xml
-#08-08-2013 Removed checksum-type
-#02-04-2013 Removed webapp-directory
-#02-04-2013 Unified webdav.max.active.threads, webdav.max.queued.threads, mapping.max.active.threads and mapping.max.queued.threads into max.active.threads and max.queued.threads for the single server running 
-#28-03-2013 Removed service>webdav.context-path and service>filetransfer.context-path
-
-

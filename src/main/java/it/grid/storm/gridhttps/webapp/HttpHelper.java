@@ -24,7 +24,6 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
-import org.italiangrid.utils.voms.CurrentSecurityContext;
 import org.italiangrid.utils.voms.SecurityContextFactory;
 import org.italiangrid.utils.voms.VOMSSecurityContext;
 import org.italiangrid.voms.ac.VOMSACValidator;
@@ -69,13 +68,14 @@ public class HttpHelper {
 		session = req.getSession();
 		
 		if (!session.isNew()){
-			
 			long now = System.currentTimeMillis();
 			
-			if (now - session.getCreationTime() > SESSION_LIFETIME_IN_MSECS)
+			// Invalidate (and recreate) session if it lasts longer than 
+			// SESSION_LIFETIME_IN_MSECS
+			if (now - session.getCreationTime() > SESSION_LIFETIME_IN_MSECS){
 				session.invalidate();
-			
-			session = req.getSession(true);
+				session = req.getSession();
+			}
 		}
 		
 	}

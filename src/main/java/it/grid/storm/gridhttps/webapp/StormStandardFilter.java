@@ -35,107 +35,107 @@ import it.grid.storm.gridhttps.webapp.common.exceptions.SRMOperationException;
 
 public class StormStandardFilter implements Filter {
 
-	private Logger log = LoggerFactory.getLogger(StormStandardFilter.class);
-	public static final String INTERNAL_SERVER_ERROR_HTML = "<html><body><h1>Internal Server Error (500)</h1></body></html>";
-	
-	public StormStandardFilter() {
-	}
+    private Logger log = LoggerFactory.getLogger(StormStandardFilter.class);
+    public static final String INTERNAL_SERVER_ERROR_HTML = "<html><body><h1>Internal Server Error (500)</h1></body></html>";
 
-	public void process(FilterChain chain, Request request, Response response) {
-		HttpManager manager = chain.getHttpManager();
-		try {
-			Request.Method method = request.getMethod();
-			Handler handler = manager.getMethodHandler(method);
-			if (handler == null) {
-				log.trace("No handler for: " + method);
-				manager.getResponseHandler().respondMethodNotImplemented(null, response, request);
-			} else {
-				if (log.isTraceEnabled()) {
-					log.trace("delegate to method handler: " + handler.getClass().getCanonicalName());
-				}
-				handler.process(manager, request, response);
-				if (response.getEntity() != null) {
-					manager.sendResponseEntity(response);
-				} else {
-					log.debug("No response entity to send to client");
-				}
-			}
-		} catch (IllegalArgumentException ex) {
-			log.error("IllegalArgumentException: " + ex.getMessage());
-			ex.printStackTrace();
-			response.sendError(Status.SC_INTERNAL_SERVER_ERROR, ex.getMessage());
-			response.setStatus(Status.SC_INTERNAL_SERVER_ERROR);
-		} catch (RuntimeApiException ex) {
-			log.error("RuntimeApiException: " + ex.getMessage());
-			response.sendError(Status.SC_INTERNAL_SERVER_ERROR, ex.getMessage());
-			response.setStatus(Status.SC_INTERNAL_SERVER_ERROR);
-		} catch (RuntimeException ex) {
-			log.error("RuntimeException: " + ex.getMessage());
-			ex.printStackTrace();
-			response.sendError(Status.SC_INTERNAL_SERVER_ERROR, ex.getMessage());
-			response.setStatus(Status.SC_INTERNAL_SERVER_ERROR);
-		} catch (SRMOperationException ex) {
-			log.error("RequestFailureException: " + ex.getReason());
-			response.sendError(Status.SC_SERVICE_UNAVAILABLE, ex.getReason());
-			response.setStatus(Status.SC_SERVICE_UNAVAILABLE);
-		} catch (BadRequestException ex) {
-			log.warn(ex.getReason());
-			manager.getResponseHandler().respondBadRequest(ex.getResource(), response, request);
-		} catch (ConflictException ex) {
-			log.info(ex.getMessage());
-			manager.getResponseHandler().respondConflict(ex.getResource(), response, request, INTERNAL_SERVER_ERROR_HTML);
-		} catch (NotAuthorizedException ex) {
-			log.info(ex.getMessage() + ": The current user is not able to perform the requested operation.");
-			manager.getResponseHandler().respondUnauthorised(ex.getResource(), response, request);
-		} catch (Throwable e) {
-			
-			log.warn(e.getMessage(),e);
-			/*
-			 * Looks like in some cases we can be left with a connection in an
-			 * indeterminate state due to the content length not being equal to
-			 * the content length header, so fall back on the underlying
-			 * connection provider to manage the error
-			 */
-			int contentLength = Integer.valueOf(response.getHeaders().get("Content-Length"));
-			int entityDimension = ((ByteArrayEntity) response.getEntity()).getArr().length;
-			if (contentLength != entityDimension) {
-				log.warn("Response header Content-Length (" + entityDimension + ") different from entity byte dimension ("
-						+ entityDimension + ")");
-				response.getHeaders().put("Content-Length", "" + entityDimension);
-			} else {
-				log.error(e.getMessage() + ": exception sending content");
-				response.sendError(Status.SC_INTERNAL_SERVER_ERROR, e.getMessage() + ": exception sending content");
-				response.setStatus(Status.SC_INTERNAL_SERVER_ERROR);
-			}
-		} finally {
-			printExitStatus(response);
-		}
-	}
+    public StormStandardFilter() {
+    }
 
-	private void printExitStatus(Response response) {
-		HttpHelper httpHelper = new HttpHelper(MiltonServlet.request(), MiltonServlet.response());
-		UserCredentials user = httpHelper.getUser();
-		int code = response.getStatus().code;
-		String text = response.getStatus().text != null ? response.getStatus().text : "";
-		String msg = getCommand(httpHelper, user) + " exited with " + code + " " + text;
-		if (code >= 400){
-			log.warn(msg);
-		}else if (code >= 500 && code < 600) {
-			log.error(msg);
-		} else {
-			log.info(msg);
-		}
-	}
+    public void process(FilterChain chain, Request request, Response response) {
+        HttpManager manager = chain.getHttpManager();
+        try {
+            Request.Method method = request.getMethod();
+            Handler handler = manager.getMethodHandler(method);
+            if (handler == null) {
+                log.trace("No handler for: " + method);
+                manager.getResponseHandler().respondMethodNotImplemented(null, response, request);
+            } else {
+                if (log.isTraceEnabled()) {
+                    log.trace("delegate to method handler: " + handler.getClass().getCanonicalName());
+                }
+                handler.process(manager, request, response);
+                if (response.getEntity() != null) {
+                    manager.sendResponseEntity(response);
+                } else {
+                    log.debug("No response entity to send to client");
+                }
+            }
+        } catch (IllegalArgumentException ex) {
+            log.error("IllegalArgumentException: " + ex.getMessage());
+            ex.printStackTrace();
+            response.sendError(Status.SC_INTERNAL_SERVER_ERROR, ex.getMessage());
+            response.setStatus(Status.SC_INTERNAL_SERVER_ERROR);
+        } catch (RuntimeApiException ex) {
+            log.error("RuntimeApiException: " + ex.getMessage());
+            response.sendError(Status.SC_INTERNAL_SERVER_ERROR, ex.getMessage());
+            response.setStatus(Status.SC_INTERNAL_SERVER_ERROR);
+        } catch (RuntimeException ex) {
+            log.error("RuntimeException: " + ex.getMessage());
+            ex.printStackTrace();
+            response.sendError(Status.SC_INTERNAL_SERVER_ERROR, ex.getMessage());
+            response.setStatus(Status.SC_INTERNAL_SERVER_ERROR);
+        } catch (SRMOperationException ex) {
+            log.error("RequestFailureException: " + ex.getReason());
+            response.sendError(Status.SC_SERVICE_UNAVAILABLE, ex.getReason());
+            response.setStatus(Status.SC_SERVICE_UNAVAILABLE);
+        } catch (BadRequestException ex) {
+            log.warn(ex.getReason());
+            manager.getResponseHandler().respondBadRequest(ex.getResource(), response, request);
+        } catch (ConflictException ex) {
+            log.info(ex.getMessage());
+            manager.getResponseHandler().respondConflict(ex.getResource(), response, request, INTERNAL_SERVER_ERROR_HTML);
+        } catch (NotAuthorizedException ex) {
+            log.info(ex.getMessage() + ": The current user is not able to perform the requested operation.");
+            manager.getResponseHandler().respondUnauthorised(ex.getResource(), response, request);
+        } catch (Throwable e) {
+            log.error(e.getMessage(), e);
 
-	private String getCommand(HttpHelper httpHelper, UserCredentials user) {
-		String fqans = user.getUserFQANSAsStr();
-		String userStr = user.getRealUserDN().isEmpty() ? "anonymous" : user.getRealUserDN();
-		userStr += fqans.isEmpty() ? "" : " with fqans '" + fqans + "'";
-		String method = httpHelper.getRequestMethod();
-		String path = httpHelper.getRequestURI().getPath();
-		String destination = httpHelper.hasDestinationHeader() ? " to " + httpHelper.getDestinationURI().getPath() : "";
-		String ipSender = httpHelper.getRequest().getRemoteAddr();
-		return method + " " + path + destination + " from " + userStr + " ip " + ipSender;
-	}
-	
+            /*
+             * Looks like in some cases we can be left with a connection in an
+             * indeterminate state due to the content length not being equal to
+             * the content length header, so fall back on the underlying
+             * connection provider to manage the error
+             */
+            int contentLength = Integer.valueOf(response.getHeaders().get("Content-Length"));
+            int entityDimension = ((ByteArrayEntity) response.getEntity()).getArr().length;
+            if (contentLength != entityDimension) {
+                log.warn("Response header Content-Length (" + entityDimension + ") different from entity byte dimension ("
+                        + entityDimension + ")");
+                response.getHeaders().put("Content-Length", "" + entityDimension);
+            } else {
+                log.error(e.getMessage() + ": exception sending content");
+                response.sendError(Status.SC_INTERNAL_SERVER_ERROR, e.getMessage() + ": exception sending content");
+                response.setStatus(Status.SC_INTERNAL_SERVER_ERROR);
+            }
+        } finally {
+            printExitStatus(response);
+        }
+    }
+
+    private void printExitStatus(Response response) {
+        HttpHelper httpHelper = new HttpHelper(MiltonServlet.request(), MiltonServlet.response());
+        UserCredentials user = httpHelper.getUser();
+        int code = response.getStatus().code;
+        String text = response.getStatus().text != null ? response.getStatus().text : "";
+        String msg = getCommand(httpHelper, user) + " exited with " + code + " " + text;
+        if (code >= 400){
+            log.warn(msg);
+        }else if (code >= 500 && code < 600) {
+            log.error(msg);
+        } else {
+            log.info(msg);
+        }
+    }
+
+    private String getCommand(HttpHelper httpHelper, UserCredentials user) {
+        String fqans = user.getUserFQANSAsStr();
+        String userStr = user.getRealUserDN().isEmpty() ? "anonymous" : user.getRealUserDN();
+        userStr += fqans.isEmpty() ? "" : " with fqans '" + fqans + "'";
+        String method = httpHelper.getRequestMethod();
+        String path = httpHelper.getRequestURI().getPath();
+        String destination = httpHelper.hasDestinationHeader() ? " to " + httpHelper.getDestinationURI().getPath() : "";
+        String ipSender = httpHelper.getRequest().getRemoteAddr();
+        return method + " " + path + destination + " from " + userStr + " ip " + ipSender;
+    }
+
 }
