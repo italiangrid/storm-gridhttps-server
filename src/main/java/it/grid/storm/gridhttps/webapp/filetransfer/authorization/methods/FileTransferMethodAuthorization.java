@@ -27,10 +27,6 @@ public abstract class FileTransferMethodAuthorization extends AbstractMethodAuth
 	protected AuthorizationStatus askBEAuth(UserCredentials user, String operation, String path) {	
 		try {
 			boolean response = StormAuthorizationUtils.isUserAuthorized(user, operation, path);
-			if (!response && !user.isAnonymous()) {
-				user.forceAnonymous();
-				response = StormAuthorizationUtils.isUserAuthorized(user, operation, path);
-			}
 			if (response) {
 				return AuthorizationStatus.AUTHORIZED();
 			} else {
