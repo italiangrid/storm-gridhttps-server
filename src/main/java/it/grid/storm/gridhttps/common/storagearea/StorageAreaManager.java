@@ -13,6 +13,7 @@
 package it.grid.storm.gridhttps.common.storagearea;
 
 import it.grid.storm.gridhttps.common.remotecall.ConfigDiscoveryServiceConstants;
+import it.grid.storm.gridhttps.webapp.StormHTTPClient;
 import it.grid.storm.gridhttps.webapp.common.authorization.Constants;
 import it.grid.storm.gridhttps.webapp.common.authorization.StormAuthorizationUtils;
 import it.grid.storm.gridhttps.webapp.common.authorization.UserCredentials;
@@ -33,7 +34,6 @@ import org.apache.http.StatusLine;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
-import org.apache.http.impl.client.DefaultHttpClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -219,7 +219,7 @@ public class StorageAreaManager {
 	private HttpResponse callConfigDiscoveryService(URI uri) throws Exception {
 		log.info("Calling Configuration Discovery service at uri: " + uri);
 		HttpGet httpget = new HttpGet(uri);
-		HttpClient httpclient = new DefaultHttpClient();
+		HttpClient httpclient = StormHTTPClient.INSTANCE.getHTTPClient();
 		HttpResponse httpResponse = null;
 		try {
 			httpResponse = httpclient.execute(httpget);

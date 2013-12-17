@@ -26,6 +26,10 @@
 # Default: 300
 #max.queued.threads = 300
 
+# Enables caching of VOMS AA certificate validation outcomes
+# Default: true
+#voms_caching.enabled = false
+
 [connectors]
 
 # ============================

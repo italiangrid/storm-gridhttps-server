@@ -61,28 +61,26 @@ public class StormStandardFilter implements Filter {
                 }
             }
         } catch (IllegalArgumentException ex) {
-            log.error("IllegalArgumentException: " + ex.getMessage());
-            ex.printStackTrace();
+            log.error(ex.getMessage(), ex);
             response.sendError(Status.SC_INTERNAL_SERVER_ERROR, ex.getMessage());
             response.setStatus(Status.SC_INTERNAL_SERVER_ERROR);
         } catch (RuntimeApiException ex) {
-            log.error("RuntimeApiException: " + ex.getMessage());
+            log.error(ex.getMessage(), ex);
             response.sendError(Status.SC_INTERNAL_SERVER_ERROR, ex.getMessage());
             response.setStatus(Status.SC_INTERNAL_SERVER_ERROR);
         } catch (RuntimeException ex) {
-            log.error("RuntimeException: " + ex.getMessage());
-            ex.printStackTrace();
+            log.error(ex.getMessage(), ex);
             response.sendError(Status.SC_INTERNAL_SERVER_ERROR, ex.getMessage());
             response.setStatus(Status.SC_INTERNAL_SERVER_ERROR);
         } catch (SRMOperationException ex) {
-            log.error("RequestFailureException: " + ex.getReason());
+            log.error("RequestFailureException: {}", ex.getReason(), ex);
             response.sendError(Status.SC_SERVICE_UNAVAILABLE, ex.getReason());
             response.setStatus(Status.SC_SERVICE_UNAVAILABLE);
         } catch (BadRequestException ex) {
-            log.warn(ex.getReason());
+            log.warn(ex.getReason(), ex);
             manager.getResponseHandler().respondBadRequest(ex.getResource(), response, request);
         } catch (ConflictException ex) {
-            log.info(ex.getMessage());
+            log.warn(ex.getMessage(), ex);
             manager.getResponseHandler().respondConflict(ex.getResource(), response, request, INTERNAL_SERVER_ERROR_HTML);
         } catch (NotAuthorizedException ex) {
             log.info(ex.getMessage() + ": The current user is not able to perform the requested operation.");
