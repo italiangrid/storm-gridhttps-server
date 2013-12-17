@@ -101,9 +101,8 @@ public class StormResourceHelper {
 		
 		AbortRequest rollbackOp = new AbortRequest(surl, token);
 		RequestOutputData output = rollbackOp.executeAs(getHttpHelper().getUser(), this.getBackend());
-		if (!output.isSuccess()) {
-			throw new SRMOperationException(output.getStatus(), TSRMExceptionReason.SRMFAILURE);
-		}
+		if (!output.isSuccess())
+			log.warn("Failure on aborting surl " + surl + " with token " + token + ": " + output.getStatus().getExplanation());
 	}
 
 	/* MKCOL */
