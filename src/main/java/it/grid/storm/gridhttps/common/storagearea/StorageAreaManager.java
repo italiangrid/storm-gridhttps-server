@@ -13,6 +13,7 @@
 package it.grid.storm.gridhttps.common.storagearea;
 
 import it.grid.storm.gridhttps.common.remotecall.ConfigDiscoveryServiceConstants;
+import it.grid.storm.gridhttps.common.remotecall.ConfigDiscoveryServiceConstants.HttpPerms;
 import it.grid.storm.gridhttps.webapp.StormHTTPClient;
 import it.grid.storm.gridhttps.webapp.common.authorization.Constants;
 import it.grid.storm.gridhttps.webapp.common.authorization.StormAuthorizationUtils;
@@ -286,6 +287,7 @@ public class StorageAreaManager {
 		String root = null;
 		ArrayList<String> stfnRootList = new ArrayList<String>();
 		ArrayList<String> protocolList = new ArrayList<String>();
+		HttpPerms httpPerms = HttpPerms.NOREAD;
 		String[] SAFields = sAEncoded.trim().split("" + ConfigDiscoveryServiceConstants.VFS_FIELD_SEPARATOR);
 		for (String SAField : SAFields) {
 			String[] keyValue = SAField.trim().split("" + ConfigDiscoveryServiceConstants.VFS_FIELD_MATCHER);
@@ -315,6 +317,11 @@ public class StorageAreaManager {
 				}
 				continue;
 			}
+			if (ConfigDiscoveryServiceConstants.VFS_ANONYMOUS_PERMS_KEY.equals(keyValue[0])) {
+				httpPerms = HttpPerms.valueOf(keyValue[1]);
+				log.debug("Found http-permissions: " + httpPerms);
+				continue;
+			}
 		}
 		if (name == null || root == null || stfnRootList.size() == 0) {
 			log.warn("Unable to decode the storage area. Some fileds are missin: name=" + name + " FSRoot=" + root + " stfnRootList="
@@ -322,7 +329,7 @@ public class StorageAreaManager {
 			throw new IllegalArgumentException("");
 		}
 		for (String stfnRoot : stfnRootList) {
-			StorageArea storageArea = new StorageArea(name, root, stfnRoot, protocolList);
+			StorageArea storageArea = new StorageArea(name, root, stfnRoot, protocolList, httpPerms);
 			log.info("Decoded storage area: " + storageArea.getName());
 			log.debug("- details: [" + storageArea.toString() + "]");
 			producedList.add(storageArea);
