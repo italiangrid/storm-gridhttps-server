@@ -23,7 +23,6 @@ import it.grid.storm.gridhttps.common.storagearea.StorageAreaManager;
 import it.grid.storm.gridhttps.webapp.HttpHelper;
 import it.grid.storm.gridhttps.webapp.common.authorization.AuthorizationException;
 import it.grid.storm.gridhttps.webapp.common.authorization.AuthorizationStatus;
-import it.grid.storm.gridhttps.webapp.common.authorization.Constants;
 import it.grid.storm.gridhttps.webapp.common.authorization.UserCredentials;
 
 public class MoveMethodAuthorization extends WebDAVMethodAuthorization {
@@ -39,36 +38,42 @@ public class MoveMethodAuthorization extends WebDAVMethodAuthorization {
 		HttpServletResponse response, UserCredentials user)
 		throws AuthorizationException {
 
-		AuthorizationStatus srcResponse;
 		HttpHelper httpHelper = new HttpHelper(request, response);
+		
 		if (!httpHelper.hasDestinationHeader())
 			return AuthorizationStatus.NOTAUTHORIZED(400, "No destination header found");
+		
 		String srcPath = this.stripContext(httpHelper.getRequestURI().getRawPath());
 		log.debug(getClass().getSimpleName() + ": from path = " + srcPath);
+		String destPath = this.stripContext(httpHelper.getDestinationURI().getRawPath());
+		log.debug(getClass().getSimpleName() + ": to path = " + destPath);
+		
+		if (srcPath.equals(destPath))
+			return AuthorizationStatus.NOTAUTHORIZED(403, "The source and destination URIs are the same!");
+		
 		StorageArea srcSA = StorageAreaManager.getMatchingSA(srcPath);
 		if (srcSA == null)
 			return AuthorizationStatus.NOTAUTHORIZED(400, "Unable to resolve storage area!");
 		log.debug(getClass().getSimpleName() + ": from storage area = " + srcSA.getName());
 		if (!srcSA.isProtocol(httpHelper.getRequestProtocol().toUpperCase()))
 			return AuthorizationStatus.NOTAUTHORIZED(401, "Storage area " + srcSA.getName() + " doesn't support " + httpHelper.getRequestProtocol() + " protocol");
-		srcResponse = super.askAuth(user, Constants.MOVE_FROM_OPERATION, srcSA.getRealPath(srcPath));
-		if (!srcResponse.isAuthorized())
-			return srcResponse;
-		String destPath = this.stripContext(httpHelper.getDestinationURI().getRawPath());
-		log.debug(getClass().getSimpleName() + ": to path = " + destPath);
-		if (srcPath.equals(destPath))
-			return AuthorizationStatus.NOTAUTHORIZED(403, "The source and destination URIs are the same!");
+		
 		StorageArea destSA = StorageAreaManager.getMatchingSA(destPath);
 		if (destSA == null)
 			return AuthorizationStatus.NOTAUTHORIZED(400, "Unable to resolve storage area!");
 		log.debug(getClass().getSimpleName() + ": to storage area = " + destSA.getName());
 		if (!destSA.isProtocol(httpHelper.getDestinationProtocol().toUpperCase()))
 			return AuthorizationStatus.NOTAUTHORIZED(401, "Storage area " + destSA.getName() + " doesn't support " + httpHelper.getDestinationProtocol() + " protocol");
-		if (httpHelper.isOverwriteRequest())
-			srcResponse = super.askAuth(user, Constants.MOVE_TO_OVERWRITE_OPERATION, destSA.getRealPath(destPath));
-		else
-			srcResponse = super.askAuth(user, Constants.MOVE_TO_OPERATION, destSA.getRealPath(destPath));
-		return srcResponse;
+		
+		AuthorizationStatus srcResponse;
+		
+		srcResponse = super.isAuthorized(request.getScheme(), srcSA, Operation.READWRITE, user);
+		if (!srcResponse.isAuthorized())
+			return srcResponse;
+		if (destSA.getName().equals(srcSA.getName()))
+			return srcResponse;
+		
+		return super.isAuthorized(request.getScheme(), destSA, Operation.READWRITE, user);
 	}
 	
 }

@@ -112,7 +112,14 @@ public class WebDAVFilter implements Filter {
 			return;
 		}
 		
-		AuthorizationStatus status = checkAuthorization(httpHelper, user, requestedPath);
+		AuthorizationStatus status = null;
+		try {
+			status = checkAuthorization(httpHelper, user, requestedPath);
+		} catch (AuthorizationException e) {
+			log.error(e.getMessage());
+			sendError(httpHelper.getResponse(), 500, e.getMessage());
+			return;
+		}
 		if (status.isAuthorized()) {
 			log.debug(getAuthorizedMsg(httpHelper, user));
 			if (isRootPath(requestedPath)) {
@@ -137,16 +144,9 @@ public class WebDAVFilter implements Filter {
 		if (isRootPath(requestedPath)) {
 			log.debug(this.getClass().getSimpleName() + ": is root path");
 			return AuthorizationStatus.AUTHORIZED();
-		} else {
-			try {
-				return (new WebDAVAuthorizationFilter()).isUserAuthorized(httpHelper.getRequest(), httpHelper.getResponse(), user);
-			} catch (AuthorizationException e) {
-				log.error(e.getMessage());
-				return AuthorizationStatus.NOTAUTHORIZED(400, e.getMessage());
-			}
 		}
-		
-	}
+		return (new WebDAVAuthorizationFilter()).isUserAuthorized(httpHelper.getRequest(), httpHelper.getResponse(), user);
+}
 
 	private String getAuthorizedMsg(HttpHelper httpHelper, UserCredentials user) {
 		String userStr = user.isAnonymous() ? "anonymous" : user.getRealUserDN();

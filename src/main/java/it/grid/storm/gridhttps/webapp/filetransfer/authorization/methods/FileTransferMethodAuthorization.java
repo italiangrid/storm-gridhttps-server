@@ -12,35 +12,33 @@
  */
 package it.grid.storm.gridhttps.webapp.filetransfer.authorization.methods;
 
-import java.io.File;
-
 import it.grid.storm.gridhttps.configuration.Configuration;
+import it.grid.storm.gridhttps.webapp.common.authorization.AuthorizationStatus;
+import it.grid.storm.gridhttps.webapp.common.authorization.StormAuthorizationUtils;
+import it.grid.storm.gridhttps.webapp.common.authorization.UserCredentials;
 import it.grid.storm.gridhttps.webapp.common.authorization.methods.AbstractMethodAuthorization;
 
 public abstract class FileTransferMethodAuthorization extends AbstractMethodAuthorization {
-
-	private String contextPath;
-	
+		
 	public FileTransferMethodAuthorization() {		
-		this.setContextPath(Configuration.getGridhttpsInfo().getFiletransferContextPath());
-	}
-	
-	protected String stripContext(String path) {
-		if (this.getContextPath().isEmpty())
-			return path;
-		String contextPath = File.separator + this.getContextPath();
-		String stripped = path.replaceFirst(contextPath, "");
-		if (stripped.isEmpty())
-			return File.separator;
-		return stripped;
+		super(Configuration.getGridhttpsInfo().getFiletransferContextPath());
 	}
 
-	public String getContextPath() {
-		return contextPath;
-	}
-
-	private void setContextPath(String contextPath) {
-		this.contextPath = contextPath;
+	protected AuthorizationStatus askBEAuth(UserCredentials user, String operation, String path) {	
+		try {
+			boolean response = StormAuthorizationUtils.isUserAuthorized(user, operation, path);
+			if (!response && !user.isAnonymous()) {
+				user.forceAnonymous();
+				response = StormAuthorizationUtils.isUserAuthorized(user, operation, path);
+			}
+			if (response) {
+				return AuthorizationStatus.AUTHORIZED();
+			} else {
+				return AuthorizationStatus.NOTAUTHORIZED(401, "You are not authorized to access the requested resource");
+			}			
+		} catch (Throwable  t) {
+			return AuthorizationStatus.NOTAUTHORIZED(500, "Error: " + t.getMessage());
+		}
 	}
 
 }

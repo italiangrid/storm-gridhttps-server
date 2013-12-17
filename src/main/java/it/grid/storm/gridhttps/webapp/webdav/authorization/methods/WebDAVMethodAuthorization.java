@@ -12,35 +12,43 @@
  */
 package it.grid.storm.gridhttps.webapp.webdav.authorization.methods;
 
-import java.io.File;
-
+import it.grid.storm.gridhttps.common.storagearea.StorageArea;
 import it.grid.storm.gridhttps.configuration.Configuration;
+import it.grid.storm.gridhttps.webapp.common.authorization.AuthorizationStatus;
+import it.grid.storm.gridhttps.webapp.common.authorization.UserCredentials;
 import it.grid.storm.gridhttps.webapp.common.authorization.methods.AbstractMethodAuthorization;
 
 public abstract class WebDAVMethodAuthorization extends AbstractMethodAuthorization {
 	
-	private String contextPath;
+	public static enum Operation { READ, READWRITE };
 	
 	public WebDAVMethodAuthorization() {		
-		this.setContextPath(Configuration.getGridhttpsInfo().getWebdavContextPath());
+		super(Configuration.getGridhttpsInfo().getWebdavContextPath());
 	}
 	
-	protected String stripContext(String path) {
-		if (this.getContextPath().isEmpty())
-			return path;
-		String contextPath = File.separator + this.getContextPath();
-		String stripped = path.replaceFirst(contextPath, "");
-		if (stripped.isEmpty())
-			return File.separator;
-		return stripped;
+	private AuthorizationStatus isAnonymousAuthorized(StorageArea sa, Operation op, UserCredentials user) {
+		if (sa.isHTTPReadable())
+			if (Operation.READWRITE.equals(op))
+				if (sa.isHTTPWritable())
+					return AuthorizationStatus.AUTHORIZED();
+				else
+					return AuthorizationStatus.NOTAUTHORIZED(405, "Anonymous users are not authorized to access " + sa.getName() + " in " + op + " mode ");
+			else
+				return AuthorizationStatus.AUTHORIZED();
+		else
+			return AuthorizationStatus.NOTAUTHORIZED(405, "Anonymous users are not authorized to access " + sa.getName() + " in " + op + " mode ");
 	}
-
-	public String getContextPath() {
-		return contextPath;
+	
+	private AuthorizationStatus isSecureAuthorized(StorageArea sa, Operation op, UserCredentials user) {
+		if (user.isAnonymous())
+			return AuthorizationStatus.NOTAUTHORIZED(405, "Anonymous users are not authorized to access " + sa.getName() + " in " + op + " mode ");
+		return AuthorizationStatus.AUTHORIZED();
 	}
-
-	private void setContextPath(String contextPath) {
-		this.contextPath = contextPath;
+	
+	protected AuthorizationStatus isAuthorized(String protocol, StorageArea sa, Operation op, UserCredentials user) {
+		if (protocol.toUpperCase().equals("HTTP"))
+			return isAnonymousAuthorized(sa, op, user);
+		return isSecureAuthorized(sa, op, user);
 	}
-
+	
 }

@@ -23,7 +23,6 @@ import it.grid.storm.gridhttps.common.storagearea.StorageAreaManager;
 import it.grid.storm.gridhttps.webapp.HttpHelper;
 import it.grid.storm.gridhttps.webapp.common.authorization.AuthorizationException;
 import it.grid.storm.gridhttps.webapp.common.authorization.AuthorizationStatus;
-import it.grid.storm.gridhttps.webapp.common.authorization.Constants;
 import it.grid.storm.gridhttps.webapp.common.authorization.UserCredentials;
 
 public class DeleteMethodAuthorization extends WebDAVMethodAuthorization {
@@ -48,7 +47,8 @@ public class DeleteMethodAuthorization extends WebDAVMethodAuthorization {
 		log.debug(getClass().getSimpleName() + ": storage area = " + srcSA.getName());
 		if (!srcSA.isProtocol(httpHelper.getRequestProtocol().toUpperCase()))
 			return AuthorizationStatus.NOTAUTHORIZED(401, "Storage area " + srcSA.getName() + " doesn't support " + httpHelper.getRequestProtocol() + " protocol");
-		return super.askAuth(user, Constants.RM_OPERATION, srcSA.getRealPath(srcPath));
+		
+		return super.isAuthorized(request.getScheme(), srcSA, Operation.READWRITE, user);
 	}
 	
 	

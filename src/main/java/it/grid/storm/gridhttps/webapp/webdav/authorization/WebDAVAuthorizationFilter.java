@@ -54,7 +54,7 @@ public class WebDAVAuthorizationFilter extends AuthorizationFilter {
 		String method = request.getMethod().toUpperCase();
 		if (!isMethodAllowed(method)) {
 			log.error("Received a request for a not allowed method : " + method);
-			return AuthorizationStatus.NOTAUTHORIZED(405, "Method " + method + " not allowed!");
+			return AuthorizationStatus.NOTAUTHORIZED(400, "Method " + method + " not allowed!");
 		}
 		
 		/* get method handler */
