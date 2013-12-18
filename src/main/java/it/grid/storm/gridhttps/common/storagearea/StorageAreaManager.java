@@ -50,8 +50,6 @@ public class StorageAreaManager {
 	private HashMap<String, String> fsRootFromStfn;
 	private HashMap<String, String> stfnRootFromFs;
 
-	/* PUBLIC STATIC METHODS */
-
 	public static void init(String stormBEHostname, int stormBEPort) throws Exception {
 		SAManager = new StorageAreaManager(stormBEHostname, stormBEPort);
 	}
@@ -59,8 +57,6 @@ public class StorageAreaManager {
 	public static boolean isInitialized() {
 		return getInstance() != null;
 	}
-
-	/* PUBLIC METHODS */
 
 	public static StorageAreaManager getInstance() {
 		return SAManager;
@@ -148,8 +144,6 @@ public class StorageAreaManager {
 		return matched;
 	}
 	
-	/* PRIVATE METHODS */
-
 	private StorageAreaManager(String stormBEHostname, int stormBEPort) throws Exception {
 		this.beHostname = stormBEHostname;
 		this.bePort = stormBEPort;
@@ -342,7 +336,7 @@ public class StorageAreaManager {
 		List<StorageArea> out = new ArrayList<StorageArea>();
 		for (StorageArea current : storageAreas) {
 			if (current.getProtocols().contains(reqProtocol)) {
-				if (isUserAuthorized(user, current.getFSRoot())) {
+				if (isUserAllowedAccess(user, current)) {
 					out.add(current);
 				}
 			}
@@ -350,26 +344,21 @@ public class StorageAreaManager {
 		return out;
 	}
 	
-	private boolean isUserAuthorized(UserCredentials user, String path) {
+	private boolean isUserAllowedAccess(UserCredentials user, StorageArea sa) {
+		if (sa.isHTTPReadable())
+			return true;
+		else if (user.isAnonymous())
+			return false;
+		
 		boolean response = false;
 		try {
-			response = StormAuthorizationUtils.isUserAuthorized(user, Constants.PREPARE_TO_GET_OPERATION, path);
+			response = StormAuthorizationUtils.isUserAuthorized(user, Constants.LS_OPERATION, sa.getFSRoot());
 		} catch (IllegalArgumentException e) {
-			e.printStackTrace();
+			log.error(e.getMessage(),e);
+			return false;
 		} catch (Exception e) {
-			e.printStackTrace();
-		}
-		if (!response && !user.isAnonymous()) {
-			/* Re-try as anonymous user: */
-			user.forceAnonymous();
-			try {
-				response = StormAuthorizationUtils.isUserAuthorized(user, Constants.PREPARE_TO_GET_OPERATION, path);
-			} catch (IllegalArgumentException e) {
-				e.printStackTrace();
-			} catch (Exception e) {
-				e.printStackTrace();
-			}
-			user.unforceAnonymous();
+			log.error(e.getMessage(),e);
+			return false;
 		}
 		return response;
 	}
