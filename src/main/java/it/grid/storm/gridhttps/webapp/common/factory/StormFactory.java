@@ -28,12 +28,9 @@ public abstract class StormFactory implements ResourceFactory {
 	private FileContentService contentService;
 	private File root;
 	SecurityManager securityManager;
-	Long maxAgeSeconds;
 	String contextPath;
 	boolean allowDirectoryBrowsing = true;
 
-	String defaultPage;
-	boolean digestAllowed = true;
 	private String localhostname;
 	
 	public StormFactory(String beHost, int bePort, File root, String contextPath) throws UnknownHostException, ApiException {

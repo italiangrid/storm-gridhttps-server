@@ -43,7 +43,6 @@ public class UserCredentials extends Object {
 	public UserCredentials(HttpHelper httpHelper) {
 		setHttpHelper(httpHelper);
 		initAsAnonymous();
-		initForcedAnonymous(false);
 		if (!getHttpHelper().isHttp()) {
 			//in case of https requests:
 			X509Certificate[] certChain = httpHelper.getX509Certificate();
@@ -70,10 +69,8 @@ public class UserCredentials extends Object {
 		}
 	}
 
-	/* public methods */
-
 	public String getUserDN() {
-		return isForcedAnonymous() ? getEmptyUserDN() : userDN;
+		return userDN;
 	}
 	
 	public String getRealUserDN() {
@@ -81,11 +78,11 @@ public class UserCredentials extends Object {
 	}
 
 	public ArrayList<String> getUserFQANS() {
-		return isForcedAnonymous() ? getEmptyUserFQANS() : userFQANS;
+		return userFQANS;
 	}
 	
 	public String getUserFQANSAsStr() {
-		if ((isForcedAnonymous()) || (userFQANS.isEmpty()))
+		if (userFQANS.isEmpty())
 			return "";
 		String out = userFQANS.get(0);
 		for (int i=1; i<userFQANS.size(); i++) {
@@ -95,20 +92,8 @@ public class UserCredentials extends Object {
 	}
 
 	public boolean isAnonymous() {
-		return isForcedAnonymous() || (getHttpHelper().isHttp() && isUserDNEmpty() && isUserFQANSEmpty());
+		return getHttpHelper().isHttp() && isUserDNEmpty() && isUserFQANSEmpty();
 	}
-
-	public void forceAnonymous() {
-		log.debug("forcing anonymous user");
-		getHttpHelper().getRequest().setAttribute("forced", true);
-	}
-
-	public void unforceAnonymous() {
-		log.debug("unforcing anonymous user");
-		getHttpHelper().getRequest().setAttribute("forced", false);
-	}
-
-	/* private methods */
 
 	private void setUserDN(String userDN) {
 		log.debug("DN: " + userDN);
@@ -124,15 +109,6 @@ public class UserCredentials extends Object {
 	private void initAsAnonymous() {
 		setUserDN(getEmptyUserDN());
 		setUserFQANS(getEmptyUserFQANS());
-	}
-
-	private void initForcedAnonymous(boolean value) {
-		log.debug("init forcing anonymous as " + value);
-		getHttpHelper().getRequest().setAttribute("forced", value);
-	}
-
-	private boolean isForcedAnonymous() {
-		return (Boolean) getHttpHelper().getRequest().getAttribute("forced");
 	}
 
 	private String getEmptyUserDN() {

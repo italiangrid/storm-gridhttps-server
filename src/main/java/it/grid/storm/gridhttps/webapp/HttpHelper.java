@@ -193,15 +193,6 @@ public class HttpHelper {
 	public boolean isHttps() {
 		return getRequestProtocol().equals("HTTPS");
 	}
-
-	public void sendError(int code, String description) {
-		try {
-			getResponse().sendError(code, description);
-		} catch (IOException e) {
-			log.error(e.getMessage());
-			e.printStackTrace();
-		}
-	}
 	
 	/* USER CREDENTIALS */
 	
