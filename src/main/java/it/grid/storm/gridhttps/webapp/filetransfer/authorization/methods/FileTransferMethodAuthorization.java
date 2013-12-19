@@ -12,35 +12,65 @@
  */
 package it.grid.storm.gridhttps.webapp.filetransfer.authorization.methods;
 
-import java.io.File;
+import javax.servlet.http.HttpServletResponse;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import it.grid.storm.gridhttps.common.storagearea.StorageArea;
+import it.grid.storm.gridhttps.common.storagearea.StorageAreaManager;
 import it.grid.storm.gridhttps.configuration.Configuration;
+import it.grid.storm.gridhttps.webapp.common.authorization.AuthorizationStatus;
+import it.grid.storm.gridhttps.webapp.common.authorization.StormAuthorizationUtils;
+import it.grid.storm.gridhttps.webapp.common.authorization.UserCredentials;
 import it.grid.storm.gridhttps.webapp.common.authorization.methods.AbstractMethodAuthorization;
+import it.grid.storm.gridhttps.webapp.common.exceptions.InvalidRequestException;
 
 public abstract class FileTransferMethodAuthorization extends AbstractMethodAuthorization {
-
-	private String contextPath;
+	
+	private static final Logger log = LoggerFactory.getLogger(FileTransferMethodAuthorization.class);
 	
 	public FileTransferMethodAuthorization() {		
-		this.setContextPath(Configuration.getGridhttpsInfo().getFiletransferContextPath());
+		super(Configuration.getGridhttpsInfo().getFiletransferContextPath());
 	}
 	
-	protected String stripContext(String path) {
-		if (this.getContextPath().isEmpty())
-			return path;
-		String contextPath = File.separator + this.getContextPath();
-		String stripped = path.replaceFirst(contextPath, "");
-		if (stripped.isEmpty())
-			return File.separator;
-		return stripped;
-	}
+	protected AuthorizationStatus askBEAuth(UserCredentials user,
+		String operation, String path) {
 
-	public String getContextPath() {
-		return contextPath;
+		boolean response = false;
+		try {
+			response = StormAuthorizationUtils
+				.isUserAuthorized(user, operation, path);
+		} catch (Throwable e) {
+			log.error(e.getMessage(), e);
+			return AuthorizationStatus.NOTAUTHORIZED(
+				HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
+				String.format("Internal Server Error: %s", e.getMessage()));
+		}
+		if (response) {
+			return AuthorizationStatus.AUTHORIZED();
+		}
+		return AuthorizationStatus.NOTAUTHORIZED(HttpServletResponse.SC_FORBIDDEN,
+			"You are not authorized to access the requested resource");
 	}
+	
+	protected StorageArea getMatchingSA(String path) throws InvalidRequestException {
+		StorageArea sa = StorageAreaManager.getMatchingSA(path);
+		if (sa == null) {
+			throw new InvalidRequestException(HttpServletResponse.SC_BAD_REQUEST, "Unable to resolve storage area for " + path);
+		}
+		return sa;
+	}
+	
+	protected AuthorizationStatus checkSA(StorageArea sa, String requestedProtocol) {
 
-	private void setContextPath(String contextPath) {
-		this.contextPath = contextPath;
+		if (!sa.isProtocol(requestedProtocol.toUpperCase())) {
+			return AuthorizationStatus.NOTAUTHORIZED(
+				HttpServletResponse.SC_FORBIDDEN,
+				String.format("Storage area %s doesn't support %s protocol",
+					sa.getName(), requestedProtocol));
+		}
+		return AuthorizationStatus.AUTHORIZED();
 	}
 
 }

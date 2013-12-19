@@ -12,6 +12,8 @@
  */
 package it.grid.storm.gridhttps.common.storagearea;
 
+import it.grid.storm.gridhttps.common.remotecall.ConfigDiscoveryServiceConstants.HttpPerms;
+
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -25,13 +27,14 @@ import org.slf4j.LoggerFactory;
  * @author Enrico Vianello
  */
 public class StorageArea {
-
+	
 	private static final Logger log = LoggerFactory.getLogger(StorageArea.class);
 	
 	private String name;
 	private String FSRoot;
 	private String stfnRoot;
 	private List<String> protocols;
+	private HttpPerms httpPerms;
 	
 	/**
 	 * @param name
@@ -41,13 +44,14 @@ public class StorageArea {
 	 * @param stfnRoot
 	 *            the storage file name root of the storage area
 	 */
-	public StorageArea(String name, String FSRoot, String stfnRoot, List<String> protocols) {
+	public StorageArea(String name, String FSRoot, String stfnRoot, List<String> protocols, HttpPerms httpPerms) {
 		this.name = name;
 		this.FSRoot = normalizePath(FSRoot);
 		this.stfnRoot = normalizePath(stfnRoot);
 		this.protocols = new ArrayList<String>();
 		for (String protocol : protocols)
 			this.protocols.add(protocol.toUpperCase());
+		this.httpPerms = httpPerms;
 	}
 
 	/**
@@ -113,14 +117,9 @@ public class StorageArea {
 		return out;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see java.lang.Object#toString()
-	 */
 	@Override
 	public String toString() {
-		return "StorageArea [name=" + name + ", root=" + FSRoot + ", stfnRoot=" + stfnRoot + ", protocol=" + getProtocols() + "]";
+		return "StorageArea [name=" + name + ", root=" + FSRoot + ", stfnRoot=" + stfnRoot + ", protocol=" + getProtocols() + ", httpPerms=" + httpPerms.name() + "]";
 	}
 
 	/**
@@ -153,6 +152,14 @@ public class StorageArea {
 			log.error(e.getMessage());
 		}
 		return false;
+	}
+	
+	public boolean isHTTPReadable() {
+		return !this.httpPerms.equals(HttpPerms.NOREAD);
+	}
+	
+	public boolean isHTTPWritable() {
+		return this.httpPerms.equals(HttpPerms.READWRITE);
 	}
 	
 }

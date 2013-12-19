@@ -10,6 +10,8 @@
  */
 package it.grid.storm.gridhttps.webapp;
 
+import java.util.concurrent.TimeUnit;
+
 import it.grid.storm.gridhttps.configuration.Configuration;
 
 import javax.servlet.ServletContextEvent;
@@ -31,6 +33,8 @@ import eu.emi.security.authn.x509.X509CertChainValidatorExt;
  */
 public class StormContextListener implements ServletContextListener {
 
+  public static final long VOMS_CACHE_LIFETIME = TimeUnit.MINUTES.toMillis(1);
+
   public static final Logger log = LoggerFactory
     .getLogger(StormContextListener.class);
 
@@ -41,7 +45,7 @@ public class StormContextListener implements ServletContextListener {
 
     if (Configuration.getGridhttpsInfo().isVomsCachingEnabled()){
       log.info("VOMS AA certificates validation cache enabled.");
-      certVal = new CachingCertificateValidator(certVal);
+      certVal = new CachingCertificateValidator(certVal, VOMS_CACHE_LIFETIME);
     }
 
     try {

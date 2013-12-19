@@ -33,13 +33,14 @@ public class FileTransferDirectoryResource extends StormDirectoryResource {
 	@Override
 	public Resource createNew(String name, InputStream in, Long length, String contentType) throws IOException, NotAuthorizedException,
 			ConflictException, BadRequestException {
-		log.debug("DirectoryResource PUT FILE disabled for fileTransfer");
-		return null;
+		log.debug("DirectoryResource PUT new file disabled for fileTransfer");
+		throw new NotAuthorizedException("Please perform an SRM prepareToPut request for such file before calling this method.", this);
 	}
 
 	public void sendContent(OutputStream out, Range range, Map<String, String> params, String contentType) throws IOException,
 			NotAuthorizedException {
 		log.debug("DirectoryResource GET DIRECTORY disabled for fileTransfer");
+		throw new NotAuthorizedException("The requested resource is not a file!", this);
 	}
 
 	public Long getMaxAgeSeconds(Auth auth) {

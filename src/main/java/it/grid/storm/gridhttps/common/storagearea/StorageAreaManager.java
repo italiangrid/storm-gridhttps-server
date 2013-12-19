@@ -13,7 +13,7 @@
 package it.grid.storm.gridhttps.common.storagearea;
 
 import it.grid.storm.gridhttps.common.remotecall.ConfigDiscoveryServiceConstants;
-import it.grid.storm.gridhttps.webapp.StormHTTPClient;
+import it.grid.storm.gridhttps.common.remotecall.ConfigDiscoveryServiceConstants.HttpPerms;
 import it.grid.storm.gridhttps.webapp.common.authorization.Constants;
 import it.grid.storm.gridhttps.webapp.common.authorization.StormAuthorizationUtils;
 import it.grid.storm.gridhttps.webapp.common.authorization.UserCredentials;
@@ -34,6 +34,7 @@ import org.apache.http.StatusLine;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
+import org.apache.http.impl.client.DefaultHttpClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -49,8 +50,6 @@ public class StorageAreaManager {
 	private HashMap<String, String> fsRootFromStfn;
 	private HashMap<String, String> stfnRootFromFs;
 
-	/* PUBLIC STATIC METHODS */
-
 	public static void init(String stormBEHostname, int stormBEPort) throws Exception {
 		SAManager = new StorageAreaManager(stormBEHostname, stormBEPort);
 	}
@@ -58,8 +57,6 @@ public class StorageAreaManager {
 	public static boolean isInitialized() {
 		return getInstance() != null;
 	}
-
-	/* PUBLIC METHODS */
 
 	public static StorageAreaManager getInstance() {
 		return SAManager;
@@ -129,7 +126,6 @@ public class StorageAreaManager {
 			log.error("Unable to match StorageArea, class not initialized. " + "Call init() first");
 			throw new IllegalStateException("Unable to match any StorageArea, class not initialized.");
 		}
-		log.debug("URI path = " + uriPath);
 		StorageArea matched = null;
 		log.debug("Looking for a StorageArea that matches " + uriPath);
 		for (StorageArea storageArea : StorageAreaManager.getInstance().getStorageAreas()) {
@@ -147,8 +143,6 @@ public class StorageAreaManager {
 		return matched;
 	}
 	
-	/* PRIVATE METHODS */
-
 	private StorageAreaManager(String stormBEHostname, int stormBEPort) throws Exception {
 		this.beHostname = stormBEHostname;
 		this.bePort = stormBEPort;
@@ -219,7 +213,7 @@ public class StorageAreaManager {
 	private HttpResponse callConfigDiscoveryService(URI uri) throws Exception {
 		log.info("Calling Configuration Discovery service at uri: " + uri);
 		HttpGet httpget = new HttpGet(uri);
-		HttpClient httpclient = StormHTTPClient.INSTANCE.getHTTPClient();
+		HttpClient httpclient = new DefaultHttpClient();
 		HttpResponse httpResponse = null;
 		try {
 			httpResponse = httpclient.execute(httpget);
@@ -286,6 +280,7 @@ public class StorageAreaManager {
 		String root = null;
 		ArrayList<String> stfnRootList = new ArrayList<String>();
 		ArrayList<String> protocolList = new ArrayList<String>();
+		HttpPerms httpPerms = HttpPerms.NOREAD;
 		String[] SAFields = sAEncoded.trim().split("" + ConfigDiscoveryServiceConstants.VFS_FIELD_SEPARATOR);
 		for (String SAField : SAFields) {
 			String[] keyValue = SAField.trim().split("" + ConfigDiscoveryServiceConstants.VFS_FIELD_MATCHER);
@@ -315,6 +310,11 @@ public class StorageAreaManager {
 				}
 				continue;
 			}
+			if (ConfigDiscoveryServiceConstants.VFS_ANONYMOUS_PERMS_KEY.equals(keyValue[0])) {
+				httpPerms = HttpPerms.valueOf(keyValue[1]);
+				log.debug("Found http-permissions: " + httpPerms);
+				continue;
+			}
 		}
 		if (name == null || root == null || stfnRootList.size() == 0) {
 			log.warn("Unable to decode the storage area. Some fileds are missin: name=" + name + " FSRoot=" + root + " stfnRootList="
@@ -322,7 +322,7 @@ public class StorageAreaManager {
 			throw new IllegalArgumentException("");
 		}
 		for (String stfnRoot : stfnRootList) {
-			StorageArea storageArea = new StorageArea(name, root, stfnRoot, protocolList);
+			StorageArea storageArea = new StorageArea(name, root, stfnRoot, protocolList, httpPerms);
 			log.info("Decoded storage area: " + storageArea.getName());
 			log.debug("- details: [" + storageArea.toString() + "]");
 			producedList.add(storageArea);
@@ -335,7 +335,7 @@ public class StorageAreaManager {
 		List<StorageArea> out = new ArrayList<StorageArea>();
 		for (StorageArea current : storageAreas) {
 			if (current.getProtocols().contains(reqProtocol)) {
-				if (isUserAuthorized(user, current.getFSRoot())) {
+				if (isUserAllowedAccess(user, current)) {
 					out.add(current);
 				}
 			}
@@ -343,27 +343,20 @@ public class StorageAreaManager {
 		return out;
 	}
 	
-	private boolean isUserAuthorized(UserCredentials user, String path) {
+	private boolean isUserAllowedAccess(UserCredentials user, StorageArea sa) {
+		if (sa.isHTTPReadable()) {
+			return true;
+		}
+		if (user.isAnonymous()) {
+			return false;
+		}
 		boolean response = false;
 		try {
-			response = StormAuthorizationUtils.isUserAuthorized(user, Constants.PREPARE_TO_GET_OPERATION, path);
-		} catch (IllegalArgumentException e) {
-			e.printStackTrace();
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-		if (!response && !user.isAnonymous()) {
-			/* Re-try as anonymous user: */
-			user.forceAnonymous();
-			try {
-				response = StormAuthorizationUtils.isUserAuthorized(user, Constants.PREPARE_TO_GET_OPERATION, path);
-			} catch (IllegalArgumentException e) {
-				e.printStackTrace();
-			} catch (Exception e) {
-				e.printStackTrace();
-			}
-			user.unforceAnonymous();
-		}
+			response = StormAuthorizationUtils.isUserAuthorized(user, Constants.LS_OPERATION, sa.getFSRoot());
+		} catch (Throwable e) {
+			log.error(e.getMessage(),e);
+			return false;
+		} 
 		return response;
 	}
 	

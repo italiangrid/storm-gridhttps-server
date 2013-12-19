@@ -101,9 +101,8 @@ public class StormResourceHelper {
 		
 		AbortRequest rollbackOp = new AbortRequest(surl, token);
 		RequestOutputData output = rollbackOp.executeAs(getHttpHelper().getUser(), this.getBackend());
-		if (!output.isSuccess()) {
-			throw new SRMOperationException(output.getStatus(), TSRMExceptionReason.SRMFAILURE);
-		}
+		if (!output.isSuccess())
+			log.warn("Failure on aborting surl " + surl + " with token " + token + ": " + output.getStatus().getExplanation());
 	}
 
 	/* MKCOL */
@@ -266,40 +265,6 @@ public class StormResourceHelper {
 			this.doAbortRequest(toReplace.getSurl(), oPtP.getToken());
 			throw new SRMOperationException(oPd.getStatus(), TSRMExceptionReason.SRMFAILURE);
 		}
-	}
-	
-	
-	/* STATUS OF PTG */
-
-	public SurlArrayRequestOutputData doPrepareToGetStatus(Surl source) throws SRMOperationException {
-		
-		PrepareToGetStatus operation = new PrepareToGetStatus(source);
-		SurlArrayRequestOutputData output = operation.executeAs(getHttpHelper().getUser(), this.getBackend());
-		if (!output.isSuccess()) {
-			throw new SRMOperationException(output.getStatus(), TSRMExceptionReason.SRMFAILURE);
-		}
-		return output;
-	}
-	
-	public SurlArrayRequestOutputData doPrepareToGetStatus(StormFileResource source) throws SRMOperationException {
-		
-		return this.doPrepareToGetStatus(source.getSurl());
-	}
-
-	/* STATUS OF PTP */
-
-	public SurlArrayRequestOutputData doPrepareToPutStatus(Surl source) throws SRMOperationException {
-		PrepareToPutStatus operation = new PrepareToPutStatus(source);
-		SurlArrayRequestOutputData output =  operation.executeAs(getHttpHelper().getUser(), this.getBackend());
-		if (!output.isSuccess()) {
-			throw new SRMOperationException(output.getStatus(), TSRMExceptionReason.SRMFAILURE);
-		}
-		return output;
-	}
-	
-	public SurlArrayRequestOutputData doPrepareToPutStatus(StormFileResource source) throws SRMOperationException {
-		
-		return this.doPrepareToPutStatus(source.getSurl());
 	}
 
 	/* COPY */

@@ -18,9 +18,7 @@ import it.grid.storm.gridhttps.configuration.Configuration;
 import it.grid.storm.gridhttps.webapp.common.checksum.ChecksumReadException;
 import it.grid.storm.gridhttps.webapp.common.checksum.ChecksumType;
 import it.grid.storm.gridhttps.webapp.common.checksum.algorithm.Adler32ChecksumAlgorithm;
-import it.grid.storm.gridhttps.webapp.common.checksum.algorithm.CRC32ChecksumAlgorithm;
 import it.grid.storm.gridhttps.webapp.common.checksum.algorithm.ChecksumAlgorithm;
-import it.grid.storm.gridhttps.webapp.common.checksum.algorithm.MDChecksumAlgorithm;
 import it.grid.storm.gridhttps.webapp.common.utils.Chronometer;
 
 import java.io.File;
@@ -104,15 +102,13 @@ public class StormContentService implements FileContentService {
 	
 	private ChecksumAlgorithm getChecksumAlgorithm(String checksumTypeStr) throws NoSuchAlgorithmException {
 		ChecksumType checksumType = ChecksumType.getChecksumAlgorithm(checksumTypeStr);
-		if (checksumType == null)
-			throw new NoSuchAlgorithmException(checksumTypeStr + " not a valid checksum algorithm!");
+		if (checksumType == null) {
+			throw new NoSuchAlgorithmException(String.format("%s is not a valid checksum algorithm!", checksumTypeStr));
+		}
 		if (checksumType.equals(ChecksumType.ADLER32)) {
 			return new Adler32ChecksumAlgorithm();
-		} else if (checksumType.equals(ChecksumType.CRC32)) {
-			return new CRC32ChecksumAlgorithm();
-		} else {
-			return new MDChecksumAlgorithm(checksumType.name());
 		}
+		throw new NoSuchAlgorithmException(String.format("%s is not a supported checksum algorithm!", checksumTypeStr));
 	}
 	
 	private void sendChecksum(File file, ChecksumType type, String checksum) {

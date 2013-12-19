@@ -12,143 +12,76 @@
  */
 package it.grid.storm.gridhttps.webapp.common.authorization;
 
-import it.grid.storm.gridhttps.webapp.HttpHelper;
-
-import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 
-import org.apache.commons.lang.StringUtils;
-import org.italiangrid.voms.VOMSAttribute;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+public class UserCredentials {
 
-public class UserCredentials extends Object {
-
-	private static final Logger log = LoggerFactory.getLogger(UserCredentials.class);
-
-	private final String EMPTY_USERDN = "";
+	private final static String EMPTY_USERDN = "";
+	private final static String EMPTY_FQANS_AS_STR = "";
+	private final static String ANONYMOUS = "anonymous";
 
 	private String userDN;
 	private ArrayList<String> userFQANS;
-	private HttpHelper httpHelper;
 
-	private HttpHelper getHttpHelper() {
-		return httpHelper;
+	public UserCredentials() {
+		this(EMPTY_USERDN, new ArrayList<String>());
 	}
 
-	private void setHttpHelper(HttpHelper httpHelper) {
-		this.httpHelper = httpHelper;
-	}
-
-	public UserCredentials(HttpHelper httpHelper) {
-		setHttpHelper(httpHelper);
-		initAsAnonymous();
-		initForcedAnonymous(false);
-		if (!getHttpHelper().isHttp()) {
-			//in case of https requests:
-			X509Certificate[] certChain = httpHelper.getX509Certificate();
-			if (certChain == null) {
-				log.warn("Failed to init VOMS Security Context! User initialized with empty DN and FQANs");
-				return;
-			}
-
-			getHttpHelper().getVOMSSecurityContext().setClientCertChain(certChain);
-			if (getHttpHelper().getVOMSSecurityContext().getClientName() != null)
-				setUserDN(getHttpHelper().getVOMSSecurityContext().getClientName());
-			
-			ArrayList<String> fqans = new ArrayList<String>();
-
-			for (VOMSAttribute voms : getHttpHelper().getVOMSSecurityContext().getVOMSAttributes())
-				fqans.addAll(voms.getFQANs());
-			
-			if (!fqans.isEmpty())
-				setUserFQANS(fqans);
-			
-			log.debug("User: " + this.getUserDN());
-		} else {
-			log.debug("User: anonymous");
-		}
-	}
-
-	/* public methods */
-
-	public String getUserDN() {
-		return isForcedAnonymous() ? getEmptyUserDN() : userDN;
+	public UserCredentials(String dn, ArrayList<String> fqans) {
+		setUserDN(dn);
+		setUserFQANS(fqans);
 	}
 	
-	public String getRealUserDN() {
+	public String getUserDN() {
 		return userDN;
 	}
 
 	public ArrayList<String> getUserFQANS() {
-		return isForcedAnonymous() ? getEmptyUserFQANS() : userFQANS;
+		return userFQANS;
 	}
 	
 	public String getUserFQANSAsStr() {
-		if ((isForcedAnonymous()) || (userFQANS.isEmpty()))
-			return "";
+		if (userFQANS.isEmpty()) {
+			return EMPTY_FQANS_AS_STR;
+		}
 		String out = userFQANS.get(0);
 		for (int i=1; i<userFQANS.size(); i++) {
-			out += userFQANS.get(i);
+			out += ", " + userFQANS.get(i);
 		}
 		return out;
 	}
 
 	public boolean isAnonymous() {
-		return isForcedAnonymous() || (getHttpHelper().isHttp() && isUserDNEmpty() && isUserFQANSEmpty());
+		return userDN.isEmpty() && userFQANS.isEmpty();
 	}
-
-	public void forceAnonymous() {
-		log.debug("forcing anonymous user");
-		getHttpHelper().getRequest().setAttribute("forced", true);
-	}
-
-	public void unforceAnonymous() {
-		log.debug("unforcing anonymous user");
-		getHttpHelper().getRequest().setAttribute("forced", false);
-	}
-
-	/* private methods */
 
 	private void setUserDN(String userDN) {
-		log.debug("DN: " + userDN);
 		this.userDN = userDN;
 	}
 
 	private void setUserFQANS(ArrayList<String> userFQANS) {
-		String s = StringUtils.join(userFQANS, ",");
-		log.debug("FQANS: " + s);
 		this.userFQANS = userFQANS;
 	}
 	
-	private void initAsAnonymous() {
-		setUserDN(getEmptyUserDN());
-		setUserFQANS(getEmptyUserFQANS());
+	public String getShortName() {
+		return isAnonymous() ? ANONYMOUS : userDN;
 	}
-
-	private void initForcedAnonymous(boolean value) {
-		log.debug("init forcing anonymous as " + value);
-		getHttpHelper().getRequest().setAttribute("forced", value);
+	
+	public String getFullName() {
+		if (isAnonymous()) {
+			return ANONYMOUS;
+		}
+		if (userFQANS.isEmpty()) {
+			return userDN;
+		} 
+		return String.format("userDN %s with fqans {%s}", userDN, getUserFQANSAsStr());
 	}
-
-	private boolean isForcedAnonymous() {
-		return (Boolean) getHttpHelper().getRequest().getAttribute("forced");
-	}
-
-	private String getEmptyUserDN() {
-		return EMPTY_USERDN;
-	}
-
-	private ArrayList<String> getEmptyUserFQANS() {
-		return new ArrayList<String>();
-	}
-
-	private boolean isUserDNEmpty() {
-		return getUserDN().isEmpty();
-	}
-
-	private boolean isUserFQANSEmpty() {
-		return getUserFQANS().isEmpty();
+	
+	public String toString() {
+		if (isAnonymous()) {
+			return String.format("[%s]", ANONYMOUS);
+		}
+		return String.format("[dn=%s, fqans={%s}]", userDN, getUserFQANSAsStr());
 	}
 
 }

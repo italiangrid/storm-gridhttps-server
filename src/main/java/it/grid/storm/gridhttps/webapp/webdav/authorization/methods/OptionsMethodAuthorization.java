@@ -15,7 +15,6 @@ package it.grid.storm.gridhttps.webapp.webdav.authorization.methods;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import it.grid.storm.gridhttps.webapp.common.authorization.AuthorizationException;
 import it.grid.storm.gridhttps.webapp.common.authorization.AuthorizationStatus;
 import it.grid.storm.gridhttps.webapp.common.authorization.UserCredentials;
 
@@ -27,8 +26,7 @@ public class OptionsMethodAuthorization extends WebDAVMethodAuthorization {
 
 	@Override
 	public AuthorizationStatus isUserAuthorized(HttpServletRequest request,
-		HttpServletResponse response, UserCredentials user)
-		throws AuthorizationException {
+		HttpServletResponse response, UserCredentials user) {
 
 		return AuthorizationStatus.AUTHORIZED();
 	}
