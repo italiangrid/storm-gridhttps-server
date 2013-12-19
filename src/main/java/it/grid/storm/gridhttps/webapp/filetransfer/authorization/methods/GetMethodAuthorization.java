@@ -21,12 +21,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import it.grid.storm.gridhttps.common.storagearea.StorageArea;
-import it.grid.storm.gridhttps.common.storagearea.StorageAreaManager;
 import it.grid.storm.gridhttps.webapp.HttpHelper;
 import it.grid.storm.gridhttps.webapp.common.authorization.AuthorizationException;
 import it.grid.storm.gridhttps.webapp.common.authorization.AuthorizationStatus;
 import it.grid.storm.gridhttps.webapp.common.authorization.Constants;
 import it.grid.storm.gridhttps.webapp.common.authorization.UserCredentials;
+import it.grid.storm.gridhttps.webapp.common.exceptions.InvalidRequestException;
 
 public class GetMethodAuthorization extends FileTransferMethodAuthorization {
 
@@ -39,31 +39,33 @@ public class GetMethodAuthorization extends FileTransferMethodAuthorization {
 	@Override
 	public AuthorizationStatus isUserAuthorized(HttpServletRequest request,
 		HttpServletResponse response, UserCredentials user)
-		throws AuthorizationException {
+		throws AuthorizationException, InvalidRequestException {
 
 		HttpHelper httpHelper = new HttpHelper(request, response);
 		
 		String srcPath = this.stripContext(httpHelper.getRequestURI().getRawPath());
-		log.debug(getClass().getSimpleName() + ": path = " + srcPath);
+		StorageArea srcSA = getMatchingSA(srcPath);
+		log.debug("path {} matches storage area {}", srcPath, srcSA.getName());
+		AuthorizationStatus status = checkSA(srcSA, httpHelper.getRequestProtocol());
+		if (!status.isAuthorized()) {
+			return status;
+		}
 		
-		StorageArea srcSA = StorageAreaManager.getMatchingSA(srcPath);
-		if (srcSA == null)
-			return AuthorizationStatus.NOTAUTHORIZED(400, "Unable to resolve storage area!");
-		log.debug(getClass().getSimpleName() + ": storage area = " + srcSA.getName());
-		if (!srcSA.isProtocol(httpHelper.getRequestProtocol().toUpperCase()))
-			return AuthorizationStatus.NOTAUTHORIZED(401, "Storage area " + srcSA.getName() + " doesn't support " + httpHelper.getRequestProtocol() + " protocol");
+		if (!srcSA.isHTTPReadable() && user.isAnonymous()) {
+			return AuthorizationStatus.NOTAUTHORIZED(HttpServletResponse.SC_FORBIDDEN, "Unauthorized: Anonymous users are not authorized to read " + httpHelper.getRequestStringURI());
+		}
+		if (srcSA.isHTTPReadable() && user.isAnonymous()) {
+			return super.askBEAuth(user, Constants.READ_OPERATION, srcSA.getRealPath(srcPath));
+		} 
 		
 		File resource = new File(srcSA.getRealPath(srcPath));
-		
-		if (srcSA.isHTTPReadable())
-			if (!resource.exists() || resource.isDirectory()) 
-				return AuthorizationStatus.NOTAUTHORIZED(404, "Not Found");
-			else 
-				return AuthorizationStatus.AUTHORIZED();
-		else if (user.isAnonymous()) 
-			return AuthorizationStatus.NOTAUTHORIZED(405, "Anonymous users are not authorized to read " + httpHelper.getRequestStringURI());
-		else
-			return super.askBEAuth(user, Constants.READ_OPERATION, srcSA.getRealPath(srcPath));
+		if (!resource.exists()) {
+			return AuthorizationStatus.NOTAUTHORIZED(HttpServletResponse.SC_NOT_FOUND, "Not Found");
+		} else if (resource.isDirectory()) {
+			return AuthorizationStatus.NOTAUTHORIZED(HttpServletResponse.SC_METHOD_NOT_ALLOWED, "Method Not Allowed: the requested resource is not a file");
+		} else { 
+			return AuthorizationStatus.AUTHORIZED();
+		}
 	}
 	
 }

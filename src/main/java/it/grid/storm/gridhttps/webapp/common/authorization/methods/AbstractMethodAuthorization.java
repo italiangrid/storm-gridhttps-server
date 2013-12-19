@@ -30,7 +30,10 @@ public abstract class AbstractMethodAuthorization {
 		this.setContextPath(contextPath);
 	}
 	
-	public abstract AuthorizationStatus isUserAuthorized(HttpServletRequest request, HttpServletResponse response, UserCredentials user) throws AuthorizationException, InvalidRequestException;
+	public abstract AuthorizationStatus isUserAuthorized(
+		HttpServletRequest request, HttpServletResponse response,
+		UserCredentials user) throws AuthorizationException,
+		InvalidRequestException;
 	
 	protected String stripContext(String path) {
 		if (this.getContextPath().isEmpty()) {

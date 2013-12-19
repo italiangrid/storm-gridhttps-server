@@ -12,15 +12,20 @@
  */
 package it.grid.storm.gridhttps.webapp.filetransfer.authorization.methods;
 
+import javax.servlet.http.HttpServletResponse;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import it.grid.storm.gridhttps.common.storagearea.StorageArea;
+import it.grid.storm.gridhttps.common.storagearea.StorageAreaManager;
 import it.grid.storm.gridhttps.configuration.Configuration;
 import it.grid.storm.gridhttps.webapp.common.authorization.AuthorizationException;
 import it.grid.storm.gridhttps.webapp.common.authorization.AuthorizationStatus;
 import it.grid.storm.gridhttps.webapp.common.authorization.StormAuthorizationUtils;
 import it.grid.storm.gridhttps.webapp.common.authorization.UserCredentials;
 import it.grid.storm.gridhttps.webapp.common.authorization.methods.AbstractMethodAuthorization;
+import it.grid.storm.gridhttps.webapp.common.exceptions.InvalidRequestException;
 
 public abstract class FileTransferMethodAuthorization extends AbstractMethodAuthorization {
 	
@@ -29,23 +34,40 @@ public abstract class FileTransferMethodAuthorization extends AbstractMethodAuth
 	public FileTransferMethodAuthorization() {		
 		super(Configuration.getGridhttpsInfo().getFiletransferContextPath());
 	}
-
+	
 	protected AuthorizationStatus askBEAuth(UserCredentials user, String operation, String path) {	
 		boolean response = false;
 		try {
 			response = StormAuthorizationUtils.isUserAuthorized(user, operation, path);
 		} catch (AuthorizationException e) {
 			log.error(e.getMessage(), e);
-			return AuthorizationStatus.NOTAUTHORIZED(500, "Internal Server Error: " + e.getMessage());
+			return AuthorizationStatus.NOTAUTHORIZED(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Internal Server Error: " + e.getMessage());
 		} catch (IllegalArgumentException e) {
 			log.error(e.getMessage(), e);
-			return AuthorizationStatus.NOTAUTHORIZED(500, "Internal Server Error: " + e.getMessage());
+			return AuthorizationStatus.NOTAUTHORIZED(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Internal Server Error: " + e.getMessage());
 		}
 		if (response) {
 			return AuthorizationStatus.AUTHORIZED();
-		} else {
-			return AuthorizationStatus.NOTAUTHORIZED(403, "You are not authorized to access the requested resource");
 		}
+		return AuthorizationStatus.NOTAUTHORIZED(HttpServletResponse.SC_FORBIDDEN, "You are not authorized to access the requested resource");
+	}
+	
+	protected StorageArea getMatchingSA(String path) throws InvalidRequestException {
+		StorageArea sa = StorageAreaManager.getMatchingSA(path);
+		if (sa == null) {
+			throw new InvalidRequestException(HttpServletResponse.SC_BAD_REQUEST, "Unable to resolve storage area!");
+		}
+		return sa;
+	}
+	
+	protected AuthorizationStatus checkSA(StorageArea sa, String requestedProtocol) {
+
+		if (!sa.isProtocol(requestedProtocol.toUpperCase())) {
+			return AuthorizationStatus.NOTAUTHORIZED(
+				HttpServletResponse.SC_FORBIDDEN, "Storage area " + sa.getName()
+					+ " doesn't support " + requestedProtocol + " protocol");
+		}
+		return AuthorizationStatus.AUTHORIZED();
 	}
 
 }

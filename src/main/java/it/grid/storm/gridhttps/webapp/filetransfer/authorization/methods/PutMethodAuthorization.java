@@ -21,13 +21,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import it.grid.storm.gridhttps.common.storagearea.StorageArea;
-import it.grid.storm.gridhttps.common.storagearea.StorageAreaManager;
 import it.grid.storm.gridhttps.webapp.HttpHelper;
-import it.grid.storm.gridhttps.webapp.common.Surl;
 import it.grid.storm.gridhttps.webapp.common.authorization.AuthorizationException;
 import it.grid.storm.gridhttps.webapp.common.authorization.AuthorizationStatus;
 import it.grid.storm.gridhttps.webapp.common.authorization.Constants;
 import it.grid.storm.gridhttps.webapp.common.authorization.UserCredentials;
+import it.grid.storm.gridhttps.webapp.common.exceptions.InvalidRequestException;
 
 public class PutMethodAuthorization extends FileTransferMethodAuthorization {
 
@@ -40,32 +39,35 @@ public class PutMethodAuthorization extends FileTransferMethodAuthorization {
 	@Override
 	public AuthorizationStatus isUserAuthorized(HttpServletRequest request,
 		HttpServletResponse response, UserCredentials user)
-		throws AuthorizationException {
+		throws AuthorizationException, InvalidRequestException {
 
 		HttpHelper httpHelper = new HttpHelper(request, response);
-
+		
 		String srcPath = this.stripContext(httpHelper.getRequestURI().getRawPath());
-		log.debug(getClass().getSimpleName() + ": path = " + srcPath);
-		
-		StorageArea srcSA = StorageAreaManager.getMatchingSA(srcPath);
-		if (srcSA == null)
-			return AuthorizationStatus.NOTAUTHORIZED(400, "Unable to resolve storage area!");
-		log.debug(getClass().getSimpleName() + ": storage area = " + srcSA.getName());
-		if (!srcSA.isProtocol(httpHelper.getRequestProtocol().toUpperCase()))
-			return AuthorizationStatus.NOTAUTHORIZED(401, "Storage area " + srcSA.getName() + " doesn't support " + httpHelper.getRequestProtocol() + " protocol");
-		
+		StorageArea srcSA = getMatchingSA(srcPath);
+		log.debug("path {} matches storage area {}", srcPath, srcSA.getName());
+		AuthorizationStatus status = checkSA(srcSA, httpHelper.getRequestProtocol());
+		if (!status.isAuthorized()) {
+			return status;
+		}
+
 		File resource = new File(srcSA.getRealPath(srcPath));
-		
-		if (srcSA.isHTTPWritable())
-			if (!resource.exists()) 
-				return AuthorizationStatus.NOTAUTHORIZED(412, "File not exist! You must do a prepare-to-put on surl '" + new Surl(resource, srcSA) + "' before!");
-			else if (!resource.isFile())
-				return AuthorizationStatus.NOTAUTHORIZED(400, "Resource required already exists and is not a file");
-			else
+		if (srcSA.isHTTPWritable()) {
+			/* Anonymous or not, user can always write */
+			if (!resource.exists()) {
+				/* It's impossible that a PtP has been done if the resource doesn't exist */
+				return AuthorizationStatus.NOTAUTHORIZED(HttpServletResponse.SC_PRECONDITION_FAILED, "Precondition Failed: File doesn't exist! Please perform an SRM prepareToPut request for such file before calling this method.");
+			} else if (!resource.isFile()) {
+				/* Can't put on a directory */
+				return AuthorizationStatus.NOTAUTHORIZED(HttpServletResponse.SC_METHOD_NOT_ALLOWED, "Method Not Allowed: Resource required already exists and is not a file");
+			} else {
 				return AuthorizationStatus.AUTHORIZED();
-		else if (user.isAnonymous())
-			return AuthorizationStatus.NOTAUTHORIZED(405, "Anonymous users are not authorized to read " + httpHelper.getRequestStringURI());
-		else
+			}
+		} else if (user.isAnonymous()) {
+			/* SA is not writable by anonymous users */
+			return AuthorizationStatus.NOTAUTHORIZED(HttpServletResponse.SC_FORBIDDEN, "Unauthorized: Anonymous users are not authorized to read " + httpHelper.getRequestStringURI());
+		} else {
 			return super.askBEAuth(user, Constants.WRITE_OPERATION, srcSA.getRealPath(srcPath));
+		}
 	}	
 }
