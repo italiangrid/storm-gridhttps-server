@@ -344,21 +344,19 @@ public class StorageAreaManager {
 	}
 	
 	private boolean isUserAllowedAccess(UserCredentials user, StorageArea sa) {
-		if (sa.isHTTPReadable())
+		if (sa.isHTTPReadable()) {
 			return true;
-		else if (user.isAnonymous())
+		}
+		if (user.isAnonymous()) {
 			return false;
-		
+		}
 		boolean response = false;
 		try {
 			response = StormAuthorizationUtils.isUserAuthorized(user, Constants.LS_OPERATION, sa.getFSRoot());
-		} catch (IllegalArgumentException e) {
+		} catch (Throwable e) {
 			log.error(e.getMessage(),e);
 			return false;
-		} catch (Exception e) {
-			log.error(e.getMessage(),e);
-			return false;
-		}
+		} 
 		return response;
 	}
 	
