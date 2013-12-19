@@ -19,11 +19,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import it.grid.storm.gridhttps.common.storagearea.StorageArea;
-import it.grid.storm.gridhttps.common.storagearea.StorageAreaManager;
 import it.grid.storm.gridhttps.webapp.HttpHelper;
 import it.grid.storm.gridhttps.webapp.common.authorization.AuthorizationException;
 import it.grid.storm.gridhttps.webapp.common.authorization.AuthorizationStatus;
 import it.grid.storm.gridhttps.webapp.common.authorization.UserCredentials;
+import it.grid.storm.gridhttps.webapp.common.exceptions.InvalidRequestException;
 
 public class CopyMethodAuthorization extends WebDAVMethodAuthorization {
 
@@ -36,45 +36,37 @@ public class CopyMethodAuthorization extends WebDAVMethodAuthorization {
 	@Override
 	public AuthorizationStatus isUserAuthorized(HttpServletRequest request,
 		HttpServletResponse response, UserCredentials user)
-		throws AuthorizationException {
+		throws AuthorizationException, InvalidRequestException {
 
 		HttpHelper httpHelper = new HttpHelper(request, response);
 		
-		if (!httpHelper.hasDestinationHeader())
-			return AuthorizationStatus.NOTAUTHORIZED(400, "No destination header found");
+		if (!httpHelper.hasDestinationHeader()) {
+			return AuthorizationStatus.NOTAUTHORIZED(HttpServletResponse.SC_BAD_REQUEST, "No destination header found");
+		}
 		
 		String srcPath = this.stripContext(httpHelper.getRequestURI().getRawPath());
-		log.debug(getClass().getSimpleName() + ": from path = " + srcPath);
 		String destPath = this.stripContext(httpHelper.getDestinationURI().getRawPath());
-		log.debug(getClass().getSimpleName() + ": to path = " + destPath);
 		
-		if (srcPath.equals(destPath))
-			return AuthorizationStatus.NOTAUTHORIZED(403, "The source and destination URIs are the same!");
+		if (srcPath.equals(destPath)) {
+			return AuthorizationStatus.NOTAUTHORIZED(HttpServletResponse.SC_FORBIDDEN, "The source and destination URIs are the same!");
+		}
 		
-		StorageArea srcSA = StorageAreaManager.getMatchingSA(srcPath);
-		if (srcSA == null)
-			return AuthorizationStatus.NOTAUTHORIZED(400, "Unable to resolve storage area!");
-		log.debug(getClass().getSimpleName() + ": from storage area = " + srcSA.getName());
-		if (!srcSA.isProtocol(httpHelper.getRequestProtocol().toUpperCase()))
-			return AuthorizationStatus.NOTAUTHORIZED(401, "Storage area " + srcSA.getName() + " doesn't support " + httpHelper.getRequestProtocol() + " protocol");
+		StorageArea srcSA = getMatchingSA(srcPath);
+		log.debug("path {} matches storage area {}", srcPath, srcSA.getName());
+		StorageArea destSA = getMatchingSA(destPath);
+		log.debug("path {} matches storage area {}", destPath, destSA.getName());
 		
-		StorageArea destSA = StorageAreaManager.getMatchingSA(destPath);
-		if (destSA == null)
-			return AuthorizationStatus.NOTAUTHORIZED(400, "Unable to resolve storage area!");
-		log.debug(getClass().getSimpleName() + ": to storage area = " + destSA.getName());
-		if (!destSA.isProtocol(httpHelper.getDestinationProtocol().toUpperCase()))
-			return AuthorizationStatus.NOTAUTHORIZED(401, "Storage area " + destSA.getName() + " doesn't support " + httpHelper.getDestinationProtocol() + " protocol");
-		
-		AuthorizationStatus srcResponse;
-		
-		if (destSA.getName().equals(srcSA.getName()))
-			return super.isAuthorized(request.getScheme(), srcSA, Operation.READWRITE, user);
-		
-		srcResponse = super.isAuthorized(request.getScheme(), srcSA, Operation.READ, user);
-		if (!srcResponse.isAuthorized())
-			return srcResponse;
-		
-		return super.isAuthorized(request.getScheme(), destSA, Operation.READWRITE, user);
+		if (destSA.getName().equals(srcSA.getName())) {
+			log.debug("source and destination storage area are the same");
+			return super.isAuthorized(request.getScheme(), srcSA, Permission.READWRITE, user);
+		} else {
+			log.debug("source and destination storage area are different");
+			AuthorizationStatus status = super.isAuthorized(request.getScheme(), srcSA, Permission.READ, user);
+			if (!status.isAuthorized()) {
+				return status;
+			}
+			return super.isAuthorized(request.getScheme(), destSA, Permission.READWRITE, user);
+		}
 	}
 
 }

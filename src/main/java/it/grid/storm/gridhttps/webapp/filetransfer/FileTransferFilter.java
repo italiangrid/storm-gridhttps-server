@@ -22,13 +22,19 @@ import io.milton.servlet.MiltonServlet;
 import it.grid.storm.gridhttps.webapp.HttpHelper;
 import it.grid.storm.gridhttps.webapp.StormStandardFilter;
 import it.grid.storm.gridhttps.webapp.common.authorization.AuthorizationException;
-import it.grid.storm.gridhttps.webapp.common.authorization.AuthorizationFilter;
 import it.grid.storm.gridhttps.webapp.common.authorization.AuthorizationStatus;
 import it.grid.storm.gridhttps.webapp.common.authorization.UserCredentials;
-import it.grid.storm.gridhttps.webapp.filetransfer.authorization.FileTransferAuthorizationFilter;
+import it.grid.storm.gridhttps.webapp.common.authorization.Constants.FTStoRMSupportedMethod;
+import it.grid.storm.gridhttps.webapp.common.exceptions.InternalErrorException;
+import it.grid.storm.gridhttps.webapp.common.exceptions.InvalidRequestException;
+import it.grid.storm.gridhttps.webapp.filetransfer.authorization.methods.FileTransferMethodAuthorization;
+import it.grid.storm.gridhttps.webapp.filetransfer.authorization.methods.GetMethodAuthorization;
+import it.grid.storm.gridhttps.webapp.filetransfer.authorization.methods.HeadMethodAuthorization;
+import it.grid.storm.gridhttps.webapp.filetransfer.authorization.methods.PutMethodAuthorization;
 import it.grid.storm.gridhttps.webapp.filetransfer.factory.FileSystemResourceFactory;
 
 import java.io.IOException;
+import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 
 import javax.servlet.Filter;
@@ -40,6 +46,7 @@ import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.italiangrid.voms.VOMSAttribute;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -49,7 +56,6 @@ public class FileTransferFilter implements Filter {
 	
 	private FilterConfig filterConfig;
 	private HttpManager httpManager;
-	private AuthorizationFilter authFilter = new FileTransferAuthorizationFilter();
 	
 	@Override
 	public void init(FilterConfig filterConfig) throws ServletException {
@@ -83,69 +89,104 @@ public class FileTransferFilter implements Filter {
 		FilterChain chain) throws IOException, ServletException {
 
 		HttpHelper httpHelper = null;
+		UserCredentials user = null;
+		
 		try {
 			httpHelper = new HttpHelper((HttpServletRequest) request, (HttpServletResponse) response);
-		} catch (Exception e) {
-			log.error(e.getMessage());
-			sendError((HttpServletResponse) response, HttpServletResponse.SC_BAD_REQUEST, e.getMessage());
-			return;
-		}
+			user = getUser(httpHelper);
+			log.debug("User: {}", user);
+			httpHelper.setUser(user);
+			printInCommand(httpHelper, user);
+			checkIfRequestIsValid(httpHelper);
 		
-		UserCredentials user = httpHelper.getUser();
-		
-		printCommand(httpHelper, user);
-
-		String requestedPath = httpHelper.getRequestURI().getRawPath();
-		log.debug("Requested-URI: " + requestedPath);
-				
-		AuthorizationStatus status = null;
-		try {
-			status = this.authFilter.isUserAuthorized((HttpServletRequest) request, (HttpServletResponse) response, user);
-		} catch (AuthorizationException e) {
-			log.error(e.getMessage());
-			status = AuthorizationStatus.NOTAUTHORIZED(400, e.getMessage());
-		}
-		if (status.isAuthorized()) {
-			log.debug(getAuthorizedMsg(httpHelper, user));
-			doMiltonProcessing((HttpServletRequest) request, (HttpServletResponse) response);
-		} else {
-			log.warn(getUnAuthorizedMsg(httpHelper, user, status.getReason()));
-			sendError(httpHelper.getResponse(), status.getErrorCode(), status.getReason());
-			return;
+			FileTransferMethodAuthorization handler = getAuthorizationMethodHandler(FTStoRMSupportedMethod.valueOf(httpHelper.getRequestMethod()));
+			AuthorizationStatus	status = handler.isUserAuthorized(httpHelper.getRequest(), httpHelper.getResponse(), user);
+			
+			if (status.isAuthorized()) {
+				log.debug("Processing a FileTransfer request");
+				doMiltonProcessing((HttpServletRequest) request, (HttpServletResponse) response);
+			} else {
+				log.debug("User is not authorized: {}", status.getReason());
+				sendError(httpHelper.getResponse(), status.getErrorCode(), status.getReason());
+			}
+			
+		} catch (InvalidRequestException e) {
+			log.error(e.getMessage(), e);
+			sendError((HttpServletResponse) response, e.getErrorcode(), e.getMessage());
+		} catch (Throwable e) {
+			log.error(e.getMessage(), e);
+			sendError(httpHelper.getResponse(), HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Internal Server Error: " + e.getMessage());
+		} finally {
+			printOutCommand(httpHelper, user);
 		}
 	}
 	
-	private String getAuthorizedMsg(HttpHelper httpHelper, UserCredentials user) {
-		String userStr = user.getRealUserDN().isEmpty() ? "anonymous" : user.getRealUserDN();
-		String method = httpHelper.getRequestMethod();
-		String path = httpHelper.getRequestURI().getPath();
-		return "User '" + userStr + "' is authorized to " + method + " " + path;
+	private UserCredentials getUser(HttpHelper httpHelper) throws InternalErrorException {
+
+		if (httpHelper.isHttp()) {
+			return new UserCredentials();
+		}
+		X509Certificate[] certChain = httpHelper.getX509Certificate();
+		if (certChain == null) {
+			log.warn("Unable to get certificate chain from request header");
+			throw new InternalErrorException("Unable to get certificate chain from request header");
+		}
+		httpHelper.getVOMSSecurityContext().setClientCertChain(certChain);
+		String dn = httpHelper.getVOMSSecurityContext().getClientName();
+		if (dn == null) {
+			log.warn("Unable to get user DN from VOMS security context!");
+			throw new InternalErrorException("Unable to get user DN from VOMS security context!");
+		}
+		ArrayList<String> fqans = new ArrayList<String>();
+		for (VOMSAttribute voms : httpHelper.getVOMSSecurityContext()
+			.getVOMSAttributes())
+			fqans.addAll(voms.getFQANs());
+		return new UserCredentials(dn, fqans);
+	}
+	
+	private void checkIfRequestIsValid(HttpHelper httpHelper) throws InvalidRequestException {
+		
+		/* check method */
+		String method = httpHelper.getRequestMethod().toUpperCase();
+		if (!isSupportedFileTransferMethod(method)) {
+			throw new InvalidRequestException(HttpServletResponse.SC_METHOD_NOT_ALLOWED, method + "Method " + method + " is not supported by this StoRM instance!");
+		}
 	}
 
-	private String getUnAuthorizedMsg(HttpHelper httpHelper, UserCredentials user, String reason) {
-		String userStr = user.getRealUserDN().isEmpty() ? "anonymous" : user.getRealUserDN();
-		String method = httpHelper.getRequestMethod();
-		String path = httpHelper.getRequestURI().getPath();
-		return "User '" + userStr + "' is NOT authorized to " + method + " " + path + ": " + reason;
+	private boolean isSupportedFileTransferMethod(String method) {
+		return FTStoRMSupportedMethod.valueOf(method) != null;
 	}
-
-	private void printCommand(HttpHelper httpHelper, UserCredentials user) {
-		String fqans = user.getUserFQANSAsStr();
-		String userStr = user.getRealUserDN().isEmpty() ? "anonymous" : user.getRealUserDN();
-		userStr += fqans.isEmpty() ? "" : " with fqans '" + fqans + "'";
+	
+	private String getMessage(HttpHelper httpHelper, UserCredentials user) {
 		String method = httpHelper.getRequestMethod();
 		String path = httpHelper.getRequestURI().getPath();
 		String destination = httpHelper.hasDestinationHeader() ? " to " + httpHelper.getDestinationURI().getPath() : "";
 		String ipSender = httpHelper.getRequest().getRemoteAddr();
-		log.info(method + " " + path + destination + " from " + userStr + " ip " + ipSender);
+		return method + " " + path + destination + " from " + user.getFullName() + " ip " + ipSender;
+	}
+	
+	private void printInCommand(HttpHelper httpHelper, UserCredentials user) {
+		log.info("Received {}", getMessage(httpHelper, user));
+	}
+
+	private void printOutCommand(HttpHelper httpHelper, UserCredentials user) {
+		int code = httpHelper.getResponse().getStatus();
+    String text = (String) httpHelper.getRequest().getAttribute("STATUS_MSG");
+    String msg = getMessage(httpHelper, user) + " exited with " + code + (text != null ? " " + text : "");
+    if (code >= 400){
+        log.warn(msg);
+    }else if (code >= 500 && code < 600) {
+        log.error(msg);
+    } else {
+        log.info(msg);
+    }
 	}
 
 	private void sendError(HttpServletResponse response, int errorCode, String errorMessage) {
 		try {
 			response.sendError(errorCode, errorMessage);
 		} catch (IOException e) {
-			log.error(e.getMessage());
-			e.printStackTrace();
+			log.error(e.getMessage(), e);
 		}
 	}
 	
@@ -162,10 +203,19 @@ public class FileTransferFilter implements Filter {
 		}
 	}
 
+	private FileTransferMethodAuthorization getAuthorizationMethodHandler(FTStoRMSupportedMethod method) throws AuthorizationException {
+		switch (method) {
+		case GET:
+			return new GetMethodAuthorization();
+		case PUT:
+			return new PutMethodAuthorization();
+		case HEAD:
+			return new HeadMethodAuthorization();
+		}
+		throw new AuthorizationException("Invalid method!");
+	}
+	
 	@Override
 	public void destroy() {
 	}
-	
-	
-	
 }

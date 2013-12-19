@@ -126,7 +126,6 @@ public class StorageAreaManager {
 			log.error("Unable to match StorageArea, class not initialized. " + "Call init() first");
 			throw new IllegalStateException("Unable to match any StorageArea, class not initialized.");
 		}
-		log.debug("URI path = " + uriPath);
 		StorageArea matched = null;
 		log.debug("Looking for a StorageArea that matches " + uriPath);
 		for (StorageArea storageArea : StorageAreaManager.getInstance().getStorageAreas()) {

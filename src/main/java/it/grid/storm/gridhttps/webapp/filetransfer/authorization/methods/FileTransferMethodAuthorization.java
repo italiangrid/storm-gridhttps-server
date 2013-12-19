@@ -12,28 +12,39 @@
  */
 package it.grid.storm.gridhttps.webapp.filetransfer.authorization.methods;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import it.grid.storm.gridhttps.configuration.Configuration;
+import it.grid.storm.gridhttps.webapp.common.authorization.AuthorizationException;
 import it.grid.storm.gridhttps.webapp.common.authorization.AuthorizationStatus;
 import it.grid.storm.gridhttps.webapp.common.authorization.StormAuthorizationUtils;
 import it.grid.storm.gridhttps.webapp.common.authorization.UserCredentials;
 import it.grid.storm.gridhttps.webapp.common.authorization.methods.AbstractMethodAuthorization;
 
 public abstract class FileTransferMethodAuthorization extends AbstractMethodAuthorization {
-		
+	
+	private static final Logger log = LoggerFactory.getLogger(FileTransferMethodAuthorization.class);
+	
 	public FileTransferMethodAuthorization() {		
 		super(Configuration.getGridhttpsInfo().getFiletransferContextPath());
 	}
 
 	protected AuthorizationStatus askBEAuth(UserCredentials user, String operation, String path) {	
+		boolean response = false;
 		try {
-			boolean response = StormAuthorizationUtils.isUserAuthorized(user, operation, path);
-			if (response) {
-				return AuthorizationStatus.AUTHORIZED();
-			} else {
-				return AuthorizationStatus.NOTAUTHORIZED(401, "You are not authorized to access the requested resource");
-			}			
-		} catch (Throwable  t) {
-			return AuthorizationStatus.NOTAUTHORIZED(500, "Error: " + t.getMessage());
+			response = StormAuthorizationUtils.isUserAuthorized(user, operation, path);
+		} catch (AuthorizationException e) {
+			log.error(e.getMessage(), e);
+			return AuthorizationStatus.NOTAUTHORIZED(500, "Internal Server Error: " + e.getMessage());
+		} catch (IllegalArgumentException e) {
+			log.error(e.getMessage(), e);
+			return AuthorizationStatus.NOTAUTHORIZED(500, "Internal Server Error: " + e.getMessage());
+		}
+		if (response) {
+			return AuthorizationStatus.AUTHORIZED();
+		} else {
+			return AuthorizationStatus.NOTAUTHORIZED(403, "You are not authorized to access the requested resource");
 		}
 	}
 

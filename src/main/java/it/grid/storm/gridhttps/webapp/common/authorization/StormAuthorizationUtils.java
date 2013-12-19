@@ -43,7 +43,7 @@ public class StormAuthorizationUtils {
     .getGridhttpsInfo().isAuthzCallEnabled();
 
   public static boolean isUserAuthorized(UserCredentials user,
-    String operation, String path) throws Exception, IllegalArgumentException {
+    String operation, String path) throws IllegalArgumentException, AuthorizationException {
 
     if (path == null)
       throw new IllegalArgumentException(
@@ -106,7 +106,7 @@ public class StormAuthorizationUtils {
   }
 
   private static URI prepareURI(String resourcePath, String operation,
-    UserCredentials user) throws Exception {
+    UserCredentials user) throws AuthorizationException {
 
     log.debug("Encoding Authorization request parameters");
     String path;
@@ -120,7 +120,7 @@ public class StormAuthorizationUtils {
     } catch (UnsupportedEncodingException e) {
       log.error("Exception encoding the path \'" + resourcePath
         + "\' UnsupportedEncodingException: " + e.getMessage());
-      throw new Exception(
+      throw new AuthorizationException(
         "Unable to encode resourcePath paramether, unsupported encoding \'"
           + Constants.ENCODING_SCHEME + "\'");
     }
@@ -143,7 +143,7 @@ public class StormAuthorizationUtils {
       log
         .error("Unable to build Authorization Service URI. URISyntaxException "
           + e.getLocalizedMessage());
-      throw new Exception("Unable to build Authorization Service URI");
+      throw new AuthorizationException("Unable to build Authorization Service URI");
     }
     log.debug("Prepared URI : " + uri);
     return uri;

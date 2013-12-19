@@ -23,15 +23,28 @@ import it.grid.storm.gridhttps.common.storagearea.StorageAreaManager;
 import it.grid.storm.gridhttps.configuration.Configuration;
 import it.grid.storm.gridhttps.webapp.HttpHelper;
 import it.grid.storm.gridhttps.webapp.StormStandardFilter;
-import it.grid.storm.gridhttps.webapp.common.authorization.AuthorizationException;
 import it.grid.storm.gridhttps.webapp.common.authorization.AuthorizationStatus;
 import it.grid.storm.gridhttps.webapp.common.authorization.UserCredentials;
-import it.grid.storm.gridhttps.webapp.webdav.authorization.WebDAVAuthorizationFilter;
+import it.grid.storm.gridhttps.webapp.common.authorization.Constants.DavMethod;
+import it.grid.storm.gridhttps.webapp.common.authorization.Constants.DavStoRMSupportedMethod;
+import it.grid.storm.gridhttps.webapp.common.exceptions.InternalErrorException;
+import it.grid.storm.gridhttps.webapp.common.exceptions.InvalidRequestException;
+import it.grid.storm.gridhttps.webapp.webdav.authorization.methods.CopyMethodAuthorization;
+import it.grid.storm.gridhttps.webapp.webdav.authorization.methods.DeleteMethodAuthorization;
+import it.grid.storm.gridhttps.webapp.webdav.authorization.methods.GetMethodAuthorization;
+import it.grid.storm.gridhttps.webapp.webdav.authorization.methods.HeadMethodAuthorization;
+import it.grid.storm.gridhttps.webapp.webdav.authorization.methods.MkcolMethodAuthorization;
+import it.grid.storm.gridhttps.webapp.webdav.authorization.methods.MoveMethodAuthorization;
+import it.grid.storm.gridhttps.webapp.webdav.authorization.methods.OptionsMethodAuthorization;
+import it.grid.storm.gridhttps.webapp.webdav.authorization.methods.PropfindMethodAuthorization;
+import it.grid.storm.gridhttps.webapp.webdav.authorization.methods.PutMethodAuthorization;
+import it.grid.storm.gridhttps.webapp.webdav.authorization.methods.WebDAVMethodAuthorization;
 import it.grid.storm.gridhttps.webapp.webdav.factory.WebdavResourceFactory;
 import it.grid.storm.gridhttps.webapp.webdav.factory.html.StormHtmlRootPage;
 
 import java.io.File;
 import java.io.IOException;
+import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 
 import javax.servlet.Filter;
@@ -43,13 +56,14 @@ import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.italiangrid.voms.VOMSAttribute;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class WebDAVFilter implements Filter {
 
 	private static final Logger log = LoggerFactory.getLogger(WebDAVFilter.class);
-
+	
 	private ArrayList<String> rootPaths;
 	private HttpManager httpManager;
 	private FilterConfig filterConfig;
@@ -94,100 +108,93 @@ public class WebDAVFilter implements Filter {
 		FilterChain chain) throws IOException, ServletException {
 		
 		HttpHelper httpHelper = null;
+		UserCredentials user = null;
+		
 		try {
 			httpHelper = new HttpHelper((HttpServletRequest) request, (HttpServletResponse) response);
-		} catch (Exception e) {
-			log.error(e.getMessage());
-			sendError((HttpServletResponse) response, HttpServletResponse.SC_BAD_REQUEST, e.getMessage());
-			return;
-		}
-		
-		UserCredentials user = httpHelper.getUser();
-		printCommand(httpHelper, user);
-		String requestedPath = httpHelper.getRequestURI().getRawPath();
-		log.debug("Requested-URI: " + requestedPath);
-
-		if (isFavicon(requestedPath)) {
-			log.debug("Requested-URI is favicon");
-			return;
-		}
-		
-		AuthorizationStatus status = null;
-		try {
-			status = checkAuthorization(httpHelper, user, requestedPath);
-		} catch (AuthorizationException e) {
-			log.error(e.getMessage());
-			sendError(httpHelper.getResponse(), 500, e.getMessage());
-			return;
-		}
-		if (status.isAuthorized()) {
-			log.debug(getAuthorizedMsg(httpHelper, user));
-			if (isRootPath(requestedPath)) {
-				log.debug("Requested-URI is root");
-				processRootRequest(httpHelper, user);
+			user = getUser(httpHelper);
+			log.debug("User: {}", user);
+			httpHelper.setUser(user);
+			printInCommand(httpHelper, user);
+			checkIfRequestIsValid(httpHelper);
+			
+			AuthorizationStatus status = null;
+			if (isRootPath(httpHelper.getRequestURI().getRawPath())) {
+				status = AuthorizationStatus.AUTHORIZED();
 			} else {
-				doMiltonProcessing((HttpServletRequest) request, (HttpServletResponse) response);
+				WebDAVMethodAuthorization handler = getAuthorizationMethodHandler(DavStoRMSupportedMethod.valueOf(httpHelper.getRequestMethod()));
+				status = handler.isUserAuthorized(httpHelper.getRequest(), httpHelper.getResponse(), user);
 			}
-		} else {
-			log.warn(getUnAuthorizedMsg(httpHelper, user, status.getReason()));
-			sendError(httpHelper.getResponse(), status.getErrorCode(), status.getReason());
-			return;
-		}
-	}
-
-	private AuthorizationStatus checkAuthorization(HttpHelper httpHelper, UserCredentials user, String requestedPath) {
+			if (status.isAuthorized()) {
+				log.debug("User is authorized");
+				if (isRootPath(httpHelper.getRequestURI().getRawPath())) {
+					log.debug("Processing root page request");
+					processRootRequest(httpHelper, user);
+				} else {
+					log.debug("Processing a WebDAV request");
+					doMiltonProcessing((HttpServletRequest) request, (HttpServletResponse) response);
+				}
+			} else {
+				log.debug("User is not authorized: {}", status.getReason());
+				sendError(httpHelper.getResponse(), status.getErrorCode(), status.getReason());
+			}
 		
-		if (requestedPath.contains("%20")) {
-			log.error("Request URI '" + requestedPath + "' contains not allowed spaces!");
-			return AuthorizationStatus.NOTAUTHORIZED(400, "Request URI '" + requestedPath + "' contains not allowed spaces!");
+		} catch (InvalidRequestException e) {
+			log.error(e.getMessage(), e);
+			sendError((HttpServletResponse) response, e.getErrorcode(), e.getMessage());
+		} catch (Throwable e) {
+			log.error(e.getMessage(), e);
+			sendError(httpHelper.getResponse(), HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Internal Server Error: " + e.getMessage());
+		} finally {
+			printOutCommand(httpHelper, user);
 		}
-		if (isRootPath(requestedPath)) {
-			log.debug(this.getClass().getSimpleName() + ": is root path");
-			return AuthorizationStatus.AUTHORIZED();
+	}
+
+	private UserCredentials getUser(HttpHelper httpHelper) throws InternalErrorException {
+
+		if (httpHelper.isHttp()) {
+			return new UserCredentials();
 		}
-		return (new WebDAVAuthorizationFilter()).isUserAuthorized(httpHelper.getRequest(), httpHelper.getResponse(), user);
-}
-
-	private String getAuthorizedMsg(HttpHelper httpHelper, UserCredentials user) {
-		String userStr = user.isAnonymous() ? "anonymous" : user.getRealUserDN();
-		String method = httpHelper.getRequestMethod();
-		String path = httpHelper.getRequestURI().getPath();
-		return "User '" + userStr + "' is authorized to " + method + " " + path;
-	}
-
-	private String getUnAuthorizedMsg(HttpHelper httpHelper, UserCredentials user, String reason) {
-		String userStr = user.isAnonymous() ? "anonymous" : user.getRealUserDN();
-		String method = httpHelper.getRequestMethod();
-		String path = httpHelper.getRequestURI().getPath();
-		return "User '" + userStr + "' is NOT authorized to " + method + " " + path + ": " + reason;
-	}
-
-	private void printCommand(HttpHelper httpHelper, UserCredentials user) {
-		String fqans = user.getUserFQANSAsStr();
-		String userStr = user.isAnonymous() ? "anonymous" : user.getRealUserDN();
-		userStr += fqans.isEmpty() ? "" : " with fqans '" + fqans + "'";
-		String method = httpHelper.getRequestMethod();
-		String path = httpHelper.getRequestURI().getPath();
-		String destination = httpHelper.hasDestinationHeader() ? " to " + httpHelper.getDestinationURI().getPath() : "";
-		String ipSender = httpHelper.getRequest().getRemoteAddr();
-		log.info("Received " + method + " " + path + destination + " from " + userStr + " ip " + ipSender);
-	}
-
-	private boolean isFavicon(String requestedPath) {
-		return requestedPath.contains("favicon.ico");
-	}
-
-	private boolean isRootPath(String requestedPath) {
-		return this.rootPaths.contains(requestedPath);
-	}
-	
-	private void sendError(HttpServletResponse response, int errorCode, String errorMessage) {
-		try {
-			response.sendError(errorCode, errorMessage);
-		} catch (IOException e) {
-			log.error(e.getMessage());
-			e.printStackTrace();
+		X509Certificate[] certChain = httpHelper.getX509Certificate();
+		if (certChain == null) {
+			log.warn("Unable to get certificate chain from request header");
+			throw new InternalErrorException("Unable to get certificate chain from request header");
 		}
+		httpHelper.getVOMSSecurityContext().setClientCertChain(certChain);
+		String dn = httpHelper.getVOMSSecurityContext().getClientName();
+		if (dn == null) {
+			log.warn("Unable to get user DN from VOMS security context!");
+			throw new InternalErrorException("Unable to get user DN from VOMS security context!");
+		}
+		ArrayList<String> fqans = new ArrayList<String>();
+		for (VOMSAttribute voms : httpHelper.getVOMSSecurityContext()
+			.getVOMSAttributes())
+			fqans.addAll(voms.getFQANs());
+		return new UserCredentials(dn, fqans);
+	}
+
+	private WebDAVMethodAuthorization getAuthorizationMethodHandler(DavStoRMSupportedMethod method) {
+		switch (method) {
+			case PROPFIND:
+				return new PropfindMethodAuthorization();
+			case OPTIONS:
+				return new OptionsMethodAuthorization();
+			case GET:
+				return new GetMethodAuthorization();
+			case DELETE:
+				return new DeleteMethodAuthorization();
+			case PUT:
+				return new PutMethodAuthorization();
+			case MKCOL:
+				return new MkcolMethodAuthorization();
+			case MOVE:
+				return new MoveMethodAuthorization();
+			case COPY:
+				return new CopyMethodAuthorization();
+			case HEAD:
+				return new HeadMethodAuthorization();
+		}
+		return null;
 	}
 	
 	private void doMiltonProcessing(HttpServletRequest req,
@@ -229,6 +236,68 @@ public class WebDAVFilter implements Filter {
 		page.addNavigator("/");
 		page.addStorageAreaList(StorageAreaManager.getInstance().getUserAuthorizedStorageAreas(user, httpHelper.getRequestProtocol()));
 		page.end();
+	}
+
+	private void checkIfRequestIsValid(HttpHelper httpHelper) throws InvalidRequestException {
+
+		/* check method */
+		String method = httpHelper.getRequestMethod().toUpperCase();
+		if (!isWebdavMethod(method)) {
+			throw new InvalidRequestException(HttpServletResponse.SC_BAD_REQUEST, method + " is not a WebDAV valid method!");
+		}
+		if (!isSupportedWebdavMethod(method)) {
+			throw new InvalidRequestException(HttpServletResponse.SC_METHOD_NOT_ALLOWED, method + "Method " + method + " is not supported by this StoRM instance!");
+		}
+		/* check requested path */
+		String requestedPath = httpHelper.getRequestURI().getRawPath();
+		if (requestedPath.contains("%20")) {
+			throw new InvalidRequestException(HttpServletResponse.SC_BAD_REQUEST, "Request URI '" + requestedPath + "' contains not allowed spaces!");
+		}
+	}
+	
+	private boolean isWebdavMethod(String method) {
+		return DavMethod.valueOf(method) != null;
+	}
+
+	private boolean isSupportedWebdavMethod(String method) {
+		return DavStoRMSupportedMethod.valueOf(method) != null;
+	}
+
+	private String getMessage(HttpHelper httpHelper, UserCredentials user) {
+		String method = httpHelper.getRequestMethod();
+		String path = httpHelper.getRequestURI().getPath();
+		String destination = httpHelper.hasDestinationHeader() ? " to " + httpHelper.getDestinationURI().getPath() : "";
+		String ipSender = httpHelper.getRequest().getRemoteAddr();
+		return method + " " + path + destination + " from " + user.getFullName() + " ip " + ipSender;
+	}
+	
+	private void printInCommand(HttpHelper httpHelper, UserCredentials user) {
+		log.info("Received {}", getMessage(httpHelper, user));
+	}
+
+	private void printOutCommand(HttpHelper httpHelper, UserCredentials user) {
+		int code = httpHelper.getResponse().getStatus();
+    String text = (String) httpHelper.getRequest().getAttribute("STATUS_MSG");
+    String msg = getMessage(httpHelper, user) + " exited with " + code + (text != null ? " " + text : "");
+    if (code >= 400){
+        log.warn(msg);
+    }else if (code >= 500 && code < 600) {
+        log.error(msg);
+    } else {
+        log.info(msg);
+    }
+	}
+	
+	private boolean isRootPath(String requestedPath) {
+		return this.rootPaths.contains(requestedPath);
+	}
+	
+	private void sendError(HttpServletResponse response, int errorCode, String errorMessage) {
+		try {
+			response.sendError(errorCode, errorMessage);
+		} catch (IOException e) {
+			log.error(e.getMessage(), e);
+		}
 	}
 	
 	@Override

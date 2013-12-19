@@ -14,7 +14,6 @@ package it.grid.storm.gridhttps.webapp;
 
 import it.grid.storm.gridhttps.webapp.common.authorization.UserCredentials;
 
-import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.security.cert.X509Certificate;
@@ -96,7 +95,7 @@ public class HttpHelper {
 		try {
 			uri = new URI(getRequestStringURI());
 		} catch (URISyntaxException e) {
-			log.error(e.getMessage());
+			log.error(e.getMessage(), e);
 			throw new RuntimeException("Unable to create URI object from the string: " + getRequestStringURI());
 		}
 		uri.normalize();
@@ -124,7 +123,7 @@ public class HttpHelper {
 		try {
 			uri = new URI(getDestinationHeader());
 		} catch (URISyntaxException e) {
-			log.error(e.getMessage());
+			log.error(e.getMessage(), e);
 			throw new RuntimeException("Unable to create URI object from the string: " + getDestinationHeader());
 		}
 		uri.normalize();
@@ -206,7 +205,7 @@ public class HttpHelper {
 	
 	public UserCredentials getUser() {
 		if (!hasUser()) {
-			setUser(new UserCredentials(this));
+			setUser(new UserCredentials());
 		}
 		return (UserCredentials) getRequest().getAttribute(USER_CREDENTIALS_KEY);
 	}

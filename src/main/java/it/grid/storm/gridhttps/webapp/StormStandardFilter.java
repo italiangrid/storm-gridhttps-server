@@ -28,8 +28,6 @@ import org.slf4j.LoggerFactory;
 import io.milton.http.exceptions.ConflictException;
 import io.milton.http.exceptions.NotAuthorizedException;
 import io.milton.servlet.MiltonServlet;
-import it.grid.storm.gridhttps.webapp.HttpHelper;
-import it.grid.storm.gridhttps.webapp.common.authorization.UserCredentials;
 import it.grid.storm.gridhttps.webapp.common.exceptions.RuntimeApiException;
 import it.grid.storm.gridhttps.webapp.common.exceptions.SRMOperationException;
 
@@ -63,19 +61,15 @@ public class StormStandardFilter implements Filter {
         } catch (IllegalArgumentException ex) {
             log.error(ex.getMessage(), ex);
             response.sendError(Status.SC_INTERNAL_SERVER_ERROR, ex.getMessage());
-            response.setStatus(Status.SC_INTERNAL_SERVER_ERROR);
         } catch (RuntimeApiException ex) {
             log.error(ex.getMessage(), ex);
             response.sendError(Status.SC_INTERNAL_SERVER_ERROR, ex.getMessage());
-            response.setStatus(Status.SC_INTERNAL_SERVER_ERROR);
         } catch (RuntimeException ex) {
             log.error(ex.getMessage(), ex);
             response.sendError(Status.SC_INTERNAL_SERVER_ERROR, ex.getMessage());
-            response.setStatus(Status.SC_INTERNAL_SERVER_ERROR);
         } catch (SRMOperationException ex) {
             log.error("RequestFailureException: {}", ex.getReason(), ex);
             response.sendError(Status.SC_SERVICE_UNAVAILABLE, ex.getReason());
-            response.setStatus(Status.SC_SERVICE_UNAVAILABLE);
         } catch (BadRequestException ex) {
             log.warn(ex.getReason(), ex);
             manager.getResponseHandler().respondBadRequest(ex.getResource(), response, request);
@@ -106,34 +100,8 @@ public class StormStandardFilter implements Filter {
                 response.setStatus(Status.SC_INTERNAL_SERVER_ERROR);
             }
         } finally {
-            printExitStatus(response);
+        	MiltonServlet.request().setAttribute("STATUS_MSG", response.getStatus().text);
         }
-    }
-
-    private void printExitStatus(Response response) {
-        HttpHelper httpHelper = new HttpHelper(MiltonServlet.request(), MiltonServlet.response());
-        UserCredentials user = httpHelper.getUser();
-        int code = response.getStatus().code;
-        String text = response.getStatus().text != null ? response.getStatus().text : "";
-        String msg = getCommand(httpHelper, user) + " exited with " + code + " " + text;
-        if (code >= 400){
-            log.warn(msg);
-        }else if (code >= 500 && code < 600) {
-            log.error(msg);
-        } else {
-            log.info(msg);
-        }
-    }
-
-    private String getCommand(HttpHelper httpHelper, UserCredentials user) {
-        String fqans = user.getUserFQANSAsStr();
-        String userStr = user.getRealUserDN().isEmpty() ? "anonymous" : user.getRealUserDN();
-        userStr += fqans.isEmpty() ? "" : " with fqans '" + fqans + "'";
-        String method = httpHelper.getRequestMethod();
-        String path = httpHelper.getRequestURI().getPath();
-        String destination = httpHelper.hasDestinationHeader() ? " to " + httpHelper.getDestinationURI().getPath() : "";
-        String ipSender = httpHelper.getRequest().getRemoteAddr();
-        return method + " " + path + destination + " from " + userStr + " ip " + ipSender;
     }
 
 }

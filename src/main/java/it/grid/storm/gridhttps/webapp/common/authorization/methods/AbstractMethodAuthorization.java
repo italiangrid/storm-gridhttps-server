@@ -20,6 +20,7 @@ import javax.servlet.http.HttpServletResponse;
 import it.grid.storm.gridhttps.webapp.common.authorization.AuthorizationException;
 import it.grid.storm.gridhttps.webapp.common.authorization.AuthorizationStatus;
 import it.grid.storm.gridhttps.webapp.common.authorization.UserCredentials;
+import it.grid.storm.gridhttps.webapp.common.exceptions.InvalidRequestException;
 
 public abstract class AbstractMethodAuthorization {
 
@@ -29,16 +30,15 @@ public abstract class AbstractMethodAuthorization {
 		this.setContextPath(contextPath);
 	}
 	
-	public abstract AuthorizationStatus isUserAuthorized(HttpServletRequest request, HttpServletResponse response, UserCredentials user) throws AuthorizationException;
+	public abstract AuthorizationStatus isUserAuthorized(HttpServletRequest request, HttpServletResponse response, UserCredentials user) throws AuthorizationException, InvalidRequestException;
 	
 	protected String stripContext(String path) {
-		if (this.getContextPath().isEmpty())
+		if (this.getContextPath().isEmpty()) {
 			return path;
+		}
 		String contextPath = File.separator + this.getContextPath();
 		String stripped = path.replaceFirst(contextPath, "");
-		if (stripped.isEmpty())
-			return File.separator;
-		return stripped;
+		return stripped.isEmpty() ? File.separator : stripped;
 	}
 
 	public String getContextPath() {

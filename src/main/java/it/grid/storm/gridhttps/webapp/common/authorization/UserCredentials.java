@@ -12,68 +12,25 @@
  */
 package it.grid.storm.gridhttps.webapp.common.authorization;
 
-import it.grid.storm.gridhttps.webapp.HttpHelper;
-
-import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 
-import org.apache.commons.lang.StringUtils;
-import org.italiangrid.voms.VOMSAttribute;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+public class UserCredentials {
 
-public class UserCredentials extends Object {
-
-	private static final Logger log = LoggerFactory.getLogger(UserCredentials.class);
-
-	private final String EMPTY_USERDN = "";
+	private final static String EMPTY_USERDN = "";
 
 	private String userDN;
 	private ArrayList<String> userFQANS;
-	private HttpHelper httpHelper;
 
-	private HttpHelper getHttpHelper() {
-		return httpHelper;
+	public UserCredentials() {
+		this(EMPTY_USERDN, new ArrayList<String>());
 	}
 
-	private void setHttpHelper(HttpHelper httpHelper) {
-		this.httpHelper = httpHelper;
-	}
-
-	public UserCredentials(HttpHelper httpHelper) {
-		setHttpHelper(httpHelper);
-		initAsAnonymous();
-		if (!getHttpHelper().isHttp()) {
-			//in case of https requests:
-			X509Certificate[] certChain = httpHelper.getX509Certificate();
-			if (certChain == null) {
-				log.warn("Failed to init VOMS Security Context! User initialized with empty DN and FQANs");
-				return;
-			}
-
-			getHttpHelper().getVOMSSecurityContext().setClientCertChain(certChain);
-			if (getHttpHelper().getVOMSSecurityContext().getClientName() != null)
-				setUserDN(getHttpHelper().getVOMSSecurityContext().getClientName());
-			
-			ArrayList<String> fqans = new ArrayList<String>();
-
-			for (VOMSAttribute voms : getHttpHelper().getVOMSSecurityContext().getVOMSAttributes())
-				fqans.addAll(voms.getFQANs());
-			
-			if (!fqans.isEmpty())
-				setUserFQANS(fqans);
-			
-			log.debug("User: " + this.getUserDN());
-		} else {
-			log.debug("User: anonymous");
-		}
-	}
-
-	public String getUserDN() {
-		return userDN;
+	public UserCredentials(String dn, ArrayList<String> fqans) {
+		setUserDN(dn);
+		setUserFQANS(fqans);
 	}
 	
-	public String getRealUserDN() {
+	public String getUserDN() {
 		return userDN;
 	}
 
@@ -86,37 +43,21 @@ public class UserCredentials extends Object {
 			return "";
 		String out = userFQANS.get(0);
 		for (int i=1; i<userFQANS.size(); i++) {
-			out += userFQANS.get(i);
+			out += ", " + userFQANS.get(i);
 		}
 		return out;
 	}
 
 	public boolean isAnonymous() {
-		return getHttpHelper().isHttp() && isUserDNEmpty() && isUserFQANSEmpty();
+		return isUserDNEmpty() && isUserFQANSEmpty();
 	}
 
 	private void setUserDN(String userDN) {
-		log.debug("DN: " + userDN);
 		this.userDN = userDN;
 	}
 
 	private void setUserFQANS(ArrayList<String> userFQANS) {
-		String s = StringUtils.join(userFQANS, ",");
-		log.debug("FQANS: " + s);
 		this.userFQANS = userFQANS;
-	}
-	
-	private void initAsAnonymous() {
-		setUserDN(getEmptyUserDN());
-		setUserFQANS(getEmptyUserFQANS());
-	}
-
-	private String getEmptyUserDN() {
-		return EMPTY_USERDN;
-	}
-
-	private ArrayList<String> getEmptyUserFQANS() {
-		return new ArrayList<String>();
 	}
 
 	private boolean isUserDNEmpty() {
@@ -125,6 +66,27 @@ public class UserCredentials extends Object {
 
 	private boolean isUserFQANSEmpty() {
 		return getUserFQANS().isEmpty();
+	}
+	
+	public String getShortName() {
+		return isAnonymous() ? "anonymous" : getUserDN();
+	}
+	
+	public String getFullName() {
+		if (isAnonymous()) {
+			return "anonymous";
+		} else if (getUserFQANS().isEmpty()) {
+			return getUserDN();
+		} else {
+			return getUserDN() + " with fqans {" + getUserFQANSAsStr() + "}";
+		}
+	}
+	
+	public String toString() {
+		if (isAnonymous()) {
+			return "[anonymous]";
+		}
+		return "[dn=" + this.getUserDN() + ", fqans={" + getUserFQANSAsStr() + "}]";
 	}
 
 }

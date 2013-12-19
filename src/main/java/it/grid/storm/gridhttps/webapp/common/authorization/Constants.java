@@ -65,13 +65,15 @@ public class Constants
     
     public static final String FQANS_SEPARATOR = ",";
 
-    
-    
-    /* /RESOURCE/VERSION/path/READ_OPERATION/VOMS_EXTENSIONS/USER?DN_KEY=dn&FQANS_KEY=fquanFQANS_SEPARATORfquan
-     * /RESOURCE/VERSION/path/WRITE_OPERATION/VOMS_EXTENSIONS/USER?DN_KEY=dn&FQANS_KEY=fquanFQANS_SEPARATORfquan
-     * /RESOURCE/VERSION/path/READ_OPERATION/PLAIN/USER?DN_KEY=dn&FQANS_KEY=fquanFQANS_SEPARATORfquan
-     * /RESOURCE/VERSION/path/WRITE_OPERATION/PLAIN/USER?DN_KEY=dn&FQANS_KEY=fquanFQANS_SEPARATORfquan
-     * 
-     * /RESOURCE/VERSION/path/READ_OPERATION
-     */
+    public static enum DavStoRMSupportedMethod {
+      HEAD, GET, PUT, DELETE, MOVE, COPY, MKCOL, OPTIONS, PROPFIND
+    };
+
+    public static enum DavMethod {
+      HEAD, GET, PUT, DELETE, MOVE, COPY, MKCOL, OPTIONS, PROPFIND, POST, TRACE, CONNECT, LOCK, UNLOCK, PROPPATCH
+    };
+
+    public static enum FTStoRMSupportedMethod {
+      HEAD, GET, PUT
+    };
 }
