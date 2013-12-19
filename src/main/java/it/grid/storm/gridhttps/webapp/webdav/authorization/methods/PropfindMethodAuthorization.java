@@ -20,10 +20,8 @@ import org.slf4j.LoggerFactory;
 
 import it.grid.storm.gridhttps.common.storagearea.StorageArea;
 import it.grid.storm.gridhttps.webapp.HttpHelper;
-import it.grid.storm.gridhttps.webapp.common.authorization.AuthorizationException;
 import it.grid.storm.gridhttps.webapp.common.authorization.AuthorizationStatus;
 import it.grid.storm.gridhttps.webapp.common.authorization.UserCredentials;
-import it.grid.storm.gridhttps.webapp.common.exceptions.InvalidRequestException;
 
 public class PropfindMethodAuthorization extends WebDAVMethodAuthorization {
 	
@@ -35,8 +33,7 @@ public class PropfindMethodAuthorization extends WebDAVMethodAuthorization {
 
 	@Override
 	public AuthorizationStatus isUserAuthorized(HttpServletRequest request,
-		HttpServletResponse response, UserCredentials user)
-		throws AuthorizationException, InvalidRequestException {
+		HttpServletResponse response, UserCredentials user) {
 
 		HttpHelper httpHelper = new HttpHelper(request, response);
 		String srcPath = stripContext(httpHelper.getRequestURI().getRawPath());

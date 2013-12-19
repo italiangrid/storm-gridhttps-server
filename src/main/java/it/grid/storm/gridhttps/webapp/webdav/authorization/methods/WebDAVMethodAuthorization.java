@@ -33,7 +33,7 @@ public abstract class WebDAVMethodAuthorization extends AbstractMethodAuthorizat
 	protected StorageArea getMatchingSA(String path) throws InvalidRequestException {
 		StorageArea sa = StorageAreaManager.getMatchingSA(path);
 		if (sa == null) {
-			throw new InvalidRequestException(HttpServletResponse.SC_BAD_REQUEST, "Unable to resolve storage area!");
+			throw new InvalidRequestException(HttpServletResponse.SC_BAD_REQUEST, "Unable to resolve storage area for path " + path);
 		}
 		return sa;
 	}
@@ -68,7 +68,7 @@ public abstract class WebDAVMethodAuthorization extends AbstractMethodAuthorizat
 		return AuthorizationStatus.AUTHORIZED();
 	}
 	
-	private AuthorizationStatus isSecureAuthorized(StorageArea sa, Permission op,
+	private AuthorizationStatus isAuthenticatedUserAuthorized(StorageArea sa, Permission op,
 		UserCredentials user) {
 
 		if (user.isAnonymous())
@@ -88,7 +88,7 @@ public abstract class WebDAVMethodAuthorization extends AbstractMethodAuthorizat
 		}
 		if (protocol.toUpperCase().equals("HTTP"))
 			return isAnonymousAuthorized(sa, op, user);
-		return isSecureAuthorized(sa, op, user);
+		return isAuthenticatedUserAuthorized(sa, op, user);
 	}
 	
 }

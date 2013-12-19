@@ -12,8 +12,6 @@
  */
 package it.grid.storm.gridhttps.webapp.filetransfer.authorization.methods;
 
-import java.io.File;
-
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -22,11 +20,9 @@ import org.slf4j.LoggerFactory;
 
 import it.grid.storm.gridhttps.common.storagearea.StorageArea;
 import it.grid.storm.gridhttps.webapp.HttpHelper;
-import it.grid.storm.gridhttps.webapp.common.authorization.AuthorizationException;
 import it.grid.storm.gridhttps.webapp.common.authorization.AuthorizationStatus;
 import it.grid.storm.gridhttps.webapp.common.authorization.Constants;
 import it.grid.storm.gridhttps.webapp.common.authorization.UserCredentials;
-import it.grid.storm.gridhttps.webapp.common.exceptions.InvalidRequestException;
 
 public class PutMethodAuthorization extends FileTransferMethodAuthorization {
 
@@ -38,8 +34,7 @@ public class PutMethodAuthorization extends FileTransferMethodAuthorization {
 
 	@Override
 	public AuthorizationStatus isUserAuthorized(HttpServletRequest request,
-		HttpServletResponse response, UserCredentials user)
-		throws AuthorizationException, InvalidRequestException {
+		HttpServletResponse response, UserCredentials user) {
 
 		HttpHelper httpHelper = new HttpHelper(request, response);
 		
@@ -50,24 +45,20 @@ public class PutMethodAuthorization extends FileTransferMethodAuthorization {
 		if (!status.isAuthorized()) {
 			return status;
 		}
-
-		File resource = new File(srcSA.getRealPath(srcPath));
-		if (srcSA.isHTTPWritable()) {
-			/* Anonymous or not, user can always write */
-			if (!resource.exists()) {
-				/* It's impossible that a PtP has been done if the resource doesn't exist */
-				return AuthorizationStatus.NOTAUTHORIZED(HttpServletResponse.SC_PRECONDITION_FAILED, "Precondition Failed: File doesn't exist! Please perform an SRM prepareToPut request for such file before calling this method.");
-			} else if (!resource.isFile()) {
-				/* Can't put on a directory */
-				return AuthorizationStatus.NOTAUTHORIZED(HttpServletResponse.SC_METHOD_NOT_ALLOWED, "Method Not Allowed: Resource required already exists and is not a file");
-			} else {
+		if (user.isAnonymous()) {
+			if (srcSA.isHTTPWritable()) {
 				return AuthorizationStatus.AUTHORIZED();
 			}
-		} else if (user.isAnonymous()) {
-			/* SA is not writable by anonymous users */
-			return AuthorizationStatus.NOTAUTHORIZED(HttpServletResponse.SC_FORBIDDEN, "Unauthorized: Anonymous users are not authorized to read " + httpHelper.getRequestStringURI());
-		} else {
-			return super.askBEAuth(user, Constants.WRITE_OPERATION, srcSA.getRealPath(srcPath));
+			return AuthorizationStatus.NOTAUTHORIZED(
+				HttpServletResponse.SC_FORBIDDEN, String.format(
+					"Unauthorized: Anonymous users are not authorized to read %s",
+					httpHelper.getRequestStringURI()));
 		}
-	}	
+		/* user is not anonymous */
+		if (srcSA.isHTTPWritable()) {
+			return AuthorizationStatus.AUTHORIZED();
+		}
+		return super.askBEAuth(user, Constants.WRITE_OPERATION,
+			srcSA.getRealPath(srcPath));
+	}
 }

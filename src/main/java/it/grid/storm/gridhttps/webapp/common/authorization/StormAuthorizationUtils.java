@@ -43,7 +43,7 @@ public class StormAuthorizationUtils {
     .getGridhttpsInfo().isAuthzCallEnabled();
 
   public static boolean isUserAuthorized(UserCredentials user,
-    String operation, String path) throws IllegalArgumentException, AuthorizationException {
+    String operation, String path) {
 
     if (path == null)
       throw new IllegalArgumentException(
@@ -106,7 +106,7 @@ public class StormAuthorizationUtils {
   }
 
   private static URI prepareURI(String resourcePath, String operation,
-    UserCredentials user) throws AuthorizationException {
+    UserCredentials user) {
 
     log.debug("Encoding Authorization request parameters");
     String path;

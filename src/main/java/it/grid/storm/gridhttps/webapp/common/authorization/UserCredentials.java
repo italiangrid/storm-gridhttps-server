@@ -17,6 +17,8 @@ import java.util.ArrayList;
 public class UserCredentials {
 
 	private final static String EMPTY_USERDN = "";
+	private final static String EMPTY_FQANS_AS_STR = "";
+	private final static String ANONYMOUS = "anonymous";
 
 	private String userDN;
 	private ArrayList<String> userFQANS;
@@ -39,8 +41,9 @@ public class UserCredentials {
 	}
 	
 	public String getUserFQANSAsStr() {
-		if (userFQANS.isEmpty())
-			return "";
+		if (userFQANS.isEmpty()) {
+			return EMPTY_FQANS_AS_STR;
+		}
 		String out = userFQANS.get(0);
 		for (int i=1; i<userFQANS.size(); i++) {
 			out += ", " + userFQANS.get(i);
@@ -49,7 +52,7 @@ public class UserCredentials {
 	}
 
 	public boolean isAnonymous() {
-		return isUserDNEmpty() && isUserFQANSEmpty();
+		return userDN.isEmpty() && userFQANS.isEmpty();
 	}
 
 	private void setUserDN(String userDN) {
@@ -59,34 +62,26 @@ public class UserCredentials {
 	private void setUserFQANS(ArrayList<String> userFQANS) {
 		this.userFQANS = userFQANS;
 	}
-
-	private boolean isUserDNEmpty() {
-		return getUserDN().isEmpty();
-	}
-
-	private boolean isUserFQANSEmpty() {
-		return getUserFQANS().isEmpty();
-	}
 	
 	public String getShortName() {
-		return isAnonymous() ? "anonymous" : getUserDN();
+		return isAnonymous() ? ANONYMOUS : userDN;
 	}
 	
 	public String getFullName() {
 		if (isAnonymous()) {
-			return "anonymous";
-		} else if (getUserFQANS().isEmpty()) {
-			return getUserDN();
-		} else {
-			return getUserDN() + " with fqans {" + getUserFQANSAsStr() + "}";
+			return ANONYMOUS;
 		}
+		if (userFQANS.isEmpty()) {
+			return userDN;
+		} 
+		return String.format("userDN %s with fqans {%s}", userDN, getUserFQANSAsStr());
 	}
 	
 	public String toString() {
 		if (isAnonymous()) {
-			return "[anonymous]";
+			return String.format("[%s]", ANONYMOUS);
 		}
-		return "[dn=" + this.getUserDN() + ", fqans={" + getUserFQANSAsStr() + "}]";
+		return String.format("[dn=%s, fqans={%s}]", userDN, getUserFQANSAsStr());
 	}
 
 }

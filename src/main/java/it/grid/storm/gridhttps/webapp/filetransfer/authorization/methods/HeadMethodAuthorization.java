@@ -12,10 +12,8 @@
  */
 package it.grid.storm.gridhttps.webapp.filetransfer.authorization.methods;
 
-import it.grid.storm.gridhttps.webapp.common.authorization.AuthorizationException;
 import it.grid.storm.gridhttps.webapp.common.authorization.AuthorizationStatus;
 import it.grid.storm.gridhttps.webapp.common.authorization.UserCredentials;
-import it.grid.storm.gridhttps.webapp.common.exceptions.InvalidRequestException;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -28,8 +26,7 @@ public class HeadMethodAuthorization extends FileTransferMethodAuthorization {
 
 	@Override
 	public AuthorizationStatus isUserAuthorized(HttpServletRequest request, 
-		HttpServletResponse response, UserCredentials user)
-		throws AuthorizationException, InvalidRequestException {
+		HttpServletResponse response, UserCredentials user) {
 		return (new GetMethodAuthorization()).isUserAuthorized(request, response, user);
 	}
 

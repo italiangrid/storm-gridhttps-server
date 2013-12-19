@@ -102,9 +102,13 @@ public class StormContentService implements FileContentService {
 	
 	private ChecksumAlgorithm getChecksumAlgorithm(String checksumTypeStr) throws NoSuchAlgorithmException {
 		ChecksumType checksumType = ChecksumType.getChecksumAlgorithm(checksumTypeStr);
-		if (checksumType == null || !checksumType.equals(ChecksumType.ADLER32))
-			throw new NoSuchAlgorithmException(checksumTypeStr + " not a valid checksum algorithm!");
-		return new Adler32ChecksumAlgorithm();
+		if (checksumType == null) {
+			throw new NoSuchAlgorithmException(String.format("%s is not a valid checksum algorithm!", checksumTypeStr));
+		}
+		if (checksumType.equals(ChecksumType.ADLER32)) {
+			return new Adler32ChecksumAlgorithm();
+		}
+		throw new NoSuchAlgorithmException(String.format("%s is not a supported checksum algorithm!", checksumTypeStr));
 	}
 	
 	private void sendChecksum(File file, ChecksumType type, String checksum) {

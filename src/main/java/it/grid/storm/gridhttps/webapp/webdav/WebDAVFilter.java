@@ -26,8 +26,7 @@ import it.grid.storm.gridhttps.webapp.StormStandardFilter;
 import it.grid.storm.gridhttps.webapp.common.authorization.AuthorizationStatus;
 import it.grid.storm.gridhttps.webapp.common.authorization.UserCredentials;
 import it.grid.storm.gridhttps.webapp.common.authorization.Constants.DavMethod;
-import it.grid.storm.gridhttps.webapp.common.authorization.Constants.DavStoRMSupportedMethod;
-import it.grid.storm.gridhttps.webapp.common.exceptions.InternalErrorException;
+import it.grid.storm.gridhttps.webapp.common.exceptions.InternalError;
 import it.grid.storm.gridhttps.webapp.common.exceptions.InvalidRequestException;
 import it.grid.storm.gridhttps.webapp.webdav.authorization.methods.CopyMethodAuthorization;
 import it.grid.storm.gridhttps.webapp.webdav.authorization.methods.DeleteMethodAuthorization;
@@ -46,6 +45,7 @@ import java.io.File;
 import java.io.IOException;
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
+import java.util.EnumSet;
 
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;
@@ -63,6 +63,8 @@ import org.slf4j.LoggerFactory;
 public class WebDAVFilter implements Filter {
 
 	private static final Logger log = LoggerFactory.getLogger(WebDAVFilter.class);
+	
+	private static final EnumSet<DavMethod> DavStoRMSupportedMethod = EnumSet.range(DavMethod.HEAD, DavMethod.PROPFIND);
 	
 	private ArrayList<String> rootPaths;
 	private HttpManager httpManager;
@@ -122,7 +124,7 @@ public class WebDAVFilter implements Filter {
 			if (isRootPath(httpHelper.getRequestURI().getRawPath())) {
 				status = AuthorizationStatus.AUTHORIZED();
 			} else {
-				WebDAVMethodAuthorization handler = getAuthorizationMethodHandler(DavStoRMSupportedMethod.valueOf(httpHelper.getRequestMethod()));
+				WebDAVMethodAuthorization handler = getAuthorizationMethodHandler(DavMethod.valueOf(httpHelper.getRequestMethod()));
 				status = handler.isUserAuthorized(httpHelper.getRequest(), httpHelper.getResponse(), user);
 			}
 			if (status.isAuthorized()) {
@@ -131,7 +133,7 @@ public class WebDAVFilter implements Filter {
 					log.debug("Processing root page request");
 					processRootRequest(httpHelper, user);
 				} else {
-					log.debug("Processing a WebDAV request");
+					log.debug("Processing a WebDAV request for {}", httpHelper.getRequestURI().getRawPath());
 					doMiltonProcessing((HttpServletRequest) request, (HttpServletResponse) response);
 				}
 			} else {
@@ -150,7 +152,7 @@ public class WebDAVFilter implements Filter {
 		}
 	}
 
-	private UserCredentials getUser(HttpHelper httpHelper) throws InternalErrorException {
+	private UserCredentials getUser(HttpHelper httpHelper) throws InternalError {
 
 		if (httpHelper.isHttp()) {
 			return new UserCredentials();
@@ -158,13 +160,13 @@ public class WebDAVFilter implements Filter {
 		X509Certificate[] certChain = httpHelper.getX509Certificate();
 		if (certChain == null) {
 			log.warn("Unable to get certificate chain from request header");
-			throw new InternalErrorException("Unable to get certificate chain from request header");
+			throw new InternalError("Unable to get certificate chain from request header");
 		}
 		httpHelper.getVOMSSecurityContext().setClientCertChain(certChain);
 		String dn = httpHelper.getVOMSSecurityContext().getClientName();
 		if (dn == null) {
 			log.warn("Unable to get user DN from VOMS security context!");
-			throw new InternalErrorException("Unable to get user DN from VOMS security context!");
+			throw new InternalError("Unable to get user DN from VOMS security context!");
 		}
 		ArrayList<String> fqans = new ArrayList<String>();
 		for (VOMSAttribute voms : httpHelper.getVOMSSecurityContext()
@@ -173,26 +175,28 @@ public class WebDAVFilter implements Filter {
 		return new UserCredentials(dn, fqans);
 	}
 
-	private WebDAVMethodAuthorization getAuthorizationMethodHandler(DavStoRMSupportedMethod method) {
+	private WebDAVMethodAuthorization getAuthorizationMethodHandler(DavMethod method) {
 		switch (method) {
-			case PROPFIND:
-				return new PropfindMethodAuthorization();
-			case OPTIONS:
-				return new OptionsMethodAuthorization();
-			case GET:
-				return new GetMethodAuthorization();
-			case DELETE:
-				return new DeleteMethodAuthorization();
-			case PUT:
-				return new PutMethodAuthorization();
-			case MKCOL:
-				return new MkcolMethodAuthorization();
-			case MOVE:
-				return new MoveMethodAuthorization();
-			case COPY:
-				return new CopyMethodAuthorization();
-			case HEAD:
-				return new HeadMethodAuthorization();
+		case PROPFIND:
+			return new PropfindMethodAuthorization();
+		case OPTIONS:
+			return new OptionsMethodAuthorization();
+		case GET:
+			return new GetMethodAuthorization();
+		case DELETE:
+			return new DeleteMethodAuthorization();
+		case PUT:
+			return new PutMethodAuthorization();
+		case MKCOL:
+			return new MkcolMethodAuthorization();
+		case MOVE:
+			return new MoveMethodAuthorization();
+		case COPY:
+			return new CopyMethodAuthorization();
+		case HEAD:
+			return new HeadMethodAuthorization();
+		default:
+			break;
 		}
 		return null;
 	}
@@ -241,7 +245,7 @@ public class WebDAVFilter implements Filter {
 	private void checkIfRequestIsValid(HttpHelper httpHelper) throws InvalidRequestException {
 
 		/* check method */
-		String method = httpHelper.getRequestMethod().toUpperCase();
+		DavMethod method = DavMethod.valueOf(httpHelper.getRequestMethod().toUpperCase());
 		if (!isWebdavMethod(method)) {
 			throw new InvalidRequestException(HttpServletResponse.SC_BAD_REQUEST, method + " is not a WebDAV valid method!");
 		}
@@ -255,30 +259,30 @@ public class WebDAVFilter implements Filter {
 		}
 	}
 	
-	private boolean isWebdavMethod(String method) {
-		return DavMethod.valueOf(method) != null;
+	private boolean isWebdavMethod(DavMethod method) {
+		return method != null;
 	}
 
-	private boolean isSupportedWebdavMethod(String method) {
-		return DavStoRMSupportedMethod.valueOf(method) != null;
+	private boolean isSupportedWebdavMethod(DavMethod method) {
+		return DavStoRMSupportedMethod.contains(method);
 	}
 
-	private String getMessage(HttpHelper httpHelper, UserCredentials user) {
+	private String buildCommandMessage(HttpHelper httpHelper, UserCredentials user) {
 		String method = httpHelper.getRequestMethod();
 		String path = httpHelper.getRequestURI().getPath();
 		String destination = httpHelper.hasDestinationHeader() ? " to " + httpHelper.getDestinationURI().getPath() : "";
 		String ipSender = httpHelper.getRequest().getRemoteAddr();
-		return method + " " + path + destination + " from " + user.getFullName() + " ip " + ipSender;
+		return String.format("%s %s%s from %s ip %s", method, path, destination, user.getFullName(), ipSender);
 	}
 	
 	private void printInCommand(HttpHelper httpHelper, UserCredentials user) {
-		log.info("Received {}", getMessage(httpHelper, user));
+		log.info("Received {}", buildCommandMessage(httpHelper, user));
 	}
 
 	private void printOutCommand(HttpHelper httpHelper, UserCredentials user) {
 		int code = httpHelper.getResponse().getStatus();
     String text = (String) httpHelper.getRequest().getAttribute("STATUS_MSG");
-    String msg = getMessage(httpHelper, user) + " exited with " + code + (text != null ? " " + text : "");
+    String msg = buildCommandMessage(httpHelper, user) + " exited with " + code + (text != null ? " " + text : "");
     if (code >= 400){
         log.warn(msg);
     }else if (code >= 500 && code < 600) {

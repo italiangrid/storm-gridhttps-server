@@ -11,6 +11,7 @@
  * limitations under the License.
  */
 package it.grid.storm.gridhttps.webapp.common.authorization;
+
 /**
  * @author Michele Dibenedetto
  *
@@ -65,15 +66,7 @@ public class Constants
     
     public static final String FQANS_SEPARATOR = ",";
 
-    public static enum DavStoRMSupportedMethod {
-      HEAD, GET, PUT, DELETE, MOVE, COPY, MKCOL, OPTIONS, PROPFIND
-    };
-
     public static enum DavMethod {
       HEAD, GET, PUT, DELETE, MOVE, COPY, MKCOL, OPTIONS, PROPFIND, POST, TRACE, CONNECT, LOCK, UNLOCK, PROPPATCH
-    };
-
-    public static enum FTStoRMSupportedMethod {
-      HEAD, GET, PUT
     };
 }

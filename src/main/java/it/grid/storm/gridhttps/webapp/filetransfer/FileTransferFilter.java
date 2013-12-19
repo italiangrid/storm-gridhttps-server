@@ -23,9 +23,10 @@ import it.grid.storm.gridhttps.webapp.HttpHelper;
 import it.grid.storm.gridhttps.webapp.StormStandardFilter;
 import it.grid.storm.gridhttps.webapp.common.authorization.AuthorizationException;
 import it.grid.storm.gridhttps.webapp.common.authorization.AuthorizationStatus;
+import it.grid.storm.gridhttps.webapp.common.authorization.Constants;
+import it.grid.storm.gridhttps.webapp.common.authorization.Constants.DavMethod;
 import it.grid.storm.gridhttps.webapp.common.authorization.UserCredentials;
-import it.grid.storm.gridhttps.webapp.common.authorization.Constants.FTStoRMSupportedMethod;
-import it.grid.storm.gridhttps.webapp.common.exceptions.InternalErrorException;
+import it.grid.storm.gridhttps.webapp.common.exceptions.InternalError;
 import it.grid.storm.gridhttps.webapp.common.exceptions.InvalidRequestException;
 import it.grid.storm.gridhttps.webapp.filetransfer.authorization.methods.FileTransferMethodAuthorization;
 import it.grid.storm.gridhttps.webapp.filetransfer.authorization.methods.GetMethodAuthorization;
@@ -36,6 +37,7 @@ import it.grid.storm.gridhttps.webapp.filetransfer.factory.FileSystemResourceFac
 import java.io.IOException;
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
+import java.util.EnumSet;
 
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;
@@ -53,6 +55,8 @@ import org.slf4j.LoggerFactory;
 public class FileTransferFilter implements Filter {
 
 	private static final Logger log = LoggerFactory.getLogger(FileTransferFilter.class);
+	
+	private final static EnumSet<DavMethod> FTStoRMSupportedMethod = EnumSet.range(DavMethod.HEAD, DavMethod.PUT);
 	
 	private FilterConfig filterConfig;
 	private HttpManager httpManager;
@@ -99,11 +103,11 @@ public class FileTransferFilter implements Filter {
 			printInCommand(httpHelper, user);
 			checkIfRequestIsValid(httpHelper);
 		
-			FileTransferMethodAuthorization handler = getAuthorizationMethodHandler(FTStoRMSupportedMethod.valueOf(httpHelper.getRequestMethod()));
+			FileTransferMethodAuthorization handler = getAuthorizationMethodHandler(Constants.DavMethod.valueOf(httpHelper.getRequestMethod()));
 			AuthorizationStatus	status = handler.isUserAuthorized(httpHelper.getRequest(), httpHelper.getResponse(), user);
 			
 			if (status.isAuthorized()) {
-				log.debug("Processing a FileTransfer request");
+				log.debug("Processing a FileTransfer request for {}", httpHelper.getRequestURI().getRawPath());
 				doMiltonProcessing((HttpServletRequest) request, (HttpServletResponse) response);
 			} else {
 				log.debug("User is not authorized: {}", status.getReason());
@@ -121,7 +125,7 @@ public class FileTransferFilter implements Filter {
 		}
 	}
 	
-	private UserCredentials getUser(HttpHelper httpHelper) throws InternalErrorException {
+	private UserCredentials getUser(HttpHelper httpHelper) throws InternalError {
 
 		if (httpHelper.isHttp()) {
 			return new UserCredentials();
@@ -129,13 +133,13 @@ public class FileTransferFilter implements Filter {
 		X509Certificate[] certChain = httpHelper.getX509Certificate();
 		if (certChain == null) {
 			log.warn("Unable to get certificate chain from request header");
-			throw new InternalErrorException("Unable to get certificate chain from request header");
+			throw new InternalError("Unable to get certificate chain from request header");
 		}
 		httpHelper.getVOMSSecurityContext().setClientCertChain(certChain);
 		String dn = httpHelper.getVOMSSecurityContext().getClientName();
 		if (dn == null) {
 			log.warn("Unable to get user DN from VOMS security context!");
-			throw new InternalErrorException("Unable to get user DN from VOMS security context!");
+			throw new InternalError("Unable to get user DN from VOMS security context!");
 		}
 		ArrayList<String> fqans = new ArrayList<String>();
 		for (VOMSAttribute voms : httpHelper.getVOMSSecurityContext()
@@ -147,14 +151,12 @@ public class FileTransferFilter implements Filter {
 	private void checkIfRequestIsValid(HttpHelper httpHelper) throws InvalidRequestException {
 		
 		/* check method */
-		String method = httpHelper.getRequestMethod().toUpperCase();
-		if (!isSupportedFileTransferMethod(method)) {
-			throw new InvalidRequestException(HttpServletResponse.SC_METHOD_NOT_ALLOWED, method + "Method " + method + " is not supported by this StoRM instance!");
+		DavMethod method = DavMethod.valueOf(httpHelper.getRequestMethod().toUpperCase());
+		if (method == null) {
+			throw new InvalidRequestException(
+				HttpServletResponse.SC_METHOD_NOT_ALLOWED,
+				String.format("Method %s is not supported by this StoRM instance!"));
 		}
-	}
-
-	private boolean isSupportedFileTransferMethod(String method) {
-		return FTStoRMSupportedMethod.valueOf(method) != null;
 	}
 	
 	private String getMessage(HttpHelper httpHelper, UserCredentials user) {
@@ -203,7 +205,12 @@ public class FileTransferFilter implements Filter {
 		}
 	}
 
-	private FileTransferMethodAuthorization getAuthorizationMethodHandler(FTStoRMSupportedMethod method) throws AuthorizationException {
+	private FileTransferMethodAuthorization getAuthorizationMethodHandler(
+		DavMethod method) throws AuthorizationException {
+
+		if (!FTStoRMSupportedMethod.contains(method)) {
+			throw new AuthorizationException("Invalid method!");
+		}
 		switch (method) {
 		case GET:
 			return new GetMethodAuthorization();
@@ -211,8 +218,10 @@ public class FileTransferFilter implements Filter {
 			return new PutMethodAuthorization();
 		case HEAD:
 			return new HeadMethodAuthorization();
+		default:
+			break;
 		}
-		throw new AuthorizationException("Invalid method!");
+		return null;
 	}
 	
 	@Override

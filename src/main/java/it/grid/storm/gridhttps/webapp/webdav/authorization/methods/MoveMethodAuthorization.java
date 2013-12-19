@@ -20,10 +20,8 @@ import org.slf4j.LoggerFactory;
 
 import it.grid.storm.gridhttps.common.storagearea.StorageArea;
 import it.grid.storm.gridhttps.webapp.HttpHelper;
-import it.grid.storm.gridhttps.webapp.common.authorization.AuthorizationException;
 import it.grid.storm.gridhttps.webapp.common.authorization.AuthorizationStatus;
 import it.grid.storm.gridhttps.webapp.common.authorization.UserCredentials;
-import it.grid.storm.gridhttps.webapp.common.exceptions.InvalidRequestException;
 
 public class MoveMethodAuthorization extends WebDAVMethodAuthorization {
 	
@@ -35,8 +33,7 @@ public class MoveMethodAuthorization extends WebDAVMethodAuthorization {
 
 	@Override
 	public AuthorizationStatus isUserAuthorized(HttpServletRequest request,
-		HttpServletResponse response, UserCredentials user)
-		throws AuthorizationException, InvalidRequestException {
+		HttpServletResponse response, UserCredentials user) {
 
 		HttpHelper httpHelper = new HttpHelper(request, response);
 		
@@ -52,9 +49,9 @@ public class MoveMethodAuthorization extends WebDAVMethodAuthorization {
 		}
 		
 		StorageArea srcSA = getMatchingSA(srcPath);
-		log.debug("path {} matches storage area {}", srcPath, srcSA.getName());
+		log.debug("srcPath {} matches storage area {}", srcPath, srcSA.getName());
 		StorageArea destSA = getMatchingSA(destPath);
-		log.debug("path {} matches storage area {}", destPath, destSA.getName());
+		log.debug("destPath {} matches storage area {}", destPath, destSA.getName());
 		
 		AuthorizationStatus status = super.isAuthorized(request.getScheme(), srcSA, Permission.READWRITE, user);
 		if (!status.isAuthorized()) {
@@ -63,9 +60,8 @@ public class MoveMethodAuthorization extends WebDAVMethodAuthorization {
 		if (destSA.getName().equals(srcSA.getName())) {
 			log.debug("source and destination storage area are the same");
 			return status;
-		} else {
-			log.debug("source and destination storage area are different");
-			return super.isAuthorized(request.getScheme(), destSA, Permission.READWRITE, user);
-		}
+		} 
+		log.debug("source and destination storage area are different");
+		return super.isAuthorized(request.getScheme(), destSA, Permission.READWRITE, user);
 	}
 }
