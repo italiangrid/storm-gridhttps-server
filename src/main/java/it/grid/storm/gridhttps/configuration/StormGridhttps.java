@@ -40,7 +40,6 @@ public class StormGridhttps {
 	private int serverQueuedThreadsMax;
 	
 	private boolean vomsCachingEnabled;
-	private boolean authzCallEnabled;
 	
 	public StormGridhttps() {
 		setHttpPort(DefaultConfiguration.SERVER_WEBAPP_HTTP_PORT);
@@ -65,7 +64,6 @@ public class StormGridhttps {
 		setServerActiveThreadsMax(DefaultConfiguration.SERVER_ACTIVE_THREADS_MAX);
 		setServerQueuedThreadsMax(DefaultConfiguration.SERVER_QUEUED_THREADS_MAX);
 		setVomsCachingEnabled(true);
-		setAuthzCallEnabled(true);
 	}
 
 	public String getHostname() {
@@ -216,14 +214,6 @@ public class StormGridhttps {
   
   public void setVomsCachingEnabled(boolean vomsCachingEnabled) {
     this.vomsCachingEnabled = vomsCachingEnabled;
-  }
-
-  public boolean isAuthzCallEnabled() {
-    return authzCallEnabled;
-  }
-  
-  public void setAuthzCallEnabled(boolean authzCallEnabled) {
-    this.authzCallEnabled = authzCallEnabled;
   }
 
 }

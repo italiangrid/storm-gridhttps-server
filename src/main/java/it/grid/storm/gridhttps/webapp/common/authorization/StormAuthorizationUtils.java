@@ -39,9 +39,6 @@ public class StormAuthorizationUtils {
   private static final Logger log = LoggerFactory
     .getLogger(StormAuthorizationUtils.class);
 
-  private static final boolean AUTHZ_CALL_ENABLED = Configuration
-    .getGridhttpsInfo().isAuthzCallEnabled();
-
   public static boolean isUserAuthorized(UserCredentials user,
     String operation, String path) {
 
@@ -57,13 +54,11 @@ public class StormAuthorizationUtils {
       throw new IllegalArgumentException(
         "Received null user at isUserAuthorized!");
 
-    if (AUTHZ_CALL_ENABLED) {
-      log.debug("Asking authorization for operation " + operation + " on "
-        + path);
-      return getAuthorizationResponse(prepareURI(path, operation, user));
-    }
+    log.debug("Asking authorization for operation " + operation + " on "
+      + path);
 
-    return true;
+    return getAuthorizationResponse(prepareURI(path, operation, user));
+
   }
 
   private static boolean getAuthorizationResponse(URI uri) {
