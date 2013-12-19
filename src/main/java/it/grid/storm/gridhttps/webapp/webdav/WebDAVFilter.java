@@ -159,14 +159,16 @@ public class WebDAVFilter implements Filter {
 		}
 		X509Certificate[] certChain = httpHelper.getX509Certificate();
 		if (certChain == null) {
-			log.warn("Unable to get certificate chain from request header");
-			throw new InternalError("Unable to get certificate chain from request header");
+			String msg = "Unable to get certificate chain from request header";
+			log.warn(msg);
+			throw new InternalError(msg);
 		}
 		httpHelper.getVOMSSecurityContext().setClientCertChain(certChain);
 		String dn = httpHelper.getVOMSSecurityContext().getClientName();
 		if (dn == null) {
-			log.warn("Unable to get user DN from VOMS security context!");
-			throw new InternalError("Unable to get user DN from VOMS security context!");
+			String msg = "Unable to get user DN from VOMS security context!";
+			log.warn(msg);
+			throw new InternalError(msg);
 		}
 		ArrayList<String> fqans = new ArrayList<String>();
 		for (VOMSAttribute voms : httpHelper.getVOMSSecurityContext()
@@ -285,7 +287,7 @@ public class WebDAVFilter implements Filter {
     String msg = buildCommandMessage(httpHelper, user) + " exited with " + code + (text != null ? " " + text : "");
     if (code >= 400){
         log.warn(msg);
-    }else if (code >= 500 && code < 600) {
+    }else if (code >= 500) {
         log.error(msg);
     } else {
         log.info(msg);

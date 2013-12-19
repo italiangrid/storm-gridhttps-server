@@ -159,25 +159,25 @@ public class FileTransferFilter implements Filter {
 		}
 	}
 	
-	private String getMessage(HttpHelper httpHelper, UserCredentials user) {
+	private String buildLogMessage(HttpHelper httpHelper, UserCredentials user) {
 		String method = httpHelper.getRequestMethod();
 		String path = httpHelper.getRequestURI().getPath();
 		String destination = httpHelper.hasDestinationHeader() ? " to " + httpHelper.getDestinationURI().getPath() : "";
 		String ipSender = httpHelper.getRequest().getRemoteAddr();
-		return method + " " + path + destination + " from " + user.getFullName() + " ip " + ipSender;
+		return String.format("%s %s%s from %s ip %s", method, path, destination, user.getFullName(), ipSender);
 	}
 	
 	private void printInCommand(HttpHelper httpHelper, UserCredentials user) {
-		log.info("Received {}", getMessage(httpHelper, user));
+		log.info("Received {}", buildLogMessage(httpHelper, user));
 	}
 
 	private void printOutCommand(HttpHelper httpHelper, UserCredentials user) {
 		int code = httpHelper.getResponse().getStatus();
     String text = (String) httpHelper.getRequest().getAttribute("STATUS_MSG");
-    String msg = getMessage(httpHelper, user) + " exited with " + code + (text != null ? " " + text : "");
+    String msg = String.format("%s exited with %s%s", buildLogMessage(httpHelper, user), code, (text != null ? " " + text : ""));
     if (code >= 400){
         log.warn(msg);
-    }else if (code >= 500 && code < 600) {
+    }else if (code >= 500) {
         log.error(msg);
     } else {
         log.info(msg);

@@ -57,7 +57,7 @@ public abstract class FileTransferMethodAuthorization extends AbstractMethodAuth
 	protected StorageArea getMatchingSA(String path) throws InvalidRequestException {
 		StorageArea sa = StorageAreaManager.getMatchingSA(path);
 		if (sa == null) {
-			throw new InvalidRequestException(HttpServletResponse.SC_BAD_REQUEST, "Unable to resolve storage area!");
+			throw new InvalidRequestException(HttpServletResponse.SC_BAD_REQUEST, "Unable to resolve storage area for " + path);
 		}
 		return sa;
 	}
@@ -66,8 +66,9 @@ public abstract class FileTransferMethodAuthorization extends AbstractMethodAuth
 
 		if (!sa.isProtocol(requestedProtocol.toUpperCase())) {
 			return AuthorizationStatus.NOTAUTHORIZED(
-				HttpServletResponse.SC_FORBIDDEN, "Storage area " + sa.getName()
-					+ " doesn't support " + requestedProtocol + " protocol");
+				HttpServletResponse.SC_FORBIDDEN,
+				String.format("Storage area %s doesn't support %s protocol",
+					sa.getName(), requestedProtocol));
 		}
 		return AuthorizationStatus.AUTHORIZED();
 	}
