@@ -12,60 +12,22 @@
  */
 package it.grid.storm.gridhttps.webapp.webdav.authorization.methods;
 
-import it.grid.storm.gridhttps.webapp.HttpHelper;
-import it.grid.storm.gridhttps.webapp.authorization.AuthorizationStatus;
-import it.grid.storm.gridhttps.webapp.authorization.UserCredentials;
-import it.grid.storm.gridhttps.webapp.authorization.methods.AbstractMethodAuthorization;
-import it.grid.storm.gridhttps.webapp.data.StormResourceHelper;
-import it.grid.storm.gridhttps.webapp.data.exceptions.RuntimeApiException;
-import it.grid.storm.gridhttps.webapp.data.exceptions.StormRequestFailureException;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import it.grid.storm.gridhttps.webapp.common.authorization.AuthorizationStatus;
+import it.grid.storm.gridhttps.webapp.common.authorization.UserCredentials;
 
-public class OptionsMethodAuthorization extends AbstractMethodAuthorization {
+public class OptionsMethodAuthorization extends WebDAVMethodAuthorization {
 
-	private String hostname;
-	private int port;
-
-	public OptionsMethodAuthorization(HttpHelper httpHelper, String hostname, int port) {
-		super(httpHelper);
-		this.setHostname(hostname);
-		this.setPort(port);
+	public OptionsMethodAuthorization() {
+		super();
 	}
-
-	private static final Logger log = LoggerFactory.getLogger(OptionsMethodAuthorization.class);
 
 	@Override
-	public AuthorizationStatus isUserAuthorized(UserCredentials user) {
-		this.doPing();
+	public AuthorizationStatus isUserAuthorized(HttpServletRequest request,
+		HttpServletResponse response, UserCredentials user) {
+
 		return AuthorizationStatus.AUTHORIZED();
-	}
-
-	private void doPing() {
-		// PING
-		try {
-			StormResourceHelper.getInstance().doPing(this.getHTTPHelper().getUser(), this.getHostname(), this.getPort());
-		} catch (RuntimeApiException e) {
-			log.error(e.getMessage() + ": " + e.getReason());
-		} catch (StormRequestFailureException e) {
-			log.error(e.getMessage() + ": " + e.getReason());
-		}
-	}
-
-	public String getHostname() {
-		return hostname;
-	}
-
-	private void setHostname(String hostname) {
-		this.hostname = hostname;
-	}
-
-	public int getPort() {
-		return port;
-	}
-
-	private void setPort(int port) {
-		this.port = port;
 	}
 }

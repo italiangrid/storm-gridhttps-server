@@ -19,11 +19,11 @@ import io.milton.http.exceptions.ConflictException;
 import io.milton.http.exceptions.NotAuthorizedException;
 import io.milton.resource.*;
 import io.milton.servlet.MiltonServlet;
-import it.grid.storm.gridhttps.webapp.data.StormDirectoryResource;
-import it.grid.storm.gridhttps.webapp.data.StormFactory;
-import it.grid.storm.gridhttps.webapp.data.exceptions.RuntimeApiException;
-import it.grid.storm.gridhttps.webapp.data.exceptions.StormResourceException;
-import it.grid.storm.gridhttps.webapp.data.exceptions.TooManyResultsException;
+import it.grid.storm.gridhttps.webapp.common.exceptions.RuntimeApiException;
+import it.grid.storm.gridhttps.webapp.common.exceptions.SRMOperationException;
+import it.grid.storm.gridhttps.webapp.common.exceptions.SRMOperationException.TSRMExceptionReason;
+import it.grid.storm.gridhttps.webapp.common.factory.StormDirectoryResource;
+import it.grid.storm.gridhttps.webapp.common.factory.StormFactory;
 import it.grid.storm.gridhttps.webapp.webdav.factory.html.StormHtmlFolderPage;
 import it.grid.storm.srm.types.TReturnStatus;
 import it.grid.storm.xmlrpc.outputdata.LsOutputData.SurlInfo;
@@ -104,20 +104,23 @@ public class WebdavDirectoryResource extends StormDirectoryResource implements M
 		int numberOfMaxEntries = 0;
 		try {
 			entries = this.getChildrenSurlInfo();
-		} catch (TooManyResultsException e) {
-			TReturnStatus status = e.getStatus();
-			String[] array = status.getExplanation().split(" ");
-			String numberOfMaxEntriesString = array[array.length - 1]; // last element
-			try {
-				numberOfMaxEntries = Integer.valueOf(numberOfMaxEntriesString);
-			} catch (NumberFormatException e2) {
-				log.error("Error parsing explanation string to retrieve the max number of entries of a srmLs -l, "
+		} catch (SRMOperationException e) {
+			if (e.getExceptionReason().equals(TSRMExceptionReason.TOOMANYRESULTS)) {
+				TReturnStatus status = e.getStatus();
+				String[] array = status.getExplanation().split(" ");
+				String numberOfMaxEntriesString = array[array.length - 1]; // last element
+				try {
+					numberOfMaxEntries = Integer.valueOf(numberOfMaxEntriesString);
+				} catch (NumberFormatException e2) {
+					log.error("Error parsing explanation string to retrieve the max number of entries of a srmLs -l, "
 						+ numberOfMaxEntriesString + " is not a valid integer!");
-				throw new RuntimeException("Error parsing explanation string to retrieve the max number of entries of a srmLs -l, "
+					throw new RuntimeException("Error parsing explanation string to retrieve the max number of entries of a srmLs -l, "
 						+ numberOfMaxEntriesString + " is not a valid integer!");
-			}
-			log.warn("Too many results with Ls, max entries is " + numberOfMaxEntries + ". Re-trying with counted Ls.");
-			entries = this.getNChildrenSurlInfo(numberOfMaxEntries);
+				}
+				log.warn("Too many results with Ls, max entries is " + numberOfMaxEntries + ". Re-trying with counted Ls.");
+				entries = this.getNChildrenSurlInfo(numberOfMaxEntries);
+			} else
+				throw e;
 		}
 		if (entries != null)
 			buildDirectoryPage(out, entries, numberOfMaxEntries);

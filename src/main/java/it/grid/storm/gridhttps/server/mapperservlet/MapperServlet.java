@@ -12,15 +12,16 @@
  */
 package it.grid.storm.gridhttps.server.mapperservlet;
 
+import it.grid.storm.gridhttps.common.storagearea.StorageArea;
+import it.grid.storm.gridhttps.common.storagearea.StorageAreaManager;
 import it.grid.storm.gridhttps.configuration.DefaultConfiguration;
-import it.grid.storm.storagearea.StorageArea;
-import it.grid.storm.storagearea.StorageAreaManager;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
+
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;

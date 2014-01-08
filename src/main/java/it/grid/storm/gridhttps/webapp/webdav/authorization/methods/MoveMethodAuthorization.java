@@ -12,41 +12,56 @@
  */
 package it.grid.storm.gridhttps.webapp.webdav.authorization.methods;
 
-import java.net.URI;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import it.grid.storm.gridhttps.common.storagearea.StorageArea;
 import it.grid.storm.gridhttps.webapp.HttpHelper;
-import it.grid.storm.gridhttps.webapp.authorization.AuthorizationStatus;
-import it.grid.storm.gridhttps.webapp.authorization.Constants;
-import it.grid.storm.gridhttps.webapp.authorization.UserCredentials;
-import it.grid.storm.gridhttps.webapp.authorization.methods.AbstractMethodAuthorization;
-import it.grid.storm.storagearea.StorageArea;
+import it.grid.storm.gridhttps.webapp.common.authorization.AuthorizationStatus;
+import it.grid.storm.gridhttps.webapp.common.authorization.UserCredentials;
 
-public class MoveMethodAuthorization extends AbstractMethodAuthorization {
+public class MoveMethodAuthorization extends WebDAVMethodAuthorization {
 	
-	private StorageArea srcSA;
-	private StorageArea destSA;
-
-	public MoveMethodAuthorization(HttpHelper httpHelper, StorageArea srcSA, StorageArea destSA) {
-		super(httpHelper);
-		this.srcSA = srcSA;
-		this.destSA = destSA;
+	private static final Logger log = LoggerFactory.getLogger(MoveMethodAuthorization.class);
+	
+	public MoveMethodAuthorization() {
+		super();
 	}
-	
-	public AuthorizationStatus isUserAuthorized(UserCredentials user) {
-		if (getHTTPHelper().hasDestinationHeader()) { 
-			URI srcURI = getHTTPHelper().getRequestURI();
-			URI destURI = getHTTPHelper().getDestinationURI();
-			String path = srcSA.getRealPath(srcURI.getRawPath());
-			String operation = Constants.MOVE_FROM_OPERATION;
-			AuthorizationStatus srcResponse = askAuth(user, operation, path);
-			if (srcResponse.isAuthorized()) {
-				path = destSA.getRealPath(destURI.getRawPath());
-				operation = getHTTPHelper().isOverwriteRequest() ? Constants.MOVE_TO_OVERWRITE_OPERATION : Constants.MOVE_TO_OPERATION;
-				return askAuth(user, operation, path);
-			} 
-			return srcResponse;
+
+	@Override
+	public AuthorizationStatus isUserAuthorized(HttpServletRequest request,
+		HttpServletResponse response, UserCredentials user) {
+
+		HttpHelper httpHelper = new HttpHelper(request, response);
+		
+		if (!httpHelper.hasDestinationHeader()) {
+			return AuthorizationStatus.NOTAUTHORIZED(HttpServletResponse.SC_BAD_REQUEST, "No destination header found");
+		}
+		
+		String srcPath = this.stripContext(httpHelper.getRequestURI().getRawPath());
+		String destPath = this.stripContext(httpHelper.getDestinationURI().getRawPath());
+		
+		if (srcPath.equals(destPath)) {
+			return AuthorizationStatus.NOTAUTHORIZED(HttpServletResponse.SC_FORBIDDEN, "The source and destination URIs are the same!");
+		}
+		
+		StorageArea srcSA = getMatchingSA(srcPath);
+		log.debug("srcPath {} matches storage area {}", srcPath, srcSA.getName());
+		StorageArea destSA = getMatchingSA(destPath);
+		log.debug("destPath {} matches storage area {}", destPath, destSA.getName());
+		
+		AuthorizationStatus status = super.isAuthorized(request.getScheme(), srcSA, Permission.READWRITE, user);
+		if (!status.isAuthorized()) {
+			return status;
+		}
+		if (destSA.getName().equals(srcSA.getName())) {
+			log.debug("source and destination storage area are the same");
+			return status;
 		} 
-		return AuthorizationStatus.NOTAUTHORIZED(400, "no destination header found");
+		log.debug("source and destination storage area are different");
+		return super.isAuthorized(request.getScheme(), destSA, Permission.READWRITE, user);
 	}
-	
 }

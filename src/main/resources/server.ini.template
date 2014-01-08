@@ -1,27 +1,13 @@
 # ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-#    server.com   
+#    server.ini
 # ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 #
-#   This file contains properties that govern the operation of StoRM gridhttps server. 
+#   This file contains properties that govern the operation of StoRM GridHTTPs server. 
 #   The file is read at startup of the service. 
 #   Your changes will be applied when the service will be restarted.
 #
 # ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-
-############################
-###  SERVICE PARAMETERS  ###
-############################
-## 
-##  NOTE: 
-##        The SERVICE PARAMETERS are managed also by YAIM. 
-##        So, if you install and configure the service with YAIM, please 
-##        remember that the parameters tagged as YAIM will be overwrite at every  
-##        reconfiguration done with YAIM, so if you want change some parameters 
-##        you should use the YAIM configuration files:
-##           <siteinfo_dir>/services/se_storm_gridhttps (or equivalent)
-## 
-        
+    
 [service]
 
 # ============================
@@ -29,8 +15,8 @@
 # ============================
 
 # GridHTTPs logging configuration file
-# Default: /etc/storm/gridhttps-server/logback.xml
-#log.configuration-file = /etc/storm/gridhttps-server/logback.xml
+# Default: /etc/storm/gridhttps-server/logging.xml
+#log.configuration-file = /etc/storm/gridhttps-server/logging.xml
 
 # Maximum number of active threads for server's requests
 # Default: 150
@@ -39,6 +25,10 @@
 # Maximum number of queued threads for server's requests
 # Default: 300
 #max.queued.threads = 300
+
+# Enables caching of VOMS AA certificate validation outcomes
+# Default: true
+#voms_caching.enabled = false
 
 [connectors]
 
@@ -80,7 +70,7 @@
 
 # Canl truststore update time interval expressed in milliseconds.
 # Default: 60000L (1 minute)
-#x509.truststore.refresh-interval = 600000L
+#x509.truststore.refresh-interval = 60000L
 
 [backend]
 
@@ -99,6 +89,9 @@ backend.hostname =
 # Default: 8080
 #backend.srm-service.port = 8080
 
+# Token used to authenticate to the StoRM BackEnd XMLRPC services
+#backend.xmlrpc.token =
+
 # StoRM SRM EndPoint
 # Default: STORM_BACKEND_HOSTNAME:8444
 #srm.endpoint = ${backend.hostname}:8444
@@ -106,14 +99,3 @@ backend.hostname =
 # If compute-checksum is true, a valid Adler32 checksum-value is computed for every file created
 # Default: true
 #compute-checksum = true
-
-
-
-
-#Change-log
-#08-08-2013 Removed checksum-type
-#02-04-2013 Removed webapp-directory
-#02-04-2013 Unified webdav.max.active.threads, webdav.max.queued.threads, mapping.max.active.threads and mapping.max.queued.threads into max.active.threads and max.queued.threads for the single server running 
-#28-03-2013 Removed service>webdav.context-path and service>filetransfer.context-path
-
-

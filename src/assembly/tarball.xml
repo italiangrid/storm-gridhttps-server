@@ -13,7 +13,7 @@
 			<outputDirectory>${conf_installation_prefix}/${module_name}
 			</outputDirectory>
 			<includes>
-				<include>logback.xml</include>
+				<include>logging.xml</include>
 				<include>server.ini.template</include>
 			</includes>
 		</fileSet>
@@ -39,7 +39,6 @@
 			</outputDirectory>
 			<includes>
 				<include>storm-gridhttps-server.jar</include>
-				<!-- <include>storm-gridhttps-webapp.war</include> -->
 			</includes>
 		</fileSet>
 

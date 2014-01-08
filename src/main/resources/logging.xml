@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<configuration scan="true" scanPeriod="60 seconds">
+
+	<appender name="PROCESS"
+		class="ch.qos.logback.core.rolling.RollingFileAppender">
+		<file>${storm.log.dir}/storm-gridhttps-server.log</file>
+
+		<rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+			<FileNamePattern>${storm.log.dir}/storm-gridhttps-server-%d{yyyy-MM-dd}.log.gz
+			</FileNamePattern>
+			<MaxHistory>60</MaxHistory>
+		</rollingPolicy>
+
+		<encoder>
+			<pattern>%date{ISO8601} [%.-16thread] %-5level %msg%n
+			</pattern>
+		</encoder>
+
+	</appender>
+
+	<logger name="io.milton" level="ERROR">
+		<appender-ref ref="PROCESS" />
+	</logger>
+
+	<logger name="it.grid.storm" level="INFO">
+		<appender-ref ref="PROCESS" />
+	</logger>
+
+	<logger name="org.italiangrid" level="INFO">
+		<appender-ref ref="PROCESS" />
+	</logger>
+
+	<!-- <root level="ERROR"> -->
+	<!-- <appender-ref ref="PROCESS" /> -->
+	<!-- </root> -->
+
+</configuration>

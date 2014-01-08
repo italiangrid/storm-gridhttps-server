@@ -12,26 +12,35 @@
  */
 package it.grid.storm.gridhttps.webapp.webdav.authorization.methods;
 
-import it.grid.storm.gridhttps.webapp.HttpHelper;
-import it.grid.storm.gridhttps.webapp.authorization.AuthorizationStatus;
-import it.grid.storm.gridhttps.webapp.authorization.Constants;
-import it.grid.storm.gridhttps.webapp.authorization.UserCredentials;
-import it.grid.storm.gridhttps.webapp.authorization.methods.AbstractMethodAuthorization;
-import it.grid.storm.storagearea.StorageArea;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
-public class PutMethodAuthorization extends AbstractMethodAuthorization {
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import it.grid.storm.gridhttps.common.storagearea.StorageArea;
+import it.grid.storm.gridhttps.webapp.HttpHelper;
+import it.grid.storm.gridhttps.webapp.common.authorization.AuthorizationStatus;
+import it.grid.storm.gridhttps.webapp.common.authorization.UserCredentials;
+
+public class PutMethodAuthorization extends WebDAVMethodAuthorization {
+		
+	private static final Logger log = LoggerFactory.getLogger(PutMethodAuthorization.class);
 	
-	private StorageArea SA;
-	
-	public PutMethodAuthorization(HttpHelper httpHelper, StorageArea SA) {
-		super(httpHelper);
-		this.SA = SA;
+	public PutMethodAuthorization() {
+		super();
 	}
-	
-	public AuthorizationStatus isUserAuthorized(UserCredentials user) {
-		String path = SA.getRealPath(getHTTPHelper().getRequestURI().getRawPath());
-		String operation = getHTTPHelper().isOverwriteRequest() ? Constants.PREPARE_TO_PUT_OVERWRITE_OPERATION : Constants.PREPARE_TO_PUT_OPERATION;
-		return askAuth(user, operation, path);
+
+	@Override
+	public AuthorizationStatus isUserAuthorized(HttpServletRequest request,
+		HttpServletResponse response, UserCredentials user) {
+
+		HttpHelper httpHelper = new HttpHelper(request, response);
+		String srcPath = stripContext(httpHelper.getRequestURI().getRawPath());
+		StorageArea srcSA = getMatchingSA(srcPath);
+		log.debug("path {} matches storage area {}", srcPath, srcSA.getName());
+		
+		return super.isAuthorized(request.getScheme(), srcSA, Permission.READWRITE, user);
 	}
 	
 }

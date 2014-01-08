@@ -12,42 +12,72 @@
  */
 package it.grid.storm.gridhttps.webapp;
 
-import it.grid.storm.gridhttps.webapp.authorization.UserCredentials;
+import it.grid.storm.gridhttps.webapp.common.authorization.UserCredentials;
 
-import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.security.cert.X509Certificate;
+import java.util.concurrent.TimeUnit;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
 
+import org.italiangrid.utils.voms.SecurityContextFactory;
 import org.italiangrid.utils.voms.VOMSSecurityContext;
-import org.italiangrid.voms.VOMSValidators;
 import org.italiangrid.voms.ac.VOMSACValidator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class HttpHelper {
 
+	public static final String VOMS_VALIDATOR_KEY = "VOMS_VALIDATOR";
+	public static final String VOMS_CONTEXT_KEY = "org.italiangrid.voms-security-context";
+	public static final String USER_CREDENTIALS_KEY = "User";
+	
 	public static final int DEPTH_NULL = -1;
 	public static final int DEPTH_0 = 0;
 	public static final int DEPTH_1 = 1;
 	public static final int DEPTH_INFINITY = 2;
 	
+	public static final long SESSION_LIFETIME_IN_MSECS = 
+		TimeUnit.MINUTES.toMillis(5);
 	
-	private static final VOMSACValidator vomsValidator = VOMSValidators.newValidator();
+	private final VOMSACValidator vomsValidator; 
 
 	private static final Logger log = LoggerFactory.getLogger(HttpHelper.class);
 
-	private HttpServletRequest HTTPRequest = null;
-	private HttpServletResponse HTTPResponse = null;
+	private final HttpServletRequest HTTPRequest;
+	private final HttpServletResponse HTTPResponse;
+	private HttpSession session = null;
 	
-	public HttpHelper(HttpServletRequest HTTPRequest, HttpServletResponse HTTPResponse) {
-		this.HTTPRequest = HTTPRequest;
-		this.HTTPResponse = HTTPResponse;
-	}
 
+	public HttpHelper(HttpServletRequest req, HttpServletResponse res) {
+		HTTPRequest = req;
+		HTTPResponse = res;
+		
+		initSession(req);
+
+		vomsValidator = (VOMSACValidator) req.getServletContext()
+			.getAttribute(VOMS_VALIDATOR_KEY);
+	}
+ 
+	private void initSession(HttpServletRequest req){
+		
+		session = req.getSession();
+		
+		if (!session.isNew()){
+			long now = System.currentTimeMillis();
+			
+			// Invalidate (and recreate) session if it lasts longer than 
+			// SESSION_LIFETIME_IN_MSECS
+			if (now - session.getCreationTime() > SESSION_LIFETIME_IN_MSECS){
+				session.invalidate();
+				session = req.getSession();
+			}
+		}
+		
+	}
 	public HttpServletRequest getRequest() {
 		return this.HTTPRequest;
 	}
@@ -65,7 +95,7 @@ public class HttpHelper {
 		try {
 			uri = new URI(getRequestStringURI());
 		} catch (URISyntaxException e) {
-			log.error(e.getMessage());
+			log.error(e.getMessage(), e);
 			throw new RuntimeException("Unable to create URI object from the string: " + getRequestStringURI());
 		}
 		uri.normalize();
@@ -93,7 +123,7 @@ public class HttpHelper {
 		try {
 			uri = new URI(getDestinationHeader());
 		} catch (URISyntaxException e) {
-			log.error(e.getMessage());
+			log.error(e.getMessage(), e);
 			throw new RuntimeException("Unable to create URI object from the string: " + getDestinationHeader());
 		}
 		uri.normalize();
@@ -162,52 +192,42 @@ public class HttpHelper {
 	public boolean isHttps() {
 		return getRequestProtocol().equals("HTTPS");
 	}
-
-	public void sendError(int code, String description) {
-		try {
-			getResponse().sendError(code, description);
-		} catch (IOException e) {
-			log.error(e.getMessage());
-			e.printStackTrace();
-		}
-	}
 	
 	/* USER CREDENTIALS */
 	
 	public boolean hasUser() {
-		return getRequest().getAttribute("User") != null;
+		return getRequest().getAttribute(USER_CREDENTIALS_KEY) != null;
 	}
 	
 	public void setUser(UserCredentials user) {
-		getRequest().setAttribute("User", user);
+		getRequest().setAttribute(USER_CREDENTIALS_KEY, user);
 	}
 	
 	public UserCredentials getUser() {
 		if (!hasUser()) {
-			setUser(new UserCredentials(this));
+			setUser(new UserCredentials());
 		}
-		return (UserCredentials) getRequest().getAttribute("User");
+		return (UserCredentials) getRequest().getAttribute(USER_CREDENTIALS_KEY);
 	}
 	
 	/* VOMS CONTEXT */
 	
 	public boolean hasVOMSSecurityContext() {
-		return getRequest().getAttribute("VOMSSecurityContext") != null;
+		return (session.getAttribute(VOMS_CONTEXT_KEY) != null);
 	}
 	
-	public void setVOMSSecurityContext(VOMSSecurityContext currentContext) {
-		getRequest().setAttribute("VOMSSecurityContext", currentContext);
+	public void setVOMSSecurityContext(VOMSSecurityContext context) {
+		session.setAttribute(VOMS_CONTEXT_KEY, context);
 	}
 	
 	public VOMSSecurityContext getVOMSSecurityContext() {
 		if (!hasVOMSSecurityContext()) {
-			VOMSSecurityContext.clearCurrentContext();
-			VOMSSecurityContext currentContext = new VOMSSecurityContext();
-			currentContext.setValidator(vomsValidator);
-			VOMSSecurityContext.setCurrentContext(currentContext);
-			getRequest().setAttribute("VOMSSecurityContext", currentContext);
+			VOMSSecurityContext sc = 
+				SecurityContextFactory.newVOMSSecurityContext(vomsValidator);
+
+			session.setAttribute(VOMS_CONTEXT_KEY, sc);
 		}
-		return (VOMSSecurityContext) getRequest().getAttribute("VOMSSecurityContext");
+		return (VOMSSecurityContext) session.getAttribute(VOMS_CONTEXT_KEY);
 	}
 	
 

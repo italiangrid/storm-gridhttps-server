@@ -29,6 +29,7 @@ public class StormGridhttps {
 	private String logFile;
 	
 	private File rootDirectory;
+	private String webappContextPath;
 	private String webdavContextPath;
 	private String filetransferContextPath;
 	
@@ -37,12 +38,14 @@ public class StormGridhttps {
 	
 	private int serverActiveThreadsMax;
 	private int serverQueuedThreadsMax;
-
+	
+	private boolean vomsCachingEnabled;
+	
 	public StormGridhttps() {
-		this.setHttpPort(DefaultConfiguration.SERVER_WEBAPP_HTTP_PORT);
-		this.setHttpsPort(DefaultConfiguration.SERVER_WEBAPP_HTTPS_PORT);
-		this.setEnabledHttp(DefaultConfiguration.SERVER_WEBAPP_USE_HTTP);
-		this.setMapperServlet(new MapperServlet());
+		setHttpPort(DefaultConfiguration.SERVER_WEBAPP_HTTP_PORT);
+		setHttpsPort(DefaultConfiguration.SERVER_WEBAPP_HTTPS_PORT);
+		setEnabledHttp(DefaultConfiguration.SERVER_WEBAPP_USE_HTTP);
+		setMapperServlet(new MapperServlet());
 		SSLOptions sslOptions = new SSLOptions();
 		sslOptions.setCertificateFile(DefaultConfiguration.SERVER_WEBAPP_HTTPS_CERTIFICATE_FILE);
 		sslOptions.setKeyFile(DefaultConfiguration.SERVER_WEBAPP_HTTPS_KEY_FILE);
@@ -50,15 +53,17 @@ public class StormGridhttps {
 		sslOptions.setNeedClientAuth(DefaultConfiguration.SERVER_WEBAPP_HTTPS_NEED_CLIENT_AUTH);
 		sslOptions.setWantClientAuth(DefaultConfiguration.SERVER_WEBAPP_HTTPS_WANT_CLIENT_AUTH);
 		sslOptions.setTrustStoreRefreshIntervalInMsec(DefaultConfiguration.SERVER_WEBAPP_TRUST_STORE_REFRESH_INTERVAL);
-		this.setSsloptions(sslOptions);
-		this.setLogFile(DefaultConfiguration.LOG_FILE);
-		this.setFiletransferContextPath(DefaultConfiguration.WEBAPP_FILETRANSFER_CONTEXTPATH);
-		this.setWebdavContextPath(DefaultConfiguration.WEBAPP_WEBDAV_CONTEXTPATH);
-		this.setRootDirectory(new File(DefaultConfiguration.WEBAPP_GPFS_ROOTDIRECTORY));
-		this.setComputeChecksum(DefaultConfiguration.WEBAPP_COMPUTE_CHECKSUM);
-		this.setChecksumType(DefaultConfiguration.WEBAPP_CHECKSUM_TYPE);
-		this.setServerActiveThreadsMax(DefaultConfiguration.SERVER_ACTIVE_THREADS_MAX);
-		this.setServerQueuedThreadsMax(DefaultConfiguration.SERVER_QUEUED_THREADS_MAX);
+		setSsloptions(sslOptions);
+		setLogFile(DefaultConfiguration.LOG_FILE);
+		setFiletransferContextPath(DefaultConfiguration.WEBAPP_FILETRANSFER_CONTEXTPATH);
+		setWebappContextPath(DefaultConfiguration.WEBAPP_CONTEXTPATH);
+		setWebdavContextPath(DefaultConfiguration.WEBAPP_WEBDAV_CONTEXTPATH);
+		setRootDirectory(new File(DefaultConfiguration.WEBAPP_GPFS_ROOTDIRECTORY));
+		setComputeChecksum(DefaultConfiguration.WEBAPP_COMPUTE_CHECKSUM);
+		setChecksumType(DefaultConfiguration.WEBAPP_CHECKSUM_TYPE);
+		setServerActiveThreadsMax(DefaultConfiguration.SERVER_ACTIVE_THREADS_MAX);
+		setServerQueuedThreadsMax(DefaultConfiguration.SERVER_QUEUED_THREADS_MAX);
+		setVomsCachingEnabled(true);
 	}
 
 	public String getHostname() {
@@ -116,11 +121,6 @@ public class StormGridhttps {
 	public void setLogFile(String logFile) {
 		this.logFile = logFile;
 	}
-
-//	public String toString() {
-//		return "{'" + hostname + "', " + httpPort + ", " + httpsPort + ", " + enabledHttp + ", " + mapperServlet + ", '" + webappsDirectory
-//				+ "', " + ssloptions + ", '" + logFile + "', '" + warFile + "'}";
-//	}
 
 	public void checkConfiguration() throws InitException {
 		mapperServlet.checkConfiguration();
@@ -199,5 +199,21 @@ public class StormGridhttps {
 	public void setServerActiveThreadsMax(int serverActiveThreadsMax) {
 		this.serverActiveThreadsMax = serverActiveThreadsMax;
 	}
+
+	public String getWebappContextPath() {
+		return webappContextPath;
+	}
+
+	public void setWebappContextPath(String webappContextPath) {
+		this.webappContextPath = webappContextPath;
+	}
+
+  public boolean isVomsCachingEnabled() {
+    return vomsCachingEnabled;
+  }
+  
+  public void setVomsCachingEnabled(boolean vomsCachingEnabled) {
+    this.vomsCachingEnabled = vomsCachingEnabled;
+  }
 
 }

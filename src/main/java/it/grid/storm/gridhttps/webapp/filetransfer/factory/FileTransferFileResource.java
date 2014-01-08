@@ -12,18 +12,23 @@
  */
 package it.grid.storm.gridhttps.webapp.filetransfer.factory;
 
-import io.milton.common.ContentTypeUtils;
 import io.milton.common.RangeUtils;
 import io.milton.http.Range;
 import io.milton.http.exceptions.BadRequestException;
 import io.milton.http.exceptions.ConflictException;
 import io.milton.http.exceptions.NotAuthorizedException;
 import io.milton.http.exceptions.NotFoundException;
-import io.milton.resource.*;
-import it.grid.storm.gridhttps.webapp.data.StormFactory;
-import it.grid.storm.gridhttps.webapp.data.StormFileResource;
+import io.milton.resource.GetableResource;
+import io.milton.resource.PropFindableResource;
+import io.milton.resource.ReplaceableResource;
+import it.grid.storm.gridhttps.webapp.common.factory.StormFactory;
+import it.grid.storm.gridhttps.webapp.common.factory.StormFileResource;
 
-import java.io.*;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.Map;
 
 import org.apache.commons.io.IOUtils;
@@ -42,14 +47,6 @@ public class FileTransferFileResource extends StormFileResource implements Getab
 		return getFile().length();
 	}
 
-	public String getContentType(String preferredList) {
-		String mime = ContentTypeUtils.findContentTypes(this.getFile());
-		String s = ContentTypeUtils.findAcceptableContentType(mime, preferredList);
-		if (log.isTraceEnabled()) {
-			log.trace("getContentType: preferred: {} mime: {} selected: {}", new Object[] { preferredList, mime, s });
-		}
-		return s;
-	}
 	
 	public void sendContent(OutputStream out, Range range, Map<String, String> params, String contentType) throws IOException,
 			NotAuthorizedException, BadRequestException, NotFoundException {

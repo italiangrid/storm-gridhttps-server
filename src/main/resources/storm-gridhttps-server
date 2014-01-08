@@ -16,11 +16,8 @@ FAILURE=-1
 TRUE=1
 FALSE=0
 
-
 if test -e /etc/init.d/functions; then
     source /etc/init.d/functions
-#else
-#    echo "/etc/init.d/functions not found"
 fi
 
 if [ -f /lib/lsb/init-functions ]; then
@@ -34,8 +31,6 @@ fi
 
 if test -e "/etc/profile.d/grid-env.sh"; then
     source /etc/profile.d/grid-env.sh
-#else
-#    echo "Warning! No grid-env.sh script found in /etc/profile.d!"
 fi
 
 # read config values override (INSTALL_ROOT is from LCG-2's site.def)
@@ -60,7 +55,6 @@ setenv_if_not_set () {
     fi
 }
 
-
 setenv_if_not_set STORM_LOGDIR "/var/log/storm"
 
 # some Java parameters
@@ -73,8 +67,6 @@ if [ -z $JAVA_HOME ]; then
 fi
 
 JAVA=$JAVA_HOME/bin/java
-
-
 
 if [ -z $STORM_GRIDHTTPS_USER ]; then
    STORM_GRIDHTTPS_USER=gridhttps
@@ -96,8 +88,6 @@ for LOG_FILE in $(ls ${STORM_LOGDIR}/*gridhttps-server* 2> /dev/null); do
       fi	
    fi
 done 
-
-
 
 start () {
     if [ ! `whoami` = "root" ]; then
@@ -139,6 +129,8 @@ start () {
 	cd /usr/share/java/storm-gridhttps-server
         export PATH=$JAVA_HOME/bin:$PATH
         run su "$STORM_GRIDHTTPS_USER" -m -s /bin/sh -c "java \
+                -server -Xmx512m \
+                ${STORM_PROFILE_OPTIONS} \
                 ${STORM_DEBUG_OPTION} \
                 -Dstorm.log.dir='$STORM_LOGDIR' \
                 -jar /usr/share/java/storm-gridhttps-server/storm-gridhttps-server.jar \
@@ -300,7 +292,7 @@ case "$1" in
     start)
 	 if [ $# -gt 1 ]; then
                 if [ $2 = "debug" ]; then
-                    STORM_DEBUG_OPTION="-Xdebug -Xrunjdwp:transport=dt_socket,address=1044,server=y,suspend=n -javaagent:/opt/jrebel/jrebel.jar -Drebel.remoting_plugin=true -Drebel.log=true -Drebel.log.file=/tmp/jrebel.log";
+                    STORM_DEBUG_OPTION="-Xdebug -Xrunjdwp:transport=dt_socket,address=1044,server=y,suspend=n";
                 elif [ $2 = "jmx" ]; then
 			STORM_JMX_OPTION="-Dcom.sun.management.jmxremote.port=8501 -Dcom.sun.management.jmxremote.ssl=false -Dcom.sun.management.jmxremote.authenticate=false";
                 fi
@@ -322,7 +314,7 @@ case "$1" in
 	    sleep 1;  
 		if [ $# -gt 1 ]; then
             if [ $2 = "debug" ]; then
-                STORM_DEBUG_OPTION="-Xdebug -Xrunjdwp:transport=dt_socket,address=1044,server=y,suspend=n -javaagent:/opt/jrebel/jrebel.jar -Drebel.remoting_plugin=true -Drebel.log=true -Drebel.log.file=/tmp/jrebel.log";
+                STORM_DEBUG_OPTION="-Xdebug -Xrunjdwp:transport=dt_socket,address=1044,server=y,suspend=n";
             elif [ $2 = "jmx" ]; then
             	STORM_JMX_OPTION="-Dcom.sun.management.jmxremote.port=8501 -Dcom.sun.management.jmxremote.ssl=false -Dcom.sun.management.jmxremote.authenticate=false";
             else
@@ -330,7 +322,7 @@ case "$1" in
             fi
             if [ $# -gt 2 ]; then
                 if [ $3 = "debug" ]; then
-                    STORM_DEBUG_OPTION="-Xdebug -Xrunjdwp:transport=dt_socket,address=1044,server=y,suspend=n -javaagent:/opt/jrebel/jrebel.jar -Drebel.remoting_plugin=true -Drebel.log=true -Drebel.log.file=/tmp/jrebel.log" ; 
+                    STORM_DEBUG_OPTION="-Xdebug -Xrunjdwp:transport=dt_socket,address=1044,server=y,suspend=n" ; 
                     start;
                 elif [ $3 = "jmx" ]; then
                 	STORM_JMX_OPTION="-Dcom.sun.management.jmxremote.port=8501 -Dcom.sun.management.jmxremote.ssl=false -Dcom.sun.management.jmxremote.authenticate=false" ; 
@@ -350,4 +342,3 @@ case "$1" in
 esac
 
 exit $RETVAL
-

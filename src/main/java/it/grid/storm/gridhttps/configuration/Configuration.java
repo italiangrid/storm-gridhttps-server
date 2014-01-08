@@ -6,10 +6,14 @@ import java.net.UnknownHostException;
 
 import org.ini4j.InvalidFileFormatException;
 import org.ini4j.Wini;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import it.grid.storm.gridhttps.configuration.exceptions.InitException;
 
 public class Configuration {
+	
+	private static final Logger log = LoggerFactory.getLogger(Configuration.class);
 	
 	private static StormGridhttps gridhttpsInfo;
 	private static StormBackend backendInfo;
@@ -31,7 +35,7 @@ public class Configuration {
 	}
 
 	public static void loadConfigurationFromFile(File conf) throws InitException {
-		System.out.println("loading configuration from file: " + conf.toString());
+		log.info("loading configuration from file: " + conf.toString());
 		Wini configuration;
 		try {
 			configuration = new Wini(conf);
@@ -50,6 +54,10 @@ public class Configuration {
 			getGridhttpsInfo().setServerActiveThreadsMax(configuration.get("service", "max.active.threads", int.class));
 		if (configuration.get("service").containsKey("max.queued.threads"))
 			getGridhttpsInfo().setServerQueuedThreadsMax(configuration.get("service", "max.queued.threads", int.class));
+		
+		if (configuration.get("service").containsKey("voms_caching.enabled"))
+		  getGridhttpsInfo().setVomsCachingEnabled(configuration.get("service",
+		    "voms_caching.enabled", boolean.class));
 		
 		/* connectors */
 		if (!configuration.keySet().contains("connectors"))
@@ -81,21 +89,23 @@ public class Configuration {
 			getBackendInfo().setServicePort(configuration.get("backend", "backend.authorization-service.port", int.class));
 		if (configuration.get("backend").containsKey("backend.srm-service.port"))
 			getBackendInfo().setPort(configuration.get("backend", "backend.srm-service.port", int.class));
+		if (configuration.get("backend").containsKey("backend.xmlrpc.token"))
+			getBackendInfo().setToken(configuration.get("backend", "backend.xmlrpc.token", String.class));
 		if (configuration.get("backend").containsKey("srm.endpoint")) {
 			getFrontendInfo().setHostname(configuration.get("backend", "srm.endpoint").split(":")[0]);
 			getFrontendInfo().setPort(Integer.valueOf(configuration.get("backend", "srm.endpoint").split(":")[1]));
 		}
 		if (configuration.get("backend").containsKey("compute-checksum"))
 			getGridhttpsInfo().setComputeChecksum(configuration.get("backend", "compute-checksum", boolean.class));
-		System.out.println("configuration successfully loaded");
+		log.info("configuration successfully loaded");
 	}
 	
 	public static void checkConfiguration() throws InitException {
-		System.out.println("checking backend configuration...");
+		log.info("checking backend configuration...");
 		getBackendInfo().checkConfiguration();
-		System.out.println("checking frontend configuration...");
+		log.info("checking frontend configuration...");
 		getFrontendInfo().checkConfiguration();
-		System.out.println("checking gridhttps configuration...");
+		log.info("checking gridhttps configuration...");
 		getGridhttpsInfo().checkConfiguration();
 	}
 	
