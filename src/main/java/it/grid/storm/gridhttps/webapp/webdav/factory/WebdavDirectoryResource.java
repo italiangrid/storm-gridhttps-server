@@ -21,11 +21,11 @@ import io.milton.resource.*;
 import io.milton.servlet.MiltonServlet;
 import it.grid.storm.gridhttps.webapp.common.exceptions.RuntimeApiException;
 import it.grid.storm.gridhttps.webapp.common.exceptions.SRMOperationException;
-import it.grid.storm.gridhttps.webapp.common.exceptions.SRMOperationException.TSRMExceptionReason;
 import it.grid.storm.gridhttps.webapp.common.factory.StormDirectoryResource;
 import it.grid.storm.gridhttps.webapp.common.factory.StormFactory;
 import it.grid.storm.gridhttps.webapp.webdav.factory.html.StormHtmlFolderPage;
 import it.grid.storm.srm.types.TReturnStatus;
+import it.grid.storm.srm.types.TStatusCode;
 import it.grid.storm.xmlrpc.outputdata.LsOutputData.SurlInfo;
 
 import java.io.File;
@@ -105,7 +105,7 @@ public class WebdavDirectoryResource extends StormDirectoryResource implements M
 		try {
 			entries = this.getChildrenSurlInfo();
 		} catch (SRMOperationException e) {
-			if (e.getExceptionReason().equals(TSRMExceptionReason.TOOMANYRESULTS)) {
+			if (e.getStatus().getStatusCode().equals(TStatusCode.SRM_TOO_MANY_RESULTS)) {
 				TReturnStatus status = e.getStatus();
 				String[] array = status.getExplanation().split(" ");
 				String numberOfMaxEntriesString = array[array.length - 1]; // last element

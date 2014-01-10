@@ -9,7 +9,6 @@ import org.slf4j.LoggerFactory;
 import it.grid.storm.gridhttps.webapp.common.Surl;
 import it.grid.storm.gridhttps.webapp.common.authorization.UserCredentials;
 import it.grid.storm.gridhttps.webapp.common.exceptions.SRMOperationException;
-import it.grid.storm.gridhttps.webapp.common.exceptions.SRMOperationException.TSRMExceptionReason;
 import it.grid.storm.srm.types.TRequestToken;
 import it.grid.storm.srm.types.TReturnStatus;
 import it.grid.storm.srm.types.TStatusCode;
@@ -54,7 +53,8 @@ public class ReleaseFile implements SRMOperation {
 	@Override
 	public SurlArrayRequestOutputData executeAs(UserCredentials user, BackendApi backend) throws SRMOperationException {
 	
-		log.debug("release '" + StringUtils.join(this.getSurlList().toArray(), ',') + "' ...");
+		log.debug(String.format("srmRf '%s' ...",
+			StringUtils.join(this.getSurlList().toArray(), ',')));
 		SurlArrayRequestOutputData output = null;
 		try {
 			if (user.isAnonymous()) { // HTTP
@@ -66,8 +66,8 @@ public class ReleaseFile implements SRMOperation {
 			}
 		} catch (ApiException e) {
 			log.error(e.getMessage());
-			TReturnStatus status = new TReturnStatus(TStatusCode.SRM_INTERNAL_ERROR, e.toString());
-			throw new SRMOperationException(status, TSRMExceptionReason.INTERNALERROR);
+			throw new SRMOperationException(new TReturnStatus(
+				TStatusCode.SRM_INTERNAL_ERROR, e.toString()));
 		}
 		log.debug(output.getStatus().getStatusCode().getValue());
 		log.debug(output.getStatus().getExplanation());

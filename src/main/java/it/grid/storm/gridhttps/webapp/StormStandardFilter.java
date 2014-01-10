@@ -30,6 +30,7 @@ import io.milton.http.exceptions.NotAuthorizedException;
 import io.milton.servlet.MiltonServlet;
 import it.grid.storm.gridhttps.webapp.common.exceptions.RuntimeApiException;
 import it.grid.storm.gridhttps.webapp.common.exceptions.SRMOperationException;
+import it.grid.storm.srm.types.TStatusCode;
 
 public class StormStandardFilter implements Filter {
 
@@ -64,12 +65,19 @@ public class StormStandardFilter implements Filter {
         } catch (RuntimeApiException ex) {
             log.error(ex.getMessage(), ex);
             response.sendError(Status.SC_INTERNAL_SERVER_ERROR, ex.getMessage());
-        } catch (RuntimeException ex) {
-            log.error(ex.getMessage(), ex);
-            response.sendError(Status.SC_INTERNAL_SERVER_ERROR, ex.getMessage());
         } catch (SRMOperationException ex) {
-            log.error("RequestFailureException: {}", ex.getReason(), ex);
-            response.sendError(Status.SC_SERVICE_UNAVAILABLE, ex.getReason());
+            log.error(String.format("SRMOperationException: %s", ex.getMessage()));
+            TStatusCode sc = ex.getStatus().getStatusCode();
+            if (sc.equals(TStatusCode.SRM_AUTHORIZATION_FAILURE)) {
+            	response.sendError(Status.SC_FORBIDDEN, ex.getStatus().toString());
+            } else if (sc.equals(TStatusCode.SRM_DUPLICATION_ERROR) || sc.equals(TStatusCode.SRM_FILE_BUSY)) {
+            	response.sendError(Status.SC_CONFLICT, ex.getStatus().toString());
+            } else {
+            	response.sendError(Status.SC_INTERNAL_SERVER_ERROR, ex.getStatus().toString());
+            }
+        } catch (RuntimeException ex) {
+          log.error(ex.getMessage(), ex);
+          response.sendError(Status.SC_INTERNAL_SERVER_ERROR, ex.getMessage());
         } catch (BadRequestException ex) {
             log.warn(ex.getReason(), ex);
             manager.getResponseHandler().respondBadRequest(ex.getResource(), response, request);

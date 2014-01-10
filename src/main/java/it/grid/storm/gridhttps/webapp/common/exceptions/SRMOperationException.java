@@ -12,24 +12,17 @@
  */
 package it.grid.storm.gridhttps.webapp.common.exceptions;
 
-import io.milton.http.exceptions.BadRequestException;
 import it.grid.storm.srm.types.TReturnStatus;
 
-public class SRMOperationException extends BadRequestException {
-
-	public enum TSRMExceptionReason {
-		 INTERNALERROR, TOOMANYRESULTS, SRMFAILURE;
-		}
+public class SRMOperationException extends RuntimeException {
 	
 	private static final long serialVersionUID = 1200998154780371147L;
 
 	private TReturnStatus status;
-	private TSRMExceptionReason exceptionReason;
 	
-	public SRMOperationException(TReturnStatus status, TSRMExceptionReason reason) {
+	public SRMOperationException(TReturnStatus status) {
 		super(status.toString());
 		this.setStatus(status);
-		this.setExceptionReason(reason);
 	}
 
 	public TReturnStatus getStatus() {
@@ -38,16 +31,6 @@ public class SRMOperationException extends BadRequestException {
 
 	private void setStatus(TReturnStatus status) {
 		this.status = status;
-	}
-
-	public TSRMExceptionReason getExceptionReason() {
-
-		return exceptionReason;
-	}
-
-	private void setExceptionReason(TSRMExceptionReason exceptionReason) {
-
-		this.exceptionReason = exceptionReason;
 	}
 
 }

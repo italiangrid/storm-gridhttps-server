@@ -28,7 +28,6 @@ import it.grid.storm.gridhttps.webapp.common.StormResource;
 import it.grid.storm.gridhttps.webapp.common.Surl;
 import it.grid.storm.gridhttps.webapp.common.authorization.UserCredentials;
 import it.grid.storm.gridhttps.webapp.common.exceptions.SRMOperationException;
-import it.grid.storm.gridhttps.webapp.common.exceptions.SRMOperationException.TSRMExceptionReason;
 import it.grid.storm.gridhttps.webapp.common.factory.StormDirectoryResource;
 import it.grid.storm.gridhttps.webapp.common.factory.StormFileResource;
 import it.grid.storm.gridhttps.webapp.common.srmOperations.*;
@@ -81,8 +80,8 @@ public class StormResourceHelper {
 			this.backend = new BackendApi(this.hostnameBE, new Long(this.portBE), this.tokenBE);
 		} catch (ApiException e) {
 			log.error(e.toString());
-			TReturnStatus status = new TReturnStatus(TStatusCode.SRM_INTERNAL_ERROR, e.toString());
-			throw new SRMOperationException(status, TSRMExceptionReason.INTERNALERROR);
+			throw new SRMOperationException(new TReturnStatus(
+				TStatusCode.SRM_INTERNAL_ERROR, e.toString()));
 		}
 		this.helper = new HttpHelper(MiltonServlet.request(), MiltonServlet.response());
 	}
@@ -101,8 +100,10 @@ public class StormResourceHelper {
 		
 		AbortRequest rollbackOp = new AbortRequest(surl, token);
 		RequestOutputData output = rollbackOp.executeAs(getHttpHelper().getUser(), this.getBackend());
-		if (!output.isSuccess())
-			log.warn("Failure on aborting surl " + surl + " with token " + token + ": " + output.getStatus().getExplanation());
+		if (!output.isSuccess()) {
+			log.warn(String.format("abortRequest failed on surl %s and token %s: %s",
+				surl, token, output.getStatus().getExplanation()));
+		}
 	}
 
 	/* MKCOL */
@@ -112,7 +113,7 @@ public class StormResourceHelper {
 		MkDir operation = new MkDir(new Surl(parentDir.getSurl(), destName));
 		RequestOutputData output = operation.executeAs(getHttpHelper().getUser(), this.getBackend());
 		if (!output.isSuccess()) {
-			throw new SRMOperationException(output.getStatus(), TSRMExceptionReason.SRMFAILURE);
+			throw new SRMOperationException(output.getStatus());
 		}
 		return new StormDirectoryResource(parentDir, destName);
 	}
@@ -124,7 +125,8 @@ public class StormResourceHelper {
 		Ping operation = new Ping(hostname, port);
 		PingOutputData output = operation.executeAs(user, this.getBackend());
 		if (!output.isSuccess()) {
-			throw new SRMOperationException(new TReturnStatus(TStatusCode.SRM_FAILURE, "ping error"), TSRMExceptionReason.SRMFAILURE);
+			throw new SRMOperationException(new TReturnStatus(
+				TStatusCode.SRM_FAILURE, "ping error"));
 		}
 		return output;
 	}
@@ -140,7 +142,7 @@ public class StormResourceHelper {
 			operation = new Rm(toDelete.getSurl());
 		RequestOutputData output = (RequestOutputData) operation.executeAs(getHttpHelper().getUser(), this.getBackend());
 		if (!output.isSuccess()) {
-			throw new SRMOperationException(output.getStatus(), TSRMExceptionReason.SRMFAILURE);
+			throw new SRMOperationException(output.getStatus());
 		}
 		return output;
 	}
@@ -153,7 +155,7 @@ public class StormResourceHelper {
 		Move operation = new Move(source.getSurl(), new Surl(destParent.getSurl(), destName));
 		RequestOutputData output = operation.executeAs(getHttpHelper().getUser(), this.getBackend());
 		if (!output.isSuccess()) {
-			throw new SRMOperationException(output.getStatus(), TSRMExceptionReason.SRMFAILURE);
+			throw new SRMOperationException(output.getStatus());
 		}
 		return output;
 	}
@@ -167,7 +169,7 @@ public class StormResourceHelper {
 		PtGOutputData outputPtG = ptg.executeAs(this.getHttpHelper().getUser(), this.getBackend());
 		if (!outputPtG.getStatus().getStatusCode().equals(TStatusCode.SRM_FILE_PINNED)) {
 			this.doAbortRequest(source.getSurl(), outputPtG.getToken());
-			throw new SRMOperationException(outputPtG.getStatus(), TSRMExceptionReason.SRMFAILURE);
+			throw new SRMOperationException(outputPtG.getStatus());
 		}
 		// READ FROM DISK
 		InputStream in = null;
@@ -176,8 +178,8 @@ public class StormResourceHelper {
 		} catch (Exception e) {
 			log.error(e.getMessage());
 			this.doAbortRequest(source.getSurl(), outputPtG.getToken());
-			TReturnStatus status = new TReturnStatus(TStatusCode.SRM_INTERNAL_ERROR, e.toString());
-			throw new SRMOperationException(status, TSRMExceptionReason.INTERNALERROR);
+			throw new SRMOperationException(new TReturnStatus(
+				TStatusCode.SRM_INTERNAL_ERROR, e.toString()));
 		}
 		// RF
 		SurlArrayRequestOutputData oRf;
@@ -190,7 +192,7 @@ public class StormResourceHelper {
 		}
 		if (!oRf.isSuccess()) {
 			this.doAbortRequest(source.getSurl(), outputPtG.getToken());
-			throw new SRMOperationException(oRf.getStatus(), TSRMExceptionReason.SRMFAILURE);
+			throw new SRMOperationException(oRf.getStatus());
 		}
 		return in;
 	}
@@ -205,7 +207,7 @@ public class StormResourceHelper {
 		FileTransferOutputData oPtP = ptp.executeAs(getHttpHelper().getUser(), this.getBackend());
 		if (!oPtP.getStatus().getStatusCode().equals(TStatusCode.SRM_SPACE_AVAILABLE)) {
 			this.doAbortRequest(toCreate, oPtP.getToken());
-			throw new SRMOperationException(oPtP.getStatus(), TSRMExceptionReason.SRMFAILURE);
+			throw new SRMOperationException(oPtP.getStatus());
 		}
 		// WRITE FILE
 		File fsDest = new File(parentDir.getFile(), name);
@@ -214,8 +216,8 @@ public class StormResourceHelper {
 		} catch (Exception e) {
 			log.error(e.getMessage());
 			this.doAbortRequest(toCreate, oPtP.getToken());
-			TReturnStatus status = new TReturnStatus(TStatusCode.SRM_INTERNAL_ERROR, e.toString());
-			throw new SRMOperationException(status, TSRMExceptionReason.INTERNALERROR);
+			throw new SRMOperationException(new TReturnStatus(
+				TStatusCode.SRM_INTERNAL_ERROR, e.toString()));
 		}
 		// PD
 		PutDone pd = new PutDone(toCreate, oPtP.getToken());
@@ -228,7 +230,7 @@ public class StormResourceHelper {
 		}
 		if (!oPd.isSuccess()) {
 			this.doAbortRequest(toCreate, oPtP.getToken());
-			throw new SRMOperationException(oPd.getStatus(), TSRMExceptionReason.SRMFAILURE);
+			throw new SRMOperationException(oPd.getStatus());
 		}
 		return new StormFileResource(parentDir, name);
 	}
@@ -240,7 +242,7 @@ public class StormResourceHelper {
 		FileTransferOutputData oPtP = ptp.executeAs(getHttpHelper().getUser(), this.getBackend()); 
 		if (!oPtP.getStatus().getStatusCode().getValue().equals("SRM_SPACE_AVAILABLE")) {
 			this.doAbortRequest(toReplace.getSurl(), oPtP.getToken());
-			throw new SRMOperationException(oPtP.getStatus(), TSRMExceptionReason.SRMFAILURE);
+			throw new SRMOperationException(oPtP.getStatus());
 		}
 		// WRITE FILE
 		try {
@@ -249,8 +251,8 @@ public class StormResourceHelper {
 		} catch (Exception e) {
 			log.error(e.getMessage());
 			this.doAbortRequest(toReplace.getSurl(), oPtP.getToken());
-			TReturnStatus status = new TReturnStatus(TStatusCode.SRM_INTERNAL_ERROR, e.toString());
-			throw new SRMOperationException(status, TSRMExceptionReason.INTERNALERROR);
+			throw new SRMOperationException(new TReturnStatus(
+				TStatusCode.SRM_INTERNAL_ERROR, e.toString()));
 		}
 		// PD
 		PutDone pd = new PutDone(toReplace.getSurl(), oPtP.getToken());
@@ -263,7 +265,7 @@ public class StormResourceHelper {
 		}
 		if (!oPd.isSuccess()) {
 			this.doAbortRequest(toReplace.getSurl(), oPtP.getToken());
-			throw new SRMOperationException(oPd.getStatus(), TSRMExceptionReason.SRMFAILURE);
+			throw new SRMOperationException(oPd.getStatus());
 		}
 	}
 
@@ -276,8 +278,9 @@ public class StormResourceHelper {
 	
 	private void doCopyDirectory(StormDirectoryResource sourceDir, StormDirectoryResource newParent, String newName,
 			boolean isDepthInfinity) throws NotAuthorizedException, BadRequestException {
-		log.debug("copy '" + sourceDir.getSurl().asString() + "' to '" + newParent.getSurl().asString() + File.separator + newName
-				+ "' ...");
+
+		log.debug(String.format("copy '%s' to '%s' ...", sourceDir.getSurl()
+			.asString(), newParent.getSurl().asString() + File.separator + newName));
 		// create destination folder:
 		StormDirectoryResource destinationResource = this.doMkCol(newParent, newName);
 		// COPY every resource from the source to the destination folder:
@@ -296,14 +299,16 @@ public class StormResourceHelper {
 	}
 	
 	public void doCopyFile(StormFileResource source, StormDirectoryResource newParent, String newName) throws SRMOperationException {
-		log.debug("copy '" + source.getSurl().asString() + "' to '" + newParent.getSurl().asString() + File.separator + newName + "' ...");
+
+		log.debug(String.format("copy '%s' to '%s' ...", source.getSurl()
+			.asString(), newParent.getSurl().asString() + File.separator + newName));
 		InputStream input = null;
 		try {
 			input = source.getInputStream();
 		} catch (FileNotFoundException e) {
 			log.error(e.getMessage());
-			TReturnStatus status = new TReturnStatus(TStatusCode.SRM_INTERNAL_ERROR, e.toString());
-			throw new SRMOperationException(status, TSRMExceptionReason.INTERNALERROR);
+			throw new SRMOperationException(new TReturnStatus(
+				TStatusCode.SRM_INTERNAL_ERROR, e.toString()));
 		}
 		this.doPut(newParent, newName, input);
 	}
@@ -318,7 +323,8 @@ public class StormResourceHelper {
 				continue;
 			}
 			if (this.lsIgnored.contains(info.getStatus().getStatusCode())) {
-				log.warn("ignored '" + info.getStfn() + "' from ls list, status is " + info.getStatus().getStatusCode().getValue());
+				log.warn(String.format("ignored '%s' from ls list, status is %s",
+					info.getStfn(), info.getStatus().getStatusCode().getValue()));
 				continue;
 			}
 			if (info.getType() == null) {
@@ -335,10 +341,8 @@ public class StormResourceHelper {
 		
 		Ls operation = new Ls(new Surl(source));
 		LsOutputData output = operation.executeAs(this.getHttpHelper().getUser(), this.getBackend());
-		if (output.getStatus().getStatusCode().equals(TStatusCode.SRM_TOO_MANY_RESULTS))
-			throw new SRMOperationException(output.getStatus(), TSRMExceptionReason.TOOMANYRESULTS);
 		if (!output.isSuccess())
-			throw new SRMOperationException(output.getStatus(), TSRMExceptionReason.SRMFAILURE);
+			throw new SRMOperationException(output.getStatus());
 		return output;
 	}
 
@@ -352,10 +356,8 @@ public class StormResourceHelper {
 		
 		LsDetailed operation = new LsDetailed(new Surl(source), recursion, count);
 		LsOutputData output = operation.executeAs(this.getHttpHelper().getUser(), this.getBackend());
-		if (output.getStatus().getStatusCode().equals(TStatusCode.SRM_TOO_MANY_RESULTS))
-			throw new SRMOperationException(output.getStatus(), TSRMExceptionReason.TOOMANYRESULTS);
 		if (!output.isSuccess())
-			throw new SRMOperationException(output.getStatus(), TSRMExceptionReason.SRMFAILURE);
+			throw new SRMOperationException(output.getStatus());
 		return output;
 	}
 	

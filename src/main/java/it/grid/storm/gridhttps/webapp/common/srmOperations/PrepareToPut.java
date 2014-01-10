@@ -3,7 +3,6 @@ package it.grid.storm.gridhttps.webapp.common.srmOperations;
 import it.grid.storm.gridhttps.webapp.common.Surl;
 import it.grid.storm.gridhttps.webapp.common.authorization.UserCredentials;
 import it.grid.storm.gridhttps.webapp.common.exceptions.SRMOperationException;
-import it.grid.storm.gridhttps.webapp.common.exceptions.SRMOperationException.TSRMExceptionReason;
 import it.grid.storm.srm.types.TReturnStatus;
 import it.grid.storm.srm.types.TStatusCode;
 import it.grid.storm.xmlrpc.ApiException;
@@ -47,8 +46,17 @@ public class PrepareToPut implements SRMOperation {
 
 	@Override
 	public FileTransferOutputData executeAs(UserCredentials user, BackendApi backend) throws SRMOperationException {
-		log.debug("prepare to put '" + this.getSurl().asString() + "' with transfer protocols '"
-				+ StringUtils.join(this.getTransferProtocols().toArray(), ',') + "' and overwrite is " + this.isOverwrite() + " ...");
+
+		if (this.getTransferProtocols().isEmpty()) {
+			log.debug(String.format("srmPtP (overwrite=%B) '%s' ...",
+				this.isOverwrite(), this.getSurl().asString()));
+		} else {
+			log.debug(String.format(
+				"srmPtP (overwrite=%B) '%s' with transfer protocols %s ...",
+				this.isOverwrite(), this.getSurl().asString(),
+				StringUtils.join(this.getTransferProtocols().toArray(), ',')));
+		}
+		
 		FileTransferOutputData outputPtP = null;
 		try {
 			if (this.getTransferProtocols().isEmpty()) {
@@ -90,8 +98,8 @@ public class PrepareToPut implements SRMOperation {
 			}
 		} catch (ApiException e) {
 			log.error(e.getMessage());
-			TReturnStatus status = new TReturnStatus(TStatusCode.SRM_INTERNAL_ERROR, e.toString());
-			throw new SRMOperationException(status, TSRMExceptionReason.INTERNALERROR);
+			throw new SRMOperationException(new TReturnStatus(
+				TStatusCode.SRM_INTERNAL_ERROR, e.toString()));
 		}
 		log.debug(outputPtP.getStatus().getStatusCode().getValue());
 		log.debug(outputPtP.getStatus().getExplanation());
