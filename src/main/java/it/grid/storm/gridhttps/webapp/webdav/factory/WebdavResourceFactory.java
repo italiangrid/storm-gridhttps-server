@@ -12,6 +12,7 @@
  */
 package it.grid.storm.gridhttps.webapp.webdav.factory;
 
+import it.grid.storm.gridhttps.common.storagearea.StorageArea;
 import it.grid.storm.gridhttps.configuration.Configuration;
 import it.grid.storm.gridhttps.webapp.common.StormResource;
 import it.grid.storm.gridhttps.webapp.common.factory.StormFactory;
@@ -34,13 +35,13 @@ public final class WebdavResourceFactory extends StormFactory {
 	}
 
 	@Override
-	public StormResource getDirectoryResource(File directory) {
-		return new WebdavDirectoryResource(this, directory);
+	public StormResource getDirectoryResource(StorageArea storageArea, File directory) {
+		return new WebdavDirectoryResource(this, storageArea, directory);
 	}
 
 	@Override
-	public StormResource getFileResource(File file) {
-		return new WebdavFileResource(this, file);
+	public StormResource getFileResource(StorageArea storageArea, File file) {
+		return new WebdavFileResource(this, storageArea, file);
 	}
 
 }

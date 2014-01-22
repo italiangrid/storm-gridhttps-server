@@ -39,6 +39,9 @@ public class PutMethodAuthorization extends FileTransferMethodAuthorization {
 		HttpHelper httpHelper = new HttpHelper(request, response);
 		
 		String srcPath = this.stripContext(httpHelper.getRequestURI().getRawPath());
+		log.debug("context stripped: " + srcPath);
+		srcPath = this.resolvePath(srcPath);
+		log.debug("resolved path: " + srcPath);
 		StorageArea srcSA = getMatchingSA(srcPath);
 		log.debug("path {} matches storage area {}", srcPath, srcSA.getName());
 		AuthorizationStatus status = checkSA(srcSA, httpHelper.getRequestProtocol());

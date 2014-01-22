@@ -17,6 +17,7 @@ import it.grid.storm.gridhttps.common.storagearea.StorageArea;
 import it.grid.storm.gridhttps.common.storagearea.StorageAreaManager;
 import it.grid.storm.gridhttps.webapp.common.StormResource;
 import it.grid.storm.gridhttps.webapp.common.contentservice.StormContentService;
+import it.grid.storm.srm.types.TFileType;
 import it.grid.storm.srm.types.TStatusCode;
 import it.grid.storm.xmlrpc.ApiException;
 import it.grid.storm.xmlrpc.outputdata.LsOutputData.SurlInfo;
@@ -118,24 +119,28 @@ public abstract class StormFactory implements ResourceFactory {
 
 	@Override
 	public Resource getResource(String host, String path) throws NotAuthorizedException, BadRequestException {
-		Resource r = null;
 		String hostNoPort = stripPortFromHost(host);
 		path = stripContext(path);
 		log.debug("getResource: host: " + hostNoPort + " - url:" + path);
-		if (!isRoot(path)) {
-		  StorageArea currentSA = StorageAreaManager.getMatchingSA(path);
-		  if (currentSA != null) {
-				String fsPath = currentSA.getRealPath(path);
-				log.debug("real path: " + fsPath);
-				File requested = new File(getRoot(), fsPath);
-				r = resolveFile(requested);
-			} else {
-				log.warn("Unable to identify a StorageArea that matches: " + path);
-			}
-		} else {
+		if (isRoot(path)) {
 			log.debug("get root resource!");
+			return null;
 		}
-		return r;
+		StorageArea currentSA = StorageAreaManager.getMatchingSA(path);
+		if (currentSA == null) {
+			log.warn("Unable to identify a StorageArea that matches: " + path);
+			return null;
+		}
+		File requested = new File(currentSA.getRealPath(path));
+		log.debug("File path: {}", requested);
+		if (!requested.exists()) {
+			log.debug("File {} doesn't exist", requested);
+			return null;
+		}
+		if (requested.isDirectory()) {
+			return getDirectoryResource(currentSA, requested);
+		}
+		return getFileResource(currentSA, requested);
 	}
 
 	private String stripContext(String path) {
@@ -144,63 +149,34 @@ public abstract class StormFactory implements ResourceFactory {
 		return path.replaceFirst(File.separator + getContextPath(), "");
 	}
 
-	public abstract StormResource getDirectoryResource(File directory);
+	public abstract StormResource getDirectoryResource(StorageArea storageArea, File directory);
 	
-	public abstract StormResource getFileResource(File file);
+	public abstract StormResource getFileResource(StorageArea storageArea, File file);
 	
-	/**
-	 * Returns the StormResource associated to the file, or null if file doesn't exist
-	 * 
-	 **/
-	public StormResource resolveFile(File file) {
-		
-		if (file.exists()) {
-			if (file.isDirectory()) {
-				return getDirectoryResource(file);
-			} else {
-				return getFileResource(file);
-			}
-		} 
-		return null;
-	}
-	
-	/**
-	 * Returns the StormResource associated to the file, or null if file doesn't exist
-	 * 
-	 **/
-	public StormResource resolveFile(File parent, String childname) {
-		
-		return resolveFile(new File(parent, childname));
-	}
-
-	public StormResource resolveFile(SurlInfo surlInfo) {
-		StorageArea storageArea = StorageAreaManager.getMatchingSA(surlInfo.getStfn());
-		return resolveFile(surlInfo, storageArea);
-	}
-	
-	public StormResource resolveFile(SurlInfo surlInfo, StorageArea storageArea) {
+	public StormResource resolveResource(SurlInfo surlInfo, StorageArea storageArea) {
 		if (surlInfo == null) {
-			log.debug("Resolve file error: received a null surl-info!");
+			log.debug("Error on resolving surl info: received null SurlInfo!");
 			return null;
 		}
 		if (storageArea == null) {
-			log.debug("Resolve file error: received a null storage-area!");
+			log.debug("Error on resolving surl info: received null StorageArea!");
 			return null;
 		}
 		if (!isSuccessful(surlInfo.getStatus().getStatusCode())) {
-			log.debug("Resolve file error: surl status is " + surlInfo.getStatus().getStatusCode() + " " + surlInfo.getStatus().getExplanation());
+			log.debug(String.format(
+				"Error on resolving surl info: surl status is %s %s", surlInfo
+					.getStatus().getStatusCode(), surlInfo.getStatus().getExplanation()));
 			return null;
 		}
 		if (surlInfo.getType() == null) {
-			log.debug("Resolve file error: surl-info type is null!");
+			log.debug("Error on resolving surl info: null Type!");
 			return null;
 		}
 		File file = new File(storageArea.getRealPath(surlInfo.getStfn()));
-		if (!storageArea.isOwner(file)) {
-			log.debug("Resolve file error: storage area " + storageArea.getName() + " isn't the owner of " + surlInfo.getStfn());
-			return null;
+		if (surlInfo.getType().equals(TFileType.DIRECTORY)) {
+			return getDirectoryResource(storageArea, file);
 		}
-		return resolveFile(file);
+		return getFileResource(storageArea, file);
 	}
 
 	private boolean isSuccessful(TStatusCode status) {

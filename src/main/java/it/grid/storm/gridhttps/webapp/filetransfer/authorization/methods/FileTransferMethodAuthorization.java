@@ -34,6 +34,12 @@ public abstract class FileTransferMethodAuthorization extends AbstractMethodAuth
 		super(Configuration.getGridhttpsInfo().getFiletransferContextPath());
 	}
 	
+	protected String resolvePath(String path) {
+		/**  TO-DO
+		 **/
+		return path;
+	}
+	
 	protected AuthorizationStatus askBEAuth(UserCredentials user,
 		String operation, String path) {
 

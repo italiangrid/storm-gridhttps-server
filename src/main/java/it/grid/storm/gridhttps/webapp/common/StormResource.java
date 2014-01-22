@@ -17,7 +17,6 @@ import io.milton.http.Request.Method;
 import io.milton.http.http11.auth.DigestResponse;
 import io.milton.resource.*;
 import it.grid.storm.gridhttps.common.storagearea.StorageArea;
-import it.grid.storm.gridhttps.common.storagearea.StorageAreaManager;
 import it.grid.storm.gridhttps.webapp.common.Surl;
 import it.grid.storm.gridhttps.webapp.common.exceptions.RuntimeApiException;
 import it.grid.storm.gridhttps.webapp.common.exceptions.SRMOperationException;
@@ -40,11 +39,13 @@ public abstract class StormResource implements Resource, DigestResource, PropFin
 	private File file;
 	private StormFactory factory;
 	private String host;
+	private StorageArea storageArea;
 
-	public StormResource(String host, StormFactory factory, File file) {
+	public StormResource(String host, StormFactory factory, StorageArea storageArea, File file) {
 		this.setHost(host);
 		this.setFactory(factory);
 		this.setFile(file);
+		this.setStorageArea(storageArea);
 	}
 	
 	private void setHost(String host) {
@@ -59,6 +60,10 @@ public abstract class StormResource implements Resource, DigestResource, PropFin
 		this.file = file;
 	}
 	
+	private void setStorageArea(StorageArea storageArea) {
+		this.storageArea = storageArea;
+	}
+
 	public String getHost() {
 		return host;
 	}
@@ -68,7 +73,7 @@ public abstract class StormResource implements Resource, DigestResource, PropFin
 	}
 
 	public StorageArea getStorageArea() {
-		return StorageAreaManager.getMatchingSA(this.getFile());
+		return this.storageArea;
 	}
 	
 	public StormFactory getFactory() {

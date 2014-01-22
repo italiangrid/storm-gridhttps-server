@@ -27,6 +27,7 @@ import io.milton.resource.MoveableResource;
 import io.milton.resource.PropFindableResource;
 import io.milton.resource.PutableResource;
 import io.milton.resource.Resource;
+import it.grid.storm.gridhttps.common.storagearea.StorageArea;
 import it.grid.storm.gridhttps.webapp.common.StormResource;
 import it.grid.storm.gridhttps.webapp.common.StormResourceHelper;
 import it.grid.storm.gridhttps.webapp.common.exceptions.RuntimeApiException;
@@ -52,12 +53,12 @@ public class StormDirectoryResource extends StormResource implements MakeCollect
 
 	private static final Logger log = LoggerFactory.getLogger(StormDirectoryResource.class);
 
-	public StormDirectoryResource(StormFactory factory, File dir) {
-		super(factory.getLocalhostname(), factory, dir);
+	public StormDirectoryResource(StormFactory factory, StorageArea storageArea, File dir) {
+		super(factory.getLocalhostname(), factory, storageArea, dir);
 	}
 
 	public StormDirectoryResource(StormDirectoryResource parentDir, String childDirName) {
-		this(parentDir.getFactory(), new File(parentDir.getFile(), childDirName));
+		this(parentDir.getFactory(), parentDir.getStorageArea(), new File(parentDir.getFile(), childDirName));
 	}
 
 	@Override
@@ -68,8 +69,15 @@ public class StormDirectoryResource extends StormResource implements MakeCollect
 
 	@Override
 	public Resource child(String name) throws NotAuthorizedException, BadRequestException {
-		
-		return getFactory().resolveFile(getFile(), name);
+		File son = new File(this.getFile(), name);
+		if (!son.exists()) {
+			log.debug("Child {} doesn't exist", son);
+			return null;
+		}
+		if (son.isDirectory()) {
+			return getFactory().getDirectoryResource(getStorageArea(), son);
+		}
+		return getFactory().getFileResource(getStorageArea(), son);
 	}
 
 	@Override
@@ -79,7 +87,7 @@ public class StormDirectoryResource extends StormResource implements MakeCollect
 		File[] children = getFile().listFiles();
 		
 		for (File file : children) {
-			StormResource res = getFactory().resolveFile(file);
+			StormResource res = (StormResource) child(file.getName());
 			if (res != null)
 				list.add(res);
 		}

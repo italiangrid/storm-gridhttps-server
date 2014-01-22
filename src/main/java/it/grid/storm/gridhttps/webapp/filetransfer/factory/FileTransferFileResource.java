@@ -21,6 +21,7 @@ import io.milton.http.exceptions.NotFoundException;
 import io.milton.resource.GetableResource;
 import io.milton.resource.PropFindableResource;
 import io.milton.resource.ReplaceableResource;
+import it.grid.storm.gridhttps.common.storagearea.StorageArea;
 import it.grid.storm.gridhttps.webapp.common.factory.StormFactory;
 import it.grid.storm.gridhttps.webapp.common.factory.StormFileResource;
 
@@ -39,8 +40,8 @@ public class FileTransferFileResource extends StormFileResource implements Getab
 
 	private static final Logger log = LoggerFactory.getLogger(FileTransferFileResource.class);
 
-	public FileTransferFileResource(StormFactory factory, File file) {
-		super(factory, file);
+	public FileTransferFileResource(StormFactory factory, StorageArea storageArea, File file) {
+		super(factory, storageArea, file);
 	}
 
 	public Long getContentLength() {

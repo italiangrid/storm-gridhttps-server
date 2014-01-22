@@ -19,6 +19,8 @@ import io.milton.http.exceptions.ConflictException;
 import io.milton.http.exceptions.NotAuthorizedException;
 import io.milton.resource.*;
 import io.milton.servlet.MiltonServlet;
+import it.grid.storm.gridhttps.common.storagearea.StorageArea;
+import it.grid.storm.gridhttps.configuration.Configuration;
 import it.grid.storm.gridhttps.webapp.common.exceptions.RuntimeApiException;
 import it.grid.storm.gridhttps.webapp.common.exceptions.SRMOperationException;
 import it.grid.storm.gridhttps.webapp.common.factory.StormDirectoryResource;
@@ -43,12 +45,12 @@ public class WebdavDirectoryResource extends StormDirectoryResource implements M
 
 	private static final Logger log = LoggerFactory.getLogger(WebdavDirectoryResource.class);
 
-	public WebdavDirectoryResource(StormFactory factory, File dir) {
-		super(factory, dir);
+	public WebdavDirectoryResource(StormFactory factory, StorageArea storageArea, File dir) {
+		super(factory, storageArea, dir);
 	}
 
 	public WebdavDirectoryResource(StormDirectoryResource parentDir, String childDirName) {
-		this(parentDir.getFactory(), new File(parentDir.getFile(), childDirName));
+		this(parentDir.getFactory(), parentDir.getStorageArea(), new File(parentDir.getFile(), childDirName));
 	}
 
 	public CollectionResource createCollection(String name) throws NotAuthorizedException, ConflictException, BadRequestException {
@@ -128,10 +130,12 @@ public class WebdavDirectoryResource extends StormDirectoryResource implements M
 
 	private void buildDirectoryPage(OutputStream out, ArrayList<SurlInfo> entries, int nmax) {
 		String dirPath = MiltonServlet.request().getRequestURI();
-		StormHtmlFolderPage page = new StormHtmlFolderPage(out);
+		StormHtmlFolderPage page = new StormHtmlFolderPage(this, out);
 		page.start();
 		page.addTitle("StoRM Gridhttps-server WebDAV");
-		page.addNavigator(getStorageArea().getStfn(getFile().getPath()));
+		String webdavContext = File.separator
+			+ Configuration.getGridhttpsInfo().getWebdavContextPath();
+		page.addNavigator(dirPath.replaceFirst(webdavContext, ""));
 		if (nmax > 0)
 			page.addTooManyResultsWarning(nmax);
 		page.addFolderList(dirPath, entries);

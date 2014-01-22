@@ -17,6 +17,7 @@ import io.milton.http.Request;
 import io.milton.http.exceptions.BadRequestException;
 import io.milton.http.exceptions.ConflictException;
 import io.milton.http.exceptions.NotAuthorizedException;
+import it.grid.storm.gridhttps.common.storagearea.StorageArea;
 import it.grid.storm.gridhttps.webapp.common.StormResource;
 import it.grid.storm.gridhttps.webapp.common.StormResourceHelper;
 import it.grid.storm.gridhttps.webapp.common.exceptions.RuntimeApiException;
@@ -33,12 +34,12 @@ public class StormFileResource extends StormResource {
 
 	private static final Logger log = LoggerFactory.getLogger(StormFileResource.class);
 	
-	public StormFileResource(StormFactory factory, File file) {
-		super(factory.getLocalhostname(), factory, file);
+	public StormFileResource(StormFactory factory, StorageArea storageArea, File file) {
+		super(factory.getLocalhostname(), factory, storageArea, file);
 	}
 	
 	public StormFileResource(StormDirectoryResource parentDir, String childFileName) {
-		this(parentDir.getFactory(), new File(parentDir.getFile(), childFileName));
+		this(parentDir.getFactory(), parentDir.getStorageArea(), new File(parentDir.getFile(), childFileName));
 	}
 
 	public Long getContentLength() {

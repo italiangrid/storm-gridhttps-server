@@ -12,6 +12,7 @@
  */
 package it.grid.storm.gridhttps.webapp.filetransfer.factory;
 
+import it.grid.storm.gridhttps.common.storagearea.StorageArea;
 import it.grid.storm.gridhttps.configuration.Configuration;
 import it.grid.storm.gridhttps.webapp.common.StormResource;
 import it.grid.storm.gridhttps.webapp.common.factory.StormFactory;
@@ -36,13 +37,13 @@ public final class FileSystemResourceFactory extends StormFactory {
 	}
 
 	@Override
-	public StormResource getDirectoryResource(File directory) {
-		return new FileTransferDirectoryResource(this, directory);
+	public StormResource getDirectoryResource(StorageArea storageArea, File directory) {
+		return new FileTransferDirectoryResource(this, storageArea, directory);
 	}
 
 	@Override
-	public StormResource getFileResource(File file) {
-		return new FileTransferFileResource(this, file);
+	public StormResource getFileResource(StorageArea storageArea, File file) {
+		return new FileTransferFileResource(this, storageArea, file);
 	}
 
 }
