@@ -99,10 +99,11 @@ public class StormResourceHelper {
 	private void doAbortRequest(Surl surl, TRequestToken token) throws SRMOperationException {
 		
 		AbortRequest rollbackOp = new AbortRequest(surl, token);
-		RequestOutputData output = rollbackOp.executeAs(getHttpHelper().getUser(), this.getBackend());
+		RequestOutputData output = rollbackOp.executeAs(getHttpHelper().getUser(),
+			getBackend());
 		if (!output.isSuccess()) {
-			log.warn(String.format("abortRequest failed on surl %s and token %s: %s",
-				surl, token, output.getStatus().getExplanation()));
+			log.warn("abortRequest failed on surl {} and token {}: {}", new Object[] {
+				surl, token, output.getStatus().getExplanation() });
 		}
 	}
 
@@ -276,8 +277,8 @@ public class StormResourceHelper {
 	private void doCopyDirectory(StormDirectoryResource sourceDir, StormDirectoryResource newParent, String newName,
 			boolean isDepthInfinity) throws NotAuthorizedException, BadRequestException {
 
-		log.debug(String.format("copy '%s' to '%s' ...", sourceDir.getSurl()
-			.asString(), newParent.getSurl().asString() + File.separator + newName));
+		log.debug("copy '{}' to '{}' ...", sourceDir.getSurl(), newParent.getSurl()
+			+ File.separator + newName);
 		// create destination folder:
 		StormDirectoryResource destinationResource = this.doMkCol(newParent, newName);
 		// COPY every resource from the source to the destination folder:
@@ -297,8 +298,8 @@ public class StormResourceHelper {
 	
 	public void doCopyFile(StormFileResource source, StormDirectoryResource newParent, String newName) throws SRMOperationException {
 
-		log.debug(String.format("copy '%s' to '%s' ...", source.getSurl()
-			.asString(), newParent.getSurl().asString() + File.separator + newName));
+		log.debug("copy '{}' to '{}' ...", source.getSurl(), newParent.getSurl()
+			+ File.separator + newName);
 		InputStream input = null;
 		try {
 			input = source.getInputStream();
@@ -334,16 +335,16 @@ public class StormResourceHelper {
 		return filteredOutput;
 	}
 	
-	public LsOutputData doLs(File source) throws SRMOperationException {
+	public LsOutputData doLs(Surl source) throws SRMOperationException {
 		
-		Ls operation = new Ls(new Surl(source));
+		Ls operation = new Ls(source);
 		LsOutputData output = operation.executeAs(this.getHttpHelper().getUser(), this.getBackend());
 		if (!output.isSuccess())
 			throw new SRMOperationException(output.getStatus());
 		return output;
 	}
 
-	public LsOutputData doLsDetailed(File source, RecursionLevel recursion, int count) throws SRMOperationException {
+	public LsOutputData doLsDetailed(Surl source, RecursionLevel recursion, int count) throws SRMOperationException {
 		
 		/*
 		 * TIP: the lightest ls is obtained with:
@@ -351,63 +352,63 @@ public class StormResourceHelper {
 		 * 
 		 */
 		
-		LsDetailed operation = new LsDetailed(new Surl(source), recursion, count);
+		LsDetailed operation = new LsDetailed(source, recursion, count);
 		LsOutputData output = operation.executeAs(this.getHttpHelper().getUser(), this.getBackend());
 		if (!output.isSuccess())
 			throw new SRMOperationException(output.getStatus());
 		return output;
 	}
 	
-	public LsOutputData doLsDetailed(File source) throws SRMOperationException {
+	public LsOutputData doLsDetailed(Surl source) throws SRMOperationException {
 		
 		return doLsDetailed(source, LsDetailed.DEFAULT_RECURSION_LEVEL, LsDetailed.DEFAULT_COUNT);
 	}
 
-	public LsOutputData doLsDetailed(File source, RecursionLevel recursion) throws SRMOperationException {
+	public LsOutputData doLsDetailed(Surl source, RecursionLevel recursion) throws SRMOperationException {
 		
 		return doLsDetailed(source, recursion, LsDetailed.DEFAULT_COUNT);
 	}
 
 	public LsOutputData doLs(StormResource source) throws SRMOperationException {
 		
-		return this.doLs(source.getFile());
+		return this.doLs(source.getSurl());
 	}
 
 	public LsOutputData doLsDetailed(StormResource source) throws SRMOperationException {
 		
-		return this.doLsDetailed(source.getFile());
+		return this.doLsDetailed(source.getSurl());
 	}
 
 	public LsOutputData doLsDetailed(StormResource source, RecursionLevel recursion) throws SRMOperationException {
 		
-		return this.doLsDetailed(source.getFile(), recursion);
+		return this.doLsDetailed(source.getSurl(), recursion);
 	}
 
 	public LsOutputData doLsDetailed(StormResource source, RecursionLevel recursion, int count) throws SRMOperationException {
 		
-		return this.doLsDetailed(source.getFile(), recursion, count);
+		return this.doLsDetailed(source.getSurl(), recursion, count);
 	}
 
 	/* LIMITED LS DETAILED */
 
-	public LsOutputData doLimitedLsDetailed(File source) throws SRMOperationException {
+	public LsOutputData doLimitedLsDetailed(Surl source) throws SRMOperationException {
 		
 		return this.doLsDetailed(source, new RecursionLevel(Recursion.LIMITED, 0));
 	}
 
-	public LsOutputData doLimitedLsDetailed(File source, int count) throws SRMOperationException {
+	public LsOutputData doLimitedLsDetailed(Surl source, int count) throws SRMOperationException {
 		
 		return this.doLsDetailed(source, new RecursionLevel(Recursion.LIMITED, 0), count);
 	}
 
 	public LsOutputData doLimitedLsDetailed(StormResource source) throws SRMOperationException {
 		
-		return this.doLimitedLsDetailed(source.getFile());
+		return this.doLimitedLsDetailed(source.getSurl());
 	}
 
 	public LsOutputData doLimitedLsDetailed(StormResource source, int count) throws SRMOperationException {
 		
-		return this.doLimitedLsDetailed(source.getFile(), count);
+		return this.doLimitedLsDetailed(source.getSurl(), count);
 	}
 
 }

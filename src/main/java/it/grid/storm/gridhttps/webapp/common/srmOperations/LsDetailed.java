@@ -53,7 +53,7 @@ public class LsDetailed implements SRMOperation {
 			throw new IllegalArgumentException(this.getClass().getSimpleName() + " constructor: null recursion");
 		
 		this.surlList.clear();
-		this.surlList.add(surl.asString());
+		this.surlList.add(surl.toString());
 		this.setRecursion(recursion);
 		this.setCount(count);
 	}
@@ -69,7 +69,7 @@ public class LsDetailed implements SRMOperation {
 		
 		this.surlList.clear();
 		for (Surl surl : surlList)
-			this.surlList.add(surl.asString());
+			this.surlList.add(surl.toString());
 		this.setRecursion(recursion);
 		this.setCount(count);
 	}

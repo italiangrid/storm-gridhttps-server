@@ -33,14 +33,14 @@ public class MkDir implements SRMOperation{
 	@Override
 	public RequestOutputData executeAs(UserCredentials user, BackendApi backend) throws SRMOperationException {
 		RequestOutputData output = null;
-		log.debug(String.format("srmMkdir '%s' ...", this.getSurl()));
+		log.debug("srmMkdir '{}' ...", this.getSurl());
 		try {
 			if (user.isAnonymous()) { // HTTP
-				output = backend.mkdir(this.getSurl().asString());
+				output = backend.mkdir(this.getSurl().toString());
 			} else if (user.getUserFQANS().isEmpty()) {
-				output = backend.mkdir(user.getUserDN(), this.getSurl().asString());
+				output = backend.mkdir(user.getUserDN(), this.getSurl().toString());
 			} else {
-				output = backend.mkdir(user.getUserDN(), user.getUserFQANS(), this.getSurl().asString());
+				output = backend.mkdir(user.getUserDN(), user.getUserFQANS(), this.getSurl().toString());
 			}
 		} catch (ApiException e) {
 			log.error(e.getMessage());

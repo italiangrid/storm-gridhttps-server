@@ -48,13 +48,12 @@ public class PrepareToPut implements SRMOperation {
 	public FileTransferOutputData executeAs(UserCredentials user, BackendApi backend) throws SRMOperationException {
 
 		if (this.getTransferProtocols().isEmpty()) {
-			log.debug(String.format("srmPtP (overwrite=%B) '%s' ...",
-				this.isOverwrite(), this.getSurl().asString()));
+			log.debug("srmPtP (overwrite={}) '{}' ...", isOverwrite(), getSurl());
 		} else {
-			log.debug(String.format(
-				"srmPtP (overwrite=%B) '%s' with transfer protocols %s ...",
-				this.isOverwrite(), this.getSurl().asString(),
-				StringUtils.join(this.getTransferProtocols().toArray(), ',')));
+			log.debug(
+				"srmPtP (overwrite={}) '{}' with transfer protocols {} ...",
+				new Object[] { isOverwrite(), getSurl(),
+					StringUtils.join(getTransferProtocols().toArray(), ',') });
 		}
 		
 		FileTransferOutputData outputPtP = null;
@@ -62,37 +61,49 @@ public class PrepareToPut implements SRMOperation {
 			if (this.getTransferProtocols().isEmpty()) {
 				if (this.isOverwrite()) {
 					if (user.isAnonymous()) {
-						outputPtP = backend.prepareToPutOverwrite(this.getSurl().asString());
+						outputPtP = backend.prepareToPutOverwrite(getSurl().toString());
 					} else if (user.getUserFQANS().isEmpty()) {
-						outputPtP = backend.prepareToPutOverwrite(user.getUserDN(), this.getSurl().asString());
+						outputPtP = backend.prepareToPutOverwrite(user.getUserDN(),
+							getSurl().toString());
 					} else {
-						outputPtP = backend.prepareToPutOverwrite(user.getUserDN(), user.getUserFQANS(), this.getSurl().asString());
+						outputPtP = backend.prepareToPutOverwrite(user.getUserDN(),
+							user.getUserFQANS(), getSurl().toString());
 					}
 				} else {
 					if (user.isAnonymous()) {
-						outputPtP = backend.prepareToPut(this.getSurl().asString());
+						outputPtP = backend.prepareToPut(getSurl().toString());
 					} else if (user.getUserFQANS().isEmpty()) {
-						outputPtP = backend.prepareToPut(user.getUserDN(), this.getSurl().asString());
+						outputPtP = backend.prepareToPut(user.getUserDN(), getSurl()
+							.toString());
 					} else {
-						outputPtP = backend.prepareToPut(user.getUserDN(), user.getUserFQANS(), this.getSurl().asString());
+						outputPtP = backend.prepareToPut(user.getUserDN(),
+							user.getUserFQANS(), getSurl().toString());
 					}
 				}
 			} else {
 				if (this.isOverwrite()) {
 					if (user.isAnonymous()) {
-						outputPtP = backend.prepareToPutOverwrite(this.getSurl().asString(), this.getTransferProtocols());
+						outputPtP = backend.prepareToPutOverwrite(getSurl().toString(),
+							getTransferProtocols());
 					} else if (user.getUserFQANS().isEmpty()) {
-						outputPtP = backend.prepareToPutOverwrite(user.getUserDN(), this.getSurl().asString(), this.getTransferProtocols());
+						outputPtP = backend.prepareToPutOverwrite(user.getUserDN(),
+							getSurl().toString(), getTransferProtocols());
 					} else {
-						outputPtP = backend.prepareToPutOverwrite(user.getUserDN(), user.getUserFQANS(), this.getSurl().asString(), this.getTransferProtocols());
+						outputPtP = backend
+							.prepareToPutOverwrite(user.getUserDN(), user.getUserFQANS(),
+								getSurl().toString(), getTransferProtocols());
 					}
 				} else {
 					if (user.isAnonymous()) {
-						outputPtP = backend.prepareToPut(this.getSurl().asString(), this.getTransferProtocols());
+						outputPtP = backend.prepareToPut(getSurl().toString(),
+							getTransferProtocols());
 					} else if (user.getUserFQANS().isEmpty()) {
-						outputPtP = backend.prepareToPut(user.getUserDN(), this.getSurl().asString(), this.getTransferProtocols());
+						outputPtP = backend.prepareToPut(user.getUserDN(), getSurl()
+							.toString(), getTransferProtocols());
 					} else {
-						outputPtP = backend.prepareToPut(user.getUserDN(), user.getUserFQANS(), this.getSurl().asString(), this.getTransferProtocols());
+						outputPtP = backend
+							.prepareToPut(user.getUserDN(), user.getUserFQANS(), getSurl()
+								.toString(), getTransferProtocols());
 					}
 				}
 			}

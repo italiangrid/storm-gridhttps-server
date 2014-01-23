@@ -78,7 +78,7 @@ public class StormFileResource extends StormResource {
 
 	@Override
 	public SurlInfo getSurlInfo() throws RuntimeApiException, SRMOperationException {
-		return StormResourceHelper.getInstance().doLimitedLsDetailed(this.getFile()).getInfos().iterator().next();
+		return StormResourceHelper.getInstance().doLimitedLsDetailed(this.getSurl()).getInfos().iterator().next();
 	}
 
 }

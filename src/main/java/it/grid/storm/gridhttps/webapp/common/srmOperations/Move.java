@@ -33,15 +33,14 @@ public class Move implements SRMOperation {
 	@Override
 	public RequestOutputData executeAs(UserCredentials user, BackendApi backend) throws SRMOperationException {
 		RequestOutputData output = null;
-		log.debug(String.format("srmMv '%s' to '%s' ...", this.getSource()
-			.asString(), this.getDestination().asString()));
+		log.debug("srmMv '{}' to '{}' ...", getSource(), getDestination());
 		try {
 			if (user.isAnonymous()) {
-				output = backend.mv(this.getSource().asString(), this.getDestination().asString());
+				output = backend.mv(getSource().toString(), getDestination().toString());
 			} else if (user.getUserFQANS().isEmpty()) {
-				output = backend.mv(user.getUserDN(), this.getSource().asString(), this.getDestination().asString());
+				output = backend.mv(user.getUserDN(), getSource().toString(), getDestination().toString());
 			} else {
-				output = backend.mv(user.getUserDN(), user.getUserFQANS(), this.getSource().asString(), this.getDestination().asString());
+				output = backend.mv(user.getUserDN(), user.getUserFQANS(), getSource().toString(), getDestination().toString());
 			}
 		} catch (ApiException e) {
 			log.error(e.getMessage());

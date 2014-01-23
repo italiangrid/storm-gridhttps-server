@@ -25,7 +25,7 @@ public class AbortRequest implements SRMOperation {
 	public AbortRequest(Surl surl, TRequestToken token) {
 
 		this.surlList = new ArrayList<String>();
-		this.surlList.add(surl.asString());
+		this.surlList.add(surl.toString());
 		this.setToken(token);
 	}
 
@@ -33,7 +33,7 @@ public class AbortRequest implements SRMOperation {
 
 		this.surlList = new ArrayList<String>();
 		for (Surl surl : surlList)
-			this.surlList.add(surl.asString());
+			this.surlList.add(surl.toString());
 		this.setToken(token);
 	}
 
@@ -41,8 +41,7 @@ public class AbortRequest implements SRMOperation {
 	public RequestOutputData executeAs(UserCredentials user, BackendApi backend)
 		throws SRMOperationException {
 
-		log.debug(String.format("srmAbortRequest '%s' ...", this.getToken()
-			.getValue()));
+		log.debug("srmAbortRequest '{}' ...", this.getToken().getValue());
 		RequestOutputData output = null;
 		try {
 			if (user.isAnonymous()) { // HTTP

@@ -29,14 +29,16 @@ public class RmDir implements SRMOperation {
 	@Override
 	public RequestOutputData executeAs(UserCredentials user, BackendApi backend) throws SRMOperationException {
 		RequestOutputData output = null;
-		log.debug(String.format("srmRmdir -r '%s' ...", this.getSurl().asString()));
+		log.debug("srmRmdir -r '{}' ...", getSurl());
 		try {
 			if (user.isAnonymous()) {
-				output = backend.rmdirRecursively(this.getSurl().asString());
+				output = backend.rmdirRecursively(getSurl().toString());
 			} else if (user.getUserFQANS().isEmpty()) {
-				output = backend.rmdirRecursively(user.getUserDN(), this.getSurl().asString());
+				output = backend.rmdirRecursively(user.getUserDN(), getSurl()
+					.toString());
 			} else {
-				output = backend.rmdirRecursively(user.getUserDN(), user.getUserFQANS(), this.getSurl().asString());
+				output = backend.rmdirRecursively(user.getUserDN(),
+					user.getUserFQANS(), getSurl().toString());
 			}
 		} catch (ApiException e) {
 			log.error(e.getMessage());

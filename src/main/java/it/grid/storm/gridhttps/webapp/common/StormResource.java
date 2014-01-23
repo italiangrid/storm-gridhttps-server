@@ -40,12 +40,16 @@ public abstract class StormResource implements Resource, DigestResource, PropFin
 	private StormFactory factory;
 	private String host;
 	private StorageArea storageArea;
+	private Surl surl;
 
-	public StormResource(String host, StormFactory factory, StorageArea storageArea, File file) {
+	public StormResource(String host, StormFactory factory,
+		StorageArea storageArea, File file) {
+
 		this.setHost(host);
 		this.setFactory(factory);
 		this.setFile(file);
 		this.setStorageArea(storageArea);
+		this.surl = new Surl(getStorageArea(), getFile());
 	}
 	
 	private void setHost(String host) {
@@ -81,7 +85,7 @@ public abstract class StormResource implements Resource, DigestResource, PropFin
 	}
 
 	public String getUniqueId() {
-		String id = this.getFile().toString() + "_" + this.getSurl().asString();
+		String id = this.getFile().toString() + "_" + this.getSurl();
 		return id.hashCode() + "";
 	}
 
@@ -125,11 +129,11 @@ public abstract class StormResource implements Resource, DigestResource, PropFin
 	}
 
 	public int compareTo(Resource o) {
-		return this.getName().compareTo(o.getName());
+		return this.getUniqueId().compareTo(o.getUniqueId());
 	}
 
 	public Surl getSurl() {
-		return new Surl(this.getFile());
+		return this.surl;
 	}
 
 	public InputStream getInputStream() throws FileNotFoundException {

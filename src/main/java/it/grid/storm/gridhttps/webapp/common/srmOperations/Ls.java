@@ -29,7 +29,7 @@ public class Ls implements SRMOperation {
 
 		this.surlList.clear();
 		;
-		this.surlList.add(surl.asString());
+		this.surlList.add(surl.toString());
 	}
 
 	public Ls(ArrayList<Surl> surlList) {
@@ -43,15 +43,14 @@ public class Ls implements SRMOperation {
 
 		this.surlList.clear();
 		for (Surl surl : surlList)
-			this.surlList.add(surl.asString());
+			this.surlList.add(surl.toString());
 	}
 
 	@Override
 	public LsOutputData executeAs(UserCredentials user, BackendApi backend)
 		throws SRMOperationException {
 
-		log.debug(String.format("srmLs '%s' ...",
-			StringUtils.join(this.getSurlList().toArray(), ',')));
+		log.debug("srmLs '{}' ...", StringUtils.join(getSurlList().toArray(), ','));
 		LsOutputData output = null;
 		try {
 			if (user.isAnonymous()) {

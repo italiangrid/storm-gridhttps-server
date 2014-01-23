@@ -31,7 +31,7 @@ public class ReleaseFile implements SRMOperation {
 			throw new IllegalArgumentException(this.getClass().getSimpleName() + " constructor: null token");
 		
 		this.surlList.clear();
-		this.surlList.add(surl.asString());
+		this.surlList.add(surl.toString());
 		this.setToken(token);
 	}
 	
@@ -46,15 +46,14 @@ public class ReleaseFile implements SRMOperation {
 		
 		this.surlList.clear();
 		for (Surl surl : surlList)
-			this.surlList.add(surl.asString());
+			this.surlList.add(surl.toString());
 		this.setToken(token);
 	}
 	
 	@Override
 	public SurlArrayRequestOutputData executeAs(UserCredentials user, BackendApi backend) throws SRMOperationException {
 	
-		log.debug(String.format("srmRf '%s' ...",
-			StringUtils.join(this.getSurlList().toArray(), ',')));
+		log.debug("srmRf '{}' ...", StringUtils.join(getSurlList().toArray(), ','));
 		SurlArrayRequestOutputData output = null;
 		try {
 			if (user.isAnonymous()) { // HTTP

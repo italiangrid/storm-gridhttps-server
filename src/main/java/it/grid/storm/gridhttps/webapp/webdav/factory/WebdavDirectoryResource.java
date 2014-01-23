@@ -101,31 +101,35 @@ public class WebdavDirectoryResource extends StormDirectoryResource implements M
 	 */
 	public void sendContent(OutputStream out, Range range, Map<String, String> params, String contentType) throws IOException,
 			NotAuthorizedException, BadRequestException {
+		
 		log.debug("Called function for GET DIRECTORY");
 		ArrayList<SurlInfo> entries = null;
 		int numberOfMaxEntries = 0;
 		try {
 			entries = this.getChildrenSurlInfo();
 		} catch (SRMOperationException e) {
-			if (e.getStatus().getStatusCode().equals(TStatusCode.SRM_TOO_MANY_RESULTS)) {
-				TReturnStatus status = e.getStatus();
-				String[] array = status.getExplanation().split(" ");
-				String numberOfMaxEntriesString = array[array.length - 1]; // last element
-				try {
-					numberOfMaxEntries = Integer.valueOf(numberOfMaxEntriesString);
-				} catch (NumberFormatException e2) {
-					log.error("Error parsing explanation string to retrieve the max number of entries of a srmLs -l, "
-						+ numberOfMaxEntriesString + " is not a valid integer!");
-					throw new RuntimeException("Error parsing explanation string to retrieve the max number of entries of a srmLs -l, "
-						+ numberOfMaxEntriesString + " is not a valid integer!");
-				}
-				log.warn("Too many results with Ls, max entries is " + numberOfMaxEntries + ". Re-trying with counted Ls.");
-				entries = this.getNChildrenSurlInfo(numberOfMaxEntries);
-			} else
+			TStatusCode statusCode = e.getStatus().getStatusCode();
+			if (!TStatusCode.SRM_TOO_MANY_RESULTS.equals(statusCode)) {
 				throw e;
+			}
+			/* status code is SRM_TOO_MANY_RESULTS */ 
+			TReturnStatus returnedStatus = e.getStatus();
+			String[] explanation = returnedStatus.getExplanation().split(" ");
+			String numberOfMaxEntriesString = explanation[explanation.length - 1]; // last element
+			try {
+				numberOfMaxEntries = Integer.valueOf(numberOfMaxEntriesString);
+			} catch (NumberFormatException e2) {
+				String msg = String.format("Error parsing explanation string to "
+					+ "retrieve the max number of entries of a srmLs -l, %s is not a "
+					+ "valid integer!", numberOfMaxEntriesString);
+				log.error(msg);
+				throw new RuntimeException(msg);
+			}
+			log.warn("Too many results with Ls, max entries is {}. Re-trying with "
+				+ "counted Ls.", numberOfMaxEntries);
+			entries = this.getNChildrenSurlInfo(numberOfMaxEntries);
 		}
-		if (entries != null)
-			buildDirectoryPage(out, entries, numberOfMaxEntries);
+		buildDirectoryPage(out, entries, numberOfMaxEntries);
 	}
 
 	private void buildDirectoryPage(OutputStream out, ArrayList<SurlInfo> entries, int nmax) {

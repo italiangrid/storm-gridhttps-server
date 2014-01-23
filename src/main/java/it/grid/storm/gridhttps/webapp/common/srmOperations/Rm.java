@@ -27,7 +27,7 @@ public class Rm implements SRMOperation {
 			throw new IllegalArgumentException(this.getClass().getSimpleName() + " constructor: null surl");
 		
 		this.surlList.clear();
-		this.surlList.add(surl.asString());
+		this.surlList.add(surl.toString());
 	}
 	
 	public Rm(ArrayList<Surl> surlList) {
@@ -39,7 +39,7 @@ public class Rm implements SRMOperation {
 		
 		this.surlList.clear();
 		for (Surl surl : surlList)
-			this.surlList.add(surl.asString());
+			this.surlList.add(surl.toString());
 	}
 	
 	public ArrayList<String> getSurlList() {
@@ -49,8 +49,7 @@ public class Rm implements SRMOperation {
 	@Override
 	public RequestOutputData executeAs(UserCredentials user, BackendApi backend) throws SRMOperationException {
 		RequestOutputData output = null;
-		log.debug(String.format("srmRm '%s' ...",
-			StringUtils.join(this.getSurlList().toArray(), ',')));
+		log.debug("srmRm '{}' ...", StringUtils.join(getSurlList().toArray(), ','));
 		try {
 			if (user.isAnonymous()) { // HTTP
 				output = backend.rm(this.getSurlList());
