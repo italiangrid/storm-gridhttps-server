@@ -79,6 +79,9 @@ public class StormStandardFilter implements Filter {
 				|| sc.equals(TStatusCode.SRM_FILE_BUSY)) {
 				response.sendError(Status.SC_CONFLICT, ex.getStatus().toString());
 				response.setStatus(Status.SC_CONFLICT);
+			} else if (sc.equals(TStatusCode.SRM_INVALID_PATH)) {
+				response.sendError(Status.SC_NOT_FOUND, ex.getStatus().toString());
+				response.setStatus(Status.SC_NOT_FOUND);
 			} else {
 				response.sendError(Status.SC_INTERNAL_SERVER_ERROR, ex.getStatus()
 					.toString());
