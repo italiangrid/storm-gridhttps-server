@@ -53,6 +53,12 @@ public abstract class WebDAVMethodAuthorization extends
 		return AuthorizationStatus.AUTHORIZED();
 	}
 
+	private boolean isApproachableByAnonymous(StorageArea sa, Permission op) {
+		
+		return (sa.isHTTPReadable() && Permission.READ.equals(op))
+			|| (!sa.isHTTPWritable() && Permission.READWRITE.equals(op));
+	}
+	
 	private AuthorizationStatus isAnonymousAuthorized(StorageArea sa,
 		Permission op, UserCredentials user) {
 
@@ -63,14 +69,12 @@ public abstract class WebDAVMethodAuthorization extends
 		 * the storage area is not HTTPWritable and the permission asked is
 		 * READWRITE
 		 */
-		if ((!sa.isHTTPReadable())
-			|| (!sa.isHTTPWritable() && Permission.READWRITE.equals(op))) {
-			return AuthorizationStatus.NOTAUTHORIZED(
-				HttpServletResponse.SC_FORBIDDEN,
-				"Anonymous users are not authorized to access " + sa.getName() + " in "
-					+ op + " mode ");
+		if (isApproachableByAnonymous(sa, op)) {
+			return AuthorizationStatus.AUTHORIZED();
 		}
-		return AuthorizationStatus.AUTHORIZED();
+		return AuthorizationStatus.NOTAUTHORIZED(HttpServletResponse.SC_FORBIDDEN,
+			"Anonymous users are not authorized to access " + sa.getName() + " in "
+				+ op + " mode ");
 	}
 
 	private AuthorizationStatus isAuthenticatedUserAuthorized(StorageArea sa,
