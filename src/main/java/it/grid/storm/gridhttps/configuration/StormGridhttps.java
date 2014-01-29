@@ -125,8 +125,6 @@ public class StormGridhttps {
 
 	public void checkConfiguration() throws InitException {
 		mapperServlet.checkConfiguration();
-		if (hostname.isEmpty())
-			throw new InitException("gridhttps hostname is empty!");
 		if (logFile.isEmpty())
 			throw new InitException("gridhttps log filename is empty!");
 		if (httpPort <= 0)
