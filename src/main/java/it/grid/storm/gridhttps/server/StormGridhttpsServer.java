@@ -68,9 +68,15 @@ public class StormGridhttpsServer {
         config.getSsloptions().getTrustStoreRefreshIntervalInMsec())
       .lazyAnchorsLoading(false).build();
 
-    oneServer = ServerFactory.newServer(config.getHostname(),
-      config.getHttpsPort(), config.getSsloptions(), validator,
-      ServerFactory.MAX_CONNECTIONS, ServerFactory.MAX_REQUEST_QUEUE_SIZE);
+    oneServer = ServerFactory
+      .newServer(
+        config.getHostname(),
+        config.getHttpsPort(), 
+        config.getSsloptions(), 
+        validator,
+        ServerFactory.MAX_CONNECTIONS, 
+        ServerFactory.MAX_REQUEST_QUEUE_SIZE);
+    
     oneServer.setStopAtShutdown(true);
     oneServer.setGracefulShutdown(1000);
     oneServer.setThreadPool(getThreadPool());
@@ -81,12 +87,11 @@ public class StormGridhttpsServer {
   private void initConnectors() {
 
     if (config.isHTTPEnabled()) {
-      httpConnector = getHttpConnector(config.getHostname(),
-        config.getHttpPort());
+      httpConnector = getHttpConnector(config.getHttpPort());
       oneServer.addConnector(httpConnector);
     }
-    mapHttpConnector = getHttpConnector(config.getHostname(), config
-      .getMapperServlet().getPort());
+
+    mapHttpConnector = getHttpConnector(config.getMapperServlet().getPort());
     oneServer.addConnector(mapHttpConnector);
   }
 
@@ -172,12 +177,11 @@ public class StormGridhttpsServer {
     mappingContext.setCompactPath(true);
   }
 
-  private Connector getHttpConnector(String hostname, int httpPort) {
+  private Connector getHttpConnector(int httpPort) {
 
     Connector connector = new SelectChannelConnector();
     connector.setPort(httpPort);
     connector.setMaxIdleTime(MAX_IDLE_TIME);
-    connector.setHost(hostname);
     return connector;
   }
 

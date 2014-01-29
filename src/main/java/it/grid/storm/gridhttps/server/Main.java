@@ -51,10 +51,10 @@ public class Main {
       server.start();
       server.status();
     } catch (InitException e) {
-      log.error(e.getMessage());
+      log.error(e.getMessage(),e);
       System.exit(1);
     } catch (ServerException e) {
-      log.error(e.getMessage());
+      log.error(e.getMessage(),e);
       System.exit(1);
     }
 

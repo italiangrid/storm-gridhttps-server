@@ -2,6 +2,7 @@ package it.grid.storm.gridhttps.configuration;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.InetAddress;
 import java.net.UnknownHostException;
 
 import org.ini4j.InvalidFileFormatException;
@@ -20,18 +21,24 @@ public class Configuration {
 	private static StormFrontend frontendInfo;
 	
 	public static void loadDefaultConfiguration() throws InitException {
+
 		setGridhttpsInfo(new StormGridhttps());
 		setBackendInfo(new StormBackend());
 		setFrontendInfo(new StormFrontend());
-		java.net.InetAddress localMachine;
+		
 		try {
-			localMachine = java.net.InetAddress.getLocalHost();
+		  String localhost  = InetAddress.getLocalHost().getCanonicalHostName();
+		  
+		  log.debug("Localhost resolved as: {}", localhost);
+		  
+		  getBackendInfo().setHostname(localhost);
+		  getFrontendInfo().setHostname(localhost);
+
 		} catch (UnknownHostException e) {
+		  log.error(e.getMessage(),e);
 			throw new InitException(e);
 		}
-		getGridhttpsInfo().setHostname(localMachine.getHostName());
-		getBackendInfo().setHostname(localMachine.getHostName());
-		getFrontendInfo().setHostname(localMachine.getHostName());
+		
 	}
 
 	public static void loadConfigurationFromFile(File conf) throws InitException {
@@ -58,6 +65,10 @@ public class Configuration {
 		if (configuration.get("service").containsKey("voms_caching.enabled"))
 		  getGridhttpsInfo().setVomsCachingEnabled(configuration.get("service",
 		    "voms_caching.enabled", boolean.class));
+		
+		if (configuration.get("service").containsKey("hostname")){
+		  getGridhttpsInfo().setHostname(configuration.get("service", "hostname"));
+		}
 		
 		/* connectors */
 		if (!configuration.keySet().contains("connectors"))

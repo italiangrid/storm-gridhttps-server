@@ -1,18 +1,13 @@
-# ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-#    server.ini
-# ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+# StoRM GridHTTPS server configuration 
 #
-#   This file contains properties that govern the operation of StoRM GridHTTPs server. 
-#   The file is read at startup of the service. 
-#   Your changes will be applied when the service will be restarted.
-#
-# ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+# This configuration is read at service startup time.
     
 [service]
 
-# ============================
-# General settings 
-# ============================
+# The host/ip address on which the Gridhttps server will bind to.
+# Default: not specified, i.e. binds on all ports  
+# hostname=
+
 
 # GridHTTPs logging configuration file
 # Default: /etc/storm/gridhttps-server/logging.xml
@@ -32,11 +27,7 @@
 
 [connectors]
 
-# ============================
-# Http connector settings 
-# ============================
-
-# Enable http connections
+# Enable plain http connections
 # Default: true - Available values: [true|false]
 #http.enabled = true
 
@@ -47,10 +38,6 @@
 # Mapping-service port
 # Default: 8086
 #mapper.servlet.port = 8086
-
-# ============================
-# Https connector settings 
-# ============================
 
 # Gridhttps https port.
 # Default: 8443
@@ -74,10 +61,6 @@
 
 [backend]
 
-# ============================
-# StoRM settings 
-# ============================
-
 # StoRM BackEnd server full hostname
 backend.hostname = 
 
@@ -93,7 +76,14 @@ backend.hostname =
 #backend.xmlrpc.token =
 
 # StoRM SRM EndPoint
-# Default: STORM_BACKEND_HOSTNAME:8444
+#
+# By default, the Gridhttps service assumes a standalone deployment
+# of the StoRM backend and frontend services. So the frontend is found
+# on the backend host, at port 8444. 
+# In a distributed deployment, this may not be true, so ensure that the
+# srm endpoint refers to the host where the storm frontend is running.
+#
+# Default: ${backend.hostname}:8444
 #srm.endpoint = ${backend.hostname}:8444
 
 # If compute-checksum is true, a valid Adler32 checksum-value is computed for every file created

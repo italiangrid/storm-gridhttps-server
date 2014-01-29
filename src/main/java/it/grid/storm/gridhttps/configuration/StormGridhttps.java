@@ -64,6 +64,7 @@ public class StormGridhttps {
 		setServerActiveThreadsMax(DefaultConfiguration.SERVER_ACTIVE_THREADS_MAX);
 		setServerQueuedThreadsMax(DefaultConfiguration.SERVER_QUEUED_THREADS_MAX);
 		setVomsCachingEnabled(true);
+		setHostname(null);
 	}
 
 	public String getHostname() {
