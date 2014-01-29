@@ -56,7 +56,7 @@ public abstract class WebDAVMethodAuthorization extends
 	private boolean isApproachableByAnonymous(StorageArea sa, Permission op) {
 		
 		return (sa.isHTTPReadable() && Permission.READ.equals(op))
-			|| (!sa.isHTTPWritable() && Permission.READWRITE.equals(op));
+			|| (sa.isHTTPWritable() && Permission.READWRITE.equals(op));
 	}
 	
 	private AuthorizationStatus isAnonymousAuthorized(StorageArea sa,
