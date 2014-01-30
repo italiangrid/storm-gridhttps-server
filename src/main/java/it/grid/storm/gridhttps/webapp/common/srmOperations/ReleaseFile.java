@@ -9,7 +9,6 @@ import org.slf4j.LoggerFactory;
 import it.grid.storm.gridhttps.webapp.common.Surl;
 import it.grid.storm.gridhttps.webapp.common.authorization.UserCredentials;
 import it.grid.storm.gridhttps.webapp.common.exceptions.SRMOperationException;
-import it.grid.storm.gridhttps.webapp.common.exceptions.SRMOperationException.TSRMExceptionReason;
 import it.grid.storm.srm.types.TRequestToken;
 import it.grid.storm.srm.types.TReturnStatus;
 import it.grid.storm.srm.types.TStatusCode;
@@ -32,7 +31,7 @@ public class ReleaseFile implements SRMOperation {
 			throw new IllegalArgumentException(this.getClass().getSimpleName() + " constructor: null token");
 		
 		this.surlList.clear();
-		this.surlList.add(surl.asString());
+		this.surlList.add(surl.toString());
 		this.setToken(token);
 	}
 	
@@ -47,14 +46,14 @@ public class ReleaseFile implements SRMOperation {
 		
 		this.surlList.clear();
 		for (Surl surl : surlList)
-			this.surlList.add(surl.asString());
+			this.surlList.add(surl.toString());
 		this.setToken(token);
 	}
 	
 	@Override
 	public SurlArrayRequestOutputData executeAs(UserCredentials user, BackendApi backend) throws SRMOperationException {
 	
-		log.debug("release '" + StringUtils.join(this.getSurlList().toArray(), ',') + "' ...");
+		log.debug("srmRf '{}' ...", StringUtils.join(getSurlList().toArray(), ','));
 		SurlArrayRequestOutputData output = null;
 		try {
 			if (user.isAnonymous()) { // HTTP
@@ -66,8 +65,8 @@ public class ReleaseFile implements SRMOperation {
 			}
 		} catch (ApiException e) {
 			log.error(e.getMessage());
-			TReturnStatus status = new TReturnStatus(TStatusCode.SRM_INTERNAL_ERROR, e.toString());
-			throw new SRMOperationException(status, TSRMExceptionReason.INTERNALERROR);
+			throw new SRMOperationException(new TReturnStatus(
+				TStatusCode.SRM_INTERNAL_ERROR, e.toString()));
 		}
 		log.debug(output.getStatus().getStatusCode().getValue());
 		log.debug(output.getStatus().getExplanation());

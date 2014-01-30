@@ -19,13 +19,15 @@ import io.milton.http.exceptions.ConflictException;
 import io.milton.http.exceptions.NotAuthorizedException;
 import io.milton.resource.*;
 import io.milton.servlet.MiltonServlet;
+import it.grid.storm.gridhttps.common.storagearea.StorageArea;
+import it.grid.storm.gridhttps.configuration.Configuration;
 import it.grid.storm.gridhttps.webapp.common.exceptions.RuntimeApiException;
 import it.grid.storm.gridhttps.webapp.common.exceptions.SRMOperationException;
-import it.grid.storm.gridhttps.webapp.common.exceptions.SRMOperationException.TSRMExceptionReason;
 import it.grid.storm.gridhttps.webapp.common.factory.StormDirectoryResource;
 import it.grid.storm.gridhttps.webapp.common.factory.StormFactory;
 import it.grid.storm.gridhttps.webapp.webdav.factory.html.StormHtmlFolderPage;
 import it.grid.storm.srm.types.TReturnStatus;
+import it.grid.storm.srm.types.TStatusCode;
 import it.grid.storm.xmlrpc.outputdata.LsOutputData.SurlInfo;
 
 import java.io.File;
@@ -43,12 +45,12 @@ public class WebdavDirectoryResource extends StormDirectoryResource implements M
 
 	private static final Logger log = LoggerFactory.getLogger(WebdavDirectoryResource.class);
 
-	public WebdavDirectoryResource(StormFactory factory, File dir) {
-		super(factory, dir);
+	public WebdavDirectoryResource(StormFactory factory, StorageArea storageArea, File dir) {
+		super(factory, storageArea, dir);
 	}
 
 	public WebdavDirectoryResource(StormDirectoryResource parentDir, String childDirName) {
-		this(parentDir.getFactory(), new File(parentDir.getFile(), childDirName));
+		this(parentDir.getFactory(), parentDir.getStorageArea(), new File(parentDir.getFile(), childDirName));
 	}
 
 	public CollectionResource createCollection(String name) throws NotAuthorizedException, ConflictException, BadRequestException {
@@ -99,39 +101,42 @@ public class WebdavDirectoryResource extends StormDirectoryResource implements M
 	 */
 	public void sendContent(OutputStream out, Range range, Map<String, String> params, String contentType) throws IOException,
 			NotAuthorizedException, BadRequestException {
+		
 		log.debug("Called function for GET DIRECTORY");
 		ArrayList<SurlInfo> entries = null;
 		int numberOfMaxEntries = 0;
 		try {
-			entries = this.getChildrenSurlInfo();
+			entries = getChildrenSurlInfo();
 		} catch (SRMOperationException e) {
-			if (e.getExceptionReason().equals(TSRMExceptionReason.TOOMANYRESULTS)) {
-				TReturnStatus status = e.getStatus();
-				String[] array = status.getExplanation().split(" ");
-				String numberOfMaxEntriesString = array[array.length - 1]; // last element
-				try {
-					numberOfMaxEntries = Integer.valueOf(numberOfMaxEntriesString);
-				} catch (NumberFormatException e2) {
-					log.error("Error parsing explanation string to retrieve the max number of entries of a srmLs -l, "
-						+ numberOfMaxEntriesString + " is not a valid integer!");
-					throw new RuntimeException("Error parsing explanation string to retrieve the max number of entries of a srmLs -l, "
-						+ numberOfMaxEntriesString + " is not a valid integer!");
-				}
-				log.warn("Too many results with Ls, max entries is " + numberOfMaxEntries + ". Re-trying with counted Ls.");
-				entries = this.getNChildrenSurlInfo(numberOfMaxEntries);
-			} else
+			TStatusCode statusCode = e.getStatus().getStatusCode();
+			if (!TStatusCode.SRM_TOO_MANY_RESULTS.equals(statusCode)) {
 				throw e;
+			}
+			/* status code is SRM_TOO_MANY_RESULTS */ 
+			TReturnStatus returnedStatus = e.getStatus();
+			String[] explanation = returnedStatus.getExplanation().split(" ");
+			String numberOfMaxEntriesString = explanation[explanation.length - 1]; // last element
+			try {
+				numberOfMaxEntries = Integer.valueOf(numberOfMaxEntriesString);
+			} catch (NumberFormatException e2) {
+				log.error(e2.getMessage(), e2);
+				throw new RuntimeException(e2.getMessage(), e2);
+			}
+			log.warn("Too many results with Ls, max entries is {}. Re-trying with "
+				+ "counted Ls.", numberOfMaxEntries);
+			entries = getNChildrenSurlInfo(numberOfMaxEntries);
 		}
-		if (entries != null)
-			buildDirectoryPage(out, entries, numberOfMaxEntries);
+		buildDirectoryPage(out, entries, numberOfMaxEntries);
 	}
 
 	private void buildDirectoryPage(OutputStream out, ArrayList<SurlInfo> entries, int nmax) {
 		String dirPath = MiltonServlet.request().getRequestURI();
-		StormHtmlFolderPage page = new StormHtmlFolderPage(out);
+		StormHtmlFolderPage page = new StormHtmlFolderPage(this, out);
 		page.start();
 		page.addTitle("StoRM Gridhttps-server WebDAV");
-		page.addNavigator(getStorageArea().getStfn(getFile().getPath()));
+		String webdavContext = File.separator
+			+ Configuration.getGridhttpsInfo().getWebdavContextPath();
+		page.addNavigator(dirPath.replaceFirst(webdavContext, ""));
 		if (nmax > 0)
 			page.addTooManyResultsWarning(nmax);
 		page.addFolderList(dirPath, entries);

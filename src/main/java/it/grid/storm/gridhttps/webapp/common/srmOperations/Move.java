@@ -6,7 +6,6 @@ import org.slf4j.LoggerFactory;
 import it.grid.storm.gridhttps.webapp.common.Surl;
 import it.grid.storm.gridhttps.webapp.common.authorization.UserCredentials;
 import it.grid.storm.gridhttps.webapp.common.exceptions.SRMOperationException;
-import it.grid.storm.gridhttps.webapp.common.exceptions.SRMOperationException.TSRMExceptionReason;
 import it.grid.storm.srm.types.TReturnStatus;
 import it.grid.storm.srm.types.TStatusCode;
 import it.grid.storm.xmlrpc.ApiException;
@@ -34,19 +33,19 @@ public class Move implements SRMOperation {
 	@Override
 	public RequestOutputData executeAs(UserCredentials user, BackendApi backend) throws SRMOperationException {
 		RequestOutputData output = null;
-		log.debug("move '" + this.getSource().asString() + "' to '" + this.getDestination().asString() + "' ...");
+		log.debug("srmMv '{}' to '{}' ...", getSource(), getDestination());
 		try {
 			if (user.isAnonymous()) {
-				output = backend.mv(this.getSource().asString(), this.getDestination().asString());
+				output = backend.mv(getSource().toString(), getDestination().toString());
 			} else if (user.getUserFQANS().isEmpty()) {
-				output = backend.mv(user.getUserDN(), this.getSource().asString(), this.getDestination().asString());
+				output = backend.mv(user.getUserDN(), getSource().toString(), getDestination().toString());
 			} else {
-				output = backend.mv(user.getUserDN(), user.getUserFQANS(), this.getSource().asString(), this.getDestination().asString());
+				output = backend.mv(user.getUserDN(), user.getUserFQANS(), getSource().toString(), getDestination().toString());
 			}
 		} catch (ApiException e) {
 			log.error(e.getMessage());
-			TReturnStatus status = new TReturnStatus(TStatusCode.SRM_INTERNAL_ERROR, e.toString());
-			throw new SRMOperationException(status, TSRMExceptionReason.INTERNALERROR);
+			throw new SRMOperationException(new TReturnStatus(
+				TStatusCode.SRM_INTERNAL_ERROR, e.toString()));
 		}
 		log.debug(output.getStatus().getStatusCode().getValue());
 		log.debug(output.getStatus().getExplanation());

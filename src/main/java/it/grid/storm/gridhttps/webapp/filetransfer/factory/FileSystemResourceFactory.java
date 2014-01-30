@@ -12,6 +12,7 @@
  */
 package it.grid.storm.gridhttps.webapp.filetransfer.factory;
 
+import it.grid.storm.gridhttps.common.storagearea.StorageArea;
 import it.grid.storm.gridhttps.configuration.Configuration;
 import it.grid.storm.gridhttps.webapp.common.StormResource;
 import it.grid.storm.gridhttps.webapp.common.factory.StormFactory;
@@ -29,20 +30,22 @@ public final class FileSystemResourceFactory extends StormFactory {
 	private static final Logger log = LoggerFactory.getLogger(WebdavResourceFactory.class);
 
 	public FileSystemResourceFactory() throws UnknownHostException, ApiException {
-		super(Configuration.getBackendInfo().getHostname(), Configuration.getBackendInfo().getPort(), Configuration.getGridhttpsInfo().getRootDirectory(),
-				Configuration.getGridhttpsInfo().getFiletransferContextPath());
-		this.setAllowDirectoryBrowsing(false);
-		log.debug(this.getClass().getSimpleName() + " created");
+
+		super(Configuration.getBackendInfo().getHostname(), Configuration
+			.getBackendInfo().getPort(), Configuration.getGridhttpsInfo()
+			.getFiletransferContextPath());
+		setAllowDirectoryBrowsing(false);
+		log.debug("FileSystemResourceFactory created!");
 	}
 
 	@Override
-	public StormResource getDirectoryResource(File directory) {
-		return new FileTransferDirectoryResource(this, directory);
+	public StormResource getDirectoryResource(StorageArea storageArea, File directory) {
+		return new FileTransferDirectoryResource(this, storageArea, directory);
 	}
 
 	@Override
-	public StormResource getFileResource(File file) {
-		return new FileTransferFileResource(this, file);
+	public StormResource getFileResource(StorageArea storageArea, File file) {
+		return new FileTransferFileResource(this, storageArea, file);
 	}
 
 }

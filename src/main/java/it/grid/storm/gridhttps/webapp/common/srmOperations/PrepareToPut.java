@@ -3,7 +3,6 @@ package it.grid.storm.gridhttps.webapp.common.srmOperations;
 import it.grid.storm.gridhttps.webapp.common.Surl;
 import it.grid.storm.gridhttps.webapp.common.authorization.UserCredentials;
 import it.grid.storm.gridhttps.webapp.common.exceptions.SRMOperationException;
-import it.grid.storm.gridhttps.webapp.common.exceptions.SRMOperationException.TSRMExceptionReason;
 import it.grid.storm.srm.types.TReturnStatus;
 import it.grid.storm.srm.types.TStatusCode;
 import it.grid.storm.xmlrpc.ApiException;
@@ -47,51 +46,71 @@ public class PrepareToPut implements SRMOperation {
 
 	@Override
 	public FileTransferOutputData executeAs(UserCredentials user, BackendApi backend) throws SRMOperationException {
-		log.debug("prepare to put '" + this.getSurl().asString() + "' with transfer protocols '"
-				+ StringUtils.join(this.getTransferProtocols().toArray(), ',') + "' and overwrite is " + this.isOverwrite() + " ...");
+
+		if (this.getTransferProtocols().isEmpty()) {
+			log.debug("srmPtP (overwrite={}) '{}' ...", isOverwrite(), getSurl());
+		} else {
+			log.debug(
+				"srmPtP (overwrite={}) '{}' with transfer protocols {} ...",
+				new Object[] { isOverwrite(), getSurl(),
+					StringUtils.join(getTransferProtocols().toArray(), ',') });
+		}
+		
 		FileTransferOutputData outputPtP = null;
 		try {
 			if (this.getTransferProtocols().isEmpty()) {
 				if (this.isOverwrite()) {
 					if (user.isAnonymous()) {
-						outputPtP = backend.prepareToPutOverwrite(this.getSurl().asString());
+						outputPtP = backend.prepareToPutOverwrite(getSurl().toString());
 					} else if (user.getUserFQANS().isEmpty()) {
-						outputPtP = backend.prepareToPutOverwrite(user.getUserDN(), this.getSurl().asString());
+						outputPtP = backend.prepareToPutOverwrite(user.getUserDN(),
+							getSurl().toString());
 					} else {
-						outputPtP = backend.prepareToPutOverwrite(user.getUserDN(), user.getUserFQANS(), this.getSurl().asString());
+						outputPtP = backend.prepareToPutOverwrite(user.getUserDN(),
+							user.getUserFQANS(), getSurl().toString());
 					}
 				} else {
 					if (user.isAnonymous()) {
-						outputPtP = backend.prepareToPut(this.getSurl().asString());
+						outputPtP = backend.prepareToPut(getSurl().toString());
 					} else if (user.getUserFQANS().isEmpty()) {
-						outputPtP = backend.prepareToPut(user.getUserDN(), this.getSurl().asString());
+						outputPtP = backend.prepareToPut(user.getUserDN(), getSurl()
+							.toString());
 					} else {
-						outputPtP = backend.prepareToPut(user.getUserDN(), user.getUserFQANS(), this.getSurl().asString());
+						outputPtP = backend.prepareToPut(user.getUserDN(),
+							user.getUserFQANS(), getSurl().toString());
 					}
 				}
 			} else {
 				if (this.isOverwrite()) {
 					if (user.isAnonymous()) {
-						outputPtP = backend.prepareToPutOverwrite(this.getSurl().asString(), this.getTransferProtocols());
+						outputPtP = backend.prepareToPutOverwrite(getSurl().toString(),
+							getTransferProtocols());
 					} else if (user.getUserFQANS().isEmpty()) {
-						outputPtP = backend.prepareToPutOverwrite(user.getUserDN(), this.getSurl().asString(), this.getTransferProtocols());
+						outputPtP = backend.prepareToPutOverwrite(user.getUserDN(),
+							getSurl().toString(), getTransferProtocols());
 					} else {
-						outputPtP = backend.prepareToPutOverwrite(user.getUserDN(), user.getUserFQANS(), this.getSurl().asString(), this.getTransferProtocols());
+						outputPtP = backend
+							.prepareToPutOverwrite(user.getUserDN(), user.getUserFQANS(),
+								getSurl().toString(), getTransferProtocols());
 					}
 				} else {
 					if (user.isAnonymous()) {
-						outputPtP = backend.prepareToPut(this.getSurl().asString(), this.getTransferProtocols());
+						outputPtP = backend.prepareToPut(getSurl().toString(),
+							getTransferProtocols());
 					} else if (user.getUserFQANS().isEmpty()) {
-						outputPtP = backend.prepareToPut(user.getUserDN(), this.getSurl().asString(), this.getTransferProtocols());
+						outputPtP = backend.prepareToPut(user.getUserDN(), getSurl()
+							.toString(), getTransferProtocols());
 					} else {
-						outputPtP = backend.prepareToPut(user.getUserDN(), user.getUserFQANS(), this.getSurl().asString(), this.getTransferProtocols());
+						outputPtP = backend
+							.prepareToPut(user.getUserDN(), user.getUserFQANS(), getSurl()
+								.toString(), getTransferProtocols());
 					}
 				}
 			}
 		} catch (ApiException e) {
 			log.error(e.getMessage());
-			TReturnStatus status = new TReturnStatus(TStatusCode.SRM_INTERNAL_ERROR, e.toString());
-			throw new SRMOperationException(status, TSRMExceptionReason.INTERNALERROR);
+			throw new SRMOperationException(new TReturnStatus(
+				TStatusCode.SRM_INTERNAL_ERROR, e.toString()));
 		}
 		log.debug(outputPtP.getStatus().getStatusCode().getValue());
 		log.debug(outputPtP.getStatus().getExplanation());

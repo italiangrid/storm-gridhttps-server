@@ -17,7 +17,6 @@ import io.milton.http.Request.Method;
 import io.milton.http.http11.auth.DigestResponse;
 import io.milton.resource.*;
 import it.grid.storm.gridhttps.common.storagearea.StorageArea;
-import it.grid.storm.gridhttps.common.storagearea.StorageAreaManager;
 import it.grid.storm.gridhttps.webapp.common.Surl;
 import it.grid.storm.gridhttps.webapp.common.exceptions.RuntimeApiException;
 import it.grid.storm.gridhttps.webapp.common.exceptions.SRMOperationException;
@@ -33,22 +32,23 @@ import java.util.Date;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public abstract class StormResource implements Resource, DigestResource, PropFindableResource {
+public abstract class StormResource implements Resource, DigestResource,
+	PropFindableResource {
 
 	private static final Logger log = LoggerFactory.getLogger(StormResource.class);
 
 	private File file;
 	private StormFactory factory;
-	private String host;
+	private StorageArea storageArea;
+	private Surl surl;
 
-	public StormResource(String host, StormFactory factory, File file) {
-		this.setHost(host);
+	public StormResource(StormFactory factory,
+		StorageArea storageArea, File file) {
+
 		this.setFactory(factory);
 		this.setFile(file);
-	}
-	
-	private void setHost(String host) {
-		this.host = host;
+		this.setStorageArea(storageArea);
+		this.surl = new Surl(storageArea, file);
 	}
 
 	private void setFactory(StormFactory factory) {
@@ -59,16 +59,16 @@ public abstract class StormResource implements Resource, DigestResource, PropFin
 		this.file = file;
 	}
 	
-	public String getHost() {
-		return host;
+	private void setStorageArea(StorageArea storageArea) {
+		this.storageArea = storageArea;
 	}
 
 	public File getFile() {
-		return this.file;
+		return file;
 	}
 
 	public StorageArea getStorageArea() {
-		return StorageAreaManager.getMatchingSA(this.getFile());
+		return storageArea;
 	}
 	
 	public StormFactory getFactory() {
@@ -76,12 +76,12 @@ public abstract class StormResource implements Resource, DigestResource, PropFin
 	}
 
 	public String getUniqueId() {
-		String id = this.getFile().toString() + "_" + this.getSurl().asString();
-		return id.hashCode() + "";
+		String id = getFile() + "_" + getSurl();
+		return Integer.toString(id.hashCode());
 	}
 
 	public String getName() {
-		return this.getFile().getName();
+		return getFile().getName();
 	}
 
 	/*
@@ -116,29 +116,30 @@ public abstract class StormResource implements Resource, DigestResource, PropFin
 	}
 
 	public String getRealm() {
-		return factory.getRealm(this.host);
+		return "milton";
 	}
 
 	public int compareTo(Resource o) {
-		return this.getName().compareTo(o.getName());
+		return getUniqueId().compareTo(o.getUniqueId());
 	}
 
 	public Surl getSurl() {
-		return new Surl(this.getFile());
+		return surl;
 	}
 
 	public InputStream getInputStream() throws FileNotFoundException {
-		return new FileInputStream(this.getFile());
+		return new FileInputStream(getFile());
 	}
 
-	public abstract SurlInfo getSurlInfo() throws RuntimeApiException, SRMOperationException;
+	public abstract SurlInfo getSurlInfo() throws RuntimeApiException,
+		SRMOperationException;
 	
 	public Date getModifiedDate() {
-		return new Date(this.getFile().lastModified());
+		return new Date(getFile().lastModified());
 	}
 
 	public Date getCreateDate() {
-		return new Date(this.getFile().lastModified());
+		return new Date(getFile().lastModified());
 	}
 
 }

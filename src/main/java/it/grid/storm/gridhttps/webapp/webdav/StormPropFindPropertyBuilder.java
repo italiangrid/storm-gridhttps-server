@@ -196,7 +196,7 @@ public class StormPropFindPropertyBuilder implements PropFindPropertyBuilder {
 
 		if (requestedDepth > currentDepth && (resource instanceof StormDirectoryResource)) {
 			for (SurlInfo info : StormResourceHelper.getInstance().filterLs(surlInfo.getSubpathInfo())) {
-				StormResource child = factory.resolveFile(info);
+				StormResource child = factory.resolveResource(info, resource.getStorageArea());
 				if (child instanceof PropFindableResource) {
 					String childName = child.getName();
 					if (childName == null) {

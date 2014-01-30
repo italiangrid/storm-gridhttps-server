@@ -20,6 +20,7 @@ import io.milton.http.exceptions.NotAuthorizedException;
 import io.milton.http.exceptions.NotFoundException;
 import io.milton.resource.*;
 import io.milton.servlet.MiltonServlet;
+import it.grid.storm.gridhttps.common.storagearea.StorageArea;
 import it.grid.storm.gridhttps.webapp.HttpHelper;
 import it.grid.storm.gridhttps.webapp.common.StormResourceHelper;
 import it.grid.storm.gridhttps.webapp.common.factory.StormDirectoryResource;
@@ -36,8 +37,8 @@ import org.slf4j.LoggerFactory;
 public class WebdavFileResource extends StormFileResource implements CopyableResource, DeletableResource, GetableResource, MoveableResource,
 		PropFindableResource, ReplaceableResource {
 
-	public WebdavFileResource(StormFactory factory, File file) {
-		super(factory, file);
+	public WebdavFileResource(StormFactory factory, StorageArea storageArea, File file) {
+		super(factory, storageArea, file);
 	}
 	
 	public WebdavFileResource(StormDirectoryResource parentDir, String childFileName) {
