@@ -14,8 +14,6 @@ package it.grid.storm.gridhttps.configuration;
 
 import it.grid.storm.gridhttps.configuration.exceptions.InitException;
 
-import java.io.File;
-
 import org.italiangrid.utils.https.SSLOptions;
 
 public class StormGridhttps {
@@ -28,7 +26,6 @@ public class StormGridhttps {
 	private SSLOptions ssloptions;
 	private String logFile;
 	
-	private File rootDirectory;
 	private String webappContextPath;
 	private String webdavContextPath;
 	private String filetransferContextPath;
@@ -58,7 +55,6 @@ public class StormGridhttps {
 		setFiletransferContextPath(DefaultConfiguration.WEBAPP_FILETRANSFER_CONTEXTPATH);
 		setWebappContextPath(DefaultConfiguration.WEBAPP_CONTEXTPATH);
 		setWebdavContextPath(DefaultConfiguration.WEBAPP_WEBDAV_CONTEXTPATH);
-		setRootDirectory(new File(DefaultConfiguration.WEBAPP_GPFS_ROOTDIRECTORY));
 		setComputeChecksum(DefaultConfiguration.WEBAPP_COMPUTE_CHECKSUM);
 		setChecksumType(DefaultConfiguration.WEBAPP_CHECKSUM_TYPE);
 		setServerActiveThreadsMax(DefaultConfiguration.SERVER_ACTIVE_THREADS_MAX);
@@ -142,14 +138,6 @@ public class StormGridhttps {
 			throw new InitException("gridhttps ssloptions trust store directory is empty!");
 		if (serverActiveThreadsMax <= 0)
 			throw new InitException("maximum number of threads for webdav-server's requests is not valid!");
-	}
-	
-	public File getRootDirectory() {
-		return rootDirectory;
-	}
-
-	public void setRootDirectory(File rootDirectory) {
-		this.rootDirectory = rootDirectory;
 	}
 
 	public String getWebdavContextPath() {

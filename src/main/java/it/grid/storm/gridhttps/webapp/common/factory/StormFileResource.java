@@ -35,7 +35,7 @@ public class StormFileResource extends StormResource {
 	private static final Logger log = LoggerFactory.getLogger(StormFileResource.class);
 	
 	public StormFileResource(StormFactory factory, StorageArea storageArea, File file) {
-		super(factory.getLocalhostname(), factory, storageArea, file);
+		super(factory, storageArea, file);
 	}
 	
 	public StormFileResource(StormDirectoryResource parentDir, String childFileName) {

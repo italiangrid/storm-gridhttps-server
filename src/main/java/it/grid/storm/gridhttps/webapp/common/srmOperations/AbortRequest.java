@@ -24,9 +24,9 @@ public class AbortRequest implements SRMOperation {
 
 	public AbortRequest(Surl surl, TRequestToken token) {
 
-		this.surlList = new ArrayList<String>();
-		this.surlList.add(surl.toString());
-		this.setToken(token);
+		surlList = new ArrayList<String>();
+		surlList.add(surl.toString());
+		setToken(token);
 	}
 
 	public AbortRequest(ArrayList<Surl> surlList, TRequestToken token) {
@@ -34,23 +34,23 @@ public class AbortRequest implements SRMOperation {
 		this.surlList = new ArrayList<String>();
 		for (Surl surl : surlList)
 			this.surlList.add(surl.toString());
-		this.setToken(token);
+		setToken(token);
 	}
 
 	@Override
 	public RequestOutputData executeAs(UserCredentials user, BackendApi backend)
 		throws SRMOperationException {
 
-		log.debug("srmAbortRequest '{}' ...", this.getToken().getValue());
+		log.debug("srmAbortRequest token: '{}'", getToken().getValue());
 		RequestOutputData output = null;
 		try {
 			if (user.isAnonymous()) { // HTTP
-				output = backend.abortRequest(this.getToken());
+				output = backend.abortRequest(getToken());
 			} else if (user.getUserFQANS().isEmpty()) {
-				output = backend.abortRequest(user.getUserDN(), this.getToken());
+				output = backend.abortRequest(user.getUserDN(), getToken());
 			} else {
 				output = backend.abortRequest(user.getUserDN(), user.getUserFQANS(),
-					this.getToken());
+					getToken());
 			}
 		} catch (ApiException e) {
 			log.error(e.getMessage());

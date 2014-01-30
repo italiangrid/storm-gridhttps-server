@@ -24,22 +24,18 @@ public class Ls implements SRMOperation {
 	public Ls(Surl surl) {
 
 		if (surl == null)
-			throw new IllegalArgumentException(this.getClass().getSimpleName()
-				+ " constructor: null surl");
+			throw new IllegalArgumentException("surl must not be null!");
 
-		this.surlList.clear();
-		;
-		this.surlList.add(surl.toString());
+		surlList.clear();
+		surlList.add(surl.toString());
 	}
 
 	public Ls(ArrayList<Surl> surlList) {
 
 		if (surlList == null)
-			throw new IllegalArgumentException(this.getClass().getSimpleName()
-				+ " constructor: null surl-list");
+			throw new IllegalArgumentException("surlList must not be null!");
 		if (surlList.isEmpty())
-			throw new IllegalArgumentException(this.getClass().getSimpleName()
-				+ " constructor: empty surl-list");
+			throw new IllegalArgumentException("surlList must not be empty!");
 
 		this.surlList.clear();
 		for (Surl surl : surlList)

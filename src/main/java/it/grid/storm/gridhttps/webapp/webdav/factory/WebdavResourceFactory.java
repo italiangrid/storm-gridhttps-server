@@ -29,9 +29,11 @@ public final class WebdavResourceFactory extends StormFactory {
 	private static final Logger log = LoggerFactory.getLogger(WebdavResourceFactory.class);
 
 	public WebdavResourceFactory() throws UnknownHostException, ApiException {
-		super(Configuration.getBackendInfo().getHostname(), Configuration.getBackendInfo().getPort(), Configuration.getGridhttpsInfo().getRootDirectory(),
-				Configuration.getGridhttpsInfo().getWebdavContextPath());
-		log.debug(this.getClass().getSimpleName() + " created");
+
+		super(Configuration.getBackendInfo().getHostname(), Configuration
+			.getBackendInfo().getPort(), Configuration.getGridhttpsInfo()
+			.getWebdavContextPath());
+		log.debug("WebdavResourceFactory created!");
 	}
 
 	@Override

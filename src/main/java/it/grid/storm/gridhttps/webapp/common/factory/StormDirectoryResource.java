@@ -50,7 +50,7 @@ public class StormDirectoryResource extends StormResource implements
 	private static final Logger log = LoggerFactory.getLogger(StormDirectoryResource.class);
 
 	public StormDirectoryResource(StormFactory factory, StorageArea storageArea, File dir) {
-		super(factory.getLocalhostname(), factory, storageArea, dir);
+		super(factory, storageArea, dir);
 	}
 
 	public StormDirectoryResource(StormDirectoryResource parentDir, String childDirName) {

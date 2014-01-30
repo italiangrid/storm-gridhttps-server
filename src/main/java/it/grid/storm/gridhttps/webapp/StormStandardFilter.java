@@ -100,8 +100,8 @@ public class StormStandardFilter implements Filter {
 			manager.getResponseHandler().respondConflict(ex.getResource(), response,
 				request, INTERNAL_SERVER_ERROR_HTML);
 		} catch (NotAuthorizedException ex) {
-			log.info(ex.getMessage()
-				+ ": The current user is not able to perform the requested operation.");
+			log.warn("Authorization error: {}. Resource: {}", ex.getMessage(),
+				ex.getResource());
 			manager.getResponseHandler().respondUnauthorised(ex.getResource(),
 				response, request);
 		} catch (Throwable e) {

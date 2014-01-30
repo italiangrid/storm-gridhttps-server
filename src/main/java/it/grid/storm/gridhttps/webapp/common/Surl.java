@@ -35,10 +35,11 @@ public class Surl {
 	public Surl(StorageArea storageArea, File file) {
 
 		/* verify parameters */
-		if (storageArea == null || file == null) {
-			String msg = "Invalid arguments: null value(s) found";
-			log.error(msg);
-			throw new IllegalArgumentException(msg);
+		if (storageArea == null) {
+			throw new IllegalArgumentException("storageArea must not be null!");
+		}
+		if (file == null) {
+			throw new IllegalArgumentException("file must not be null!");
 		}
 		
 		/* check if file is owned by storage area */
@@ -89,8 +90,8 @@ public class Surl {
 
 	public Surl(Surl baseSurl, String childName) {
 
-		buildURI(baseSurl.asURI().getHost(), baseSurl.asURI().getPort(), baseSurl
-			.asURI().getRawPath() + File.separator + childName);
+		buildURI(baseSurl.getHostname(), baseSurl.getPort(), baseSurl.getPath()
+			+ File.separator + childName);
 	}
 
 	private void buildURI(String feHostname, int fePort, String path) {
@@ -104,12 +105,22 @@ public class Surl {
 
 	public String toString() {
 
-		return this.surl.toASCIIString();
+		return surl.toASCIIString();
 	}
 
-	public URI asURI() {
-
-		return this.surl;
+	public String getHostname() {
+		
+		return surl.getHost();
+	}
+	
+	public int getPort() {
+		
+		return surl.getPort();
+	}
+	
+	public String getPath() {
+		
+		return surl.getRawPath();
 	}
 
 }

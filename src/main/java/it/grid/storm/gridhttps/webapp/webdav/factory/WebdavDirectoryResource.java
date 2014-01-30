@@ -106,7 +106,7 @@ public class WebdavDirectoryResource extends StormDirectoryResource implements M
 		ArrayList<SurlInfo> entries = null;
 		int numberOfMaxEntries = 0;
 		try {
-			entries = this.getChildrenSurlInfo();
+			entries = getChildrenSurlInfo();
 		} catch (SRMOperationException e) {
 			TStatusCode statusCode = e.getStatus().getStatusCode();
 			if (!TStatusCode.SRM_TOO_MANY_RESULTS.equals(statusCode)) {
@@ -119,15 +119,12 @@ public class WebdavDirectoryResource extends StormDirectoryResource implements M
 			try {
 				numberOfMaxEntries = Integer.valueOf(numberOfMaxEntriesString);
 			} catch (NumberFormatException e2) {
-				String msg = String.format("Error parsing explanation string to "
-					+ "retrieve the max number of entries of a srmLs -l, %s is not a "
-					+ "valid integer!", numberOfMaxEntriesString);
-				log.error(msg);
-				throw new RuntimeException(msg);
+				log.error(e2.getMessage(), e2);
+				throw new RuntimeException(e2.getMessage(), e2);
 			}
 			log.warn("Too many results with Ls, max entries is {}. Re-trying with "
 				+ "counted Ls.", numberOfMaxEntries);
-			entries = this.getNChildrenSurlInfo(numberOfMaxEntries);
+			entries = getNChildrenSurlInfo(numberOfMaxEntries);
 		}
 		buildDirectoryPage(out, entries, numberOfMaxEntries);
 	}

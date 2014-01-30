@@ -30,10 +30,12 @@ public final class FileSystemResourceFactory extends StormFactory {
 	private static final Logger log = LoggerFactory.getLogger(WebdavResourceFactory.class);
 
 	public FileSystemResourceFactory() throws UnknownHostException, ApiException {
-		super(Configuration.getBackendInfo().getHostname(), Configuration.getBackendInfo().getPort(), Configuration.getGridhttpsInfo().getRootDirectory(),
-				Configuration.getGridhttpsInfo().getFiletransferContextPath());
-		this.setAllowDirectoryBrowsing(false);
-		log.debug(this.getClass().getSimpleName() + " created");
+
+		super(Configuration.getBackendInfo().getHostname(), Configuration
+			.getBackendInfo().getPort(), Configuration.getGridhttpsInfo()
+			.getFiletransferContextPath());
+		setAllowDirectoryBrowsing(false);
+		log.debug("FileSystemResourceFactory created!");
 	}
 
 	@Override

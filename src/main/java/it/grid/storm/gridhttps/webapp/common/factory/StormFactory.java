@@ -27,45 +27,18 @@ public abstract class StormFactory implements ResourceFactory {
 	private static final Logger log = LoggerFactory.getLogger(StormFactory.class);
 
 	private FileContentService contentService;
-	private File root;
 	SecurityManager securityManager;
 	String contextPath;
 	boolean allowDirectoryBrowsing = true;
 
-	private String localhostname;
-	
-	public StormFactory(String beHost, int bePort, File root, String contextPath) throws UnknownHostException, ApiException {
-		log.debug(this.getClass().getSimpleName() + " constructor");
-		setRoot(root);
+	public StormFactory(String beHost, int bePort, String contextPath)
+		throws UnknownHostException, ApiException {
+
+		log.debug("{} constructor", getClass().getSimpleName());
 		setContextPath(contextPath);
 		setSecurityManager(new NullSecurityManager());
 		setContentService(new StormContentService());
-		setLocalhostname(java.net.InetAddress.getLocalHost().getHostName());
-		log.debug(this.getClass().getSimpleName() + " created");
-	}
-
-	private boolean isRoot(String path) {
-		return isRoot(new File(path));
-	}
-
-	private boolean isRoot(File file) {
-		return file.getAbsolutePath().equals(getRoot().getAbsolutePath());
-	}
-
-	public File getRoot() {
-		return root;
-	}
-
-	public final void setRoot(File root) {
-		log.debug("root: " + root.getAbsolutePath());
-		this.root = root;
-		if (root.exists()) {
-			if (!root.isDirectory()) {
-				log.warn("Root exists but is not a directory: " + root.getAbsolutePath());
-			}
-		} else {
-			log.warn("Root folder does not exist: " + root.getAbsolutePath());
-		}
+		log.debug("{} created", getClass().getSimpleName());
 	}
 
 	public void setSecurityManager(SecurityManager securityManager) {
@@ -97,38 +70,15 @@ public abstract class StormFactory implements ResourceFactory {
 		this.contentService = contentService;
 	}
 
-	public String getLocalhostname() {
-		return localhostname;
-	}
-
-	private void setLocalhostname(String localhostname) {
-		this.localhostname = localhostname;
-	}
-
-	private String stripPortFromHost(String host) {
-		if (host == null || host.isEmpty())
-			return "";
-		return host.indexOf(':') != -1 ? host.substring(0, host.indexOf(':')) : host;
-	}
-
-	public boolean isLocalResource(String host) {
-		if (host == null || host.isEmpty())
-			return true;
-		return host.equals(localhostname);
-	}
-
 	@Override
-	public Resource getResource(String host, String path) throws NotAuthorizedException, BadRequestException {
-		String hostNoPort = stripPortFromHost(host);
+	public Resource getResource(String host, String path)
+		throws NotAuthorizedException, BadRequestException {
+
 		path = stripContext(path);
-		log.debug("getResource: host: " + hostNoPort + " - url:" + path);
-		if (isRoot(path)) {
-			log.debug("get root resource!");
-			return null;
-		}
+		log.debug("getResource: host={} path={}", host, path);
 		StorageArea currentSA = StorageAreaManager.getMatchingSA(path);
 		if (currentSA == null) {
-			log.warn("Unable to identify a StorageArea that matches: " + path);
+			log.warn("Unable to identify a StorageArea that matches: {}", path);
 			return null;
 		}
 		File requested = new File(currentSA.getRealPath(path));
@@ -163,9 +113,8 @@ public abstract class StormFactory implements ResourceFactory {
 			return null;
 		}
 		if (!isSuccessful(surlInfo.getStatus().getStatusCode())) {
-			log.debug(String.format(
-				"Error on resolving surl info: surl status is %s %s", surlInfo
-					.getStatus().getStatusCode(), surlInfo.getStatus().getExplanation()));
+			log.debug("Error on resolving surl info: surl status is {} {}", surlInfo
+				.getStatus().getStatusCode(), surlInfo.getStatus().getExplanation());
 			return null;
 		}
 		if (surlInfo.getType() == null) {
