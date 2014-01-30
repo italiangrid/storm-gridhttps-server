@@ -60,6 +60,7 @@ public class StormGridhttps {
 		setServerActiveThreadsMax(DefaultConfiguration.SERVER_ACTIVE_THREADS_MAX);
 		setServerQueuedThreadsMax(DefaultConfiguration.SERVER_QUEUED_THREADS_MAX);
 		setVomsCachingEnabled(true);
+		setHostname(null);
 	}
 
 	public String getHostname() {
@@ -120,8 +121,6 @@ public class StormGridhttps {
 
 	public void checkConfiguration() throws InitException {
 		mapperServlet.checkConfiguration();
-		if (hostname.isEmpty())
-			throw new InitException("gridhttps hostname is empty!");
 		if (logFile.isEmpty())
 			throw new InitException("gridhttps log filename is empty!");
 		if (httpPort <= 0)
