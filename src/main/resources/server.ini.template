@@ -5,7 +5,7 @@
 [service]
 
 # The host/ip address on which the Gridhttps server will bind to.
-# Default: not specified, i.e. binds on all ports  
+# Default: not specified, i.e. binds on all interfaces  
 # hostname=
 
 
