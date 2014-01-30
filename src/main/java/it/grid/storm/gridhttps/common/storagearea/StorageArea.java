@@ -15,7 +15,6 @@ package it.grid.storm.gridhttps.common.storagearea;
 import it.grid.storm.gridhttps.common.remotecall.ConfigDiscoveryServiceConstants.HttpPerms;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -146,12 +145,10 @@ public class StorageArea {
 	}
 	
 	public boolean isOwner(File file) {
-		try {
-			return file.getCanonicalPath().startsWith(this.getFSRoot());
-		} catch (IOException e) {
-			log.error(e.getMessage());
-		}
-		return false;
+
+		log.debug("SA root is {}, file absolute path is {}",
+			file.getAbsolutePath(), getFSRoot());
+		return file.getAbsolutePath().startsWith(getFSRoot());
 	}
 	
 	public boolean isHTTPReadable() {

@@ -14,7 +14,6 @@ import it.grid.storm.gridhttps.common.storagearea.StorageArea;
 import it.grid.storm.gridhttps.configuration.Configuration;
 
 import java.io.File;
-import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 
@@ -54,14 +53,8 @@ public class Surl {
 		log.debug("Surl: file {} belongs to storage area {}", file,
 			storageArea.getName());
 
-		/* get canonical path */
-		String path;
-		try {
-			path = file.getCanonicalPath();
-		} catch (IOException e) {
-			log.error(e.getMessage());
-			throw new RuntimeException(e.getMessage());
-		}
+		/* get absolute path */
+		String path = file.getAbsolutePath();
 		
 		/* replace the storage area fs root with the storage area stfn root */
 		if (storageArea.getFSRoot().endsWith(File.separator)) {
