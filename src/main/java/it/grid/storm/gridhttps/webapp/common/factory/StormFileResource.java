@@ -50,7 +50,7 @@ public class StormFileResource extends StormResource {
 		String mime = ContentTypeUtils.findContentTypes(getFile());
 		String s = ContentTypeUtils.findAcceptableContentType(mime, preferredList);
 		if (log.isTraceEnabled()) {
-			log.trace("getContentType: preferred: {} mime: {} selected: {}", new Object[] { preferredList, mime, s });
+			log.trace("getContentType: preferred: {} mime: {} selected: {}", preferredList, mime, s );
 		}
 		return s;
 	}

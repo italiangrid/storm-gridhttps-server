@@ -63,11 +63,11 @@ public class FileTransferFilter implements Filter {
 	
 	@Override
 	public void init(FilterConfig filterConfig) throws ServletException {
-		log.debug(this.getClass().getSimpleName() + " - Init");
+		log.debug("{} - Init" , this.getClass().getSimpleName());
 		this.filterConfig = filterConfig;
 		
 		try {
-			log.debug(this.getClass().getSimpleName() + " - Init HttpManagerBuilder");
+			log.debug("{} - Init HttpManagerBuilder" , this.getClass().getSimpleName());
 			HttpManagerBuilder builder = new HttpManagerBuilder();
 			builder.setResourceFactory(new FileSystemResourceFactory());
 			builder.setDefaultStandardFilter(new StormStandardFilter());
@@ -80,10 +80,10 @@ public class FileTransferFilter implements Filter {
 			builder.setEnableCookieAuth(false);
 			builder.setPropertySources(new ArrayList<PropertySource>());
 			this.httpManager = builder.buildHttpManager();
-			log.debug(this.getClass().getSimpleName() + " - HttpManager created!");
+			log.debug("{} - HttpManager created!" , this.getClass().getSimpleName());
 			
 		} catch (Exception e) {
-			log.error(e.getMessage());
+			log.error(e.getMessage(),e);
 			System.exit(1);
 		}		
 	}

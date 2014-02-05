@@ -71,7 +71,7 @@ public class StormPropFindPropertyBuilder implements PropFindPropertyBuilder {
 
 	public void setPropertySources(List<PropertySource> propertySources) {
 		this.propertySources = propertySources;
-		log.debug("num property sources: " + propertySources.size());
+		log.debug("num property sources: {}" , propertySources.size());
 	}
 
 	@Override
@@ -133,13 +133,13 @@ public class StormPropFindPropertyBuilder implements PropFindPropertyBuilder {
 		final LinkedHashMap<QName, ValueAndType> knownProperties = new LinkedHashMap<QName, ValueAndType>();
 		final ArrayList<NameAndError> unknownProperties = new ArrayList<NameAndError>();
 
-		log.debug("propfind processing '" + surlInfo.getStfn() + "'");
+		log.debug("propfind processing '{}'" , surlInfo.getStfn());
 		Iterator<QName> it = requestedFields.iterator();
 		while (it.hasNext()) {
 			QName field = it.next();
 			if (field.getLocalPart().equals("href")) {
 				knownProperties.put(field, new ValueAndType(href, String.class));
-				log.debug("property '" + field + "' added!");
+				log.debug("property '{}' added!" , field);
 				break;
 			}
 			boolean found = false;
@@ -176,7 +176,7 @@ public class StormPropFindPropertyBuilder implements PropFindPropertyBuilder {
 			}
 			if (!found) {
 				if (log.isDebugEnabled()) {
-					log.debug("property not found in any property source: " + field.toString());
+					log.debug("property not found in any property source: {}" , field.toString());
 				}
 				unknownProperties.add(new NameAndError(field, null));
 			}
@@ -185,7 +185,7 @@ public class StormPropFindPropertyBuilder implements PropFindPropertyBuilder {
 			if (unknownProperties.size() > 0) {
 				log.debug("some properties could not be resolved. Listing property sources:");
 				for (PropertySource ps : propertySources) {
-					log.debug(" - " + ps.getClass().getCanonicalName());
+					log.debug(" - {}" , ps.getClass().getCanonicalName());
 				}
 			}
 		}
@@ -200,8 +200,7 @@ public class StormPropFindPropertyBuilder implements PropFindPropertyBuilder {
 				if (child instanceof PropFindableResource) {
 					String childName = child.getName();
 					if (childName == null) {
-						log.warn("null name for resource of type: " + child.getClass() + " in folder: " + href
-								+ " WILL NOT be returned in PROPFIND response!!");
+						log.warn("null name for resource of type: {} in folder: {} WILL NOT be returned in PROPFIND response!!" , child.getClass() , href);
 					} else {
 						String childHref = href + child.getName();
 						process(responses, child, info, childHref, href, requestedFields, requestedDepth, currentDepth + 1,

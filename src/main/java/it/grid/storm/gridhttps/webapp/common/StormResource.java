@@ -110,7 +110,7 @@ public abstract class StormResource implements Resource, DigestResource,
 	public boolean authorise(Request request, Method method, Auth auth) {
 		boolean b = factory.getSecurityManager().authorise(request, method, auth, this);
 		if (log.isTraceEnabled()) {
-			log.trace("authorise: result=" + b);
+			log.trace("authorise: result={}" , b);
 		}
 		return b;
 	}

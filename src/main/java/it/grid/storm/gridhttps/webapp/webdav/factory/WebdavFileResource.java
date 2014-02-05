@@ -51,14 +51,14 @@ public class WebdavFileResource extends StormFileResource implements CopyableRes
 		log.debug("Called function for GET FILE");
 		InputStream in = StormResourceHelper.getInstance().doGetFile(this);
 		if (in == null) {
-			log.error("Unable to get resource content '" + getFile().toString() + "'");
+			log.error("Unable to get resource content '{}'" , getFile().toString());
 			return;
 		}
 		if (range != null) {
-			log.debug("sendContent: ranged content: " + getFile().getAbsolutePath());
+			log.debug("sendContent: ranged content: {}" , getFile().getAbsolutePath());
 			RangeUtils.writeRange(in, range, out);
 		} else {
-			log.debug("sendContent: send whole file " + getFile().getAbsolutePath());
+			log.debug("sendContent: send whole file {}" , getFile().getAbsolutePath());
 			IOUtils.copy(in, out);
 		}
 		out.flush();
@@ -84,7 +84,7 @@ public class WebdavFileResource extends StormFileResource implements CopyableRes
 		if (newParent instanceof StormDirectoryResource) {
 			super.moveTo((StormDirectoryResource) newParent, newName);
 		} else
-			log.error("Directory Resource class " + newParent.getClass().getSimpleName() + " not supported!");
+			log.error("Directory Resource class {}  not supported!" , newParent.getClass().getSimpleName());
 	}
 
 	public void copyTo(CollectionResource newParent, String newName) throws NotAuthorizedException, ConflictException, BadRequestException {
@@ -92,7 +92,7 @@ public class WebdavFileResource extends StormFileResource implements CopyableRes
 		if (newParent instanceof StormDirectoryResource) {
 			super.copyTo((StormDirectoryResource) newParent, newName);
 		} else {
-			log.error("Directory Resource class " + newParent.getClass().getSimpleName() + " not supported!");
+			log.error("Directory Resource class {}  not supported!" , newParent.getClass().getSimpleName());
 		}
 	}
 }

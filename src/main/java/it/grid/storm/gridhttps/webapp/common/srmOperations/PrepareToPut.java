@@ -52,8 +52,7 @@ public class PrepareToPut implements SRMOperation {
 		} else {
 			log.debug(
 				"srmPtP (overwrite={}) '{}' with transfer protocols {} ...",
-				new Object[] { isOverwrite(), getSurl(),
-					StringUtils.join(getTransferProtocols().toArray(), ',') });
+				 isOverwrite(), getSurl(),StringUtils.join(getTransferProtocols().toArray(), ','));
 		}
 		
 		FileTransferOutputData outputPtP = null;
@@ -108,7 +107,7 @@ public class PrepareToPut implements SRMOperation {
 				}
 			}
 		} catch (ApiException e) {
-			log.error(e.getMessage());
+			log.error(e.getMessage(),e);
 			throw new SRMOperationException(new TReturnStatus(
 				TStatusCode.SRM_INTERNAL_ERROR, e.toString()));
 		}

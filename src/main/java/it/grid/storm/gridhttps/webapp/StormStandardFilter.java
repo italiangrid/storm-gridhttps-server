@@ -46,13 +46,13 @@ public class StormStandardFilter implements Filter {
 			Request.Method method = request.getMethod();
 			Handler handler = manager.getMethodHandler(method);
 			if (handler == null) {
-				log.trace("No handler for: " + method);
+				log.trace("No handler for: {}" , method);
 				manager.getResponseHandler().respondMethodNotImplemented(null,
 					response, request);
 			} else {
 				if (log.isTraceEnabled()) {
-					log.trace("delegate to method handler: "
-						+ handler.getClass().getCanonicalName());
+					log.trace("delegate to method handler: {}"
+						, handler.getClass().getCanonicalName());
 				}
 				handler.process(manager, request, response);
 				if (response.getEntity() != null) {
@@ -70,7 +70,7 @@ public class StormStandardFilter implements Filter {
 			response.sendError(Status.SC_INTERNAL_SERVER_ERROR, ex.getMessage());
 			response.setStatus(Status.SC_INTERNAL_SERVER_ERROR);
 		} catch (SRMOperationException ex) {
-			log.debug(ex.getMessage());
+			log.debug(ex.getMessage(),ex);
 			TStatusCode sc = ex.getStatus().getStatusCode();
 			if (sc.equals(TStatusCode.SRM_AUTHORIZATION_FAILURE)) {
 				response.sendError(Status.SC_FORBIDDEN, ex.getStatus().toString());
@@ -92,11 +92,11 @@ public class StormStandardFilter implements Filter {
 			response.sendError(Status.SC_INTERNAL_SERVER_ERROR, ex.getMessage());
 			response.setStatus(Status.SC_INTERNAL_SERVER_ERROR);
 		} catch (BadRequestException ex) {
-			log.warn(ex.getReason(), ex);
+			log.warn(ex.getReason());
 			manager.getResponseHandler().respondBadRequest(ex.getResource(),
 				response, request);
 		} catch (ConflictException ex) {
-			log.warn(ex.getMessage(), ex);
+			log.warn(ex.getMessage());
 			manager.getResponseHandler().respondConflict(ex.getResource(), response,
 				request, INTERNAL_SERVER_ERROR_HTML);
 		} catch (NotAuthorizedException ex) {
@@ -117,11 +117,10 @@ public class StormStandardFilter implements Filter {
 				"Content-Length"));
 			int entityDimension = ((ByteArrayEntity) response.getEntity()).getArr().length;
 			if (contentLength != entityDimension) {
-				log.warn("Response header Content-Length (" + entityDimension
-					+ ") different from entity byte dimension (" + entityDimension + ")");
-				response.getHeaders().put("Content-Length", "" + entityDimension);
+				log.warn("Response header Content-Length ({}) different from entity byte dimension ({})" , entityDimension, entityDimension);
+				response.getHeaders().put("Content-Length", "" + entityDimension);				
 			} else {
-				log.error(e.getMessage() + ": exception sending content");
+				log.error("{}: exception sending content" , e.getMessage(),e);
 				response.sendError(Status.SC_INTERNAL_SERVER_ERROR, e.getMessage()
 					+ ": exception sending content");
 				response.setStatus(Status.SC_INTERNAL_SERVER_ERROR);

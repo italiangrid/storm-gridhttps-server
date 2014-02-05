@@ -49,7 +49,7 @@ class StormPropertySource implements PropertySource {
 	}
 
 	public void setProperty(QName name, Object value, Resource r) {
-		log.warn("setting property " + name.getLocalPart() + " is not permit");
+		log.warn("setting property {} is not permit" , name.getLocalPart());
 	}
 
 	public PropertyMetaData getPropertyMetaData(QName name, Resource r) throws NotAuthorizedException, BadRequestException {
@@ -60,7 +60,7 @@ class StormPropertySource implements PropertySource {
 	}
 
 	public void clearProperty(QName name, Resource r) throws PropertySetException, NotAuthorizedException {
-		log.warn("clear property " + name.getLocalPart() + " is not permit");
+		log.warn("clear property {} is not permit" , name.getLocalPart());
 	}
 
 	public List<QName> getAllPropertyNames(Resource r) throws NotAuthorizedException, BadRequestException {
