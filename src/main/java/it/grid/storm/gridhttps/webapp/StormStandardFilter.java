@@ -26,6 +26,7 @@ import org.slf4j.LoggerFactory;
 import io.milton.http.exceptions.ConflictException;
 import io.milton.http.exceptions.NotAuthorizedException;
 import io.milton.servlet.MiltonServlet;
+import it.grid.storm.gridhttps.webapp.common.exceptions.PreconditionFailedException;
 import it.grid.storm.gridhttps.webapp.common.exceptions.RuntimeApiException;
 import it.grid.storm.gridhttps.webapp.common.exceptions.SRMOperationException;
 import it.grid.storm.srm.types.TStatusCode;
@@ -87,6 +88,10 @@ public class StormStandardFilter implements Filter {
 					.toString());
 				response.setStatus(Status.SC_INTERNAL_SERVER_ERROR);
 			}
+		} catch (PreconditionFailedException e) {
+			log.warn(e.getMessage());
+			response.sendError(Status.SC_PRECONDITION_FAILED, e.getMessage());
+			response.setStatus(Status.SC_PRECONDITION_FAILED);
 		} catch (RuntimeException ex) {
 			log.error(ex.getMessage(), ex);
 			response.sendError(Status.SC_INTERNAL_SERVER_ERROR, ex.getMessage());

@@ -23,6 +23,7 @@ import io.milton.servlet.MiltonServlet;
 import it.grid.storm.gridhttps.common.storagearea.StorageArea;
 import it.grid.storm.gridhttps.webapp.HttpHelper;
 import it.grid.storm.gridhttps.webapp.common.StormResourceHelper;
+import it.grid.storm.gridhttps.webapp.common.exceptions.PreconditionFailedException;
 import it.grid.storm.gridhttps.webapp.common.factory.StormDirectoryResource;
 import it.grid.storm.gridhttps.webapp.common.factory.StormFactory;
 import it.grid.storm.gridhttps.webapp.common.factory.StormFileResource;
@@ -69,7 +70,8 @@ public class WebdavFileResource extends StormFileResource implements CopyableRes
 		log.debug("Called function for PUT-OVERWRITE");
 		HttpHelper httpHelper = new HttpHelper(MiltonServlet.request(), MiltonServlet.response());
 		if (!httpHelper.isOverwriteRequest()) {
-			throw new NotAuthorizedException("Resource exists but this is not an overwrite request!", this);
+			throw new PreconditionFailedException("Resource exists but Overwrite "
+				+ "header value is " + httpHelper.getOverwriteHeader() + "!");
 		}
 		super.replaceContent(in, length);
 	}
