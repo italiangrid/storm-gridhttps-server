@@ -45,7 +45,7 @@ public class CopyMethodAuthorization extends WebDAVMethodAuthorization {
 		String destPath = this.stripContext(httpHelper.getDestinationURI().getRawPath());
 		
 		if (srcPath.equals(destPath)) {
-			return AuthorizationStatus.NOTAUTHORIZED(HttpServletResponse.SC_FORBIDDEN, "The source and destination URIs are the same!");
+			return AuthorizationStatus.NOTAUTHORIZED(HttpServletResponse.SC_PRECONDITION_FAILED, "The source and destination URIs are the same!");
 		}
 		
 		StorageArea srcSA = getMatchingSA(srcPath);
