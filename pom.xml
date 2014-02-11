@@ -56,8 +56,7 @@
 		<mavenJarVersion>2.4</mavenJarVersion>
 		<mavenAssemblyVersion>2.4</mavenAssemblyVersion>
 
-		<httpsutilsVersion>0.3.2.rc0</httpsutilsVersion>
-		<slf4jVersion>1.7.2</slf4jVersion>
+		<httpsutilsVersion>0.3.2.rc1</httpsutilsVersion>
 		<xmlrpcApiVersion>0.0.17.rc1</xmlrpcApiVersion>
 		<miltonVersion>2.5.2.0</miltonVersion>
 		<commonsLangVersion>2.3</commonsLangVersion>
@@ -216,17 +215,6 @@
 			<groupId>org.italiangrid</groupId>
 			<artifactId>https-utils</artifactId>
 			<version>${httpsutilsVersion}</version>
-			<exclusions>
-				<exclusion>
-					<artifactId>slf4j-api</artifactId>
-					<groupId>org.slf4j</groupId>
-				</exclusion>				
-			</exclusions>
-		</dependency>
-		<dependency>
-			<groupId>org.slf4j</groupId>
-			<artifactId>slf4j-api</artifactId>
-			<version>${slf4jVersion}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.httpcomponents</groupId>
