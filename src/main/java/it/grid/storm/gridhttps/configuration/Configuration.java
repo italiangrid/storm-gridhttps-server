@@ -42,7 +42,7 @@ public class Configuration {
 	}
 
 	public static void loadConfigurationFromFile(File conf) throws InitException {
-		log.info("loading configuration from file: " + conf.toString());
+		log.info("loading configuration from file: {}" , conf.toString());
 		Wini configuration;
 		try {
 			configuration = new Wini(conf);

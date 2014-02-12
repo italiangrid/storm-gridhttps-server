@@ -72,14 +72,14 @@ public class WebDAVFilter implements Filter {
 	
 	@Override
 	public void init(FilterConfig filterConfig) throws ServletException {
-		log.debug(this.getClass().getSimpleName() + " - Init");
+		log.debug("{} - Init" , this.getClass().getSimpleName());
 		this.filterConfig = filterConfig;
 		this.rootPaths = new ArrayList<String>();
 		this.rootPaths.add(File.separator + Configuration.getGridhttpsInfo().getWebdavContextPath());
 		this.rootPaths.add(File.separator + Configuration.getGridhttpsInfo().getWebdavContextPath() + File.separator);
 		
 		try {
-			log.debug(this.getClass().getSimpleName() + " - Init HttpManagerBuilder");
+			log.debug("{} - Init HttpManagerBuilder" , this.getClass().getSimpleName());
 			HttpManagerBuilder builder = new HttpManagerBuilder();
 			builder.setResourceFactory(new WebdavResourceFactory());
 			builder.setDefaultStandardFilter(new StormStandardFilter());
@@ -97,10 +97,10 @@ public class WebDAVFilter implements Filter {
 			StormPropFindPropertyBuilder pfBuilder = new StormPropFindPropertyBuilder();
 			builder.setPropFindPropertyBuilder(pfBuilder);
 			this.httpManager = builder.buildHttpManager();
-			log.debug(this.getClass().getSimpleName() + " - HttpManager created!");
+			log.debug("{} - HttpManager created!", this.getClass().getSimpleName());
 			pfBuilder.setPropertySources(builder.getPropertySources());
 		} catch (Exception e) {
-			log.error(this.getClass().getSimpleName() + " - " + e.getMessage());
+			log.error("{} - {}" , this.getClass().getSimpleName() , e.getMessage(),e);
 			System.exit(1);
 		}		
 	}

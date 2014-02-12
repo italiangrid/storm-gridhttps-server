@@ -144,7 +144,7 @@ public class HttpHelper {
 		try {
 			certChain = (X509Certificate[]) getRequest().getAttribute("javax.servlet.request.X509Certificate");
 		} catch (Exception e) {
-			log.error("Error fetching certificate from http request: " + e.getMessage());
+			log.error("Error fetching certificate from http request: {}" , e.getMessage(),e);
 			return null;
 		}
 		return certChain;

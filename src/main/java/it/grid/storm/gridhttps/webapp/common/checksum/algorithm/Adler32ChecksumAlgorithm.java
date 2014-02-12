@@ -21,14 +21,14 @@ public class Adler32ChecksumAlgorithm implements ChecksumAlgorithm {
 	}
 
 	public String compute(InputStream inputStream) throws ChecksumReadException {
-		log.debug("Computing " + getType().name() + " checksum");
+		log.debug("Computing {} checksum" , getType().name());
 		byte[] bAarray = new byte[BUFFER_SIZE];
 		CheckedInputStream cis = new CheckedInputStream(inputStream, new Adler32());
 		try {
 			while (cis.read(bAarray) >= 0) {
 			}
 		} catch (IOException e) {
-			log.error(e.getMessage());
+			log.error(e.getMessage(),e);
 			throw new ChecksumReadException(e);
 		}
 		String checksum = Long.toHexString(cis.getChecksum().getValue());
@@ -37,7 +37,7 @@ public class Adler32ChecksumAlgorithm implements ChecksumAlgorithm {
 	}
 
 	public String compute(InputStream inputStream, OutputStream outputStream) throws ChecksumReadException {
-		log.debug("Computing " + getType().name() + " checksum");
+		log.debug("Computing {}  checksum" , getType().name());
 		byte[] bArray = new byte[BUFFER_SIZE];
         CheckedInputStream cis = new CheckedInputStream(inputStream, new Adler32());
         int bytes_read;
@@ -46,7 +46,7 @@ public class Adler32ChecksumAlgorithm implements ChecksumAlgorithm {
 				outputStream.write(bArray, 0, bytes_read);
 			}
 		} catch (IOException e) {
-			log.error(e.getMessage());
+			log.error(e.getMessage(),e);
 			throw new ChecksumReadException(e);
 		}
         String checksum = Long.toHexString(cis.getChecksum().getValue());

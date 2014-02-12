@@ -229,13 +229,10 @@ public class StormGridhttpsServer {
   public void status() {
 
     if (isRunning()) {
-      log.info("gridhttps-server is listening on port " + config.getHttpsPort()
-        + " (secure connection)");
+      log.info("gridhttps-server is listening on port {} (secure connection)" , config.getHttpsPort());
       if (config.isHTTPEnabled())
-        log.info("gridhttps-server is listening on port "
-          + config.getHttpPort() + " (anonymous connection)");
-      log.info("mapping-service is listening on port "
-        + config.getMapperServlet().getPort());
+        log.info("gridhttps-server is listening on port {} (anonymous connection)" , config.getHttpPort());
+      log.info("mapping-service is listening on port {}" , config.getMapperServlet().getPort());
     } else {
       log.info("gridhttps-server is not running ");
       log.info("mapping-service is not running ");

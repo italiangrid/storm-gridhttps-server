@@ -70,7 +70,7 @@ public class Main {
             try {
               server.stop();
             } catch (Exception e) {
-              log.error(e.getMessage());
+              log.error(e.getMessage(),e);
             }
           }
         }
@@ -125,7 +125,7 @@ public class Main {
       true, true);
     try {
       configurationFileName = cli.getString("conf");
-      log.info("configuration-file: " + configurationFileName);
+      log.info("configuration-file: {}" , configurationFileName);
     } catch (Exception e) {
       throw new InitException(e);
     }

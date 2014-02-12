@@ -61,7 +61,7 @@ public class WebdavDirectoryResource extends StormDirectoryResource implements M
 			 * it is a PUT with a path that contains a directory that does not
 			 * exist, so send a 409 error to the client method
 			 */
-			log.warn(MiltonServlet.request().getRequestURI() + " path contains one or more intermediate collections that not exist!");
+			log.warn("{} path contains one or more intermediate collections that not exist!",MiltonServlet.request().getRequestURI());
 			throw new ConflictException(this,
 					"A resource cannot be created at the destination URI until one or more intermediate collections are created.");
 		}
@@ -119,11 +119,10 @@ public class WebdavDirectoryResource extends StormDirectoryResource implements M
 			try {
 				numberOfMaxEntries = Integer.valueOf(numberOfMaxEntriesString);
 			} catch (NumberFormatException e2) {
-				log.error(e2.getMessage(), e2);
+				log.error("Failed to format {}",numberOfMaxEntriesString, e2);
 				throw new RuntimeException(e2.getMessage(), e2);
 			}
-			log.warn("Too many results with Ls, max entries is {}. Re-trying with "
-				+ "counted Ls.", numberOfMaxEntries);
+			log.warn("Too many results with Ls, max entries is {}. Re-trying with counted Ls.", numberOfMaxEntries);
 			entries = getNChildrenSurlInfo(numberOfMaxEntries);
 		}
 		buildDirectoryPage(out, entries, numberOfMaxEntries);

@@ -79,7 +79,7 @@ public class StormResourceHelper {
 		try {
 			this.backend = new BackendApi(this.hostnameBE, new Long(this.portBE), this.tokenBE);
 		} catch (ApiException e) {
-			log.error(e.toString());
+			log.error(e.toString(),e);
 			throw new SRMOperationException(new TReturnStatus(
 				TStatusCode.SRM_INTERNAL_ERROR, e.toString()));
 		}
@@ -102,8 +102,7 @@ public class StormResourceHelper {
 		RequestOutputData output = rollbackOp.executeAs(getHttpHelper().getUser(),
 			getBackend());
 		if (!output.isSuccess()) {
-			log.warn("abortRequest failed on surl {} and token {}: {}", new Object[] {
-				surl, token, output.getStatus().getExplanation() });
+			log.warn("abortRequest failed on surl {} and token {}: {}", surl, token, output.getStatus().getExplanation());
 		}
 	}
 
@@ -281,8 +280,8 @@ public class StormResourceHelper {
 		StormDirectoryResource newParent, String newName, boolean isDepthInfinity)
 		throws NotAuthorizedException, BadRequestException {
 
-		log.debug("copy '{}' to '{}' ...", sourceDir.getSurl(), newParent.getSurl()
-			+ File.separator + newName);
+		log.debug("copy '{}' to '{}{}{}' ...", sourceDir.getSurl(), newParent.getSurl()
+			, File.separator , newName);
 		
 		// create destination folder:
 		StormDirectoryResource destinationResource = doMkCol(newParent, newName);
@@ -312,8 +311,8 @@ public class StormResourceHelper {
 		StormDirectoryResource newParent, String newName)
 		throws SRMOperationException {
 
-		log.debug("copy '{}' to '{}' ...", source.getSurl(), newParent.getSurl()
-			+ File.separator + newName);
+		log.debug("copy '{}' to '{}{}{}' ...", source.getSurl(), newParent.getSurl()
+			, File.separator , newName);
 		InputStream input = null;
 		try {
 			input = source.getInputStream();

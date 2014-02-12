@@ -60,18 +60,18 @@ public class StormContentService implements FileContentService {
 				chrono.start();
 				checksum = algorithm.compute(in, out);
 				chrono.stop();
-				log.debug("Checksum: " + checksum);
+				log.debug("Checksum: {}" , checksum);
 				IOUtils.closeQuietly(out);
 				sendChecksum(file, algorithm.getType(), checksum);
 			} catch (NoSuchAlgorithmException e) {
-				log.error(e.getMessage());
-				log.warn("Checksum algorithm '" + Configuration.getGridhttpsInfo().getChecksumType() + "' not supported!");
+				log.error(e.getMessage(),e);
+				log.warn("Checksum algorithm '{}' not supported!" , Configuration.getGridhttpsInfo().getChecksumType());
 				log.debug("Proceeding with nochecksum file transfer...");
 				chrono.start();
 				doSimpleSetFileContent(in, out);
 				chrono.stop();
 			} catch (ChecksumReadException e) {
-				log.error(e.getMessage());
+				log.error(e.getMessage(),e);
 				log.error("File transfer is failed!");
 				log.warn("Trying to transfer file without checksum...");
 				in.reset();
@@ -84,7 +84,7 @@ public class StormContentService implements FileContentService {
 			doSimpleSetFileContent(in, out);
 			chrono.stop();
 		}
-		log.debug("File-transfer time: " + chrono.getElapsedTime());
+		log.debug("File-transfer time: {}" , chrono.getElapsedTime());
 	}
 
 	public InputStream getFileContent(File file) throws FileNotFoundException {
@@ -112,13 +112,13 @@ public class StormContentService implements FileContentService {
 	}
 	
 	private void sendChecksum(File file, ChecksumType type, String checksum) {
-		log.debug("Set checksum " + type.name() + " = " + checksum + " to file " + file.getAbsolutePath());
+		log.debug("Set checksum {} = {} to file {}" , type.name() , checksum , file.getAbsolutePath());
 		try {
 			HttpResponse response = callSetChecksumService(buildSetChecksumValueUri(file, type, checksum));
 			StatusLine status = response.getStatusLine();
 			if (status != null) {
-				log.debug("Http call return code is: " + status.getStatusCode());
-				log.debug("Http call return reason phrase is: " + status.getReasonPhrase());
+				log.debug("Http call return code is: {}" , status.getStatusCode());
+				log.debug("Http call return reason phrase is: {}" , status.getReasonPhrase());
 				if (status.getStatusCode() == HttpURLConnection.HTTP_NO_CONTENT) {
 					log.debug("Checksum successfully set!");
 				} else {
@@ -128,7 +128,7 @@ public class StormContentService implements FileContentService {
 				throw new Exception("Unexpected error! response.getStatusLine() returned null!");
 			}
 		} catch (Exception e) {
-			log.error(e.getMessage());
+			log.error(e.getMessage(),e);
 		}
 	}
 	
@@ -137,22 +137,22 @@ public class StormContentService implements FileContentService {
 		String path = "/" + Constants.RESOURCE + "/" + Constants.VERSION + "/" + encodedFilename + "/" + type.toString();
 		String query = Constants.CHECKSUM_VALUE_KEY + "=" + checksum;
 		URI uri = new URI("http", null, Configuration.getBackendInfo().getHostname(), Configuration.getBackendInfo().getServicePort(), path, query, null);
-		log.debug("Built checksum service URI: " + uri);
+		log.debug("Built checksum service URI: {}" , uri);
 		return uri;
 	}
 
 	private HttpResponse callSetChecksumService(URI uri) throws Exception {
-		log.debug("Put checksum value at uri: " + uri);
+		log.debug("Put checksum value at uri: {}" , uri);
 		HttpPut httpput = new HttpPut(uri);
 		HttpClient httpclient = new DefaultHttpClient();
 		HttpResponse httpResponse = null;
 		try {
 			httpResponse = httpclient.execute(httpput);
 		} catch (ClientProtocolException e) {
-			log.error("Error executing http call. ClientProtocolException " + e.getLocalizedMessage());
+			log.error("Error executing http call. ClientProtocolException {}" , e.getMessage());
 			throw new Exception("Error contacting set checksum service.");
 		} catch (IOException e) {
-			log.error("Error executing http call. IOException " + e.getLocalizedMessage());
+			log.error("Error executing http call. IOException {}" , e.getMessage());
 			throw new Exception("Error contacting set checksum service.");
 		}
 		return httpResponse;

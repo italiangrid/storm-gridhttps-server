@@ -43,7 +43,7 @@ public abstract class StormFactory implements ResourceFactory {
 
 	public void setSecurityManager(SecurityManager securityManager) {
 		if (securityManager != null) {
-			log.debug("securityManager: " + securityManager.getClass());
+			log.debug("securityManager: {}" , securityManager.getClass());
 		} else {
 			log.warn("Setting null FsSecurityManager. This WILL cause null pointer exceptions");
 		}
@@ -140,7 +140,7 @@ public abstract class StormFactory implements ResourceFactory {
 	public boolean isDigestAllowed() {
 		boolean b = getSecurityManager() != null && getSecurityManager().isDigestAllowed();
 		if (log.isTraceEnabled()) {
-			log.trace("isDigestAllowed: " + b);
+			log.trace("isDigestAllowed: {}" , b);
 		}
 		return b;
 	}
