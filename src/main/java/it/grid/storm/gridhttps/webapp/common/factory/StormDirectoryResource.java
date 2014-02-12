@@ -134,6 +134,9 @@ public class StormDirectoryResource extends StormResource implements
 			throw new RuntimeException(msg);
 		}
 		
+		// check if source is readable
+		StormResourceHelper.getInstance().doGetDirectoryWithoutReallyRead(this);
+		
 		StormResourceHelper.getInstance().doCopyDirectory(this,
 			(StormDirectoryResource) newParent, newName);
 	}

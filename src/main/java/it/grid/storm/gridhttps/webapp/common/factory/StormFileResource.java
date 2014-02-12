@@ -69,6 +69,10 @@ public class StormFileResource extends StormResource {
 	}
 
 	public void copyTo(StormDirectoryResource newParent, String newName) throws NotAuthorizedException, ConflictException, BadRequestException {
+		
+		// check if source is readable
+		StormResourceHelper.getInstance().doGetFileWithoutReallyRead(this);
+		
 		StormResourceHelper.getInstance().doCopyFile(this, newParent, newName);
 	}
 
