@@ -13,10 +13,6 @@ public class InternalError extends RuntimeException {
 		this.msg = msg;
 	}
 
-	public InternalError(Exception e) {
-		this(e.getLocalizedMessage());
-	}
-
 	/**
 	 * @return the msg
 	 */

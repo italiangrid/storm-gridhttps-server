@@ -136,7 +136,7 @@ public class StormAuthorizationUtils {
     } catch (URISyntaxException e) {
       log
         .error("Unable to build Authorization Service URI. URISyntaxException {}"
-          , e.getLocalizedMessage(),e);
+          , e.getMessage(),e);
       throw new AuthorizationException("Unable to build Authorization Service URI");
     }
     log.debug("Prepared URI : {}" , uri);

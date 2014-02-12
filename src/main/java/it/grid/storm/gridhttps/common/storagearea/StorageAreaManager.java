@@ -172,10 +172,10 @@ public class StorageAreaManager {
 			try {
 				responseIS = entity.getContent();
 			} catch (IllegalStateException e) {
-				log.error("Unable to get the input content stream from server answer. IllegalStateException {}" , e.getLocalizedMessage(),e);
+				log.error("Unable to get the input content stream from server answer. IllegalStateException {}" , e.getMessage(),e);
 				throw new Exception("Error comunicationg with the Configuration Discovery service.");
 			} catch (IOException e) {
-				log.error("Unable to get the input content stream from server answer. IOException {}" , e.getLocalizedMessage(),e);
+				log.error("Unable to get the input content stream from server answer. IOException {}" , e.getMessage(),e);
 				throw new Exception("Error comunicationg with the Configuration Discovery service.");
 			}
 			int l;
@@ -204,7 +204,7 @@ public class StorageAreaManager {
 		try {
 			uri = new URI("http", null, beHostname, bePort, path, null, null);
 		} catch (URISyntaxException e) {
-			log.error("Unable to create Configuration Discovery URI. URISyntaxException {}" , e.getLocalizedMessage(),e);
+			log.error("Unable to create Configuration Discovery URI. URISyntaxException {}" , e.getMessage(),e);
 			throw new Exception("Unable to create Configuration Discovery URI");
 		}
 		log.debug("Built configuration discovery URI: {}" , uri);
@@ -219,10 +219,10 @@ public class StorageAreaManager {
 		try {
 			httpResponse = httpclient.execute(httpget);
 		} catch (ClientProtocolException e) {
-			log.error("Error executing http call. ClientProtocolException {}" , e.getLocalizedMessage(),e);
+			log.error("Error executing http call. ClientProtocolException {}" , e.getMessage(),e);
 			throw new Exception("Error contacting Configuration Discovery service.");
 		} catch (IOException e) {
-			log.error("Error executing http call. IOException {}" , e.getLocalizedMessage(),e);
+			log.error("Error executing http call. IOException {}" , e.getMessage(),e);
 			throw new Exception("Error contacting Configuration Discovery service.");
 		}
 		StatusLine status = httpResponse.getStatusLine();

@@ -149,10 +149,10 @@ public class StormContentService implements FileContentService {
 		try {
 			httpResponse = httpclient.execute(httpput);
 		} catch (ClientProtocolException e) {
-			log.error("Error executing http call. ClientProtocolException {}" , e.getLocalizedMessage());
+			log.error("Error executing http call. ClientProtocolException {}" , e.getMessage());
 			throw new Exception("Error contacting set checksum service.");
 		} catch (IOException e) {
-			log.error("Error executing http call. IOException {}" , e.getLocalizedMessage());
+			log.error("Error executing http call. IOException {}" , e.getMessage());
 			throw new Exception("Error contacting set checksum service.");
 		}
 		return httpResponse;
