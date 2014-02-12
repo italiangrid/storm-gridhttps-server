@@ -25,6 +25,7 @@ import it.grid.storm.gridhttps.webapp.common.authorization.StormAuthorizationUti
 import it.grid.storm.gridhttps.webapp.common.authorization.UserCredentials;
 import it.grid.storm.gridhttps.webapp.common.authorization.methods.AbstractMethodAuthorization;
 import it.grid.storm.gridhttps.webapp.common.exceptions.InvalidRequestException;
+import it.grid.storm.gridhttps.webapp.common.utils.URIUtils;
 
 public abstract class FileTransferMethodAuthorization extends AbstractMethodAuthorization {
 	
@@ -35,9 +36,8 @@ public abstract class FileTransferMethodAuthorization extends AbstractMethodAuth
 	}
 	
 	protected String resolvePath(String path) {
-		/**  TO-DO
-		 **/
-		return path;
+
+		return URIUtils.removeDotSegments(path);
 	}
 	
 	protected AuthorizationStatus askBEAuth(UserCredentials user,
