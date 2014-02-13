@@ -38,31 +38,19 @@ public class GetMethodAuthorization extends FileTransferMethodAuthorization {
 
 		HttpHelper httpHelper = new HttpHelper(request, response);
 		
-		String srcPath = this.stripContext(httpHelper.getRequestURI().getRawPath());
-		log.debug("context stripped: {}" , srcPath);
-		srcPath = this.resolvePath(srcPath);
-		log.debug("resolved path: {}" , srcPath);
-		StorageArea srcSA = getMatchingSA(srcPath);
-		log.debug("path {} matches storage area {}", srcPath, srcSA.getName());
-		AuthorizationStatus status = checkSA(srcSA, httpHelper.getRequestProtocol());
-		if (!status.isAuthorized()) {
+		String uriPath = httpHelper.getRequestURI().getRawPath();
+		log.debug("uriPath: {}", uriPath);
+		
+		StorageArea sa = checkTURL(httpHelper.getRequestProtocol(), uriPath);
+		
+		AuthorizationStatus status = checkUserReadPermissionsOnStorageArea(user, sa);
+		if (status != null) {
 			return status;
 		}
 		
-		if (user.isAnonymous()) {
-			if (srcSA.isHTTPReadable()) {
-				return AuthorizationStatus.AUTHORIZED();
-			}
-			return AuthorizationStatus.NOTAUTHORIZED(
-				HttpServletResponse.SC_FORBIDDEN, String.format(
-					"Unauthorized: Anonymous users are not authorized to read %s",
-					httpHelper.getRequestStringURI()));
-		}
-		/* user is not anonymous */
-		if (srcSA.isHTTPReadable()) {
-			return AuthorizationStatus.AUTHORIZED();
-		}
-		return super.askBEAuth(user, Constants.READ_OPERATION, srcSA.getRealPath(srcPath)); 
+		String realPath = sa.getRealPath(stripContext(uriPath));
+		log.debug("Real path is {}", realPath);
+		return super.askBEAuth(user, Constants.READ_OPERATION, realPath); 
 	}
 	
 }

@@ -12,6 +12,9 @@
  */
 package it.grid.storm.gridhttps.webapp.filetransfer.authorization.methods;
 
+import java.io.File;
+import java.io.IOException;
+
 import javax.servlet.http.HttpServletResponse;
 
 import org.slf4j.Logger;
@@ -25,7 +28,6 @@ import it.grid.storm.gridhttps.webapp.common.authorization.StormAuthorizationUti
 import it.grid.storm.gridhttps.webapp.common.authorization.UserCredentials;
 import it.grid.storm.gridhttps.webapp.common.authorization.methods.AbstractMethodAuthorization;
 import it.grid.storm.gridhttps.webapp.common.exceptions.InvalidRequestException;
-import it.grid.storm.gridhttps.webapp.common.utils.URIUtils;
 
 public abstract class FileTransferMethodAuthorization extends AbstractMethodAuthorization {
 	
@@ -33,11 +35,6 @@ public abstract class FileTransferMethodAuthorization extends AbstractMethodAuth
 	
 	public FileTransferMethodAuthorization() {		
 		super(Configuration.getGridhttpsInfo().getFiletransferContextPath());
-	}
-	
-	protected String resolvePath(String path) {
-
-		return URIUtils.removeDotSegments(path);
 	}
 	
 	protected AuthorizationStatus askBEAuth(UserCredentials user,
@@ -60,23 +57,104 @@ public abstract class FileTransferMethodAuthorization extends AbstractMethodAuth
 			"You are not authorized to access the requested resource");
 	}
 	
-	protected StorageArea getMatchingSA(String path) throws InvalidRequestException {
-		StorageArea sa = StorageAreaManager.getMatchingSA(path);
-		if (sa == null) {
-			throw new InvalidRequestException(HttpServletResponse.SC_BAD_REQUEST, "Unable to resolve storage area for " + path);
+	protected StorageArea getMatchingStorageArea(String uriPath) 
+		throws InvalidRequestException {
+		
+		uriPath = stripContext(uriPath);
+		log.debug("context stripped: {}" , uriPath);
+		return StorageAreaManager.getMatchingSA(uriPath);
+	}
+
+	protected StorageArea checkTURL(String protocol, String uriPath) {
+		
+		String ftContextPath = File.separator + 
+			Configuration.getGridhttpsInfo().getFiletransferContextPath();
+		
+		if (!uriPath.startsWith(ftContextPath)) {
+			log.debug("TURL '{}' doesn't start with {}!", uriPath, ftContextPath);
+			throw new InvalidRequestException(HttpServletResponse.SC_CONFLICT, 
+				"Invalid TURL!");
 		}
+		
+		if (uriPath.contains("..")) {
+			log.debug("TURL '{}' contains a dotted segment!", uriPath);
+			throw new InvalidRequestException(HttpServletResponse.SC_CONFLICT, 
+				"Invalid TURL!");
+		}
+		
+		StorageArea sa = getMatchingStorageArea(uriPath);
+		if (sa == null) {
+			log.debug("Unable to resolve a Storage Area from {}", uriPath);
+			throw new InvalidRequestException(HttpServletResponse.SC_CONFLICT, 
+				"Invalid TURL!");
+		}
+		
+		log.debug("path {} matches storage area {}", uriPath, sa.getName());
+		if (!sa.hasProtocol(protocol)) {
+			log.debug("{} doesn't support {} as transfer protocol", sa.getName(),
+				protocol);
+			throw new InvalidRequestException(HttpServletResponse.SC_CONFLICT, 
+				"Invalid TURL!");
+		}
+		
+		File file = new File(sa.getRealPath(stripContext(uriPath)));
+		log.debug("file path is {}", file);
+		
+		String canonicalPath;
+		try {
+			canonicalPath = file.getCanonicalPath();
+		} catch (IOException e) {
+			log.error(e.getMessage(), e);
+			throw new InvalidRequestException(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, 
+				e.getMessage());
+		}
+		log.debug("canonical path is {}", canonicalPath);
+		
+		if (!canonicalPath.startsWith(sa.getFSRoot())) {
+			log.debug("file {} is not owned by {}", canonicalPath, sa.getName());
+			throw new InvalidRequestException(HttpServletResponse.SC_CONFLICT, 
+				"Invalid TURL!");
+		}
+		
 		return sa;
 	}
 	
-	protected AuthorizationStatus checkSA(StorageArea sa, String requestedProtocol) {
-
-		if (!sa.isProtocol(requestedProtocol.toUpperCase())) {
+	protected AuthorizationStatus checkUserReadPermissionsOnStorageArea(
+		UserCredentials user, StorageArea sa) {
+		
+		if (user.isAnonymous()) {
+			if (sa.isHTTPReadable()) {
+				return AuthorizationStatus.AUTHORIZED();
+			}
 			return AuthorizationStatus.NOTAUTHORIZED(
-				HttpServletResponse.SC_FORBIDDEN,
-				String.format("Storage area %s doesn't support %s protocol",
-					sa.getName(), requestedProtocol));
+				HttpServletResponse.SC_FORBIDDEN, String.format(
+					"Unauthorized: Anonymous users are not authorized to read into {}",
+					sa.getName()));
 		}
-		return AuthorizationStatus.AUTHORIZED();
+		/* user is not anonymous */
+		if (sa.isHTTPReadable()) {
+			return AuthorizationStatus.AUTHORIZED();
+		}
+		return null; 
 	}
-
+	
+	protected AuthorizationStatus checkUserWritePermissionsOnStorageArea(
+		UserCredentials user, StorageArea sa) {
+		
+		if (user.isAnonymous()) {
+			if (sa.isHTTPWritable()) {
+				return AuthorizationStatus.AUTHORIZED();
+			}
+			return AuthorizationStatus.NOTAUTHORIZED(
+				HttpServletResponse.SC_FORBIDDEN, String.format(
+					"Unauthorized: Anonymous users are not authorized to read into {}",
+					sa.getName()));
+		}
+		/* user is not anonymous */
+		if (sa.isHTTPWritable()) {
+			return AuthorizationStatus.AUTHORIZED();
+		}
+		return null;
+	}
+	
 }

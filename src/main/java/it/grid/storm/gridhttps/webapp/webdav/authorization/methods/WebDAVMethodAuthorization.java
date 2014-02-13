@@ -45,7 +45,7 @@ public abstract class WebDAVMethodAuthorization extends
 
 	private AuthorizationStatus checkSA(StorageArea sa, String requestedProtocol) {
 
-		if (!sa.isProtocol(requestedProtocol.toUpperCase())) {
+		if (!sa.hasProtocol(requestedProtocol.toUpperCase())) {
 			return AuthorizationStatus.NOTAUTHORIZED(
 				HttpServletResponse.SC_FORBIDDEN, "Storage area " + sa.getName()
 					+ " doesn't support " + requestedProtocol + " protocol");

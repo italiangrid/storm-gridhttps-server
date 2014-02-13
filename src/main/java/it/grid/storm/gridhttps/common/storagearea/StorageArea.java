@@ -124,7 +124,7 @@ public class StorageArea {
 	/**
 	 * @return if the protocol is accepted as transfer protocol
 	 */
-	public boolean isProtocol(String protocol) {
+	public boolean hasProtocol(String protocol) {
 		return getProtocols().contains(protocol);
 	}
 	

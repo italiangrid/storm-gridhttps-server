@@ -115,7 +115,7 @@ public class FileTransferFilter implements Filter {
 			}
 			
 		} catch (InvalidRequestException e) {
-			log.error(e.getMessage(), e);
+			log.debug(e.getMessage());
 			sendError((HttpServletResponse) response, e.getErrorcode(), e.getMessage());
 		} catch (Throwable e) {
 			log.error(e.getMessage(), e);
