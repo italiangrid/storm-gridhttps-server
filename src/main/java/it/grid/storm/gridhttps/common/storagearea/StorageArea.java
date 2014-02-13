@@ -15,19 +15,16 @@ package it.grid.storm.gridhttps.common.storagearea;
 import it.grid.storm.gridhttps.common.remotecall.ConfigDiscoveryServiceConstants.HttpPerms;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * @author Michele Dibenedetto
  * @author Enrico Vianello
  */
 public class StorageArea {
-	
-	private static final Logger log = LoggerFactory.getLogger(StorageArea.class);
 	
 	private String name;
 	private String FSRoot;
@@ -129,34 +126,35 @@ public class StorageArea {
 	}
 	
 	/**
-	 * @param path "virtual" path to a storage area resource
+	 * @param stfn "virtual" path to a storage area resource
 	 * @return the phisical path to the resource
 	 */
-	public String getRealPath(String path) {
-		return path.replaceFirst(getStfnRoot(), getFSRoot()).replace("//", "/");
+	public String getRealPath(String stfn) {
+		return stfn.replaceFirst(getStfnRoot(), getFSRoot()).replace("//", "/");
+	}
+
+	public String getCanonicalPath(String stfn) throws IOException {
+		return new File(getRealPath(stfn)).getCanonicalPath();
 	}
 
 	public String getStfn(String fsPath) {
 		return fsPath.replaceFirst(getFSRoot(), getStfnRoot()).replace("//", "/");
 	}
 
-	public boolean isOwner(String stfn) {
-		return isOwner(new File(getRealPath(stfn)));
+	public boolean isOwner(String filePath) {
+		return filePath.startsWith(getFSRoot());
 	}
 	
 	public boolean isOwner(File file) {
-
-		log.debug("SA root is {}, file absolute path is {}",
-			file.getAbsolutePath(), getFSRoot());
-		return file.getAbsolutePath().startsWith(getFSRoot());
+		return isOwner(file.getAbsolutePath());
 	}
 	
 	public boolean isHTTPReadable() {
-		return !this.httpPerms.equals(HttpPerms.NOREAD);
+		return !httpPerms.equals(HttpPerms.NOREAD);
 	}
 	
 	public boolean isHTTPWritable() {
-		return this.httpPerms.equals(HttpPerms.READWRITE);
+		return httpPerms.equals(HttpPerms.READWRITE);
 	}
 	
 }

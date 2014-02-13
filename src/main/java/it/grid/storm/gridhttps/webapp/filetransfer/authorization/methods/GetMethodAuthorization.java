@@ -12,6 +12,8 @@
  */
 package it.grid.storm.gridhttps.webapp.filetransfer.authorization.methods;
 
+import java.io.File;
+
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -19,7 +21,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import it.grid.storm.gridhttps.common.storagearea.StorageArea;
+import it.grid.storm.gridhttps.common.storagearea.StorageAreaManager;
 import it.grid.storm.gridhttps.webapp.HttpHelper;
+import it.grid.storm.gridhttps.webapp.common.authorization.AuthorizationException;
 import it.grid.storm.gridhttps.webapp.common.authorization.AuthorizationStatus;
 import it.grid.storm.gridhttps.webapp.common.authorization.Constants;
 import it.grid.storm.gridhttps.webapp.common.authorization.UserCredentials;
@@ -37,20 +41,47 @@ public class GetMethodAuthorization extends FileTransferMethodAuthorization {
 		HttpServletResponse response, UserCredentials user) {
 
 		HttpHelper httpHelper = new HttpHelper(request, response);
+		AuthorizationStatus status = null;
 		
 		String uriPath = httpHelper.getRequestURI().getRawPath();
 		log.debug("uriPath: {}", uriPath);
 		
-		StorageArea sa = checkTURL(httpHelper.getRequestProtocol(), uriPath);
+		StorageArea matched = getMatchingStorageArea(uriPath);
+		String realPath = matched.getRealPath(stripContext(uriPath));
+		log.debug("real path is {}", realPath);
+
+		status = checkUserReadPermissionsOnStorageArea(user, matched);
+		if (status == null) {
+			/* not anonymous user and https protocol */
+			status = super.askBEAuth(user, Constants.READ_OPERATION, realPath);
+		}
+		if (!status.isAuthorized()) {
+			return status;
+		}
+		/* is authorized */
+		File file = new File(realPath);
+		String canPath = null;
+		try {
+			canPath = file.getCanonicalPath();
+		} catch (Throwable e) {
+			log.error(e.getMessage(), e);
+			throw new AuthorizationException(e.getMessage());
+		}
+		log.debug("canonical path is: {}", canPath);
+		StorageArea target = StorageAreaManager.getMatchingSAFromFsPath(canPath);
+		log.debug("target storage area is: {}", target.getName());
 		
-		AuthorizationStatus status = checkUserReadPermissionsOnStorageArea(user, sa);
-		if (status != null) {
+		if (matched.getFSRoot().equals(target.getFSRoot())) {
+			log.debug("target storage area matches {}!", matched.getName());
 			return status;
 		}
 		
-		String realPath = sa.getRealPath(stripContext(uriPath));
-		log.debug("Real path is {}", realPath);
-		return super.askBEAuth(user, Constants.READ_OPERATION, realPath); 
+		log.debug("target storage area doesn't match {}!", matched.getName());
+		status = checkUserReadPermissionsOnStorageArea(user, target);
+		if (status == null) {
+			status = super.askBEAuth(user, Constants.READ_OPERATION, canPath);
+		}
+		return status;
 	}
 	
 }

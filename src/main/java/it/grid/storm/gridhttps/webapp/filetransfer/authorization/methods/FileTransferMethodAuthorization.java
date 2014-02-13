@@ -12,7 +12,6 @@
  */
 package it.grid.storm.gridhttps.webapp.filetransfer.authorization.methods;
 
-import java.io.File;
 import java.io.IOException;
 
 import javax.servlet.http.HttpServletResponse;
@@ -23,11 +22,12 @@ import org.slf4j.LoggerFactory;
 import it.grid.storm.gridhttps.common.storagearea.StorageArea;
 import it.grid.storm.gridhttps.common.storagearea.StorageAreaManager;
 import it.grid.storm.gridhttps.configuration.Configuration;
+import it.grid.storm.gridhttps.webapp.common.authorization.AuthorizationException;
 import it.grid.storm.gridhttps.webapp.common.authorization.AuthorizationStatus;
 import it.grid.storm.gridhttps.webapp.common.authorization.StormAuthorizationUtils;
 import it.grid.storm.gridhttps.webapp.common.authorization.UserCredentials;
 import it.grid.storm.gridhttps.webapp.common.authorization.methods.AbstractMethodAuthorization;
-import it.grid.storm.gridhttps.webapp.common.exceptions.InvalidRequestException;
+import it.grid.storm.gridhttps.webapp.filetransfer.authorization.InvalidTURLException;
 
 public abstract class FileTransferMethodAuthorization extends AbstractMethodAuthorization {
 	
@@ -58,65 +58,29 @@ public abstract class FileTransferMethodAuthorization extends AbstractMethodAuth
 	}
 	
 	protected StorageArea getMatchingStorageArea(String uriPath) 
-		throws InvalidRequestException {
+		throws InvalidTURLException {
 		
 		uriPath = stripContext(uriPath);
 		log.debug("context stripped: {}" , uriPath);
-		return StorageAreaManager.getMatchingSA(uriPath);
-	}
-
-	protected StorageArea checkTURL(String protocol, String uriPath) {
-		
-		String ftContextPath = File.separator + 
-			Configuration.getGridhttpsInfo().getFiletransferContextPath();
-		
-		if (!uriPath.startsWith(ftContextPath)) {
-			log.debug("TURL '{}' doesn't start with {}!", uriPath, ftContextPath);
-			throw new InvalidRequestException(HttpServletResponse.SC_CONFLICT, 
-				"Invalid TURL!");
-		}
-		
-		if (uriPath.contains("..")) {
-			log.debug("TURL '{}' contains a dotted segment!", uriPath);
-			throw new InvalidRequestException(HttpServletResponse.SC_CONFLICT, 
-				"Invalid TURL!");
-		}
-		
-		StorageArea sa = getMatchingStorageArea(uriPath);
+		StorageArea sa = StorageAreaManager.getMatchingSA(uriPath);
 		if (sa == null) {
 			log.debug("Unable to resolve a Storage Area from {}", uriPath);
-			throw new InvalidRequestException(HttpServletResponse.SC_CONFLICT, 
+			throw new InvalidTURLException(HttpServletResponse.SC_CONFLICT, 
 				"Invalid TURL!");
 		}
-		
-		log.debug("path {} matches storage area {}", uriPath, sa.getName());
-		if (!sa.hasProtocol(protocol)) {
-			log.debug("{} doesn't support {} as transfer protocol", sa.getName(),
-				protocol);
-			throw new InvalidRequestException(HttpServletResponse.SC_CONFLICT, 
-				"Invalid TURL!");
-		}
-		
-		File file = new File(sa.getRealPath(stripContext(uriPath)));
-		log.debug("file path is {}", file);
-		
-		String canonicalPath;
+		return sa;
+	}
+
+	protected StorageArea getTargetStorageArea(StorageArea owner, String uriPath) {
+		String realPath;
 		try {
-			canonicalPath = file.getCanonicalPath();
+			realPath = owner.getCanonicalPath(stripContext(uriPath));
 		} catch (IOException e) {
 			log.error(e.getMessage(), e);
-			throw new InvalidRequestException(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, 
-				e.getMessage());
+			throw new AuthorizationException(e.getMessage());
 		}
-		log.debug("canonical path is {}", canonicalPath);
-		
-		if (!canonicalPath.startsWith(sa.getFSRoot())) {
-			log.debug("file {} is not owned by {}", canonicalPath, sa.getName());
-			throw new InvalidRequestException(HttpServletResponse.SC_CONFLICT, 
-				"Invalid TURL!");
-		}
-		
-		return sa;
+		log.debug("real path is {}", realPath);
+		return StorageAreaManager.getMatchingSAFromFsPath(realPath);
 	}
 	
 	protected AuthorizationStatus checkUserReadPermissionsOnStorageArea(
@@ -156,5 +120,5 @@ public abstract class FileTransferMethodAuthorization extends AbstractMethodAuth
 		}
 		return null;
 	}
-	
+
 }

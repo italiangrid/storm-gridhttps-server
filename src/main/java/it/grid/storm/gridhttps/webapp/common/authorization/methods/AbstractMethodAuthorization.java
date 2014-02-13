@@ -20,7 +20,7 @@ import javax.servlet.http.HttpServletResponse;
 import it.grid.storm.gridhttps.webapp.common.authorization.AuthorizationException;
 import it.grid.storm.gridhttps.webapp.common.authorization.AuthorizationStatus;
 import it.grid.storm.gridhttps.webapp.common.authorization.UserCredentials;
-import it.grid.storm.gridhttps.webapp.common.exceptions.InvalidRequestException;
+import it.grid.storm.gridhttps.webapp.filetransfer.authorization.InvalidTURLException;
 
 public abstract class AbstractMethodAuthorization {
 
@@ -33,7 +33,7 @@ public abstract class AbstractMethodAuthorization {
 	public abstract AuthorizationStatus isUserAuthorized(
 		HttpServletRequest request, HttpServletResponse response,
 		UserCredentials user) throws AuthorizationException,
-		InvalidRequestException;
+		InvalidTURLException;
 	
 	protected String stripContext(String path) {
 		if (this.getContextPath().isEmpty()) {

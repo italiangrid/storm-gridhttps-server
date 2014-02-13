@@ -12,15 +12,45 @@
  */
 package it.grid.storm.gridhttps.webapp.common.authorization;
 
+import javax.servlet.http.HttpServletResponse;
+
 public class AuthorizationException extends RuntimeException {
 
 	private static final long serialVersionUID = 1L;
 
-	public AuthorizationException(String string) {
-		super(string);
+	private int errorcode;
+	private String msg;
+
+	public AuthorizationException(String msg) {
+
+		this(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, msg);
 	}
 
 	public AuthorizationException(Throwable t){
-		super(t);
+
+		this(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, t.getMessage());
 	}
+
+	public AuthorizationException(int error, String msg) {
+
+		this.errorcode = error;
+		this.msg = msg;
+	}
+
+	/**
+	 * @return the errorcode
+	 */
+	public int getErrorcode() {
+	
+		return errorcode;
+	}
+
+	/**
+	 * @return the msg
+	 */
+	public String getMessage() {
+	
+		return msg;
+	}
+	
 }
