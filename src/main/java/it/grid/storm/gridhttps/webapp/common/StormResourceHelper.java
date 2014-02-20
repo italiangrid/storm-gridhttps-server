@@ -383,8 +383,12 @@ public class StormResourceHelper {
 		
 		Ls operation = new Ls(source);
 		LsOutputData output = operation.executeAs(this.getHttpHelper().getUser(), this.getBackend());
-		if (!output.isSuccess())
+		if (!output.isSuccess()) {
+			if (output.hasInfos()) {
+				throw new SRMOperationException(output.getInfos().iterator().next().getStatus());
+			}
 			throw new SRMOperationException(output.getStatus());
+		}
 		return output;
 	}
 
@@ -398,8 +402,12 @@ public class StormResourceHelper {
 		
 		LsDetailed operation = new LsDetailed(source, recursion, count);
 		LsOutputData output = operation.executeAs(this.getHttpHelper().getUser(), this.getBackend());
-		if (!output.isSuccess())
+		if (!output.isSuccess()) {
+			if (output.hasInfos()) {
+				throw new SRMOperationException(output.getInfos().iterator().next().getStatus());
+			}
 			throw new SRMOperationException(output.getStatus());
+		}
 		return output;
 	}
 	
