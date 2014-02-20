@@ -77,16 +77,13 @@ public class MapperServlet extends HttpServlet {
 	private StorageArea getMatchingSA(String pathDecoded) throws ServletException {
 		StorageArea SA = null;
 		try {
-			SA = StorageAreaManager.getMatchingSA(new File(pathDecoded));
-		} catch (IllegalArgumentException e) {
-			log.error("Unable to get matching SA for path {}. IllegalArgumentException : {}" , pathDecoded , e.getMessage(),e);
-			throw new ServletException("Unable to get matching SA for path " + pathDecoded, e);
-		} catch (IllegalStateException e) {
-			log.error("Unable to get matching SA for path {}. IllegalStateException : {}" , pathDecoded , e.getMessage(),e);
-			throw new ServletException("Unable to get matching SA for path " + pathDecoded, e);
+			SA = StorageAreaManager.getMatchingSAFromFsPath(pathDecoded);
+		} catch (Throwable e) {
+			log.error(e.getMessage(), e);
+			throw new ServletException(e.getMessage(), e);
 		}
 		if (SA == null) {
-			log.error("No matching StorageArea found for path '{}' . Unable to build http(s) relative path" , pathDecoded);
+			log.error("No matching StorageArea found for path '{}'", pathDecoded);
 			throw new ServletException("No matching StorageArea found for the provided path");
 		}
 		return SA;

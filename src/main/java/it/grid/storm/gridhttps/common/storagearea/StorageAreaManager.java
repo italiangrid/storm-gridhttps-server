@@ -18,7 +18,6 @@ import it.grid.storm.gridhttps.webapp.common.authorization.Constants;
 import it.grid.storm.gridhttps.webapp.common.authorization.StormAuthorizationUtils;
 import it.grid.storm.gridhttps.webapp.common.authorization.UserCredentials;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
@@ -82,29 +81,33 @@ public class StorageAreaManager {
 		return fsRootFromStfn;
 	}
 	
-	public static StorageArea getMatchingSA(File localFile) throws IllegalArgumentException, IllegalStateException {
-		if (localFile == null) {
-			log.error("Unable to match StorageArea, the provided localFile is null");
-			throw new IllegalArgumentException("Provided localFile is null!");
+	public static StorageArea getMatchingSAFromFsPath(String filePath)
+		throws IllegalArgumentException, IllegalStateException {
+		
+		if (filePath == null) {
+			log.error("Unable to match StorageArea: filePath is null");
+			throw new IllegalArgumentException("filePath is null!");
 		}
 		if (!isInitialized()) {
-			log.error("Unable to match StorageArea, class not initialized. Call init() first");
+			log.error("Unable to match StorageArea: class not initialized. Call init() first");
 			throw new IllegalStateException("Unable to match any StorageArea, class not initialized.");
 		}
-		String path = localFile.getPath();
-		log.debug("Looking for a StorageArea that matches {}", path);
+
+		log.debug("Looking for a StorageArea that matches {}", filePath);
 		StorageArea mapped = null;
 		for (StorageArea storageArea : StorageAreaManager.getInstance().getStorageAreas()) {
-			if (path.startsWith(storageArea.getFSRoot())) {
-					if (mapped == null || storageArea.getFSRoot().length() > mapped.getFSRoot().length()) {
+			if (filePath.startsWith(storageArea.getFSRoot())) {
+					if (mapped == null || 
+						storageArea.getFSRoot().length() > mapped.getFSRoot().length()) {
 						mapped = storageArea;
+						log.debug("Temporary matched StorageArea {}", mapped.getName());
 					}
 			}
 		}
 		if (mapped == null) {
 			log.debug("No match found");
 		} else {
-			log.debug("Matched StorageArea {}", mapped.toString());
+			log.debug("Final matched StorageArea {}", mapped.getName());
 		}
 		return mapped;
 	}

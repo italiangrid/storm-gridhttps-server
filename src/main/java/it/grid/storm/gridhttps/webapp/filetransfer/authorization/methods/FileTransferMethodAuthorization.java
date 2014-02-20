@@ -12,6 +12,8 @@
  */
 package it.grid.storm.gridhttps.webapp.filetransfer.authorization.methods;
 
+import java.io.IOException;
+
 import javax.servlet.http.HttpServletResponse;
 
 import org.slf4j.Logger;
@@ -20,11 +22,12 @@ import org.slf4j.LoggerFactory;
 import it.grid.storm.gridhttps.common.storagearea.StorageArea;
 import it.grid.storm.gridhttps.common.storagearea.StorageAreaManager;
 import it.grid.storm.gridhttps.configuration.Configuration;
+import it.grid.storm.gridhttps.webapp.common.authorization.AuthorizationException;
 import it.grid.storm.gridhttps.webapp.common.authorization.AuthorizationStatus;
 import it.grid.storm.gridhttps.webapp.common.authorization.StormAuthorizationUtils;
 import it.grid.storm.gridhttps.webapp.common.authorization.UserCredentials;
 import it.grid.storm.gridhttps.webapp.common.authorization.methods.AbstractMethodAuthorization;
-import it.grid.storm.gridhttps.webapp.common.exceptions.InvalidRequestException;
+import it.grid.storm.gridhttps.webapp.filetransfer.authorization.InvalidTURLException;
 
 public abstract class FileTransferMethodAuthorization extends AbstractMethodAuthorization {
 	
@@ -32,12 +35,6 @@ public abstract class FileTransferMethodAuthorization extends AbstractMethodAuth
 	
 	public FileTransferMethodAuthorization() {		
 		super(Configuration.getGridhttpsInfo().getFiletransferContextPath());
-	}
-	
-	protected String resolvePath(String path) {
-		/**  TO-DO
-		 **/
-		return path;
 	}
 	
 	protected AuthorizationStatus askBEAuth(UserCredentials user,
@@ -60,23 +57,68 @@ public abstract class FileTransferMethodAuthorization extends AbstractMethodAuth
 			"You are not authorized to access the requested resource");
 	}
 	
-	protected StorageArea getMatchingSA(String path) throws InvalidRequestException {
-		StorageArea sa = StorageAreaManager.getMatchingSA(path);
+	protected StorageArea getMatchingStorageArea(String uriPath) 
+		throws InvalidTURLException {
+		
+		uriPath = stripContext(uriPath);
+		log.debug("context stripped: {}" , uriPath);
+		StorageArea sa = StorageAreaManager.getMatchingSA(uriPath);
 		if (sa == null) {
-			throw new InvalidRequestException(HttpServletResponse.SC_BAD_REQUEST, "Unable to resolve storage area for " + path);
+			log.debug("Unable to resolve a Storage Area from {}", uriPath);
+			throw new InvalidTURLException(HttpServletResponse.SC_CONFLICT, 
+				"Invalid TURL!");
 		}
 		return sa;
 	}
-	
-	protected AuthorizationStatus checkSA(StorageArea sa, String requestedProtocol) {
 
-		if (!sa.isProtocol(requestedProtocol.toUpperCase())) {
-			return AuthorizationStatus.NOTAUTHORIZED(
-				HttpServletResponse.SC_FORBIDDEN,
-				String.format("Storage area %s doesn't support %s protocol",
-					sa.getName(), requestedProtocol));
+	protected StorageArea getTargetStorageArea(StorageArea owner, String uriPath) {
+		String realPath;
+		try {
+			realPath = owner.getCanonicalPath(stripContext(uriPath));
+		} catch (IOException e) {
+			log.error(e.getMessage(), e);
+			throw new AuthorizationException(e.getMessage());
 		}
-		return AuthorizationStatus.AUTHORIZED();
+		log.debug("real path is {}", realPath);
+		return StorageAreaManager.getMatchingSAFromFsPath(realPath);
+	}
+	
+	protected AuthorizationStatus checkUserReadPermissionsOnStorageArea(
+		UserCredentials user, StorageArea sa) {
+		
+		if (user.isAnonymous()) {
+			if (sa.isHTTPReadable()) {
+				return AuthorizationStatus.AUTHORIZED();
+			}
+			return AuthorizationStatus.NOTAUTHORIZED(
+				HttpServletResponse.SC_FORBIDDEN, String.format(
+					"Unauthorized: Anonymous users are not authorized to read into {}",
+					sa.getName()));
+		}
+		/* user is not anonymous */
+		if (sa.isHTTPReadable()) {
+			return AuthorizationStatus.AUTHORIZED();
+		}
+		return null; 
+	}
+	
+	protected AuthorizationStatus checkUserWritePermissionsOnStorageArea(
+		UserCredentials user, StorageArea sa) {
+		
+		if (user.isAnonymous()) {
+			if (sa.isHTTPWritable()) {
+				return AuthorizationStatus.AUTHORIZED();
+			}
+			return AuthorizationStatus.NOTAUTHORIZED(
+				HttpServletResponse.SC_FORBIDDEN, String.format(
+					"Unauthorized: Anonymous users are not authorized to read into {}",
+					sa.getName()));
+		}
+		/* user is not anonymous */
+		if (sa.isHTTPWritable()) {
+			return AuthorizationStatus.AUTHORIZED();
+		}
+		return null;
 	}
 
 }

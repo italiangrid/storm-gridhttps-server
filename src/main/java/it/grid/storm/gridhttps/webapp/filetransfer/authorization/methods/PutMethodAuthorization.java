@@ -12,6 +12,8 @@
  */
 package it.grid.storm.gridhttps.webapp.filetransfer.authorization.methods;
 
+import java.io.File;
+
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -19,7 +21,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import it.grid.storm.gridhttps.common.storagearea.StorageArea;
+import it.grid.storm.gridhttps.common.storagearea.StorageAreaManager;
 import it.grid.storm.gridhttps.webapp.HttpHelper;
+import it.grid.storm.gridhttps.webapp.common.authorization.AuthorizationException;
 import it.grid.storm.gridhttps.webapp.common.authorization.AuthorizationStatus;
 import it.grid.storm.gridhttps.webapp.common.authorization.Constants;
 import it.grid.storm.gridhttps.webapp.common.authorization.UserCredentials;
@@ -37,31 +41,46 @@ public class PutMethodAuthorization extends FileTransferMethodAuthorization {
 		HttpServletResponse response, UserCredentials user) {
 
 		HttpHelper httpHelper = new HttpHelper(request, response);
+		AuthorizationStatus status = null;
 		
-		String srcPath = this.stripContext(httpHelper.getRequestURI().getRawPath());
-		log.debug("context stripped: {}" , srcPath);
-		srcPath = this.resolvePath(srcPath);
-		log.debug("resolved path: {}" , srcPath);
-		StorageArea srcSA = getMatchingSA(srcPath);
-		log.debug("path {} matches storage area {}", srcPath, srcSA.getName());
-		AuthorizationStatus status = checkSA(srcSA, httpHelper.getRequestProtocol());
+		String uriPath = httpHelper.getRequestURI().getRawPath();
+		log.debug("uriPath: {}", uriPath);
+		
+		StorageArea matched = getMatchingStorageArea(uriPath);
+		String realPath = matched.getRealPath(stripContext(uriPath));
+		log.debug("real path is {}", realPath);
+
+		status = checkUserWritePermissionsOnStorageArea(user, matched);
+		if (status == null) {
+			/* not anonymous user and https protocol */
+			status = super.askBEAuth(user, Constants.WRITE_OPERATION, realPath);
+		}
 		if (!status.isAuthorized()) {
 			return status;
 		}
-		if (user.isAnonymous()) {
-			if (srcSA.isHTTPWritable()) {
-				return AuthorizationStatus.AUTHORIZED();
-			}
-			return AuthorizationStatus.NOTAUTHORIZED(
-				HttpServletResponse.SC_FORBIDDEN, String.format(
-					"Unauthorized: Anonymous users are not authorized to read %s",
-					httpHelper.getRequestStringURI()));
+		/* is authorized */
+		File file = new File(realPath);
+		String canPath = null;
+		try {
+			canPath = file.getCanonicalPath();
+		} catch (Throwable e) {
+			log.error(e.getMessage(), e);
+			throw new AuthorizationException(e.getMessage());
 		}
-		/* user is not anonymous */
-		if (srcSA.isHTTPWritable()) {
-			return AuthorizationStatus.AUTHORIZED();
+		log.debug("canonical path is: {}", canPath);
+		StorageArea target = StorageAreaManager.getMatchingSAFromFsPath(canPath);
+		log.debug("target storage area is: {}", target.getName());
+		
+		if (matched.getFSRoot().equals(target.getFSRoot())) {
+			log.debug("target storage area matches {}!", matched.getName());
+			return status;
 		}
-		return super.askBEAuth(user, Constants.WRITE_OPERATION,
-			srcSA.getRealPath(srcPath));
+		
+		log.debug("target storage area doesn't match {}!", matched.getName());
+		status = checkUserWritePermissionsOnStorageArea(user, target);
+		if (status == null) {
+			status = super.askBEAuth(user, Constants.WRITE_OPERATION, canPath);
+		}
+		return status;
 	}
 }

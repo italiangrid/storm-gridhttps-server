@@ -18,7 +18,7 @@ import it.grid.storm.gridhttps.configuration.Configuration;
 import it.grid.storm.gridhttps.webapp.common.authorization.AuthorizationStatus;
 import it.grid.storm.gridhttps.webapp.common.authorization.UserCredentials;
 import it.grid.storm.gridhttps.webapp.common.authorization.methods.AbstractMethodAuthorization;
-import it.grid.storm.gridhttps.webapp.common.exceptions.InvalidRequestException;
+import it.grid.storm.gridhttps.webapp.filetransfer.authorization.InvalidTURLException;
 
 public abstract class WebDAVMethodAuthorization extends
 	AbstractMethodAuthorization {
@@ -33,11 +33,11 @@ public abstract class WebDAVMethodAuthorization extends
 	}
 
 	protected StorageArea getMatchingSA(String path)
-		throws InvalidRequestException {
+		throws InvalidTURLException {
 
 		StorageArea sa = StorageAreaManager.getMatchingSA(path);
 		if (sa == null) {
-			throw new InvalidRequestException(HttpServletResponse.SC_BAD_REQUEST,
+			throw new InvalidTURLException(HttpServletResponse.SC_BAD_REQUEST,
 				"Unable to resolve storage area for path " + path);
 		}
 		return sa;
@@ -45,7 +45,7 @@ public abstract class WebDAVMethodAuthorization extends
 
 	private AuthorizationStatus checkSA(StorageArea sa, String requestedProtocol) {
 
-		if (!sa.isProtocol(requestedProtocol.toUpperCase())) {
+		if (!sa.hasProtocol(requestedProtocol.toUpperCase())) {
 			return AuthorizationStatus.NOTAUTHORIZED(
 				HttpServletResponse.SC_FORBIDDEN, "Storage area " + sa.getName()
 					+ " doesn't support " + requestedProtocol + " protocol");

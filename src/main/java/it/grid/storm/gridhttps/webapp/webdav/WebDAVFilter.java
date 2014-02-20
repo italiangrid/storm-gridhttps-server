@@ -26,8 +26,6 @@ import it.grid.storm.gridhttps.webapp.StormStandardFilter;
 import it.grid.storm.gridhttps.webapp.common.authorization.AuthorizationStatus;
 import it.grid.storm.gridhttps.webapp.common.authorization.UserCredentials;
 import it.grid.storm.gridhttps.webapp.common.authorization.Constants.DavMethod;
-import it.grid.storm.gridhttps.webapp.common.exceptions.InternalError;
-import it.grid.storm.gridhttps.webapp.common.exceptions.InvalidRequestException;
 import it.grid.storm.gridhttps.webapp.webdav.authorization.methods.CopyMethodAuthorization;
 import it.grid.storm.gridhttps.webapp.webdav.authorization.methods.DeleteMethodAuthorization;
 import it.grid.storm.gridhttps.webapp.webdav.authorization.methods.GetMethodAuthorization;
@@ -45,7 +43,6 @@ import java.io.File;
 import java.io.IOException;
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
-import java.util.EnumSet;
 
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;
@@ -63,8 +60,6 @@ import org.slf4j.LoggerFactory;
 public class WebDAVFilter implements Filter {
 
 	private static final Logger log = LoggerFactory.getLogger(WebDAVFilter.class);
-	
-	private static final EnumSet<DavMethod> DavStoRMSupportedMethod = EnumSet.range(DavMethod.HEAD, DavMethod.PROPFIND);
 	
 	private ArrayList<String> rootPaths;
 	private HttpManager httpManager;
@@ -109,22 +104,23 @@ public class WebDAVFilter implements Filter {
 	public void doFilter(ServletRequest request, ServletResponse response,
 		FilterChain chain) throws IOException, ServletException {
 		
-		HttpHelper httpHelper = null;
+		HttpHelper httpHelper = new HttpHelper((HttpServletRequest) request, 
+			(HttpServletResponse) response);
 		UserCredentials user = null;
+		WebDAVMethodAuthorization handler = null;
 		
 		try {
-			httpHelper = new HttpHelper((HttpServletRequest) request, (HttpServletResponse) response);
 			user = getUser(httpHelper);
 			log.debug("User: {}", user);
 			httpHelper.setUser(user);
 			printInCommand(httpHelper, user);
-			checkIfRequestIsValid(httpHelper);
+			checkURL(httpHelper);
 			
 			AuthorizationStatus status = null;
 			if (isRootPath(httpHelper.getRequestURI().getRawPath())) {
 				status = AuthorizationStatus.AUTHORIZED();
 			} else {
-				WebDAVMethodAuthorization handler = getAuthorizationMethodHandler(DavMethod.valueOf(httpHelper.getRequestMethod()));
+				handler = getAuthorizationMethodHandler(httpHelper.getRequestMethod());
 				status = handler.isUserAuthorized(httpHelper.getRequest(), httpHelper.getResponse(), user);
 			}
 			if (status.isAuthorized()) {
@@ -140,10 +136,9 @@ public class WebDAVFilter implements Filter {
 				log.debug("User is not authorized: {}", status.getReason());
 				sendError(httpHelper.getResponse(), status.getErrorCode(), status.getReason());
 			}
-		
-		} catch (InvalidRequestException e) {
-			log.error(e.getMessage(), e);
-			sendError((HttpServletResponse) response, e.getErrorcode(), e.getMessage());
+		} catch (WebDAVFilterException e) {
+			log.error(e.getMessage());
+			sendError(httpHelper.getResponse(), e.getErrorcode(), e.getMessage());
 		} catch (Throwable e) {
 			log.error(e.getMessage(), e);
 			sendError(httpHelper.getResponse(), HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Internal Server Error: " + e.getMessage());
@@ -152,23 +147,22 @@ public class WebDAVFilter implements Filter {
 		}
 	}
 
-	private UserCredentials getUser(HttpHelper httpHelper) throws InternalError {
+	private UserCredentials getUser(HttpHelper httpHelper) 
+		throws WebDAVFilterException {
 
 		if (httpHelper.isHttp()) {
 			return new UserCredentials();
 		}
 		X509Certificate[] certChain = httpHelper.getX509Certificate();
 		if (certChain == null) {
-			String msg = "Unable to get certificate chain from request header";
-			log.warn(msg);
-			throw new InternalError(msg);
+			throw new WebDAVFilterException(HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
+				"Unable to get certificate chain from request header");
 		}
 		httpHelper.getVOMSSecurityContext().setClientCertChain(certChain);
 		String dn = httpHelper.getVOMSSecurityContext().getClientName();
 		if (dn == null) {
-			String msg = "Unable to get user DN from VOMS security context!";
-			log.warn(msg);
-			throw new InternalError(msg);
+			throw new WebDAVFilterException(HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
+				"Unable to get user DN from VOMS security context!");
 		}
 		ArrayList<String> fqans = new ArrayList<String>();
 		for (VOMSAttribute voms : httpHelper.getVOMSSecurityContext()
@@ -176,9 +170,17 @@ public class WebDAVFilter implements Filter {
 			fqans.addAll(voms.getFQANs());
 		return new UserCredentials(dn, fqans);
 	}
+	
 
-	private WebDAVMethodAuthorization getAuthorizationMethodHandler(DavMethod method) {
-		switch (method) {
+	private WebDAVMethodAuthorization getAuthorizationMethodHandler(String method) {
+		
+		DavMethod davMethod = DavMethod.valueOf(method.toUpperCase());
+		if (davMethod == null) {
+			throw new WebDAVFilterException(
+				HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
+				"Invalid method " + method +"!");
+		}
+		switch (davMethod) {
 		case PROPFIND:
 			return new PropfindMethodAuthorization();
 		case OPTIONS:
@@ -198,9 +200,10 @@ public class WebDAVFilter implements Filter {
 		case HEAD:
 			return new HeadMethodAuthorization();
 		default:
-			break;
+			throw new WebDAVFilterException(
+				HttpServletResponse.SC_METHOD_NOT_ALLOWED,
+				"Method " + davMethod +" is not supported!");
 		}
-		return null;
 	}
 	
 	private void doMiltonProcessing(HttpServletRequest req,
@@ -244,31 +247,16 @@ public class WebDAVFilter implements Filter {
 		page.end();
 	}
 
-	private void checkIfRequestIsValid(HttpHelper httpHelper) throws InvalidRequestException {
+	private void checkURL(HttpHelper httpHelper) {
 
-		/* check method */
-		DavMethod method = DavMethod.valueOf(httpHelper.getRequestMethod().toUpperCase());
-		if (!isWebdavMethod(method)) {
-			throw new InvalidRequestException(HttpServletResponse.SC_BAD_REQUEST, method + " is not a WebDAV valid method!");
-		}
-		if (!isSupportedWebdavMethod(method)) {
-			throw new InvalidRequestException(HttpServletResponse.SC_METHOD_NOT_ALLOWED, method + "Method " + method + " is not supported by this StoRM instance!");
-		}
 		/* check requested path */
 		String requestedPath = httpHelper.getRequestURI().getRawPath();
 		if (requestedPath.contains("%20")) {
-			throw new InvalidRequestException(HttpServletResponse.SC_BAD_REQUEST, "Request URI '" + requestedPath + "' contains not allowed spaces!");
+			throw new WebDAVFilterException(HttpServletResponse.SC_BAD_REQUEST, 
+				"Request URI '" + requestedPath + "' contains not allowed spaces!");
 		}
 	}
 	
-	private boolean isWebdavMethod(DavMethod method) {
-		return method != null;
-	}
-
-	private boolean isSupportedWebdavMethod(DavMethod method) {
-		return DavStoRMSupportedMethod.contains(method);
-	}
-
 	private String buildCommandMessage(HttpHelper httpHelper, UserCredentials user) {
 		String method = httpHelper.getRequestMethod();
 		String path = httpHelper.getRequestURI().getPath();
