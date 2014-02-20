@@ -195,6 +195,37 @@ public class StormResourceHelper {
 		}
 		return in;
 	}
+	
+	public void doGetFileWithoutReallyRead(StormFileResource source) 
+		throws SRMOperationException {
+		
+		// PTG
+		PrepareToGet ptg = new PrepareToGet(source.getSurl());
+		PtGOutputData outputPtG = ptg.executeAs(getHttpHelper().getUser(), getBackend());
+		if (!outputPtG.getStatus().getStatusCode().equals(TStatusCode.SRM_FILE_PINNED)) {
+			throw new SRMOperationException(outputPtG.getStatus());
+		}
+		// RF
+		SurlArrayRequestOutputData oRf;
+		ReleaseFile rf = new ReleaseFile(source.getSurl(), outputPtG.getToken());
+		try {
+			oRf = rf.executeAs(getHttpHelper().getUser(), getBackend());
+		} catch (SRMOperationException e) {
+			doAbortRequest(source.getSurl(), outputPtG.getToken());
+			throw e;
+		}
+		if (!oRf.isSuccess()) {
+			doAbortRequest(source.getSurl(), outputPtG.getToken());
+			throw new SRMOperationException(oRf.getStatus());
+		}
+	}
+
+	public void doGetDirectoryWithoutReallyRead(StormResource source) 
+		throws SRMOperationException {
+		
+		doLimitedLsDetailed(source);
+	}
+
 
 	/* PUT */
 
