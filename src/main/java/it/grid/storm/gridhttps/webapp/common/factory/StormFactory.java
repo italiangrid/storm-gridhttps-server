@@ -84,7 +84,8 @@ public abstract class StormFactory implements ResourceFactory {
 		File requested = new File(currentSA.getRealPath(path));
 		log.debug("File path: {}", requested);
 		if (!requested.exists()) {
-			log.debug("File {} doesn't exist", requested);
+			log.warn("File {} doesn't exist or user {} does not have the rights to "
+				+ "read it.", requested, System.getProperty("user.name"));
 			return null;
 		}
 		if (requested.isDirectory()) {
