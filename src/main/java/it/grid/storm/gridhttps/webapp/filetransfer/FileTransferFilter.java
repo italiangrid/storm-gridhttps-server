@@ -25,6 +25,7 @@ import it.grid.storm.gridhttps.webapp.StormStandardFilter;
 import it.grid.storm.gridhttps.webapp.common.authorization.AuthorizationStatus;
 import it.grid.storm.gridhttps.webapp.common.authorization.Constants.DavMethod;
 import it.grid.storm.gridhttps.webapp.common.authorization.UserCredentials;
+import it.grid.storm.gridhttps.webapp.common.utils.StormPartialGetHelper;
 import it.grid.storm.gridhttps.webapp.filetransfer.authorization.FileTransferException;
 import it.grid.storm.gridhttps.webapp.filetransfer.authorization.InvalidTURLException;
 import it.grid.storm.gridhttps.webapp.filetransfer.authorization.methods.FileTransferMethodAuthorization;
@@ -60,11 +61,9 @@ public class FileTransferFilter implements Filter {
 	
 	@Override
 	public void init(FilterConfig filterConfig) throws ServletException {
-		log.debug("{} - Init" , this.getClass().getSimpleName());
 		this.filterConfig = filterConfig;
 		
 		try {
-			log.debug("{} - Init HttpManagerBuilder" , this.getClass().getSimpleName());
 			HttpManagerBuilder builder = new HttpManagerBuilder();
 			builder.setResourceFactory(new FileSystemResourceFactory());
 			builder.setDefaultStandardFilter(new StormStandardFilter());
@@ -75,9 +74,10 @@ public class FileTransferFilter implements Filter {
 			builder.setEnableExpectContinue(false);
 			builder.setEnableFormAuth(false);
 			builder.setEnableCookieAuth(false);
+			builder.setPartialGetHelper(new StormPartialGetHelper());
 			builder.setPropertySources(new ArrayList<PropertySource>());
 			this.httpManager = builder.buildHttpManager();
-			log.debug("{} - HttpManager created!" , this.getClass().getSimpleName());
+			log.debug("HttpManager succesfully created!");
 			
 		} catch (Exception e) {
 			log.error(e.getMessage(),e);

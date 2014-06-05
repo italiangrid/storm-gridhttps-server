@@ -26,6 +26,7 @@ import it.grid.storm.gridhttps.webapp.StormStandardFilter;
 import it.grid.storm.gridhttps.webapp.common.authorization.AuthorizationStatus;
 import it.grid.storm.gridhttps.webapp.common.authorization.UserCredentials;
 import it.grid.storm.gridhttps.webapp.common.authorization.Constants.DavMethod;
+import it.grid.storm.gridhttps.webapp.common.utils.StormPartialGetHelper;
 import it.grid.storm.gridhttps.webapp.webdav.authorization.methods.CopyMethodAuthorization;
 import it.grid.storm.gridhttps.webapp.webdav.authorization.methods.DeleteMethodAuthorization;
 import it.grid.storm.gridhttps.webapp.webdav.authorization.methods.GetMethodAuthorization;
@@ -67,14 +68,14 @@ public class WebDAVFilter implements Filter {
 	
 	@Override
 	public void init(FilterConfig filterConfig) throws ServletException {
-		log.debug("{} - Init" , this.getClass().getSimpleName());
+		
 		this.filterConfig = filterConfig;
 		this.rootPaths = new ArrayList<String>();
 		this.rootPaths.add(File.separator + Configuration.getGridhttpsInfo().getWebdavContextPath());
 		this.rootPaths.add(File.separator + Configuration.getGridhttpsInfo().getWebdavContextPath() + File.separator);
 		
 		try {
-			log.debug("{} - Init HttpManagerBuilder" , this.getClass().getSimpleName());
+		
 			HttpManagerBuilder builder = new HttpManagerBuilder();
 			builder.setResourceFactory(new WebdavResourceFactory());
 			builder.setDefaultStandardFilter(new StormStandardFilter());
@@ -89,6 +90,8 @@ public class WebDAVFilter implements Filter {
 			builder.setEnableFormAuth(false);
 			builder.setEnableCookieAuth(false);
 			builder.setPropertySources(new ArrayList<PropertySource>());
+			builder.setPartialGetHelper(new StormPartialGetHelper());
+			
 			StormPropFindPropertyBuilder pfBuilder = new StormPropFindPropertyBuilder();
 			builder.setPropFindPropertyBuilder(pfBuilder);
 			this.httpManager = builder.buildHttpManager();
