@@ -1,4 +1,4 @@
-package it.grid.storm.gridhttps.webapp.common.utils;
+package it.grid.storm.gridhttps.webapp.rangeutils;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -12,12 +12,19 @@ import org.apache.commons.lang.RandomStringUtils;
 public class HTTPHelper {
 
   static final int BUFFER_SIZE = 1024;
+  static final int DEFAULT_BOUNDARY_SIZE = 4;
 
+  static final String CONTENT_TYPE = "Content-type";
+  static final String CONTENT_RANGE = "Content-range";
+  
   static final Charset DEFAULT_CHARSET = Charset.forName("US-ASCII");
+  
   static final byte[] CR_LF =
     { '\r', '\n' };
+  
   static final byte[] DASH_DASH =
     { '-', '-' };
+  
   static final byte[] COLON_SPACE =
     { ':', ' ' };
 
@@ -33,7 +40,13 @@ public class HTTPHelper {
     boundary = boundaryString.getBytes(DEFAULT_CHARSET);
   }
 
-  private void encodeBoundaryStart() throws IOException {
+  private void write() throws IOException {
+
+    outputChannel.write(buffer);
+  }
+
+  public void writeBoundaryStart()
+    throws IOException {
 
     buffer.clear();
     
@@ -42,10 +55,11 @@ public class HTTPHelper {
     buffer.put(CR_LF);
     buffer.flip();
     write();
-    
+
   }
 
-  private void encodeBoundaryEnd() throws IOException {
+  public void writeBoundaryEnd()
+    throws IOException {
 
     buffer.clear();
     buffer.put(DASH_DASH);
@@ -54,9 +68,10 @@ public class HTTPHelper {
     buffer.put(CR_LF);
     buffer.flip();
     write();
+
   }
 
-  private void encodeHeader(String headerName, String headerValue)
+  private void writeHeader(String headerName, String headerValue) 
     throws IOException {
 
     buffer.clear();
@@ -66,32 +81,7 @@ public class HTTPHelper {
     buffer.put(CR_LF);
     buffer.flip();
     write();
-  }
-
-  private void write() throws IOException {
-
-    outputChannel.write(buffer);
-  }
-
-  public void writeBoundaryStart()
-    throws IOException {
-
-    encodeBoundaryStart();
-
-  }
-
-  public void writeBoundaryEnd()
-    throws IOException {
-
-    encodeBoundaryEnd();
-
-  }
-
-  private void writeHeader(String headerName, String headerValue) 
-    throws IOException {
-
-    encodeHeader(headerName, headerValue);
-
+  
   }
 
   public void writeContentTypeHeader(String contentType)
@@ -115,13 +105,20 @@ public class HTTPHelper {
     write();
   }
 
-  public static String generateRandomMultipartBoundary() {
+  
+  public static String generateRandomMultipartBoundary(String prefix, int size) {
 
-    StringBuilder builder = new StringBuilder();
-
-    builder.append("StoRM:");
-    builder.append(RandomStringUtils.randomAlphanumeric(32).toUpperCase());
-
+    final StringBuilder builder = new StringBuilder();
+    
+    if (prefix != null && prefix.length() > 0)
+      builder.append(prefix);
+    
+    if (size <= 0){
+      size = DEFAULT_BOUNDARY_SIZE;
+    }
+    
+    builder.append(RandomStringUtils.randomAlphanumeric(size).toUpperCase());
+    
     return builder.toString();
   }
 }

@@ -1,4 +1,4 @@
-package it.grid.storm.gridhttps.webapp.common.utils;
+package it.grid.storm.gridhttps.webapp.rangeutils;
 
 import io.milton.http.Range;
 import io.milton.http.Response;
@@ -26,16 +26,6 @@ public class StormPartialEntity implements Response.Entity {
     this.contentType = contentType;
   }
 
-  /**
-   * Validates ranges applicability to current resource
-   * 
-   * @return <code>true</code> if ranges are valid, <code>false</code> otherwise
-   */
-  protected boolean validRanges() {
-
-    return true;
-  }
-
 
   private String rangeByteInfo(Range r) {
 
@@ -57,17 +47,12 @@ public class StormPartialEntity implements Response.Entity {
     throws Exception {
 
     final HTTPHelper httpHelper = new HTTPHelper(boundary,os);
-    
-    if (!validRanges()) {
-      return;
-    }
 
     try{
       
       httpHelper.writeNewline();
       
       for (Range r : ranges) {
-        
         
         httpHelper.writeBoundaryStart();
         httpHelper.writeContentTypeHeader(contentType);
@@ -86,6 +71,62 @@ public class StormPartialEntity implements Response.Entity {
       response.sendError(Response.Status.SC_INTERNAL_SERVER_ERROR, 
         "Error handling multirange partial get: " + t.getMessage());
     }
+  }
+  
+  private long computeHeaderLength(Range r){
+   
+    return 12 + 2 + contentType.length() + 2 // Content-Type: <ct>CRLF
+      + 13 + 2 + rangeByteInfo(r).length() + 2; // Content-range: <...>CRLF
+  }
+  
+  private long computeRangeLength(){
+    
+    if (ranges == null || ranges.size() == 0) 
+      return 0;
+    
+    long lengthSoFar = 0L;
+    long headerLengthSoFar = 0L;
+      
+    for (Range r: ranges){
+      Long length = r.getLength();
+      headerLengthSoFar+= computeHeaderLength(r);
+      
+      if (length != null && length <= resource.getContentLength()){
+        lengthSoFar += length;
+      } else {
+        
+        if (resource.getContentLength() > 0){
+          lengthSoFar += resource.getContentLength() - r.getStart() + 1;
+        } else {
+          continue;
+        }
+      }
+    }
+    
+    return lengthSoFar+headerLengthSoFar;
+  }
+    
+  public long getContentLenght(){
+    int numRanges = ranges.size();
+    
+    // The content is encoded as follows:
+    //    CRLF (2)
+    // 
+    // then, for each range: 
+    //    --<boundary>CRLF
+    //    Content-type: ... CRLF
+    //    Content-Range: ... CRLF
+    //    CRLF
+    //    <data>
+    //    CRLF
+    // and finally
+    //    --<boundary>--CRLF
+    
+    return 2 
+      + numRanges*(4+boundary.length()+4)
+      + computeRangeLength() // the actual data + headers
+      + (6+boundary.length()); // --<boundary>--CRLF
+    
   }
 
 }

@@ -58,7 +58,7 @@
 
 		<httpsutilsVersion>0.3.2.rc1</httpsutilsVersion>
 		<xmlrpcApiVersion>0.0.18.rc1</xmlrpcApiVersion>
-		<miltonVersion>2.6.1.2</miltonVersion>
+		<miltonVersion>2.6.2.1-SNAPSHOT</miltonVersion>
 		<commonsLangVersion>2.3</commonsLangVersion>
 		<httpcoreVersion>4.2.2</httpcoreVersion>
 		<httpclientVersion>4.2.1</httpclientVersion>

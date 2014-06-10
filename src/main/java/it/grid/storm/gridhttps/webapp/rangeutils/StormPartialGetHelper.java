@@ -1,4 +1,4 @@
-package it.grid.storm.gridhttps.webapp.common.utils;
+package it.grid.storm.gridhttps.webapp.rangeutils;
 
 import io.milton.http.AbstractResponse;
 import io.milton.http.Range;
@@ -34,9 +34,8 @@ public class StormPartialGetHelper extends PartialGetHelper {
       super.sendPartialContent(resource, request, response, ranges, params,
         responseHandler);
     } else {
-      log.trace("Handling multiple range partial get.");
       
-      String boundary = HTTPHelper.generateRandomMultipartBoundary();
+      String boundary = HTTPHelper.generateRandomMultipartBoundary("StoRM:",4);
       
       AbstractResponse res = (AbstractResponse) response;
       
@@ -55,6 +54,8 @@ public class StormPartialGetHelper extends PartialGetHelper {
         boundary, 
         contentType);
       
+      long contentLength = spe.getContentLenght();
+      response.setContentLengthHeader(contentLength);
       response.setDateHeader(new Date());
       response.setEntity(spe);
       

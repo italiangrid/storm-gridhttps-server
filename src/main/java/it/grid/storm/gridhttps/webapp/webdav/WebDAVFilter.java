@@ -17,16 +17,18 @@ import io.milton.http.HttpManager;
 import io.milton.http.Request;
 import io.milton.http.Response;
 import io.milton.http.http11.DefaultHttp11ResponseHandler.BUFFERING;
+import io.milton.http.webdav.PropFindPropertyBuilder;
 import io.milton.property.PropertySource;
 import io.milton.servlet.MiltonServlet;
 import it.grid.storm.gridhttps.common.storagearea.StorageAreaManager;
 import it.grid.storm.gridhttps.configuration.Configuration;
 import it.grid.storm.gridhttps.webapp.HttpHelper;
 import it.grid.storm.gridhttps.webapp.StormStandardFilter;
+import it.grid.storm.gridhttps.webapp.common.StoRMHttpManagerBuilder;
 import it.grid.storm.gridhttps.webapp.common.authorization.AuthorizationStatus;
-import it.grid.storm.gridhttps.webapp.common.authorization.UserCredentials;
 import it.grid.storm.gridhttps.webapp.common.authorization.Constants.DavMethod;
-import it.grid.storm.gridhttps.webapp.common.utils.StormPartialGetHelper;
+import it.grid.storm.gridhttps.webapp.common.authorization.UserCredentials;
+import it.grid.storm.gridhttps.webapp.rangeutils.StoRMResponseHandler;
 import it.grid.storm.gridhttps.webapp.webdav.authorization.methods.CopyMethodAuthorization;
 import it.grid.storm.gridhttps.webapp.webdav.authorization.methods.DeleteMethodAuthorization;
 import it.grid.storm.gridhttps.webapp.webdav.authorization.methods.GetMethodAuthorization;
@@ -44,6 +46,7 @@ import java.io.File;
 import java.io.IOException;
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
+import java.util.Arrays;
 
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;
@@ -76,29 +79,22 @@ public class WebDAVFilter implements Filter {
 		
 		try {
 		
-			HttpManagerBuilder builder = new HttpManagerBuilder();
-			builder.setResourceFactory(new WebdavResourceFactory());
-			builder.setDefaultStandardFilter(new StormStandardFilter());
-			ArrayList<PropertySource> extraPropertySources = new ArrayList<PropertySource>();
-			extraPropertySources.add(new StormPropertySource());
-			builder.setExtraPropertySources(extraPropertySources);
-			builder.setEnabledJson(false);
-			builder.setBuffering(BUFFERING.never);
-			builder.setEnableBasicAuth(false);
-			builder.setEnableCompression(false);
-			builder.setEnableExpectContinue(false);
-			builder.setEnableFormAuth(false);
-			builder.setEnableCookieAuth(false);
-			builder.setPropertySources(new ArrayList<PropertySource>());
-			builder.setPartialGetHelper(new StormPartialGetHelper());
-			
+			HttpManagerBuilder builder = new StoRMHttpManagerBuilder();
 			StormPropFindPropertyBuilder pfBuilder = new StormPropFindPropertyBuilder();
-			builder.setPropFindPropertyBuilder(pfBuilder);
+			
+      builder.setResourceFactory(new WebdavResourceFactory());
+      builder.setDefaultStandardFilter(new StormStandardFilter());
+      
+      builder.setExtraPropertySources(Arrays
+        .asList((PropertySource) new StormPropertySource()));
+      
+      builder.setPropFindPropertyBuilder(pfBuilder);
+      
 			this.httpManager = builder.buildHttpManager();
-			log.debug("{} - HttpManager created!", this.getClass().getSimpleName());
 			pfBuilder.setPropertySources(builder.getPropertySources());
+			
 		} catch (Exception e) {
-			log.error("{} - {}" , this.getClass().getSimpleName() , e.getMessage(),e);
+		  log.error(e.getMessage(),e);
 			System.exit(1);
 		}		
 	}

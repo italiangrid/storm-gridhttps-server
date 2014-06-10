@@ -12,20 +12,17 @@
  */
 package it.grid.storm.gridhttps.webapp.filetransfer;
 
-import io.milton.config.HttpManagerBuilder;
 import io.milton.http.HttpManager;
 import io.milton.http.Request;
 import io.milton.http.Response;
-import io.milton.http.http11.DefaultHttp11ResponseHandler.BUFFERING;
-import io.milton.property.PropertySource;
 import io.milton.servlet.MiltonServlet;
 import it.grid.storm.gridhttps.configuration.Configuration;
 import it.grid.storm.gridhttps.webapp.HttpHelper;
 import it.grid.storm.gridhttps.webapp.StormStandardFilter;
+import it.grid.storm.gridhttps.webapp.common.StoRMHttpManagerBuilder;
 import it.grid.storm.gridhttps.webapp.common.authorization.AuthorizationStatus;
 import it.grid.storm.gridhttps.webapp.common.authorization.Constants.DavMethod;
 import it.grid.storm.gridhttps.webapp.common.authorization.UserCredentials;
-import it.grid.storm.gridhttps.webapp.common.utils.StormPartialGetHelper;
 import it.grid.storm.gridhttps.webapp.filetransfer.authorization.FileTransferException;
 import it.grid.storm.gridhttps.webapp.filetransfer.authorization.InvalidTURLException;
 import it.grid.storm.gridhttps.webapp.filetransfer.authorization.methods.FileTransferMethodAuthorization;
@@ -64,19 +61,12 @@ public class FileTransferFilter implements Filter {
 		this.filterConfig = filterConfig;
 		
 		try {
-			HttpManagerBuilder builder = new HttpManagerBuilder();
+		  
+		  StoRMHttpManagerBuilder builder = new StoRMHttpManagerBuilder();
 			builder.setResourceFactory(new FileSystemResourceFactory());
 			builder.setDefaultStandardFilter(new StormStandardFilter());
-			builder.setEnabledJson(false);
-			builder.setBuffering(BUFFERING.never);
-			builder.setEnableBasicAuth(false);
-			builder.setEnableCompression(false);
-			builder.setEnableExpectContinue(false);
-			builder.setEnableFormAuth(false);
-			builder.setEnableCookieAuth(false);
-			builder.setPartialGetHelper(new StormPartialGetHelper());
-			builder.setPropertySources(new ArrayList<PropertySource>());
-			this.httpManager = builder.buildHttpManager();
+			
+			httpManager = builder.buildHttpManager();
 			log.debug("HttpManager succesfully created!");
 			
 		} catch (Exception e) {
