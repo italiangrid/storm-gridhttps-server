@@ -17,6 +17,7 @@ import io.milton.http.Request;
 import io.milton.http.exceptions.BadRequestException;
 import io.milton.http.exceptions.ConflictException;
 import io.milton.http.exceptions.NotAuthorizedException;
+import it.grid.storm.gridhttps.common.storagearea.StorageArea;
 import it.grid.storm.gridhttps.webapp.common.StormResource;
 import it.grid.storm.gridhttps.webapp.common.StormResourceHelper;
 import it.grid.storm.gridhttps.webapp.common.exceptions.RuntimeApiException;
@@ -33,12 +34,12 @@ public class StormFileResource extends StormResource {
 
 	private static final Logger log = LoggerFactory.getLogger(StormFileResource.class);
 	
-	public StormFileResource(StormFactory factory, File file) {
-		super(factory.getLocalhostname(), factory, file);
+	public StormFileResource(StormFactory factory, StorageArea storageArea, File file) {
+		super(factory, storageArea, file);
 	}
 	
 	public StormFileResource(StormDirectoryResource parentDir, String childFileName) {
-		this(parentDir.getFactory(), new File(parentDir.getFile(), childFileName));
+		this(parentDir.getFactory(), parentDir.getStorageArea(), new File(parentDir.getFile(), childFileName));
 	}
 
 	public Long getContentLength() {
@@ -49,7 +50,7 @@ public class StormFileResource extends StormResource {
 		String mime = ContentTypeUtils.findContentTypes(getFile());
 		String s = ContentTypeUtils.findAcceptableContentType(mime, preferredList);
 		if (log.isTraceEnabled()) {
-			log.trace("getContentType: preferred: {} mime: {} selected: {}", new Object[] { preferredList, mime, s });
+			log.trace("getContentType: preferred: {} mime: {} selected: {}", preferredList, mime, s );
 		}
 		return s;
 	}
@@ -68,6 +69,10 @@ public class StormFileResource extends StormResource {
 	}
 
 	public void copyTo(StormDirectoryResource newParent, String newName) throws NotAuthorizedException, ConflictException, BadRequestException {
+		
+		// check if source is readable
+		StormResourceHelper.getInstance().doGetFileWithoutReallyRead(this);
+		
 		StormResourceHelper.getInstance().doCopyFile(this, newParent, newName);
 	}
 
@@ -77,7 +82,7 @@ public class StormFileResource extends StormResource {
 
 	@Override
 	public SurlInfo getSurlInfo() throws RuntimeApiException, SRMOperationException {
-		return StormResourceHelper.getInstance().doLimitedLsDetailed(this.getFile()).getInfos().iterator().next();
+		return StormResourceHelper.getInstance().doLimitedLsDetailed(this.getSurl()).getInfos().iterator().next();
 	}
 
 }

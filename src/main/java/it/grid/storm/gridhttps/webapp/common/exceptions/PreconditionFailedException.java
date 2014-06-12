@@ -1,6 +1,6 @@
 package it.grid.storm.gridhttps.webapp.common.exceptions;
 
-public class InternalError extends RuntimeException {
+public class PreconditionFailedException extends RuntimeException {
 
 	/**
 	 * 
@@ -9,12 +9,8 @@ public class InternalError extends RuntimeException {
 	
 	private String msg;
 	
-	public InternalError(String msg) {
+	public PreconditionFailedException(String msg) {
 		this.msg = msg;
-	}
-
-	public InternalError(Exception e) {
-		this(e.getLocalizedMessage());
 	}
 
 	/**

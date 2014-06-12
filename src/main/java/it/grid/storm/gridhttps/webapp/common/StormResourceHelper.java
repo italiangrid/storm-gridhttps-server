@@ -28,7 +28,6 @@ import it.grid.storm.gridhttps.webapp.common.StormResource;
 import it.grid.storm.gridhttps.webapp.common.Surl;
 import it.grid.storm.gridhttps.webapp.common.authorization.UserCredentials;
 import it.grid.storm.gridhttps.webapp.common.exceptions.SRMOperationException;
-import it.grid.storm.gridhttps.webapp.common.exceptions.SRMOperationException.TSRMExceptionReason;
 import it.grid.storm.gridhttps.webapp.common.factory.StormDirectoryResource;
 import it.grid.storm.gridhttps.webapp.common.factory.StormFileResource;
 import it.grid.storm.gridhttps.webapp.common.srmOperations.*;
@@ -80,9 +79,9 @@ public class StormResourceHelper {
 		try {
 			this.backend = new BackendApi(this.hostnameBE, new Long(this.portBE), this.tokenBE);
 		} catch (ApiException e) {
-			log.error(e.toString());
-			TReturnStatus status = new TReturnStatus(TStatusCode.SRM_INTERNAL_ERROR, e.toString());
-			throw new SRMOperationException(status, TSRMExceptionReason.INTERNALERROR);
+			log.error(e.toString(),e);
+			throw new SRMOperationException(new TReturnStatus(
+				TStatusCode.SRM_INTERNAL_ERROR, e.toString()));
 		}
 		this.helper = new HttpHelper(MiltonServlet.request(), MiltonServlet.response());
 	}
@@ -100,9 +99,11 @@ public class StormResourceHelper {
 	private void doAbortRequest(Surl surl, TRequestToken token) throws SRMOperationException {
 		
 		AbortRequest rollbackOp = new AbortRequest(surl, token);
-		RequestOutputData output = rollbackOp.executeAs(getHttpHelper().getUser(), this.getBackend());
-		if (!output.isSuccess())
-			log.warn("Failure on aborting surl " + surl + " with token " + token + ": " + output.getStatus().getExplanation());
+		RequestOutputData output = rollbackOp.executeAs(getHttpHelper().getUser(),
+			getBackend());
+		if (!output.isSuccess()) {
+			log.warn("abortRequest failed on surl {} and token {}: {}", surl, token, output.getStatus().getExplanation());
+		}
 	}
 
 	/* MKCOL */
@@ -112,7 +113,7 @@ public class StormResourceHelper {
 		MkDir operation = new MkDir(new Surl(parentDir.getSurl(), destName));
 		RequestOutputData output = operation.executeAs(getHttpHelper().getUser(), this.getBackend());
 		if (!output.isSuccess()) {
-			throw new SRMOperationException(output.getStatus(), TSRMExceptionReason.SRMFAILURE);
+			throw new SRMOperationException(output.getStatus());
 		}
 		return new StormDirectoryResource(parentDir, destName);
 	}
@@ -124,7 +125,8 @@ public class StormResourceHelper {
 		Ping operation = new Ping(hostname, port);
 		PingOutputData output = operation.executeAs(user, this.getBackend());
 		if (!output.isSuccess()) {
-			throw new SRMOperationException(new TReturnStatus(TStatusCode.SRM_FAILURE, "ping error"), TSRMExceptionReason.SRMFAILURE);
+			throw new SRMOperationException(new TReturnStatus(
+				TStatusCode.SRM_FAILURE, "ping error"));
 		}
 		return output;
 	}
@@ -140,7 +142,7 @@ public class StormResourceHelper {
 			operation = new Rm(toDelete.getSurl());
 		RequestOutputData output = (RequestOutputData) operation.executeAs(getHttpHelper().getUser(), this.getBackend());
 		if (!output.isSuccess()) {
-			throw new SRMOperationException(output.getStatus(), TSRMExceptionReason.SRMFAILURE);
+			throw new SRMOperationException(output.getStatus());
 		}
 		return output;
 	}
@@ -153,7 +155,7 @@ public class StormResourceHelper {
 		Move operation = new Move(source.getSurl(), new Surl(destParent.getSurl(), destName));
 		RequestOutputData output = operation.executeAs(getHttpHelper().getUser(), this.getBackend());
 		if (!output.isSuccess()) {
-			throw new SRMOperationException(output.getStatus(), TSRMExceptionReason.SRMFAILURE);
+			throw new SRMOperationException(output.getStatus());
 		}
 		return output;
 	}
@@ -164,36 +166,66 @@ public class StormResourceHelper {
 		
 		// PTG
 		PrepareToGet ptg = new PrepareToGet(source.getSurl());
-		PtGOutputData outputPtG = ptg.executeAs(this.getHttpHelper().getUser(), this.getBackend());
+		PtGOutputData outputPtG = ptg.executeAs(getHttpHelper().getUser(), getBackend());
 		if (!outputPtG.getStatus().getStatusCode().equals(TStatusCode.SRM_FILE_PINNED)) {
-			this.doAbortRequest(source.getSurl(), outputPtG.getToken());
-			throw new SRMOperationException(outputPtG.getStatus(), TSRMExceptionReason.SRMFAILURE);
+			throw new SRMOperationException(outputPtG.getStatus());
 		}
 		// READ FROM DISK
 		InputStream in = null;
 		try {
 			in = source.getFactory().getContentService().getFileContent(source.getFile());
 		} catch (Exception e) {
-			log.error(e.getMessage());
-			this.doAbortRequest(source.getSurl(), outputPtG.getToken());
-			TReturnStatus status = new TReturnStatus(TStatusCode.SRM_INTERNAL_ERROR, e.toString());
-			throw new SRMOperationException(status, TSRMExceptionReason.INTERNALERROR);
+			log.error(e.getMessage(), e);
+			doAbortRequest(source.getSurl(), outputPtG.getToken());
+			throw new SRMOperationException(new TReturnStatus(
+				TStatusCode.SRM_INTERNAL_ERROR, e.toString()));
 		}
 		// RF
 		SurlArrayRequestOutputData oRf;
 		ReleaseFile rf = new ReleaseFile(source.getSurl(), outputPtG.getToken());
 		try {
-			oRf = rf.executeAs(this.getHttpHelper().getUser(), this.getBackend());
+			oRf = rf.executeAs(getHttpHelper().getUser(), getBackend());
 		} catch (SRMOperationException e) {
-			this.doAbortRequest(source.getSurl(), outputPtG.getToken());
+			doAbortRequest(source.getSurl(), outputPtG.getToken());
 			throw e;
 		}
 		if (!oRf.isSuccess()) {
-			this.doAbortRequest(source.getSurl(), outputPtG.getToken());
-			throw new SRMOperationException(oRf.getStatus(), TSRMExceptionReason.SRMFAILURE);
+			doAbortRequest(source.getSurl(), outputPtG.getToken());
+			throw new SRMOperationException(oRf.getStatus());
 		}
 		return in;
 	}
+	
+	public void doGetFileWithoutReallyRead(StormFileResource source) 
+		throws SRMOperationException {
+		
+		// PTG
+		PrepareToGet ptg = new PrepareToGet(source.getSurl());
+		PtGOutputData outputPtG = ptg.executeAs(getHttpHelper().getUser(), getBackend());
+		if (!outputPtG.getStatus().getStatusCode().equals(TStatusCode.SRM_FILE_PINNED)) {
+			throw new SRMOperationException(outputPtG.getStatus());
+		}
+		// RF
+		SurlArrayRequestOutputData oRf;
+		ReleaseFile rf = new ReleaseFile(source.getSurl(), outputPtG.getToken());
+		try {
+			oRf = rf.executeAs(getHttpHelper().getUser(), getBackend());
+		} catch (SRMOperationException e) {
+			doAbortRequest(source.getSurl(), outputPtG.getToken());
+			throw e;
+		}
+		if (!oRf.isSuccess()) {
+			doAbortRequest(source.getSurl(), outputPtG.getToken());
+			throw new SRMOperationException(oRf.getStatus());
+		}
+	}
+
+	public void doGetDirectoryWithoutReallyRead(StormResource source) 
+		throws SRMOperationException {
+		
+		doLimitedLsDetailed(source);
+	}
+
 
 	/* PUT */
 
@@ -202,33 +234,32 @@ public class StormResourceHelper {
 		// PTP
 		Surl toCreate = new Surl(parentDir.getSurl(), name);
 		PrepareToPut ptp = new PrepareToPut(toCreate);
-		FileTransferOutputData oPtP = ptp.executeAs(getHttpHelper().getUser(), this.getBackend());
+		FileTransferOutputData oPtP = ptp.executeAs(getHttpHelper().getUser(), getBackend());
 		if (!oPtP.getStatus().getStatusCode().equals(TStatusCode.SRM_SPACE_AVAILABLE)) {
-			this.doAbortRequest(toCreate, oPtP.getToken());
-			throw new SRMOperationException(oPtP.getStatus(), TSRMExceptionReason.SRMFAILURE);
+			throw new SRMOperationException(oPtP.getStatus());
 		}
 		// WRITE FILE
 		File fsDest = new File(parentDir.getFile(), name);
 		try {
 			parentDir.getFactory().getContentService().setFileContent(fsDest, in);
 		} catch (Exception e) {
-			log.error(e.getMessage());
+			log.error(e.getMessage(), e);
 			this.doAbortRequest(toCreate, oPtP.getToken());
-			TReturnStatus status = new TReturnStatus(TStatusCode.SRM_INTERNAL_ERROR, e.toString());
-			throw new SRMOperationException(status, TSRMExceptionReason.INTERNALERROR);
+			throw new SRMOperationException(new TReturnStatus(
+				TStatusCode.SRM_INTERNAL_ERROR, e.toString()));
 		}
 		// PD
 		PutDone pd = new PutDone(toCreate, oPtP.getToken());
 		SurlArrayRequestOutputData oPd;
 		try {
-			oPd = pd.executeAs(getHttpHelper().getUser(), this.getBackend());
+			oPd = pd.executeAs(getHttpHelper().getUser(), getBackend());
 		} catch (SRMOperationException e) {
 			this.doAbortRequest(toCreate, oPtP.getToken());
 			throw e;
 		}
 		if (!oPd.isSuccess()) {
 			this.doAbortRequest(toCreate, oPtP.getToken());
-			throw new SRMOperationException(oPd.getStatus(), TSRMExceptionReason.SRMFAILURE);
+			throw new SRMOperationException(oPd.getStatus());
 		}
 		return new StormFileResource(parentDir, name);
 	}
@@ -237,73 +268,89 @@ public class StormResourceHelper {
 
 		// PTP
 		PrepareToPut ptp = new PrepareToPut(toReplace.getSurl(), true);
-		FileTransferOutputData oPtP = ptp.executeAs(getHttpHelper().getUser(), this.getBackend()); 
+		FileTransferOutputData oPtP = ptp.executeAs(getHttpHelper().getUser(), getBackend()); 
 		if (!oPtP.getStatus().getStatusCode().getValue().equals("SRM_SPACE_AVAILABLE")) {
-			this.doAbortRequest(toReplace.getSurl(), oPtP.getToken());
-			throw new SRMOperationException(oPtP.getStatus(), TSRMExceptionReason.SRMFAILURE);
+			throw new SRMOperationException(oPtP.getStatus());
 		}
 		// WRITE FILE
 		try {
 			toReplace.getFactory().getContentService()
 				.setFileContent(toReplace.getFile(), in);
 		} catch (Exception e) {
-			log.error(e.getMessage());
+			log.error(e.getMessage(),e);
 			this.doAbortRequest(toReplace.getSurl(), oPtP.getToken());
-			TReturnStatus status = new TReturnStatus(TStatusCode.SRM_INTERNAL_ERROR, e.toString());
-			throw new SRMOperationException(status, TSRMExceptionReason.INTERNALERROR);
+			throw new SRMOperationException(new TReturnStatus(
+				TStatusCode.SRM_INTERNAL_ERROR, e.toString()));
 		}
 		// PD
 		PutDone pd = new PutDone(toReplace.getSurl(), oPtP.getToken());
 		SurlArrayRequestOutputData oPd;
 		try {
-			oPd = pd.executeAs(getHttpHelper().getUser(), this.getBackend());
+			oPd = pd.executeAs(getHttpHelper().getUser(), getBackend());
 		} catch (SRMOperationException e) {
 			this.doAbortRequest(toReplace.getSurl(), oPtP.getToken());
 			throw e;
 		}
 		if (!oPd.isSuccess()) {
 			this.doAbortRequest(toReplace.getSurl(), oPtP.getToken());
-			throw new SRMOperationException(oPd.getStatus(), TSRMExceptionReason.SRMFAILURE);
+			throw new SRMOperationException(oPd.getStatus());
 		}
 	}
 
 	/* COPY */
 
-	public void doCopyDirectory(StormDirectoryResource sourceDir, StormDirectoryResource newParent, String newName)
-			throws NotAuthorizedException, BadRequestException {
-		this.doCopyDirectory(sourceDir, newParent, newName, getHttpHelper().isDepthInfinity());
+	public void doCopyDirectory(StormDirectoryResource sourceDir,
+		StormDirectoryResource newParent, String newName)
+		throws NotAuthorizedException, BadRequestException {
+
+		this.doCopyDirectory(sourceDir, newParent, newName, getHttpHelper()
+			.isDepthInfinity());
 	}
 	
-	private void doCopyDirectory(StormDirectoryResource sourceDir, StormDirectoryResource newParent, String newName,
-			boolean isDepthInfinity) throws NotAuthorizedException, BadRequestException {
-		log.debug("copy '" + sourceDir.getSurl().asString() + "' to '" + newParent.getSurl().asString() + File.separator + newName
-				+ "' ...");
+	private void doCopyDirectory(StormDirectoryResource sourceDir,
+		StormDirectoryResource newParent, String newName, boolean isDepthInfinity)
+		throws NotAuthorizedException, BadRequestException {
+
+		log.debug("copy '{}' to '{}{}{}' ...", sourceDir.getSurl(), newParent.getSurl()
+			, File.separator , newName);
+		
 		// create destination folder:
-		StormDirectoryResource destinationResource = this.doMkCol(newParent, newName);
+		StormDirectoryResource destinationResource = doMkCol(newParent, newName);
+		
 		// COPY every resource from the source to the destination folder:
 		for (Resource r : sourceDir.getChildren()) {
-			if (r instanceof StormFileResource) { // is a file
-				this.doCopyFile((StormFileResource) r, destinationResource, ((StormFileResource) r).getName());
-			} else if (r instanceof StormDirectoryResource) { // is a directory
-				if (isDepthInfinity) { // recursion on
-					this.doCopyDirectory((StormDirectoryResource) r, destinationResource,
+			if (r instanceof StormFileResource) { 
+				// is a file
+				doCopyFile((StormFileResource) r, destinationResource,
+					((StormFileResource) r).getName());
+			} else if (r instanceof StormDirectoryResource) { 
+				// is a directory
+				if (isDepthInfinity) { 
+					// recursion on
+					doCopyDirectory((StormDirectoryResource) r, destinationResource,
 							((StormDirectoryResource) r).getName(), isDepthInfinity);
-				} else { // recursion off
-					this.doMkCol(destinationResource, ((StormDirectoryResource) r).getName());
+				} else {
+					// recursion off
+					doMkCol(destinationResource, ((StormDirectoryResource) r).getName());
+				
 				}
 			}
 		}
 	}
 	
-	public void doCopyFile(StormFileResource source, StormDirectoryResource newParent, String newName) throws SRMOperationException {
-		log.debug("copy '" + source.getSurl().asString() + "' to '" + newParent.getSurl().asString() + File.separator + newName + "' ...");
+	public void doCopyFile(StormFileResource source,
+		StormDirectoryResource newParent, String newName)
+		throws SRMOperationException {
+
+		log.debug("copy '{}' to '{}{}{}' ...", source.getSurl(), newParent.getSurl()
+			, File.separator , newName);
 		InputStream input = null;
 		try {
 			input = source.getInputStream();
 		} catch (FileNotFoundException e) {
-			log.error(e.getMessage());
-			TReturnStatus status = new TReturnStatus(TStatusCode.SRM_INTERNAL_ERROR, e.toString());
-			throw new SRMOperationException(status, TSRMExceptionReason.INTERNALERROR);
+			log.error(e.getMessage(), e);
+			throw new SRMOperationException(new TReturnStatus(
+				TStatusCode.SRM_INTERNAL_ERROR, e.toString()));
 		}
 		this.doPut(newParent, newName, input);
 	}
@@ -318,7 +365,8 @@ public class StormResourceHelper {
 				continue;
 			}
 			if (this.lsIgnored.contains(info.getStatus().getStatusCode())) {
-				log.warn("ignored '" + info.getStfn() + "' from ls list, status is " + info.getStatus().getStatusCode().getValue());
+				log.warn(String.format("ignored '%s' from ls list, status is %s",
+					info.getStfn(), info.getStatus().getStatusCode().getValue()));
 				continue;
 			}
 			if (info.getType() == null) {
@@ -331,18 +379,20 @@ public class StormResourceHelper {
 		return filteredOutput;
 	}
 	
-	public LsOutputData doLs(File source) throws SRMOperationException {
+	public LsOutputData doLs(Surl source) throws SRMOperationException {
 		
-		Ls operation = new Ls(new Surl(source));
+		Ls operation = new Ls(source);
 		LsOutputData output = operation.executeAs(this.getHttpHelper().getUser(), this.getBackend());
-		if (output.getStatus().getStatusCode().equals(TStatusCode.SRM_TOO_MANY_RESULTS))
-			throw new SRMOperationException(output.getStatus(), TSRMExceptionReason.TOOMANYRESULTS);
-		if (!output.isSuccess())
-			throw new SRMOperationException(output.getStatus(), TSRMExceptionReason.SRMFAILURE);
+		if (!output.isSuccess()) {
+			if (output.hasInfos()) {
+				throw new SRMOperationException(output.getInfos().iterator().next().getStatus());
+			}
+			throw new SRMOperationException(output.getStatus());
+		}
 		return output;
 	}
 
-	public LsOutputData doLsDetailed(File source, RecursionLevel recursion, int count) throws SRMOperationException {
+	public LsOutputData doLsDetailed(Surl source, RecursionLevel recursion, int count) throws SRMOperationException {
 		
 		/*
 		 * TIP: the lightest ls is obtained with:
@@ -350,65 +400,67 @@ public class StormResourceHelper {
 		 * 
 		 */
 		
-		LsDetailed operation = new LsDetailed(new Surl(source), recursion, count);
+		LsDetailed operation = new LsDetailed(source, recursion, count);
 		LsOutputData output = operation.executeAs(this.getHttpHelper().getUser(), this.getBackend());
-		if (output.getStatus().getStatusCode().equals(TStatusCode.SRM_TOO_MANY_RESULTS))
-			throw new SRMOperationException(output.getStatus(), TSRMExceptionReason.TOOMANYRESULTS);
-		if (!output.isSuccess())
-			throw new SRMOperationException(output.getStatus(), TSRMExceptionReason.SRMFAILURE);
+		if (!output.isSuccess()) {
+			if (output.hasInfos()) {
+				throw new SRMOperationException(output.getInfos().iterator().next().getStatus());
+			}
+			throw new SRMOperationException(output.getStatus());
+		}
 		return output;
 	}
 	
-	public LsOutputData doLsDetailed(File source) throws SRMOperationException {
+	public LsOutputData doLsDetailed(Surl source) throws SRMOperationException {
 		
 		return doLsDetailed(source, LsDetailed.DEFAULT_RECURSION_LEVEL, LsDetailed.DEFAULT_COUNT);
 	}
 
-	public LsOutputData doLsDetailed(File source, RecursionLevel recursion) throws SRMOperationException {
+	public LsOutputData doLsDetailed(Surl source, RecursionLevel recursion) throws SRMOperationException {
 		
 		return doLsDetailed(source, recursion, LsDetailed.DEFAULT_COUNT);
 	}
 
 	public LsOutputData doLs(StormResource source) throws SRMOperationException {
 		
-		return this.doLs(source.getFile());
+		return this.doLs(source.getSurl());
 	}
 
 	public LsOutputData doLsDetailed(StormResource source) throws SRMOperationException {
 		
-		return this.doLsDetailed(source.getFile());
+		return this.doLsDetailed(source.getSurl());
 	}
 
 	public LsOutputData doLsDetailed(StormResource source, RecursionLevel recursion) throws SRMOperationException {
 		
-		return this.doLsDetailed(source.getFile(), recursion);
+		return this.doLsDetailed(source.getSurl(), recursion);
 	}
 
 	public LsOutputData doLsDetailed(StormResource source, RecursionLevel recursion, int count) throws SRMOperationException {
 		
-		return this.doLsDetailed(source.getFile(), recursion, count);
+		return this.doLsDetailed(source.getSurl(), recursion, count);
 	}
 
 	/* LIMITED LS DETAILED */
 
-	public LsOutputData doLimitedLsDetailed(File source) throws SRMOperationException {
+	public LsOutputData doLimitedLsDetailed(Surl source) throws SRMOperationException {
 		
 		return this.doLsDetailed(source, new RecursionLevel(Recursion.LIMITED, 0));
 	}
 
-	public LsOutputData doLimitedLsDetailed(File source, int count) throws SRMOperationException {
+	public LsOutputData doLimitedLsDetailed(Surl source, int count) throws SRMOperationException {
 		
 		return this.doLsDetailed(source, new RecursionLevel(Recursion.LIMITED, 0), count);
 	}
 
 	public LsOutputData doLimitedLsDetailed(StormResource source) throws SRMOperationException {
 		
-		return this.doLimitedLsDetailed(source.getFile());
+		return this.doLimitedLsDetailed(source.getSurl());
 	}
 
 	public LsOutputData doLimitedLsDetailed(StormResource source, int count) throws SRMOperationException {
 		
-		return this.doLimitedLsDetailed(source.getFile(), count);
+		return this.doLimitedLsDetailed(source.getSurl(), count);
 	}
 
 }

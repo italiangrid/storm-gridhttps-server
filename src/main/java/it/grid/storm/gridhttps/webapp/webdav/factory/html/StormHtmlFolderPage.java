@@ -12,10 +12,13 @@
  */
 package it.grid.storm.gridhttps.webapp.webdav.factory.html;
 
+import it.grid.storm.gridhttps.configuration.Configuration;
+import it.grid.storm.gridhttps.webapp.webdav.factory.WebdavDirectoryResource;
 import it.grid.storm.srm.types.SizeUnit;
 import it.grid.storm.srm.types.TFileType;
 import it.grid.storm.xmlrpc.outputdata.LsOutputData.SurlInfo;
 
+import java.io.File;
 import java.io.OutputStream;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
@@ -31,6 +34,8 @@ import org.slf4j.LoggerFactory;
 public class StormHtmlFolderPage extends HtmlPage {
 
 	private static final Logger log = LoggerFactory.getLogger(StormHtmlFolderPage.class);
+	
+	private WebdavDirectoryResource resource;
 	
 	private class SurlInfoComparator implements Comparator<SurlInfo> {
 		public int compare(SurlInfo s1, SurlInfo s2) {
@@ -53,8 +58,9 @@ public class StormHtmlFolderPage extends HtmlPage {
 		}
 	}
 
-	public StormHtmlFolderPage(OutputStream out) {
+	public StormHtmlFolderPage(WebdavDirectoryResource resource, OutputStream out) {
 		super(out);
+		this.resource = resource;
 	}
 
 	public void start() {
@@ -187,12 +193,36 @@ public class StormHtmlFolderPage extends HtmlPage {
 	private String buildParentHref(String uri) {
 		String abUrl = uri;
 		if (abUrl.endsWith("/")) {
-			abUrl = abUrl.substring(0, abUrl.length() - 2);
+			abUrl = abUrl.substring(0, abUrl.length() - 1);
+		}
+		if (isRootDirectory(abUrl)) {
+			return getWebappRootPath();
 		}
 		String[] parts = abUrl.split("/");
 		String lastPart = parts[parts.length - 1];
 		abUrl = abUrl.substring(0, abUrl.length() - lastPart.length());
 		return abUrl;
+	}
+
+	private String getResourceRootDirectory() {
+
+		return File.separator
+			+ Configuration.getGridhttpsInfo().getWebdavContextPath()
+			+ this.resource.getStorageArea().getStfnRoot();
+	}
+	
+	private String getWebappRootPath() {
+
+		return File.separator
+			+ Configuration.getGridhttpsInfo().getWebdavContextPath();
+	}
+	
+	private boolean isRootDirectory(String path) {
+		
+		if (path.endsWith("/")) {
+			path = path.substring(0, path.length() - 2);
+		}
+		return path.equals(getResourceRootDirectory());
 	}
 
 	private void addLink(String label, String href) {

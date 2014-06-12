@@ -9,7 +9,6 @@ import org.slf4j.LoggerFactory;
 import it.grid.storm.gridhttps.webapp.common.Surl;
 import it.grid.storm.gridhttps.webapp.common.authorization.UserCredentials;
 import it.grid.storm.gridhttps.webapp.common.exceptions.SRMOperationException;
-import it.grid.storm.gridhttps.webapp.common.exceptions.SRMOperationException.TSRMExceptionReason;
 import it.grid.storm.srm.types.TReturnStatus;
 import it.grid.storm.srm.types.TStatusCode;
 import it.grid.storm.xmlrpc.ApiException;
@@ -28,7 +27,7 @@ public class Rm implements SRMOperation {
 			throw new IllegalArgumentException(this.getClass().getSimpleName() + " constructor: null surl");
 		
 		this.surlList.clear();
-		this.surlList.add(surl.asString());
+		this.surlList.add(surl.toString());
 	}
 	
 	public Rm(ArrayList<Surl> surlList) {
@@ -40,7 +39,7 @@ public class Rm implements SRMOperation {
 		
 		this.surlList.clear();
 		for (Surl surl : surlList)
-			this.surlList.add(surl.asString());
+			this.surlList.add(surl.toString());
 	}
 	
 	public ArrayList<String> getSurlList() {
@@ -50,7 +49,7 @@ public class Rm implements SRMOperation {
 	@Override
 	public RequestOutputData executeAs(UserCredentials user, BackendApi backend) throws SRMOperationException {
 		RequestOutputData output = null;
-		log.debug("delete '" + StringUtils.join(this.getSurlList().toArray(), ',') + "' ...");
+		log.debug("srmRm '{}' ...", StringUtils.join(getSurlList().toArray(), ','));
 		try {
 			if (user.isAnonymous()) { // HTTP
 				output = backend.rm(this.getSurlList());
@@ -61,8 +60,8 @@ public class Rm implements SRMOperation {
 			}
 		} catch (ApiException e) {
 			log.error(e.getMessage());
-			TReturnStatus status = new TReturnStatus(TStatusCode.SRM_INTERNAL_ERROR, e.toString());
-			throw new SRMOperationException(status, TSRMExceptionReason.INTERNALERROR);
+			throw new SRMOperationException(new TReturnStatus(
+				TStatusCode.SRM_INTERNAL_ERROR, e.toString()));
 		}
 		log.debug(output.getStatus().getStatusCode().getValue());
 		log.debug(output.getStatus().getExplanation());

@@ -1,6 +1,6 @@
-package it.grid.storm.gridhttps.webapp.common.exceptions;
+package it.grid.storm.gridhttps.webapp.webdav;
 
-public class InvalidRequestException extends RuntimeException {
+public class WebDAVFilterException extends RuntimeException {
 
 	/**
 	 * 
@@ -10,7 +10,7 @@ public class InvalidRequestException extends RuntimeException {
 	private int errorcode;
 	private String msg;
 	
-	public InvalidRequestException(int error, String msg) {
+	public WebDAVFilterException(int error, String msg) {
 		this.errorcode = error;
 		this.msg = msg;
 	}

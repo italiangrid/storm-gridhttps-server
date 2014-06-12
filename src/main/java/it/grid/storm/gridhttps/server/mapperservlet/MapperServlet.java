@@ -48,17 +48,17 @@ public class MapperServlet extends HttpServlet {
 	public void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 		log.debug("Serving a mapping request");
 		String pathDecoded = getDecodedPath(request);
-		log.debug("Decoded filePath = " + pathDecoded + " . Retrieving matching StorageArea");
+		log.debug("Decoded filePath = {}  . Retrieving matching StorageArea" , pathDecoded);
 		StorageArea SA = getMatchingSA(pathDecoded);
-		log.debug("Storage-Area: " + SA);
+		log.debug("Storage-Area: {}" , SA);
 		String relativeUrl = File.separator + DefaultConfiguration.WEBAPP_FILETRANSFER_CONTEXTPATH + SA.getStfn(pathDecoded);
-		log.info("GET-MAPPING: '" + pathDecoded + "' to '" + relativeUrl + "'");
+		log.info("GET-MAPPING: '{}' to '{}'" , pathDecoded , relativeUrl);
 		sendResponse(response, relativeUrl);
 	}
 	
 	@Override
 	public void doHead(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-		log.info("HEAD-MAPPING: " + request.getRequestURI());
+		log.info("HEAD-MAPPING: {}" , request.getRequestURI());
 	}
 	
 	
@@ -68,7 +68,7 @@ public class MapperServlet extends HttpServlet {
 		try {
 			pathDecoded = URLDecoder.decode(path, MAPPER_SERVLET_ENCODING_SCHEME);
 		} catch (UnsupportedEncodingException e) {
-			log.error("Unable to decode " + PATH_PARAMETER_KEY + " parameter. UnsupportedEncodingException : " + e.getMessage());
+			log.error("Unable to decode {} parameter. UnsupportedEncodingException : {}" , PATH_PARAMETER_KEY ,  e.getMessage(),e);
 			throw new ServletException("Unable to decode " + PATH_PARAMETER_KEY + " parameter", e);
 		}
 		return pathDecoded;
@@ -77,16 +77,13 @@ public class MapperServlet extends HttpServlet {
 	private StorageArea getMatchingSA(String pathDecoded) throws ServletException {
 		StorageArea SA = null;
 		try {
-			SA = StorageAreaManager.getMatchingSA(new File(pathDecoded));
-		} catch (IllegalArgumentException e) {
-			log.error("Unable to get matching SA for path " + pathDecoded + ". IllegalArgumentException : " + e.getMessage());
-			throw new ServletException("Unable to get matching SA for path " + pathDecoded, e);
-		} catch (IllegalStateException e) {
-			log.error("Unable to get matching SA for path " + pathDecoded + ". IllegalStateException : " + e.getMessage());
-			throw new ServletException("Unable to get matching SA for path " + pathDecoded, e);
+			SA = StorageAreaManager.getMatchingSAFromFsPath(pathDecoded);
+		} catch (Throwable e) {
+			log.error(e.getMessage(), e);
+			throw new ServletException(e.getMessage(), e);
 		}
 		if (SA == null) {
-			log.error("No matching StorageArea found for path \'" + pathDecoded + "\' Unable to build http(s) relative path");
+			log.error("No matching StorageArea found for path '{}'", pathDecoded);
 			throw new ServletException("No matching StorageArea found for the provided path");
 		}
 		return SA;
@@ -98,7 +95,7 @@ public class MapperServlet extends HttpServlet {
 		try {
 			out = response.getWriter();
 		} catch (IOException e) {
-			log.error("Unable to obtain the PrintWriter for the response. IOException: " + e.getMessage());
+			log.error("Unable to obtain the PrintWriter for the response. IOException: {}" , e.getMessage(),e);
 			throw e;
 		}
 		out.print(message);

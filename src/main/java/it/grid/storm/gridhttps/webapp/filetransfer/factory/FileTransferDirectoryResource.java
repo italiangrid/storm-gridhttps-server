@@ -6,6 +6,7 @@ import io.milton.http.exceptions.BadRequestException;
 import io.milton.http.exceptions.ConflictException;
 import io.milton.http.exceptions.NotAuthorizedException;
 import io.milton.resource.*;
+import it.grid.storm.gridhttps.common.storagearea.StorageArea;
 import it.grid.storm.gridhttps.webapp.common.factory.StormDirectoryResource;
 import it.grid.storm.gridhttps.webapp.common.factory.StormFactory;
 
@@ -22,12 +23,12 @@ public class FileTransferDirectoryResource extends StormDirectoryResource {
 
 	private static final Logger log = LoggerFactory.getLogger(FileTransferDirectoryResource.class);
 
-	public FileTransferDirectoryResource(StormFactory factory, File dir) {
-		super(factory, dir);
+	public FileTransferDirectoryResource(StormFactory factory, StorageArea storageArea, File dir) {
+		super(factory, storageArea, dir);
 	}
 
-	public FileTransferDirectoryResource(FileSystemResourceFactory factory, File dir) {
-		super(factory, dir);
+	public FileTransferDirectoryResource(FileSystemResourceFactory factory, StorageArea storageArea, File dir) {
+		super(factory, storageArea, dir);
 	}
 
 	@Override

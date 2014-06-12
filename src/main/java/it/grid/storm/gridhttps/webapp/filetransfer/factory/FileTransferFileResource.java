@@ -21,6 +21,7 @@ import io.milton.http.exceptions.NotFoundException;
 import io.milton.resource.GetableResource;
 import io.milton.resource.PropFindableResource;
 import io.milton.resource.ReplaceableResource;
+import it.grid.storm.gridhttps.common.storagearea.StorageArea;
 import it.grid.storm.gridhttps.webapp.common.factory.StormFactory;
 import it.grid.storm.gridhttps.webapp.common.factory.StormFileResource;
 
@@ -39,8 +40,8 @@ public class FileTransferFileResource extends StormFileResource implements Getab
 
 	private static final Logger log = LoggerFactory.getLogger(FileTransferFileResource.class);
 
-	public FileTransferFileResource(StormFactory factory, File file) {
-		super(factory, file);
+	public FileTransferFileResource(StormFactory factory, StorageArea storageArea, File file) {
+		super(factory, storageArea, file);
 	}
 
 	public Long getContentLength() {
@@ -56,18 +57,18 @@ public class FileTransferFileResource extends StormFileResource implements Getab
 		try {
 			in = this.getFactory().getContentService().getFileContent(this.getFile());
 		} catch (FileNotFoundException e) {
-			log.error(e.getMessage());
+			log.error(e.getMessage(),e);
 			throw new NotFoundException("Couldn't locate content");
 		}
 		if (in == null) {
-			log.error("Unable to get resource content '" + this.getFile().toString() + "'");
+			log.error("Unable to get resource content '{}'" , this.getFile().toString());
 			return;
 		}
 		if (range != null) {
-			log.debug("sendContent: ranged content: " + getFile().getAbsolutePath());
+			log.debug("sendContent: ranged content: {}" , getFile().getAbsolutePath());
 			RangeUtils.writeRange(in, range, out);
 		} else {
-			log.debug("sendContent: send whole file " + getFile().getAbsolutePath());
+			log.debug("sendContent: send whole file {}" , getFile().getAbsolutePath());
 			IOUtils.copy(in, out);
 		}
 		out.flush();
@@ -80,7 +81,7 @@ public class FileTransferFileResource extends StormFileResource implements Getab
 			// overwrite
 			this.getFactory().getContentService().setFileContent(this.getFile(), in);
 		} catch (IOException ex) {
-			log.error(ex.getMessage());
+			log.error(ex.getMessage(),ex);
 			throw new RuntimeException("Couldnt write to: " + this.getFile().getAbsolutePath(), ex);
 		} 
 	}

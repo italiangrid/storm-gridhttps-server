@@ -19,25 +19,24 @@ import io.milton.http.Response;
 import io.milton.http.http11.DefaultHttp11ResponseHandler.BUFFERING;
 import io.milton.property.PropertySource;
 import io.milton.servlet.MiltonServlet;
+import it.grid.storm.gridhttps.configuration.Configuration;
 import it.grid.storm.gridhttps.webapp.HttpHelper;
 import it.grid.storm.gridhttps.webapp.StormStandardFilter;
-import it.grid.storm.gridhttps.webapp.common.authorization.AuthorizationException;
 import it.grid.storm.gridhttps.webapp.common.authorization.AuthorizationStatus;
-import it.grid.storm.gridhttps.webapp.common.authorization.Constants;
 import it.grid.storm.gridhttps.webapp.common.authorization.Constants.DavMethod;
 import it.grid.storm.gridhttps.webapp.common.authorization.UserCredentials;
-import it.grid.storm.gridhttps.webapp.common.exceptions.InternalError;
-import it.grid.storm.gridhttps.webapp.common.exceptions.InvalidRequestException;
+import it.grid.storm.gridhttps.webapp.filetransfer.authorization.FileTransferException;
+import it.grid.storm.gridhttps.webapp.filetransfer.authorization.InvalidTURLException;
 import it.grid.storm.gridhttps.webapp.filetransfer.authorization.methods.FileTransferMethodAuthorization;
 import it.grid.storm.gridhttps.webapp.filetransfer.authorization.methods.GetMethodAuthorization;
 import it.grid.storm.gridhttps.webapp.filetransfer.authorization.methods.HeadMethodAuthorization;
 import it.grid.storm.gridhttps.webapp.filetransfer.authorization.methods.PutMethodAuthorization;
 import it.grid.storm.gridhttps.webapp.filetransfer.factory.FileSystemResourceFactory;
 
+import java.io.File;
 import java.io.IOException;
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
-import java.util.EnumSet;
 
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;
@@ -56,18 +55,16 @@ public class FileTransferFilter implements Filter {
 
 	private static final Logger log = LoggerFactory.getLogger(FileTransferFilter.class);
 	
-	private final static EnumSet<DavMethod> FTStoRMSupportedMethod = EnumSet.range(DavMethod.HEAD, DavMethod.PUT);
-	
 	private FilterConfig filterConfig;
 	private HttpManager httpManager;
 	
 	@Override
 	public void init(FilterConfig filterConfig) throws ServletException {
-		log.debug(this.getClass().getSimpleName() + " - Init");
+		log.debug("{} - Init" , this.getClass().getSimpleName());
 		this.filterConfig = filterConfig;
 		
 		try {
-			log.debug(this.getClass().getSimpleName() + " - Init HttpManagerBuilder");
+			log.debug("{} - Init HttpManagerBuilder" , this.getClass().getSimpleName());
 			HttpManagerBuilder builder = new HttpManagerBuilder();
 			builder.setResourceFactory(new FileSystemResourceFactory());
 			builder.setDefaultStandardFilter(new StormStandardFilter());
@@ -80,10 +77,10 @@ public class FileTransferFilter implements Filter {
 			builder.setEnableCookieAuth(false);
 			builder.setPropertySources(new ArrayList<PropertySource>());
 			this.httpManager = builder.buildHttpManager();
-			log.debug(this.getClass().getSimpleName() + " - HttpManager created!");
+			log.debug("{} - HttpManager created!" , this.getClass().getSimpleName());
 			
 		} catch (Exception e) {
-			log.error(e.getMessage());
+			log.error(e.getMessage(),e);
 			System.exit(1);
 		}		
 	}
@@ -92,71 +89,94 @@ public class FileTransferFilter implements Filter {
 	public void doFilter(ServletRequest request, ServletResponse response,
 		FilterChain chain) throws IOException, ServletException {
 
-		HttpHelper httpHelper = null;
+		HttpHelper httpHelper = new HttpHelper((HttpServletRequest) request,
+			(HttpServletResponse) response);
 		UserCredentials user = null;
+		FileTransferMethodAuthorization handler = null;
 		
 		try {
-			httpHelper = new HttpHelper((HttpServletRequest) request, (HttpServletResponse) response);
+			/* get user */
 			user = getUser(httpHelper);
 			log.debug("User: {}", user);
 			httpHelper.setUser(user);
-			printInCommand(httpHelper, user);
-			checkIfRequestIsValid(httpHelper);
-		
-			FileTransferMethodAuthorization handler = getAuthorizationMethodHandler(Constants.DavMethod.valueOf(httpHelper.getRequestMethod()));
-			AuthorizationStatus	status = handler.isUserAuthorized(httpHelper.getRequest(), httpHelper.getResponse(), user);
 			
+			/* print received command */
+			printInCommand(httpHelper, user);
+			
+			/* check if TURL is malformed */
+			String uriPath = httpHelper.getRequestURI().getRawPath();
+			checkRequestedTURL(uriPath);
+			
+			/* check if user is authorized */
+			handler = getAuthorizationMethodHandler(httpHelper.getRequestMethod());
+			log.debug("AuthorizationMethodHandler is {}", handler.getClass().getName());
+			AuthorizationStatus status = handler.isUserAuthorized(
+				httpHelper.getRequest(), httpHelper.getResponse(), user);
+
 			if (status.isAuthorized()) {
-				log.debug("Processing a FileTransfer request for {}", httpHelper.getRequestURI().getRawPath());
+				log.debug("Processing a FileTransfer request for {}", uriPath);
 				doMiltonProcessing((HttpServletRequest) request, (HttpServletResponse) response);
 			} else {
 				log.debug("User is not authorized: {}", status.getReason());
 				sendError(httpHelper.getResponse(), status.getErrorCode(), status.getReason());
 			}
 			
-		} catch (InvalidRequestException e) {
-			log.error(e.getMessage(), e);
-			sendError((HttpServletResponse) response, e.getErrorcode(), e.getMessage());
+		} catch (FileTransferException e) {
+			log.error(e.getMessage());
+			sendError(httpHelper.getResponse(), e.getErrorcode(), e.getMessage());
+		
+		} catch (InvalidTURLException e) {
+			log.error(e.getMessage());
+			sendError(httpHelper.getResponse(), e.getErrorcode(), e.getMessage());
+		
 		} catch (Throwable e) {
 			log.error(e.getMessage(), e);
-			sendError(httpHelper.getResponse(), HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Internal Server Error: " + e.getMessage());
+			sendError(httpHelper.getResponse(), HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
+		
 		} finally {
 			printOutCommand(httpHelper, user);
 		}
 	}
 	
-	private UserCredentials getUser(HttpHelper httpHelper) throws InternalError {
+	private void checkRequestedTURL(String uriPath) {
+
+		String ftContextPath = File.separator + 
+			Configuration.getGridhttpsInfo().getFiletransferContextPath();
+		
+		if (!uriPath.startsWith(ftContextPath)) {
+			throw new InvalidTURLException(HttpServletResponse.SC_CONFLICT, 
+				String.format("TURL '%s' doesn't start with %s!", uriPath, ftContextPath));
+		}
+		log.debug("TURL {} starts with {}", uriPath, ftContextPath);
+		
+		if (uriPath.contains("..")) {
+			throw new InvalidTURLException(HttpServletResponse.SC_CONFLICT, 
+				String.format("TURL '%s' contains a dotted segment!", uriPath));
+		}
+		log.debug("TURL {} doesn't contain dotted segments", uriPath);
+}
+
+	private UserCredentials getUser(HttpHelper httpHelper) throws FileTransferException {
 
 		if (httpHelper.isHttp()) {
 			return new UserCredentials();
 		}
 		X509Certificate[] certChain = httpHelper.getX509Certificate();
 		if (certChain == null) {
-			log.warn("Unable to get certificate chain from request header");
-			throw new InternalError("Unable to get certificate chain from request header");
+			throw new FileTransferException(HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
+				"Unable to get certificate chain from request header");
 		}
 		httpHelper.getVOMSSecurityContext().setClientCertChain(certChain);
 		String dn = httpHelper.getVOMSSecurityContext().getClientName();
 		if (dn == null) {
-			log.warn("Unable to get user DN from VOMS security context!");
-			throw new InternalError("Unable to get user DN from VOMS security context!");
+			throw new FileTransferException(HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
+				"Unable to get user DN from VOMS security context!");
 		}
 		ArrayList<String> fqans = new ArrayList<String>();
 		for (VOMSAttribute voms : httpHelper.getVOMSSecurityContext()
 			.getVOMSAttributes())
 			fqans.addAll(voms.getFQANs());
 		return new UserCredentials(dn, fqans);
-	}
-	
-	private void checkIfRequestIsValid(HttpHelper httpHelper) throws InvalidRequestException {
-		
-		/* check method */
-		DavMethod method = DavMethod.valueOf(httpHelper.getRequestMethod().toUpperCase());
-		if (method == null) {
-			throw new InvalidRequestException(
-				HttpServletResponse.SC_METHOD_NOT_ALLOWED,
-				String.format("Method %s is not supported by this StoRM instance!"));
-		}
 	}
 	
 	private String buildLogMessage(HttpHelper httpHelper, UserCredentials user) {
@@ -206,12 +226,15 @@ public class FileTransferFilter implements Filter {
 	}
 
 	private FileTransferMethodAuthorization getAuthorizationMethodHandler(
-		DavMethod method) throws AuthorizationException {
+		String method) throws FileTransferException {
 
-		if (!FTStoRMSupportedMethod.contains(method)) {
-			throw new AuthorizationException("Invalid method!");
+		DavMethod davMethod = DavMethod.valueOf(method.toUpperCase());
+		if (davMethod == null) {
+			throw new FileTransferException(
+				HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
+				"Invalid method " + method +"!");
 		}
-		switch (method) {
+		switch (davMethod) {
 		case GET:
 			return new GetMethodAuthorization();
 		case PUT:
@@ -219,9 +242,10 @@ public class FileTransferFilter implements Filter {
 		case HEAD:
 			return new HeadMethodAuthorization();
 		default:
-			break;
+			throw new FileTransferException(
+				HttpServletResponse.SC_METHOD_NOT_ALLOWED,
+				"Method " + davMethod +" is not supported!");
 		}
-		return null;
 	}
 	
 	@Override

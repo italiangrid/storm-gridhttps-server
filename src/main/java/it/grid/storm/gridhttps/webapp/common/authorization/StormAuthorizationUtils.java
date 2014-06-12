@@ -54,8 +54,7 @@ public class StormAuthorizationUtils {
       throw new IllegalArgumentException(
         "Received null user at isUserAuthorized!");
 
-    log.debug("Asking authorization for operation " + operation + " on "
-      + path);
+    log.debug("Asking authorization for operation {} on {}" , operation , path);
 
     return getAuthorizationResponse(prepareURI(path, operation, user));
 
@@ -113,8 +112,8 @@ public class StormAuthorizationUtils {
         URLEncoder.encode(resourcePath, Constants.ENCODING_SCHEME), operation,
         hasSubjectDN, hasVOMSExtension);
     } catch (UnsupportedEncodingException e) {
-      log.error("Exception encoding the path \'" + resourcePath
-        + "\' UnsupportedEncodingException: " + e.getMessage());
+      log.error("Exception encoding the path '{}' UnsupportedEncodingException: {}" , resourcePath
+        , e.getMessage(),e);
       throw new AuthorizationException(
         "Unable to encode resourcePath paramether, unsupported encoding \'"
           + Constants.ENCODING_SCHEME + "\'");
@@ -136,11 +135,11 @@ public class StormAuthorizationUtils {
         null);
     } catch (URISyntaxException e) {
       log
-        .error("Unable to build Authorization Service URI. URISyntaxException "
-          + e.getLocalizedMessage());
+        .error("Unable to build Authorization Service URI. URISyntaxException {}"
+          , e.getMessage(),e);
       throw new AuthorizationException("Unable to build Authorization Service URI");
     }
-    log.debug("Prepared URI : " + uri);
+    log.debug("Prepared URI : {}" , uri);
     return uri;
   }
 
@@ -159,7 +158,7 @@ public class StormAuthorizationUtils {
       }
       path += Constants.USER;
     }
-    log.debug("Built path " + path);
+    log.debug("Built path {}" , path);
     return path;
   }
 

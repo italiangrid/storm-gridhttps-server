@@ -9,7 +9,6 @@ import org.slf4j.LoggerFactory;
 import it.grid.storm.gridhttps.webapp.common.Surl;
 import it.grid.storm.gridhttps.webapp.common.authorization.UserCredentials;
 import it.grid.storm.gridhttps.webapp.common.exceptions.SRMOperationException;
-import it.grid.storm.gridhttps.webapp.common.exceptions.SRMOperationException.TSRMExceptionReason;
 import it.grid.storm.srm.types.Recursion;
 import it.grid.storm.srm.types.RecursionLevel;
 import it.grid.storm.srm.types.TReturnStatus;
@@ -28,7 +27,7 @@ public class LsDetailed implements SRMOperation {
 	private ArrayList<String> surlList = new ArrayList<String>();
 	private RecursionLevel recursion;
 	private int count;
-
+	
 	public LsDetailed(Surl surl) {
 		this(surl, DEFAULT_RECURSION_LEVEL, DEFAULT_COUNT);
 	}
@@ -54,7 +53,7 @@ public class LsDetailed implements SRMOperation {
 			throw new IllegalArgumentException(this.getClass().getSimpleName() + " constructor: null recursion");
 		
 		this.surlList.clear();
-		this.surlList.add(surl.asString());
+		this.surlList.add(surl.toString());
 		this.setRecursion(recursion);
 		this.setCount(count);
 	}
@@ -70,7 +69,7 @@ public class LsDetailed implements SRMOperation {
 		
 		this.surlList.clear();
 		for (Surl surl : surlList)
-			this.surlList.add(surl.asString());
+			this.surlList.add(surl.toString());
 		this.setRecursion(recursion);
 		this.setCount(count);
 	}
@@ -78,7 +77,9 @@ public class LsDetailed implements SRMOperation {
 	@Override
 	public LsOutputData executeAs(UserCredentials user, BackendApi backend) throws SRMOperationException {
 		
-		log.debug("ls-detailed '" + StringUtils.join(this.getSurlList().toArray(), ',') + "' ...");
+		log.debug(String.format("srmLsDetailed (count=%d,recursion=%s) on '%s' ...",
+			this.getCount(), this.getRecursion(),
+			StringUtils.join(this.getSurlList().toArray(), ',')));
 		LsOutputData output = null;
 		try {
 			if (this.hasCount()) {
@@ -100,8 +101,8 @@ public class LsDetailed implements SRMOperation {
 			}
 		} catch (ApiException e) {
 			log.error(e.getMessage());
-			TReturnStatus status = new TReturnStatus(TStatusCode.SRM_INTERNAL_ERROR, e.toString());
-			throw new SRMOperationException(status, TSRMExceptionReason.INTERNALERROR);
+			throw new SRMOperationException(new TReturnStatus(
+				TStatusCode.SRM_INTERNAL_ERROR, e.toString()));
 		}
 		log.debug(output.getStatus().getStatusCode().getValue());
 		log.debug(output.getStatus().getExplanation());

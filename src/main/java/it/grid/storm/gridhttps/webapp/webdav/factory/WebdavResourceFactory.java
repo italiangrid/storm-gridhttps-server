@@ -12,6 +12,7 @@
  */
 package it.grid.storm.gridhttps.webapp.webdav.factory;
 
+import it.grid.storm.gridhttps.common.storagearea.StorageArea;
 import it.grid.storm.gridhttps.configuration.Configuration;
 import it.grid.storm.gridhttps.webapp.common.StormResource;
 import it.grid.storm.gridhttps.webapp.common.factory.StormFactory;
@@ -28,19 +29,21 @@ public final class WebdavResourceFactory extends StormFactory {
 	private static final Logger log = LoggerFactory.getLogger(WebdavResourceFactory.class);
 
 	public WebdavResourceFactory() throws UnknownHostException, ApiException {
-		super(Configuration.getBackendInfo().getHostname(), Configuration.getBackendInfo().getPort(), Configuration.getGridhttpsInfo().getRootDirectory(),
-				Configuration.getGridhttpsInfo().getWebdavContextPath());
-		log.debug(this.getClass().getSimpleName() + " created");
+
+		super(Configuration.getBackendInfo().getHostname(), Configuration
+			.getBackendInfo().getPort(), Configuration.getGridhttpsInfo()
+			.getWebdavContextPath());
+		log.debug("WebdavResourceFactory created!");
 	}
 
 	@Override
-	public StormResource getDirectoryResource(File directory) {
-		return new WebdavDirectoryResource(this, directory);
+	public StormResource getDirectoryResource(StorageArea storageArea, File directory) {
+		return new WebdavDirectoryResource(this, storageArea, directory);
 	}
 
 	@Override
-	public StormResource getFileResource(File file) {
-		return new WebdavFileResource(this, file);
+	public StormResource getFileResource(StorageArea storageArea, File file) {
+		return new WebdavFileResource(this, storageArea, file);
 	}
 
 }

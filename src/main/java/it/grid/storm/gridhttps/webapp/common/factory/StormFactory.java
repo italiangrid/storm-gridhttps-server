@@ -17,6 +17,7 @@ import it.grid.storm.gridhttps.common.storagearea.StorageArea;
 import it.grid.storm.gridhttps.common.storagearea.StorageAreaManager;
 import it.grid.storm.gridhttps.webapp.common.StormResource;
 import it.grid.storm.gridhttps.webapp.common.contentservice.StormContentService;
+import it.grid.storm.srm.types.TFileType;
 import it.grid.storm.srm.types.TStatusCode;
 import it.grid.storm.xmlrpc.ApiException;
 import it.grid.storm.xmlrpc.outputdata.LsOutputData.SurlInfo;
@@ -26,50 +27,23 @@ public abstract class StormFactory implements ResourceFactory {
 	private static final Logger log = LoggerFactory.getLogger(StormFactory.class);
 
 	private FileContentService contentService;
-	private File root;
 	SecurityManager securityManager;
 	String contextPath;
 	boolean allowDirectoryBrowsing = true;
 
-	private String localhostname;
-	
-	public StormFactory(String beHost, int bePort, File root, String contextPath) throws UnknownHostException, ApiException {
-		log.debug(this.getClass().getSimpleName() + " constructor");
-		setRoot(root);
+	public StormFactory(String beHost, int bePort, String contextPath)
+		throws UnknownHostException, ApiException {
+
+		log.debug("{} constructor", getClass().getSimpleName());
 		setContextPath(contextPath);
 		setSecurityManager(new NullSecurityManager());
 		setContentService(new StormContentService());
-		setLocalhostname(java.net.InetAddress.getLocalHost().getHostName());
-		log.debug(this.getClass().getSimpleName() + " created");
-	}
-
-	private boolean isRoot(String path) {
-		return isRoot(new File(path));
-	}
-
-	private boolean isRoot(File file) {
-		return file.getAbsolutePath().equals(getRoot().getAbsolutePath());
-	}
-
-	public File getRoot() {
-		return root;
-	}
-
-	public final void setRoot(File root) {
-		log.debug("root: " + root.getAbsolutePath());
-		this.root = root;
-		if (root.exists()) {
-			if (!root.isDirectory()) {
-				log.warn("Root exists but is not a directory: " + root.getAbsolutePath());
-			}
-		} else {
-			log.warn("Root folder does not exist: " + root.getAbsolutePath());
-		}
+		log.debug("{} created", getClass().getSimpleName());
 	}
 
 	public void setSecurityManager(SecurityManager securityManager) {
 		if (securityManager != null) {
-			log.debug("securityManager: " + securityManager.getClass());
+			log.debug("securityManager: {}" , securityManager.getClass());
 		} else {
 			log.warn("Setting null FsSecurityManager. This WILL cause null pointer exceptions");
 		}
@@ -96,46 +70,28 @@ public abstract class StormFactory implements ResourceFactory {
 		this.contentService = contentService;
 	}
 
-	public String getLocalhostname() {
-		return localhostname;
-	}
-
-	private void setLocalhostname(String localhostname) {
-		this.localhostname = localhostname;
-	}
-
-	private String stripPortFromHost(String host) {
-		if (host == null || host.isEmpty())
-			return "";
-		return host.indexOf(':') != -1 ? host.substring(0, host.indexOf(':')) : host;
-	}
-
-	public boolean isLocalResource(String host) {
-		if (host == null || host.isEmpty())
-			return true;
-		return host.equals(localhostname);
-	}
-
 	@Override
-	public Resource getResource(String host, String path) throws NotAuthorizedException, BadRequestException {
-		Resource r = null;
-		String hostNoPort = stripPortFromHost(host);
+	public Resource getResource(String host, String path)
+		throws NotAuthorizedException, BadRequestException {
+
 		path = stripContext(path);
-		log.debug("getResource: host: " + hostNoPort + " - url:" + path);
-		if (!isRoot(path)) {
-		  StorageArea currentSA = StorageAreaManager.getMatchingSA(path);
-		  if (currentSA != null) {
-				String fsPath = currentSA.getRealPath(path);
-				log.debug("real path: " + fsPath);
-				File requested = new File(getRoot(), fsPath);
-				r = resolveFile(requested);
-			} else {
-				log.warn("Unable to identify a StorageArea that matches: " + path);
-			}
-		} else {
-			log.debug("get root resource!");
+		log.debug("getResource: host={} path={}", host, path);
+		StorageArea currentSA = StorageAreaManager.getMatchingSA(path);
+		if (currentSA == null) {
+			log.warn("Unable to identify a StorageArea that matches: {}", path);
+			return null;
 		}
-		return r;
+		File requested = new File(currentSA.getRealPath(path));
+		log.debug("File path: {}", requested);
+		if (!requested.exists()) {
+			log.warn("File {} doesn't exist or user {} does not have the rights to "
+				+ "read it.", requested, System.getProperty("user.name"));
+			return null;
+		}
+		if (requested.isDirectory()) {
+			return getDirectoryResource(currentSA, requested);
+		}
+		return getFileResource(currentSA, requested);
 	}
 
 	private String stripContext(String path) {
@@ -144,63 +100,33 @@ public abstract class StormFactory implements ResourceFactory {
 		return path.replaceFirst(File.separator + getContextPath(), "");
 	}
 
-	public abstract StormResource getDirectoryResource(File directory);
+	public abstract StormResource getDirectoryResource(StorageArea storageArea, File directory);
 	
-	public abstract StormResource getFileResource(File file);
+	public abstract StormResource getFileResource(StorageArea storageArea, File file);
 	
-	/**
-	 * Returns the StormResource associated to the file, or null if file doesn't exist
-	 * 
-	 **/
-	public StormResource resolveFile(File file) {
-		
-		if (file.exists()) {
-			if (file.isDirectory()) {
-				return getDirectoryResource(file);
-			} else {
-				return getFileResource(file);
-			}
-		} 
-		return null;
-	}
-	
-	/**
-	 * Returns the StormResource associated to the file, or null if file doesn't exist
-	 * 
-	 **/
-	public StormResource resolveFile(File parent, String childname) {
-		
-		return resolveFile(new File(parent, childname));
-	}
-
-	public StormResource resolveFile(SurlInfo surlInfo) {
-		StorageArea storageArea = StorageAreaManager.getMatchingSA(surlInfo.getStfn());
-		return resolveFile(surlInfo, storageArea);
-	}
-	
-	public StormResource resolveFile(SurlInfo surlInfo, StorageArea storageArea) {
+	public StormResource resolveResource(SurlInfo surlInfo, StorageArea storageArea) {
 		if (surlInfo == null) {
-			log.debug("Resolve file error: received a null surl-info!");
+			log.debug("Error on resolving surl info: received null SurlInfo!");
 			return null;
 		}
 		if (storageArea == null) {
-			log.debug("Resolve file error: received a null storage-area!");
+			log.debug("Error on resolving surl info: received null StorageArea!");
 			return null;
 		}
 		if (!isSuccessful(surlInfo.getStatus().getStatusCode())) {
-			log.debug("Resolve file error: surl status is " + surlInfo.getStatus().getStatusCode() + " " + surlInfo.getStatus().getExplanation());
+			log.debug("Error on resolving surl info: surl status is {} {}", surlInfo
+				.getStatus().getStatusCode(), surlInfo.getStatus().getExplanation());
 			return null;
 		}
 		if (surlInfo.getType() == null) {
-			log.debug("Resolve file error: surl-info type is null!");
+			log.debug("Error on resolving surl info: null Type!");
 			return null;
 		}
 		File file = new File(storageArea.getRealPath(surlInfo.getStfn()));
-		if (!storageArea.isOwner(file)) {
-			log.debug("Resolve file error: storage area " + storageArea.getName() + " isn't the owner of " + surlInfo.getStfn());
-			return null;
+		if (surlInfo.getType().equals(TFileType.DIRECTORY)) {
+			return getDirectoryResource(storageArea, file);
 		}
-		return resolveFile(file);
+		return getFileResource(storageArea, file);
 	}
 
 	private boolean isSuccessful(TStatusCode status) {
@@ -215,7 +141,7 @@ public abstract class StormFactory implements ResourceFactory {
 	public boolean isDigestAllowed() {
 		boolean b = getSecurityManager() != null && getSecurityManager().isDigestAllowed();
 		if (log.isTraceEnabled()) {
-			log.trace("isDigestAllowed: " + b);
+			log.trace("isDigestAllowed: {}" , b);
 		}
 		return b;
 	}
