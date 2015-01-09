@@ -5,7 +5,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>it.grid.storm</groupId>
 	<artifactId>storm-gridhttps-server</artifactId>
-	<version>3.0.1</version>
+	<version>3.0.2</version>
 	<packaging>jar</packaging>
 	<name>storm-gridhttps-server</name>
 
@@ -56,9 +56,9 @@
 		<mavenJarVersion>2.4</mavenJarVersion>
 		<mavenAssemblyVersion>2.4</mavenAssemblyVersion>
 
-		<httpsutilsVersion>0.3.2.rc1</httpsutilsVersion>
+		<httpsutilsVersion>0.3.6</httpsutilsVersion>
 		<xmlrpcApiVersion>0.0.18.rc1</xmlrpcApiVersion>
-		<miltonVersion>2.5.2.0</miltonVersion>
+		<miltonVersion>2.6.3.3</miltonVersion>
 		<commonsLangVersion>2.3</commonsLangVersion>
 		<httpcoreVersion>4.2.2</httpcoreVersion>
 		<httpclientVersion>4.2.1</httpclientVersion>
